@@ -378,7 +378,20 @@
         </div>
       </div>
 
+    </div><!-- /chartView -->
+  </div><!-- /wrap -->
 
+<div id="authOverlay" style="position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;background:var(--night);padding:20px">
+  <div style="width:100%;max-width:360px;border:1px solid var(--line);border-radius:16px;background:var(--night-2);padding:26px 24px;box-shadow:0 10px 40px rgba(0,0,0,.18)">
+    <div style="font-size:19px;letter-spacing:.3em;color:var(--gold);text-align:center;margin-bottom:4px">星 历 盘</div>
+    <div style="font-size:12px;color:var(--muted);text-align:center;margin-bottom:20px">登录后,你的星盘与解读将安全存放在云端</div>
+    <div class="field"><label>邮箱</label><input id="authEmail" type="email" autocomplete="email" placeholder="you@example.com"></div>
+    <div class="field" style="margin-top:10px"><label>密码</label><input id="authPw" type="password" autocomplete="current-password" placeholder="至少 6 位"></div>
+    <div id="authMsg" style="min-height:18px;font-size:12px;color:var(--fire);margin:8px 0 4px"></div>
+    <button class="btn" id="authLogin" style="width:100%;padding:11px;font-size:14px">登 录</button>
+    <button class="btn ghost" id="authSignup" style="width:100%;padding:10px;font-size:13px;margin-top:9px">没有账号?注 册</button>
+  </div>
+</div>
 <div class="scrim" id="scrim"></div>
 <div class="drawer" id="drawer">
   <button class="x" id="drawerX">×</button>
@@ -1510,6 +1523,170 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
 </script>
 <script>
 /* ============================================================
+   云端存储层(Supabase)
+   架构:所有数据(星盘、解读、偏好)存 Supabase,客户端不落盘。
+   本地仅保留登录会话令牌(凭证,非数据;否则每次刷新都需重新登录)。
+   ============================================================ */
+(function () {
+  "use strict";
+
+  /* ★★★★★★★★  Supabase 连接设置(全应用唯一入口)  ★★★★★★★★ */
+  const SUPABASE_URL = "https://lbzddxzzywqbbtumjfjc.supabase.co";
+  const SUPABASE_ANON_KEY = "sb_publishable_D-cLCeMxJ_DheCLPKDRyxw_IS0yEGKX";
+  const FUNC_URL = SUPABASE_URL + "/functions/v1/read-chart";
+  window.CloudCfg = { url: SUPABASE_URL, anon: SUPABASE_ANON_KEY, funcUrl: FUNC_URL };
+
+  const SESSION_KEY = "xingli_session_v1"; // 唯一的本地键:会话令牌
+  let session = null;
+  try { session = JSON.parse(localStorage.getItem(SESSION_KEY) || "null"); } catch (e) { }
+
+  function saveSession(s) {
+    session = s;
+    try {
+      if (s) localStorage.setItem(SESSION_KEY, JSON.stringify(s));
+      else localStorage.removeItem(SESSION_KEY);
+    } catch (e) { }
+  }
+
+  function authHeaders() {
+    return {
+      "apikey": SUPABASE_ANON_KEY,
+      "Authorization": "Bearer " + (session ? session.access_token : SUPABASE_ANON_KEY),
+      "Content-Type": "application/json"
+    };
+  }
+
+  // ---------- 认证 ----------
+  function authCall(path, body) {
+    return fetch(SUPABASE_URL + "/auth/v1/" + path, {
+      method: "POST",
+      headers: { "apikey": SUPABASE_ANON_KEY, "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    }).then(r => r.json().then(d => ({ ok: r.ok, data: d })));
+  }
+  function pickSession(d) {
+    if (!d || !d.access_token) return null;
+    return {
+      access_token: d.access_token,
+      refresh_token: d.refresh_token,
+      user_id: d.user ? d.user.id : (d.user_id || ""),
+      email: d.user ? d.user.email : ""
+    };
+  }
+  function signup(email, pw) {
+    return authCall("signup", { email: email, password: pw }).then(function (r) {
+      if (!r.ok) throw new Error(r.data.msg || r.data.error_description || r.data.message || "注册失败");
+      const s = pickSession(r.data);
+      if (s) { saveSession(s); return { loggedIn: true }; }
+      return { loggedIn: false, needConfirm: true }; // 项目开了邮箱确认
+    });
+  }
+  function login(email, pw) {
+    return authCall("token?grant_type=password", { email: email, password: pw }).then(function (r) {
+      if (!r.ok) throw new Error(r.data.error_description || r.data.msg || "邮箱或密码不正确");
+      saveSession(pickSession(r.data));
+    });
+  }
+  function refresh() {
+    if (!session || !session.refresh_token) return Promise.reject(new Error("no session"));
+    return authCall("token?grant_type=refresh_token", { refresh_token: session.refresh_token }).then(function (r) {
+      if (!r.ok) { saveSession(null); throw new Error("会话已过期"); }
+      saveSession(pickSession(r.data));
+    });
+  }
+  function logout() { saveSession(null); }
+
+  // ---------- REST(自动续期一次) ----------
+  function rest(path, opts, retried) {
+    opts = opts || {};
+    opts.headers = Object.assign(authHeaders(), opts.headers || {});
+    return fetch(SUPABASE_URL + "/rest/v1/" + path, opts).then(function (r) {
+      if (r.status === 401 && !retried && session) {
+        return refresh().then(function () { return rest(path, opts, true); });
+      }
+      if (!r.ok) return r.text().then(t => { throw new Error("DB " + r.status + ": " + t.slice(0, 140)); });
+      return r.status === 204 ? null : r.json();
+    });
+  }
+
+  // ---------- 星盘 CRUD(整体存 jsonb data 列) ----------
+  function uuid() {
+    if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+    return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
+      const r = Math.random() * 16 | 0; return (c === "x" ? r : (r & 3 | 8)).toString(16);
+    });
+  }
+  function loadCharts() {
+    return rest("charts?select=id,data&order=created_at.asc").then(rows =>
+      rows.map(r => Object.assign({}, r.data, { id: r.id })));
+  }
+  function insertChart(c) {
+    const id = c.id && /^[0-9a-f-]{36}$/.test(c.id) ? c.id : uuid();
+    c.id = id;
+    const data = Object.assign({}, c); delete data.id;
+    return rest("charts", { method: "POST", body: JSON.stringify({ id: id, data: data }) }).then(() => c);
+  }
+  function updateChart(c) {
+    const data = Object.assign({}, c); delete data.id;
+    return rest("charts?id=eq." + c.id, {
+      method: "PATCH",
+      body: JSON.stringify({ data: data, updated_at: new Date().toISOString() })
+    });
+  }
+  function deleteChart(id) {
+    return rest("charts?id=eq." + id, { method: "DELETE" });
+  }
+
+  // ---------- 偏好(单行 jsonb,防抖上云) ----------
+  let prefsCache = {}, prefsTimer = null;
+  function loadPrefs() {
+    return rest("prefs?select=data").then(function (rows) {
+      prefsCache = (rows[0] && rows[0].data) || {};
+      return prefsCache;
+    });
+  }
+  function savePrefs(patch) {
+    Object.assign(prefsCache, patch || {});
+    clearTimeout(prefsTimer);
+    prefsTimer = setTimeout(function () {
+      if (!session) return;
+      rest("prefs", {
+        method: "POST",
+        headers: { "Prefer": "resolution=merge-duplicates" },
+        body: JSON.stringify({ user_id: session.user_id, data: prefsCache })
+      }).catch(function (e) { console.warn("偏好同步失败", e); });
+    }, 900);
+  }
+
+  // ---------- 旧本地数据一次性迁移 ----------
+  function migrateLegacy() {
+    let legacy = null;
+    try { legacy = JSON.parse(localStorage.getItem("xingli_charts_v1") || "null"); } catch (e) { }
+    if (!legacy || !legacy.charts || !legacy.charts.length) return Promise.resolve([]);
+    const jobs = legacy.charts.map(function (c) {
+      c.id = uuid();
+      return insertChart(c).catch(function () { return null; });
+    });
+    return Promise.all(jobs).then(function (rows) {
+      // 迁移完成:清空所有旧本地数据键
+      ["xingli_charts_v1", "xingli_show_v1", "xingli_glyphmode_v1", "xingli_theme_v1", "xingli_readopts_v1"]
+        .forEach(function (k) { try { localStorage.removeItem(k); } catch (e) { } });
+      return rows.filter(Boolean);
+    });
+  }
+
+  window.Cloud = {
+    hasSession: function () { return !!session; },
+    email: function () { return session ? session.email : ""; },
+    signup: signup, login: login, logout: logout, refresh: refresh,
+    loadCharts: loadCharts, insertChart: insertChart, updateChart: updateChart, deleteChart: deleteChart,
+    loadPrefs: loadPrefs, savePrefs: savePrefs, uuid: uuid,
+    migrateLegacy: migrateLegacy
+  };
+})();
+</script>
+<script>
+/* ============================================================
    九步定调 · computeNineSteps()
    依据《命盘基础定调 · 九步演算 Schema 规格书 v1.1》
    计算层:Step 1–8 + 集中度×醒目度心法象限(纯离线)
@@ -1972,8 +2149,8 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
        SUPABASE_ANON_KEY  = "<你的 anon public key>"
      留空则按钮自动降级为「复制解读提示词 → 粘贴 AI 解读」流程。
      ================================================================== */
-  const SUPABASE_FUNC_URL = "https://lbzddxzzywqbbtumjfjc.supabase.co/functions/v1/read-chart";
-  const SUPABASE_ANON_KEY = "sb_publishable_D-cLCeMxJ_DheCLPKDRyxw_IS0yEGKX";
+  const SUPABASE_FUNC_URL = (window.CloudCfg || {}).funcUrl || "";
+  const SUPABASE_ANON_KEY = (window.CloudCfg || {}).anon || "";
 
   // ---------- V3 完整解读 Prompt(五章 · 4000–5000 字) ----------
   const ASPECT_CN = { con: "合", sex: "六合", squ: "刑", tri: "拱", opp: "冲" };
@@ -2445,15 +2622,9 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   CITY_GROUPS.forEach(g => g[1].forEach(ct => CITIES.push(ct)));
 
   // ---------- 本地存储 ----------
-  function loadStore() {
-    try {
-      const s = JSON.parse(localStorage.getItem(STORE_KEY));
-      if (s && Array.isArray(s.charts)) return s;
-    } catch (e) { }
-    return { charts: [], activeId: null };
-  }
-  let store = loadStore();
-  function saveStore() { try { localStorage.setItem(STORE_KEY, JSON.stringify(store)); } catch (e) { } }
+  // 云端存储:内存态 + Supabase 持久化(charts 表逐条同步,activeId 走偏好)
+  let store = { charts: [], activeId: null };
+  function saveStore() { window.Cloud.savePrefs({ activeId: store.activeId }); }
   function activeChart() { return store.charts.find(c => c.id === store.activeId) || null; }
 
   let curResult = null;       // 最近一次计算结果
@@ -2553,14 +2724,13 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   ];
   const THEME_DEFAULT_VARS = Object.keys(THEMES[1].vars); // 需要复位的变量名集合
   let curTheme = "solar";
-  try { curTheme = localStorage.getItem("xingli_theme_v1") || "solar"; } catch (e) { }
   function applyTheme(id) {
     const th = THEMES.find(t => t.id === id) || THEMES[0];
     curTheme = th.id;
     const rootStyle = document.documentElement.style;
     THEME_DEFAULT_VARS.forEach(function (v) { rootStyle.removeProperty(v); }); // 先回到默认(日光神殿)
     Object.keys(th.vars).forEach(function (v) { rootStyle.setProperty(v, th.vars[v]); });
-    try { localStorage.setItem("xingli_theme_v1", th.id); } catch (e) { }
+    window.Cloud.savePrefs({ theme: th.id });
     if (typeof curResult !== "undefined" && curResult) { ensureToggleBar(); drawWheel(); }
   }
   applyTheme(curTheme); // 启动即应用已保存主题
@@ -2708,16 +2878,19 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     PoF: "福", PoSpirit: "精", PoE: "情", PoM: "姻", Vertex: "宿", SMmid: "中", Eris: "阋"
   };
   let wheelShow = {};
-  try { wheelShow = JSON.parse(localStorage.getItem("xingli_show_v1") || "{}"); } catch (e) { wheelShow = {}; }
-  OPT_KEYS.forEach(function (k) { if (typeof wheelShow[k[0]] !== "boolean") wheelShow[k[0]] = false; });
+  OPT_KEYS.forEach(function (k) { wheelShow[k[0]] = false; });
   let glyphMode = "sym";
-  try { glyphMode = localStorage.getItem("xingli_glyphmode_v1") || "sym"; } catch (e) { }
   let settingsOpen = false;
+  // 登录后应用云端偏好
+  function applyCloudPrefs(p) {
+    p = p || {};
+    if (p.wheelShow) OPT_KEYS.forEach(function (k) { wheelShow[k[0]] = !!p.wheelShow[k[0]]; });
+    if (p.glyphMode === "sym" || p.glyphMode === "name") glyphMode = p.glyphMode;
+    if (p.theme) applyTheme(p.theme);
+    if (p.activeId) store.activeId = p.activeId;
+  }
   function saveShow() {
-    try {
-      localStorage.setItem("xingli_show_v1", JSON.stringify(wheelShow));
-      localStorage.setItem("xingli_glyphmode_v1", glyphMode);
-    } catch (e) { }
+    window.Cloud.savePrefs({ wheelShow: wheelShow, glyphMode: glyphMode });
   }
 
 
@@ -2798,13 +2971,18 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       if (lat < -89.9 || lat > 89.9) { alert("纬度需在 -89.9 ~ 89.9 之间"); return; }
       if (editingId) {
         const c = store.charts.find(x => x.id === editingId);
-        if (c) { Object.assign(c, { nick, date, time, lat, lon }); store.activeId = c.id; }
+        if (c) {
+          Object.assign(c, { nick, date, time, lat, lon });
+          store.activeId = c.id;
+          window.Cloud.updateChart(c).catch(e => console.warn("云同步失败", e));
+        }
         editingId = null;
         $("formTitleText").textContent = "新建星盘";
       } else {
-        const c = { id: "c" + Date.now(), nick, date, time, lat, lon, sys: "placidus", note: "", interp: {}, listDone: {}, listNotes: {} };
+        const c = { id: window.Cloud.uuid(), nick, date, time, lat, lon, sys: "placidus" };
         store.charts.push(c);
         store.activeId = c.id;
+        window.Cloud.insertChart(c).catch(e => console.warn("云同步失败", e));
       }
       saveStore(); renderChartList(); drawActive();
     });
@@ -2846,6 +3024,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
           return;
         }
         store.charts = store.charts.filter(x => x.id !== c.id);
+        window.Cloud.deleteChart(c.id).catch(e => console.warn("云删除失败", e));
         if (store.activeId === c.id) store.activeId = store.charts.length ? store.charts[0].id : null;
         confirmDelId = null;
         saveStore(); renderChartList(); drawActive();
@@ -3320,6 +3499,66 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   function init() {
     initForm();
     initThemeMusic();
+    // —— 云端登录门 ——
+    function setAuthMsg(t, ok) { const m = $("authMsg"); m.textContent = t || ""; m.style.color = ok ? "var(--gold)" : "var(--fire)"; }
+    function enterApp() {
+      $("authOverlay").style.display = "none";
+      // 右上角账号条
+      let bar = document.getElementById("acctBar");
+      if (!bar) {
+        bar = document.createElement("div");
+        bar.id = "acctBar";
+        bar.style.cssText = "position:fixed;top:10px;right:14px;z-index:60;display:flex;gap:8px;align-items:center;font-size:11.5px;color:var(--muted);background:var(--card-soft);border:1px solid var(--line);border-radius:16px;padding:4px 6px 4px 12px";
+        bar.innerHTML = '<span>' + window.Cloud.email() + '</span><button id="logoutBtn" style="font-family:inherit;font-size:11.5px;border:1px solid var(--line);border-radius:12px;background:transparent;color:var(--gold);padding:2px 10px;cursor:pointer">退出</button>';
+        document.body.appendChild(bar);
+        document.getElementById("logoutBtn").addEventListener("click", function () {
+          window.Cloud.logout(); location.reload();
+        });
+      }
+      // 拉取偏好与星盘
+      Promise.all([
+        window.Cloud.loadPrefs().catch(function () { return {}; }),
+        window.Cloud.loadCharts().catch(function (e) { console.warn(e); return []; })
+      ]).then(function (r) {
+        const prefs = r[0] || {};
+        store.charts = r[1] || [];
+        applyCloudPrefs(prefs);
+        if (prefs.readopts) {
+          if (prefs.readopts.depth) $("readDepth").value = prefs.readopts.depth;
+          if (prefs.readopts.tone) $("readTone").value = prefs.readopts.tone;
+        }
+        if (!store.charts.length) {
+          // 首次登录:自动迁移旧本地数据
+          return window.Cloud.migrateLegacy().then(function (mig) {
+            if (mig.length) store.charts = mig;
+          });
+        }
+      }).then(function () {
+        if (!store.activeId || !store.charts.some(c => c.id === store.activeId))
+          store.activeId = store.charts.length ? store.charts[0].id : null;
+        renderChartList(); drawActive();
+      });
+    }
+    $("authLogin").addEventListener("click", function () {
+      const em = $("authEmail").value.trim(), pw = $("authPw").value;
+      if (!em || pw.length < 6) { setAuthMsg("请输入邮箱与至少 6 位密码"); return; }
+      setAuthMsg("登录中…", true);
+      window.Cloud.login(em, pw).then(enterApp).catch(function (e) { setAuthMsg(e.message); });
+    });
+    $("authSignup").addEventListener("click", function () {
+      const em = $("authEmail").value.trim(), pw = $("authPw").value;
+      if (!em || pw.length < 6) { setAuthMsg("请输入邮箱与至少 6 位密码"); return; }
+      setAuthMsg("注册中…", true);
+      window.Cloud.signup(em, pw).then(function (r) {
+        if (r.loggedIn) enterApp();
+        else setAuthMsg("注册成功!请到邮箱点击确认链接,然后回来登录", true);
+      }).catch(function (e) { setAuthMsg(e.message); });
+    });
+    $("authPw").addEventListener("keydown", function (e) { if (e.key === "Enter") $("authLogin").click(); });
+    // 已有会话:静默续期后直接进入
+    if (window.Cloud.hasSession()) {
+      window.Cloud.refresh().then(enterApp).catch(function () { /* 停留在登录页 */ });
+    }
     // —— 解读面板按钮 ——
     function copyText(txt, btn, okLabel) {
       function done() { const t = btn.textContent; btn.textContent = okLabel; setTimeout(function () { btn.textContent = t; }, 1800); }
@@ -3336,14 +3575,9 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       return { depth: $("readDepth").value, tone: $("readTone").value };
     }
     // 记住上次选择
-    try {
-      const ro = JSON.parse(localStorage.getItem("xingli_readopts_v1") || "{}");
-      if (ro.depth) $("readDepth").value = ro.depth;
-      if (ro.tone) $("readTone").value = ro.tone;
-    } catch (e) { }
     ["readDepth", "readTone"].forEach(function (id) {
       $(id).addEventListener("change", function () {
-        try { localStorage.setItem("xingli_readopts_v1", JSON.stringify(readOpts())); } catch (e) { }
+        window.Cloud.savePrefs({ readopts: readOpts() });
       });
     });
     $("nineCopyPrompt").addEventListener("click", function () {
@@ -3360,7 +3594,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       const c = activeChart();
       if (!c) return;
       c.reading = Object.assign({ ts: new Date().toISOString().slice(0, 10) }, readOpts(), parsed);
-      saveStore();
+      window.Cloud.updateChart(c).catch(function (e) { console.warn("云同步失败", e); });
       $("pasteTa").value = ""; $("pasteBox").style.display = "none";
       renderReading();
     });
@@ -3377,7 +3611,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       const fpSeed = [c.date, c.time, c.lat, c.lon, c.sys || "placidus", "tropical"].join("|");
       window.NineSteps.fetchReading(curNine, curResult, readOpts(), fpSeed).then(function (parsed) {
         c.reading = Object.assign({ ts: new Date().toISOString().slice(0, 10) }, readOpts(), parsed);
-        saveStore();
+        window.Cloud.updateChart(c).catch(function (e) { console.warn("云同步失败", e); });
         btn.disabled = false;
         renderReading();
       }).catch(function (e) {
@@ -3402,7 +3636,8 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
         const c = activeChart();
         if (!c) return;
         c.sys = b.dataset.sys;
-        saveStore(); drawActive();
+        window.Cloud.updateChart(c).catch(function (e) { console.warn("云同步失败", e); });
+        drawActive();
       });
     });
     $("drawerX").addEventListener("click", closeDrawer);
