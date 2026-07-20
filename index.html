@@ -1677,6 +1677,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
 
   window.Cloud = {
     hasSession: function () { return !!session; },
+    token: function () { return session ? session.access_token : ""; },
     email: function () { return session ? session.email : ""; },
     signup: signup, login: login, logout: logout, refresh: refresh,
     loadCharts: loadCharts, insertChart: insertChart, updateChart: updateChart, deleteChart: deleteChart,
@@ -2292,14 +2293,21 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   function fetchReading(ns, res, opts, fpSeed) {
     const prompt = buildPrompt(ns, res, opts);
     return fingerprint(String(fpSeed || "") + "|" + (opts && opts.depth) + "|" + (opts && opts.tone) + "|v4").then(function (fp) {
+      const bearer = (window.Cloud && window.Cloud.token && window.Cloud.token()) || SUPABASE_ANON_KEY;
       return fetch(SUPABASE_FUNC_URL, {
         method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": "Bearer " + SUPABASE_ANON_KEY, "apikey": SUPABASE_ANON_KEY },
+        headers: { "Content-Type": "application/json", "Authorization": "Bearer " + bearer, "apikey": SUPABASE_ANON_KEY },
         body: JSON.stringify({ prompt: prompt, fingerprint: fp })
       });
     }).then(function (r) {
-      if (!r.ok) throw new Error("HTTP " + r.status);
-      return r.json();
+      return r.text().then(function (t) {
+        if (!r.ok) {
+          let msg = "HTTP " + r.status;
+          try { const o = JSON.parse(t); msg += " · " + (o.error || "") + (o.detail ? " · " + o.detail : ""); } catch (e) { msg += " · " + t.slice(0, 160); }
+          throw new Error(msg);
+        }
+        try { return JSON.parse(t); } catch (e) { throw new Error("返回不是 JSON:" + t.slice(0, 120)); }
+      });
     }).then(function (d) {
       const ch = parseChapters(d.text || d.content || JSON.stringify(d));
       if (!ch) throw new Error("返回内容无法解析为五章");
