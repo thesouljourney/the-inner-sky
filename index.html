@@ -360,6 +360,13 @@
         <div id="nineBody"></div>
       </div>
 
+      <div class="panel" style="margin-top:18px" id="topicPanel">
+        <h3><span>主题专区</span></h3>
+        <div style="font-size:12px;color:var(--muted);margin:-4px 0 12px;line-height:1.7">想深入了解哪一块,点开就好</div>
+        <div id="topicGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:9px"></div>
+        <div id="topicBody" style="margin-top:16px"></div>
+      </div>
+
     </div><!-- /chartView -->
   </div><!-- /wrap -->
 
@@ -2487,43 +2494,45 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     const cards = Array.isArray(reading) ? [] : (reading.cards || []);
     const esc = t => String(t || "").replace(/</g, "&lt;");
     const para = t => esc(t).split(/\n\s*\n|\n/).filter(x => x.trim()).map(x => '<p style="margin:0 0 12px">' + x.trim() + "</p>").join("");
-    // 字卡按标题索引,与主题合并
-    const cardMap = {};
-    cards.forEach(function (c) { cardMap[c.title] = c.line; });
-    const usedCard = {};
+    const inChapter = {};
+    chs.forEach(c => { inChapter[c.title] = 1; });
     let h = "";
 
-    // 一句话主线
+    // ① 一句话说你
     if (spine) {
       h += '<div style="margin:2px 0 20px;padding:16px 18px;border-left:3px solid var(--gold);background:rgba(var(--accent-rgb),.07);border-radius:0 12px 12px 0">' +
         '<div style="font-size:10.5px;letter-spacing:.18em;color:var(--gold);margin-bottom:6px">一句话说你</div>' +
         '<div style="font-size:15.5px;line-height:1.85;color:var(--parchment)">' + esc(spine) + "</div></div>";
     }
 
-    // 主题卡:摘要在前,展开即读全文(两层合一)
-    h += '<div style="display:grid;gap:11px">' + chs.map(function (c, i) {
-      usedCard[c.title] = 1;
-      const line = cardMap[c.title] || "";
-      const sum = c.summary || "";
-      return '<div class="rd-item" style="border:1px solid var(--line);border-radius:13px;padding:16px 18px;background:var(--card-soft)">' +
-        '<div style="font-size:14px;font-weight:700;color:var(--gold);margin-bottom:9px">' + (i + 1) + " · " + esc(c.title) + "</div>" +
-        (line ? '<div style="font-size:14.5px;line-height:1.85;color:var(--parchment);margin-bottom:' + (sum ? "9px" : "0") + '">' + esc(line) + "</div>" : "") +
-        (sum ? '<div style="font-size:13.5px;line-height:1.9;color:var(--parchment);opacity:.88">' + esc(sum) + "</div>" : "") +
-        (c.body ? '<div class="rd-full" style="display:none;margin-top:13px;padding-top:13px;border-top:1px dashed var(--line);font-size:13.5px;line-height:2;color:var(--parchment)">' + para(c.body) + "</div>" +
-          '<button class="rd-more" style="margin-top:11px;font-family:inherit;font-size:12.5px;padding:5px 15px;border:1px solid var(--line);border-radius:14px;background:transparent;color:var(--gold);cursor:pointer">展开阅读 \u2228</button>' : "") +
-        "</div>";
-    }).join("") + "</div>";
-
-    // 额外字卡(核心人格模式/情绪运作/天赋/理想状态等未被主题使用的)
-    const extra = cards.filter(c => !usedCard[c.title]);
-    if (extra.length) {
-      h += '<div style="font-size:11px;letter-spacing:.16em;color:var(--gold);margin:24px 0 10px">关 于 你 的 几 件 事</div>' +
-        '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(228px,1fr));gap:10px">' +
-        extra.map(function (c) {
+    // ② 关于你的几件事(重点字卡)
+    const quick = cards.filter(c => !inChapter[c.title]);
+    if (quick.length) {
+      h += '<div style="font-size:11px;letter-spacing:.16em;color:var(--gold);margin:0 0 10px">关 于 你 的 几 件 事</div>' +
+        '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(228px,1fr));gap:10px;margin-bottom:26px">' +
+        quick.map(function (c) {
           return '<div style="border:1px solid var(--line);border-radius:12px;padding:14px 16px;background:var(--card-soft)">' +
             '<div style="font-size:11.5px;color:var(--gold-soft);margin-bottom:6px;letter-spacing:.04em">' + esc(c.title) + "</div>" +
             '<div style="font-size:13.5px;line-height:1.8;color:var(--parchment)">' + esc(c.line) + "</div></div>";
         }).join("") + "</div>";
+    }
+
+    // ③ 你的生命蓝图:字卡句 + 摘要 + 展开全文(同一张卡)
+    if (chs.length) {
+      const cardMap = {};
+      cards.forEach(c => { cardMap[c.title] = c.line; });
+      h += '<div style="font-size:11px;letter-spacing:.16em;color:var(--gold);margin:0 0 10px">你 的 生 命 蓝 图</div>' +
+        '<div style="display:grid;gap:11px">' + chs.map(function (c, i) {
+        const line = cardMap[c.title] || "";
+        const sum = c.summary || "";
+        return '<div class="rd-item" style="border:1px solid var(--line);border-radius:13px;padding:16px 18px;background:var(--card-soft)">' +
+          '<div style="font-size:14px;font-weight:700;color:var(--gold);margin-bottom:9px">' + (i + 1) + " · " + esc(c.title) + "</div>" +
+          (line ? '<div style="font-size:14.5px;line-height:1.85;color:var(--parchment);margin-bottom:' + (sum ? "9px" : "0") + '">' + esc(line) + "</div>" : "") +
+          (sum ? '<div style="font-size:13.5px;line-height:1.9;color:var(--parchment);opacity:.88">' + esc(sum) + "</div>" : "") +
+          (c.body ? '<div class="rd-full" style="display:none;margin-top:13px;padding-top:13px;border-top:1px dashed var(--line);font-size:13.5px;line-height:2;color:var(--parchment)">' + para(c.body) + "</div>" +
+            '<button class="rd-more" style="margin-top:11px;font-family:inherit;font-size:12.5px;padding:5px 15px;border:1px solid var(--line);border-radius:14px;background:transparent;color:var(--gold);cursor:pointer">展开阅读 \u2228</button>' : "") +
+          "</div>";
+      }).join("") + "</div>";
     }
 
     mount.innerHTML = h;
@@ -2537,7 +2546,177 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     });
   }
 
-  window.NineSteps = { compute: computeNineSteps, render: renderNine, buildPrompt: buildPrompt, planetNote: planetNote, parseChapters: parseChapters, fetchReading: fetchReading, renderChapters: renderChapters, hasSupabase: function () { return !!(SUPABASE_FUNC_URL && SUPABASE_ANON_KEY); } };
+  // ========== 主题专区:后台调用规则(前端不出现任何术语) ==========
+  const TOPICS = [
+    { id: "personal", icon: "\uD83D\uDC64", name: "个人议题",   tone: "一个人是否容易活出真正的自己,看他的主导力量落在哪里、状态如何。" },
+    { id: "wealth",   icon: "\uD83D\uDCB0", name: "财运议题",   tone: "财富通常流向「金钱领域的主导力量」所连接的人生领域。" },
+    { id: "emotion",  icon: "\u2764\uFE0F",  name: "情感议题",   tone: "爱的需求由亲密偏好决定,关系的发展模式由伴侣领域决定。" },
+    { id: "love",     icon: "\uD83D\uDC95", name: "爱情议题",   tone: "恋爱发生的位置看第五领域,心动的触发点看亲密偏好。" },
+    { id: "destined", icon: "\uD83D\uDC8D", name: "正缘画像",   tone: "分三层回答:他是什么样的人、容易在哪里相遇、你们的关系模式。" },
+    { id: "career",   icon: "\uD83D\uDCBC", name: "事业议题",   tone: "事业方向由生涯顶点与事业领域的主导力量共同决定。" },
+    { id: "study",    icon: "\uD83D\uDCDA", name: "求学议题",   tone: "学习方式看思维模式,知识成长方向看远方与信念领域。" },
+    { id: "family",   icon: "\uD83C\uDFE0", name: "家庭议题",   tone: "家庭给予的情感基础,以及最深层的安全感来源。" },
+    { id: "sibling",  icon: "\uD83D\uDC6A", name: "兄弟姐妹议题", tone: "与手足之间的互动模式,以及彼此带来的影响。" }
+  ];
+
+  // 取指定宫的:宫头星座、宫内行星、宫主星(现代/传统)及其飞向
+  function houseInfo(ns, res, h) {
+    const cuspLon = ((res.cusps[h - 1] % 360) + 360) % 360;
+    const sIdx = Math.floor(cuspLon / 30);
+    const inside = res.planets.filter(p => p.house === h).map(p => p.key);
+    const fm = ns.step6.flyingStars.modern[h - 1];
+    const ft = ns.step6.flyingStars.traditional[h - 1];
+    return {
+      house: h, cuspSign: signCN(sIdx), element: ELEM_CN[ELEM(sIdx)],
+      planetsInside: inside,
+      rulerModern: { planet: fm.ruler, fliesToHouse: fm.fliesTo, sign: signCN(res.planets.find(p => p.key === fm.ruler).signIdx), score: ns.step6.planetScores[fm.ruler] },
+      rulerTraditional: { planet: ft.ruler, fliesToHouse: ft.fliesTo }
+    };
+  }
+  function planetInfo(ns, res, key) {
+    const p = res.planets.find(x => x.key === key);
+    if (!p) return null;
+    const sc = ns.step6.planetScores[key] || {};
+    const asps = ns.step7.allAspects.filter(a => a.a === key || a.b === key)
+      .sort((x, y) => x.orb - y.orb).slice(0, 4)
+      .map(a => ({ with: a.a === key ? a.b : a.a, type: a.type, orb: a.orb, tight: a.precision }));
+    return { planet: key, sign: signCN(p.signIdx), house: p.house, retro: !!p.retro, level: sc.level, total: sc.total, flags: sc.flags, aspects: asps };
+  }
+  function extraInfo(res, key) {
+    const x = (res.extras || []).find(e => e.key === key);
+    return x ? { point: key, sign: signCN(x.signIdx), house: x.house } : null;
+  }
+
+  // 按主题抽取后台数据(严格对应规范第五节)
+  function topicData(ns, res, id) {
+    const H = h => houseInfo(ns, res, h);
+    const P = k => planetInfo(ns, res, k);
+    const X = k => extraInfo(res, k);
+    const ascIdx = Math.floor(((res.ang.asc % 360) + 360) % 360 / 30);
+    switch (id) {
+      case "personal": return {
+        ascSign: signCN(ascIdx), house1: H(1),
+        sun: P("Sun"), moon: P("Moon"),
+        chartRuler: ns.step5.chartRuler.modern,
+        chartRulerState: ns.step6.planetScores[ns.step5.chartRuler.modern.planet],
+        stelliumFocus: ns.step3.focusPointer, stelliums: ns.step3.stelliums, mind: ns.mind
+      };
+      case "wealth": return {
+        house2: H(2), house8: H(8),
+        venus: P("Venus"), mars: P("Mars"), jupiter: P("Jupiter"), saturn: P("Saturn"), pluto: P("Pluto"),
+        fortune: X("PoF"), sect: ns.step1.sect
+      };
+      case "emotion": return {
+        venus: P("Venus"), mars: P("Mars"), moon: P("Moon"),
+        house5: H(5), house7: H(7),
+        juno: X("Juno"), eros: X("Eros433")
+      };
+      case "love": return {
+        venus: P("Venus"), mars: P("Mars"), house5: H(5),
+        eros: X("Eros433"), partEros: X("PoE"), sunMoonMid: X("SMmid")
+      };
+      case "destined": return {
+        layer1_whoTheyAre: { house7: H(7), planetsInside: H(7).planetsInside.map(k => P(k)) },
+        layer2_whereToMeet: { seventhRulerFliesTo: H(7).rulerModern.fliesToHouse, seventhRulerTradFliesTo: H(7).rulerTraditional.fliesToHouse, vertex: X("Vertex") },
+        layer3_dynamic: { venus: P("Venus"), mars: P("Mars"), chartRuler: ns.step5.chartRuler.modern, seventhRuler: H(7).rulerModern,
+          rulerVsSeventh: ns.step7.allAspects.filter(a => [ns.step5.chartRuler.modern.planet, H(7).rulerModern.planet].every(k => a.a === k || a.b === k)) }
+      };
+      case "career": return {
+        house10: H(10), house6: H(6), house2: H(2),
+        mcSign: signCN(Math.floor(((res.ang.mc % 360) + 360) % 360 / 30)),
+        sun: P("Sun"), saturn: P("Saturn"), mars: P("Mars"), jupiter: P("Jupiter")
+      };
+      case "study": return { mercury: P("Mercury"), jupiter: P("Jupiter"), house3: H(3), house9: H(9) };
+      case "family": return {
+        moon: P("Moon"), saturn: P("Saturn"), sun: P("Sun"),
+        house4: H(4), icSign: signCN(Math.floor(((res.ang.mc + 180) % 360 + 360) % 360 / 30)),
+        chiron: X("Chiron")
+      };
+      case "sibling": return { house3: H(3), mercury: P("Mercury"), moon: P("Moon") };
+      default: return {};
+    }
+  }
+
+  function buildTopicPrompt(ns, res, id) {
+    const t = TOPICS.find(x => x.id === id);
+    const d = topicData(ns, res, id);
+    const isDestined = id === "destined";
+    return [
+      "你要为一个完全不懂占星的普通人,写一段关于「" + t.name.replace("议题", "") + "」的解读。",
+      "",
+      "【铁律 · 违反即失败】",
+      "1. 正文里一个占星术语都不许出现:不准写「第几宫」「宫主星」「飞星」「相位」「尊贵」「落陷」以及任何行星名、星座名、「凯龙」「MC」「IC」「星盘」「命盘」「能量」「宇宙」。全部换成大白话与生活情境。",
+      "   例:✗「你的金星落入九宫」 ✓「你容易因为共同成长、一起学习或来自远方的文化背景,而对一个人产生好感」。",
+      "2. 不做宿命论:不写「你注定」「一定会」「永远」「命中只有一个」。改写成「你比较容易…」「你往往会…」「你通常会被…吸引」「在关系里,你常出现…」。",
+      "3. 不给具体身份:不写对方职业、姓氏、出现年龄、结婚年份。只写对方通常具备什么气质、容易出现在哪类环境、你们之间容易形成什么互动。",
+      "4. 每个困难都要有出口:讲完卡点后,一定补上如何成长、可以学会什么、这段经历想带来什么,保持温暖不制造焦虑。",
+      "5. 语言风格与《生命蓝图》一致:日常口语、句子短、简单易懂、有温度不浮夸,不用文学式长句,不解释任何理论。",
+      "",
+      "【这个主题的核心定调】" + t.tone,
+      "先在心里跑一遍这条链路(结果不要写出来):这件事发生的人生领域 → 主导这个领域的力量流向了哪里 → 相关力量的状态是资源还是课题 → 收成一句话定调。然后再用自然语言写出来。",
+      "",
+      isDestined
+        ? "【结构】固定输出三层,对应 sections 的三段:1「他是什么样的人」(气质、给人的感觉、相处时的调性) 2「容易在哪里相遇」(哪类场合、什么状态下的你更容易遇见,写成情境不写地点清单) 3「你们的关系模式」(互动怎么运转、你在关系里的位置、容易甜的地方与容易卡的地方 + 出口)。"
+        : "【结构】输出 3 段,每段一个小标题(标题 8 字内、大白话、不含术语),依序讲:1 你在这件事上的天生倾向与实际表现 2 优势与最顺手的地方 3 容易卡住的地方 + 具体可做的成长方向。",
+      "每段 200–300 字。整段总字数 700–900 字。",
+      "",
+      "【后台资料(仅供你分析,绝不可出现在正文)】",
+      JSON.stringify(d),
+      "补充判断:此人整体形态「" + ns.mind.lifePattern + "」," + (ns.step1.sect === "day" ? "内外冲突时以「想成为谁」为主" : "内外冲突时以「安不安稳」为主") + "。",
+      "",
+      "【交稿前自查】有没有术语漏网?有没有哪句换成任何人都成立?有没有断言式宿命句?有没有留下没有出口的困难?",
+      "",
+      "【只输出这个 JSON,不要其他文字】",
+      '{"tagline":"一句话定调(30字内,大白话)","sections":[{"title":"小标题","body":"200-300字"},{"title":"小标题","body":"..."},{"title":"小标题","body":"..."}]}'
+    ].join("\n");
+  }
+
+  function parseTopic(txt) {
+    const m = String(txt || "").match(/\{[\s\S]*\}/);
+    if (!m) return null;
+    try {
+      const o = JSON.parse(m[0]);
+      if (!Array.isArray(o.sections) || !o.sections.length) return null;
+      return {
+        tagline: String(o.tagline || "").trim(),
+        sections: o.sections.map(x => ({ title: String(x.title || "").trim(), body: String(x.body || "").trim() })).filter(x => x.body)
+      };
+    } catch (e) { return null; }
+  }
+
+  function fetchTopic(ns, res, id, fpSeed) {
+    const prompt = buildTopicPrompt(ns, res, id);
+    function attempt(seed) {
+      return fingerprint(seed).then(function (fp) {
+        const bearer = (window.Cloud && window.Cloud.token && window.Cloud.token()) || SUPABASE_ANON_KEY;
+        return fetch(SUPABASE_FUNC_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Authorization": "Bearer " + bearer, "apikey": SUPABASE_ANON_KEY },
+          body: JSON.stringify({ prompt: prompt, fingerprint: fp })
+        });
+      }).then(function (r) {
+        return r.text().then(function (t) {
+          if (!r.ok) {
+            let msg = "HTTP " + r.status;
+            try { const o = JSON.parse(t); msg += " · " + (o.error || ""); } catch (e) { }
+            throw new Error(msg);
+          }
+          try { return JSON.parse(t); } catch (e) { throw new Error("返回异常"); }
+        });
+      }).then(function (d) {
+        const parsed = parseTopic(d.text || d.content || "");
+        if (!parsed) { const e = new Error("内容解析失败"); e.parseFail = true; throw e; }
+        return parsed;
+      });
+    }
+    const base = String(fpSeed || "") + "|topic:" + id + "|v1";
+    return attempt(base).catch(function (e) {
+      if (e.parseFail) return attempt(base + "|retry" + Date.now());
+      throw e;
+    });
+  }
+
+  window.NineSteps = { TOPICS: TOPICS, buildTopicPrompt: buildTopicPrompt, parseTopic: parseTopic, fetchTopic: fetchTopic, compute: computeNineSteps, render: renderNine, buildPrompt: buildPrompt, planetNote: planetNote, parseChapters: parseChapters, fetchReading: fetchReading, renderChapters: renderChapters, hasSupabase: function () { return !!(SUPABASE_FUNC_URL && SUPABASE_ANON_KEY); } };
 })();
 </script>
 <script>
@@ -3505,10 +3684,81 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     ensureToggleBar();
     drawWheel();
     drawPosTable();
+    curTopic = null;
+    $("topicBody").innerHTML = "";
     renderReading();
+    renderTopics();
   }
 
   // 解读面板:有完整解读显示五章,否则显示本地简版
+  // ---------- 主题专区 ----------
+  let curTopic = null, topicBusy = false;
+  function renderTopics() {
+    const c = activeChart(), grid = $("topicGrid"), body = $("topicBody");
+    if (!c || !curNine) { $("topicPanel").style.display = "none"; return; }
+    $("topicPanel").style.display = "";
+    const saved = c.topics || {};
+    grid.innerHTML = "";
+    window.NineSteps.TOPICS.forEach(function (t) {
+      const on = curTopic === t.id;
+      const done = !!saved[t.id];
+      const b = document.createElement("button");
+      b.style.cssText = "font-family:inherit;font-size:13px;padding:11px 12px;border-radius:12px;cursor:pointer;text-align:left;line-height:1.5;transition:.15s;border:1px solid " +
+        (on ? "var(--gold-soft)" : "var(--line)") + ";background:" + (on ? "rgba(var(--accent-rgb),.14)" : "var(--card-soft)") +
+        ";color:" + (on ? "var(--gold)" : "var(--parchment)");
+      b.innerHTML = '<span style="font-size:15px;margin-right:6px">' + t.icon + "</span>" + t.name.replace("议题", "") +
+        (done ? '<span style="color:var(--gold);font-size:11px;margin-left:5px">\u2713</span>' : "");
+      b.addEventListener("click", function () { openTopic(t.id); });
+      grid.appendChild(b);
+    });
+    if (!curTopic) body.innerHTML = "";
+  }
+
+  function openTopic(id) {
+    const c = activeChart(), body = $("topicBody");
+    if (!c || !curNine || topicBusy) return;
+    if (curTopic === id) { curTopic = null; renderTopics(); body.innerHTML = ""; return; }
+    curTopic = id;
+    renderTopics();
+    const t = window.NineSteps.TOPICS.find(x => x.id === id);
+    const saved = (c.topics || {})[id];
+    if (saved) { paintTopic(t, saved); return; }
+    topicBusy = true;
+    body.innerHTML = '<div style="padding:26px 8px;text-align:center;color:var(--muted);font-size:13px;line-height:2">' +
+      '<div style="font-size:19px;color:var(--gold);margin-bottom:8px">' + t.icon + "</div>正在为你整理「" + t.name.replace("议题", "") + "」…</div>";
+    const fpSeed = [c.date, c.time, c.lat.toFixed(4), c.lon.toFixed(4)].join("|");
+    window.NineSteps.fetchTopic(curNine, curResult, id, fpSeed).then(function (data) {
+      topicBusy = false;
+      if (curTopic !== id || !activeChart() || activeChart().id !== c.id) return;
+      c.topics = c.topics || {};
+      c.topics[id] = data;
+      window.Cloud.updateChart(c).catch(function (e) { console.warn("云同步失败", e); });
+      renderTopics();
+      paintTopic(t, data);
+    }).catch(function (e) {
+      topicBusy = false;
+      body.innerHTML = '<div style="padding:20px 8px;text-align:center;color:var(--muted);font-size:12.5px;line-height:1.9">内容暂时无法完成。<a href="#" id="topicRetry" style="color:var(--gold)">点此再试一次</a></div>';
+      const r = document.getElementById("topicRetry");
+      if (r) r.addEventListener("click", function (ev) { ev.preventDefault(); curTopic = null; openTopic(id); });
+    });
+  }
+
+  function paintTopic(t, data) {
+    const esc = x => String(x || "").replace(/</g, "&lt;");
+    const para = x => esc(x).split(/\n\s*\n|\n/).filter(y => y.trim()).map(y => '<p style="margin:0 0 11px">' + y.trim() + "</p>").join("");
+    let h = '<div style="border:1px solid var(--line);border-radius:13px;padding:17px 19px;background:var(--card-soft)">' +
+      '<div style="font-size:14.5px;font-weight:700;color:var(--gold);margin-bottom:10px">' + t.icon + " " + t.name.replace("议题", "") + "</div>";
+    if (data.tagline)
+      h += '<div style="font-size:14.5px;line-height:1.85;color:var(--parchment);padding:12px 14px;margin-bottom:14px;border-left:2px solid var(--gold-soft);background:rgba(var(--accent-rgb),.06);border-radius:0 9px 9px 0">' + esc(data.tagline) + "</div>";
+    h += data.sections.map(function (sc) {
+      return '<div style="margin:0 0 15px">' +
+        (sc.title ? '<div style="font-size:13px;font-weight:700;color:var(--gold-soft);margin-bottom:7px">' + esc(sc.title) + "</div>" : "") +
+        '<div style="font-size:13.5px;line-height:2;color:var(--parchment)">' + para(sc.body) + "</div></div>";
+    }).join("");
+    h += "</div>";
+    $("topicBody").innerHTML = h;
+  }
+
   let autoGenBusy = false;
   function renderReading(retrying) {
     const c = activeChart(), body = $("nineBody");
@@ -3516,6 +3766,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     if (c.reading && c.reading.chapters) {
       window.NineSteps.renderChapters(c.reading, body);
       $("readState").textContent = "";
+      renderTopics();
       return;
     }
     if (window.NineSteps.hasSupabase() && !autoGenBusy) {
