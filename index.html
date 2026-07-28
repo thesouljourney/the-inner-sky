@@ -128,8 +128,8 @@
   .chart-title .nm{color:var(--gold)}
   .chart-title small{color:var(--muted);font-size:12.5px;margin-left:8px;letter-spacing:.04em}
 
-  .grid-main{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:22px;align-items:start}
-  @media(max-width:1080px){.grid-main{grid-template-columns:1fr}}
+  .grid-main{display:grid;grid-template-columns:minmax(0,400px) minmax(0,1fr);gap:18px;align-items:start}
+  @media(max-width:720px){.grid-main{grid-template-columns:1fr}}
 
   .wheel-card{background:var(--night-2);border:1px solid var(--line);border-radius:14px;padding:10px}
   svg.wheel{width:100%;height:auto;display:block}
@@ -349,25 +349,15 @@
             <h3 style="cursor:pointer;display:flex;align-items:center;justify-content:space-between" id="posHead"><span>行星位置</span><span id="posArrow" style="font-size:14px;color:var(--muted)">∧</span></h3>
             <table class="pos" id="posTable"></table>
           </div>
-          <div class="panel">
-            <h3 style="display:flex;align-items:center;justify-content:space-between" id="nineHead">
-              <span>你的生命蓝图</span>
-              <span id="readState" style="font-size:11.5px;color:var(--muted);font-weight:400"></span>
-            </h3>
-            <div id="nineBody"></div>
-            <div id="nineBtns" style="display:none;gap:8px;margin-top:14px;flex-wrap:wrap">
-              <button class="btn ghost" id="genRead" style="width:auto;padding:8px 16px;font-size:13px">重新生成</button>
-              <button class="btn ghost" id="nineCopyPrompt" style="width:auto;padding:8px 14px;font-size:12.5px">复制提示词</button>
-              <button class="btn ghost" id="pasteRead" style="width:auto;padding:8px 14px;font-size:12.5px">手动粘贴</button>
-              <select id="readDepth" style="display:none"><option value="standard" selected>standard</option></select>
-              <select id="readTone" style="display:none"><option value="balanced" selected>balanced</option></select>
-            </div>
-            <div id="pasteBox" style="display:none;margin-top:10px">
-              <textarea id="pasteTa" rows="6" style="width:100%;box-sizing:border-box;font-family:inherit;font-size:13px;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--ink);color:var(--parchment)" placeholder="把 AI 生成的内容粘贴到这里"></textarea>
-              <button class="btn" id="pasteSave" style="width:auto;padding:7px 16px;font-size:12.5px;margin-top:8px">保存</button>
-            </div>
-          </div>
         </div>
+      </div>
+
+      <div class="panel" style="margin-top:18px">
+        <h3 style="display:flex;align-items:center;justify-content:space-between" id="nineHead">
+          <span>你的生命蓝图</span>
+          <span id="readState" style="font-size:11.5px;color:var(--muted);font-weight:400"></span>
+        </h3>
+        <div id="nineBody"></div>
       </div>
 
     </div><!-- /chartView -->
@@ -2322,57 +2312,6 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   }
 
   // ---------- 章节渲染:宽屏=章节式长读 / 窄屏=卡片式 ----------
-  function renderChapters(reading, mount) {
-    const chs = Array.isArray(reading) ? reading : (reading.chapters || []);
-    const spine = Array.isArray(reading) ? "" : (reading.spine || "");
-    const cards = Array.isArray(reading) ? [] : (reading.cards || []);
-    const esc = t => String(t || "").replace(/</g, "&lt;");
-    const para = t => esc(t).split(/\n\s*\n|\n/).filter(x => x.trim()).map(x => '<p style="margin:0 0 12px">' + x.trim() + "</p>").join("");
-    let h = "";
-
-    // 一句话主线
-    if (spine) {
-      h += '<div style="margin:2px 0 18px;padding:15px 18px;border-left:3px solid var(--gold);background:rgba(var(--accent-rgb),.07);border-radius:0 12px 12px 0">' +
-        '<div style="font-size:10.5px;letter-spacing:.18em;color:var(--gold);margin-bottom:5px">一句话说你</div>' +
-        '<div style="font-size:15px;line-height:1.85;color:var(--parchment)">' + esc(spine) + "</div></div>";
-    }
-
-    // 第一层:生命字卡
-    if (cards.length) {
-      h += '<div style="font-size:11px;letter-spacing:.16em;color:var(--gold);margin:0 0 9px">生 命 字 卡</div>' +
-        '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:9px;margin-bottom:24px">' +
-        cards.map(function (c) {
-          return '<div style="border:1px solid var(--line);border-radius:12px;padding:13px 15px;background:var(--card-soft)">' +
-            '<div style="font-size:11.5px;color:var(--gold-soft);margin-bottom:6px;letter-spacing:.04em">' + esc(c.title) + "</div>" +
-            '<div style="font-size:13.5px;line-height:1.75;color:var(--parchment)">' + esc(c.line) + "</div></div>";
-        }).join("") + "</div>";
-    }
-
-    // 第二层:摘要 + 展开全文
-    if (chs.length) {
-      h += '<div style="font-size:11px;letter-spacing:.16em;color:var(--gold);margin:0 0 10px">想 深 入 了 解</div>';
-      h += chs.map(function (c, i) {
-        const sum = c.summary || (c.body || "").slice(0, 80);
-        return '<div class="rd-item" style="border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin:0 0 10px;background:var(--card-soft)">' +
-          '<div style="font-size:13.5px;font-weight:700;color:var(--gold);margin-bottom:7px">' + (i + 1) + " · " + esc(c.title) + "</div>" +
-          '<div style="font-size:13.5px;line-height:1.9;color:var(--parchment)">' + esc(sum) + "</div>" +
-          (c.body ? '<div class="rd-full" style="display:none;margin-top:12px;padding-top:12px;border-top:1px dashed var(--line);font-size:13.5px;line-height:2;color:var(--parchment)">' + para(c.body) + "</div>" +
-            '<button class="rd-more" style="margin-top:10px;font-family:inherit;font-size:12.5px;padding:5px 14px;border:1px solid var(--line);border-radius:14px;background:transparent;color:var(--gold);cursor:pointer">展开阅读 \u2228</button>' : "") +
-          "</div>";
-      }).join("");
-    }
-
-    mount.innerHTML = h;
-    mount.querySelectorAll(".rd-more").forEach(function (btn) {
-      btn.addEventListener("click", function () {
-        const full = btn.parentNode.querySelector(".rd-full");
-        const closed = full.style.display === "none";
-        full.style.display = closed ? "" : "none";
-        btn.textContent = closed ? "\u6536\u8d77 \u2227" : "\u5c55\u5f00\u9605\u8bfb \u2228";
-      });
-    });
-  }
-
   // ---------- 叙事引擎:把九步结果写成"你的盘"的解读 ----------
   const KW = { Sun: "意志与自我", Moon: "情绪与安全感", Mercury: "思维与表达", Venus: "爱与价值", Mars: "行动与欲望", Jupiter: "扩张与信念", Saturn: "结构与责任", Uranus: "变革与独立", Neptune: "梦想与消融", Pluto: "深度与转化" };
   const HOUSE_T = ["自我与外在形象", "金钱与自我价值", "沟通、学习与近环境", "家庭与内在根基", "创造、恋爱与自我表达", "日常、工作与身心状态", "伴侣与一对一关系", "深度亲密与共享资源", "远方、信念与视野", "事业与社会位置", "朋友、社群与愿景", "独处、潜意识与幕后"];
@@ -2540,6 +2479,62 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   // ---------- 面板渲染(叙事版) ----------
   function renderNine(ns, mount) {
     mount.innerHTML = narrative(ns);
+  }
+
+  function renderChapters(reading, mount) {
+    const chs = Array.isArray(reading) ? reading : (reading.chapters || []);
+    const spine = Array.isArray(reading) ? "" : (reading.spine || "");
+    const cards = Array.isArray(reading) ? [] : (reading.cards || []);
+    const esc = t => String(t || "").replace(/</g, "&lt;");
+    const para = t => esc(t).split(/\n\s*\n|\n/).filter(x => x.trim()).map(x => '<p style="margin:0 0 12px">' + x.trim() + "</p>").join("");
+    // 字卡按标题索引,与主题合并
+    const cardMap = {};
+    cards.forEach(function (c) { cardMap[c.title] = c.line; });
+    const usedCard = {};
+    let h = "";
+
+    // 一句话主线
+    if (spine) {
+      h += '<div style="margin:2px 0 20px;padding:16px 18px;border-left:3px solid var(--gold);background:rgba(var(--accent-rgb),.07);border-radius:0 12px 12px 0">' +
+        '<div style="font-size:10.5px;letter-spacing:.18em;color:var(--gold);margin-bottom:6px">一句话说你</div>' +
+        '<div style="font-size:15.5px;line-height:1.85;color:var(--parchment)">' + esc(spine) + "</div></div>";
+    }
+
+    // 主题卡:摘要在前,展开即读全文(两层合一)
+    h += '<div style="display:grid;gap:11px">' + chs.map(function (c, i) {
+      usedCard[c.title] = 1;
+      const line = cardMap[c.title] || "";
+      const sum = c.summary || "";
+      return '<div class="rd-item" style="border:1px solid var(--line);border-radius:13px;padding:16px 18px;background:var(--card-soft)">' +
+        '<div style="font-size:14px;font-weight:700;color:var(--gold);margin-bottom:9px">' + (i + 1) + " · " + esc(c.title) + "</div>" +
+        (line ? '<div style="font-size:14.5px;line-height:1.85;color:var(--parchment);margin-bottom:' + (sum ? "9px" : "0") + '">' + esc(line) + "</div>" : "") +
+        (sum ? '<div style="font-size:13.5px;line-height:1.9;color:var(--parchment);opacity:.88">' + esc(sum) + "</div>" : "") +
+        (c.body ? '<div class="rd-full" style="display:none;margin-top:13px;padding-top:13px;border-top:1px dashed var(--line);font-size:13.5px;line-height:2;color:var(--parchment)">' + para(c.body) + "</div>" +
+          '<button class="rd-more" style="margin-top:11px;font-family:inherit;font-size:12.5px;padding:5px 15px;border:1px solid var(--line);border-radius:14px;background:transparent;color:var(--gold);cursor:pointer">展开阅读 \u2228</button>' : "") +
+        "</div>";
+    }).join("") + "</div>";
+
+    // 额外字卡(核心人格模式/情绪运作/天赋/理想状态等未被主题使用的)
+    const extra = cards.filter(c => !usedCard[c.title]);
+    if (extra.length) {
+      h += '<div style="font-size:11px;letter-spacing:.16em;color:var(--gold);margin:24px 0 10px">关 于 你 的 几 件 事</div>' +
+        '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(228px,1fr));gap:10px">' +
+        extra.map(function (c) {
+          return '<div style="border:1px solid var(--line);border-radius:12px;padding:14px 16px;background:var(--card-soft)">' +
+            '<div style="font-size:11.5px;color:var(--gold-soft);margin-bottom:6px;letter-spacing:.04em">' + esc(c.title) + "</div>" +
+            '<div style="font-size:13.5px;line-height:1.8;color:var(--parchment)">' + esc(c.line) + "</div></div>";
+        }).join("") + "</div>";
+    }
+
+    mount.innerHTML = h;
+    mount.querySelectorAll(".rd-more").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        const full = btn.parentNode.querySelector(".rd-full");
+        const closed = full.style.display === "none";
+        full.style.display = closed ? "" : "none";
+        btn.textContent = closed ? "\u6536\u8d77 \u2227" : "\u5c55\u5f00\u9605\u8bfb \u2228";
+      });
+    });
   }
 
   window.NineSteps = { compute: computeNineSteps, render: renderNine, buildPrompt: buildPrompt, planetNote: planetNote, parseChapters: parseChapters, fetchReading: fetchReading, renderChapters: renderChapters, hasSupabase: function () { return !!(SUPABASE_FUNC_URL && SUPABASE_ANON_KEY); } };
@@ -3515,22 +3510,21 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
 
   // 解读面板:有完整解读显示五章,否则显示本地简版
   let autoGenBusy = false;
-  function renderReading() {
+  function renderReading(retrying) {
     const c = activeChart(), body = $("nineBody");
     if (!c || !curNine) { body.innerHTML = ""; return; }
     if (c.reading && c.reading.chapters) {
       window.NineSteps.renderChapters(c.reading, body);
       $("readState").textContent = "";
-      $("nineBtns").style.display = "flex";
       return;
     }
-    // 没有内容:自动生成,无需用户点击
     if (window.NineSteps.hasSupabase() && !autoGenBusy) {
       autoGenBusy = true;
-      body.innerHTML = '<div style="padding:26px 8px;text-align:center;color:var(--muted);font-size:13px;line-height:2">' +
-        '<div style="font-size:20px;color:var(--gold);margin-bottom:8px">✶</div>' +
-        '正在为你整理这份生命蓝图…<br><span style="font-size:11.5px;opacity:.75">第一次需要 1–2 分钟,之后打开就是秒开</span></div>';
-      $("nineBtns").style.display = "none";
+      body.innerHTML = '<div style="padding:30px 8px;text-align:center;color:var(--muted);font-size:13px;line-height:2">' +
+        '<div style="font-size:22px;color:var(--gold);margin-bottom:10px">✶</div>' +
+        (retrying ? "正在重新整理…" : "正在为你整理这份生命蓝图…") +
+        '<br><span style="font-size:11.5px;opacity:.75">第一次需要 1–2 分钟,之后打开就是秒开</span></div>';
+      $("readState").textContent = "";
       const fpSeed = [c.date, c.time, c.lat.toFixed(4), c.lon.toFixed(4)].join("|");
       window.NineSteps.fetchReading(curNine, curResult, { depth: "standard", tone: "balanced" }, fpSeed)
         .then(function (parsed) {
@@ -3542,13 +3536,19 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
         })
         .catch(function (e) {
           autoGenBusy = false;
+          if (!retrying) { setTimeout(function () { renderReading(true); }, 1500); return; }
+          // 两次都失败:显示本地简版内容,并给一个再试链接
           window.NineSteps.render(curNine, body);
-          $("readState").textContent = "自动生成未成功:" + e.message;
-          $("nineBtns").style.display = "flex";
+          $("readState").textContent = "";
+          const tip = document.createElement("div");
+          tip.style.cssText = "margin-top:16px;padding:12px 14px;border:1px dashed var(--line);border-radius:10px;font-size:12.5px;color:var(--muted);line-height:1.8";
+          tip.innerHTML = '内容暂时无法完成,已先为你显示基础版本。<a href="#" id="againLink" style="color:var(--gold)">点此再试一次</a>';
+          body.appendChild(tip);
+          const a2 = document.getElementById("againLink");
+          if (a2) a2.addEventListener("click", function (ev) { ev.preventDefault(); renderReading(); });
         });
-    } else {
+    } else if (!autoGenBusy) {
       window.NineSteps.render(curNine, body);
-      $("nineBtns").style.display = "flex";
     }
   }
 
@@ -3580,10 +3580,6 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
         const prefs = r[0] || {};
         store.charts = r[1] || [];
         applyCloudPrefs(prefs);
-        if (prefs.readopts) {
-          if (prefs.readopts.depth) $("readDepth").value = prefs.readopts.depth;
-          if (prefs.readopts.tone) $("readTone").value = prefs.readopts.tone;
-        }
         if (!store.charts.length) {
           // 首次登录:自动迁移旧本地数据
           return window.Cloud.migrateLegacy().then(function (mig) {
@@ -3628,51 +3624,6 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(done, fallback);
       else fallback();
     }
-    function readOpts() {
-      return { depth: $("readDepth").value, tone: $("readTone").value };
-    }
-    // 记住上次选择
-    ["readDepth", "readTone"].forEach(function (id) {
-      $(id).addEventListener("change", function () {
-        window.Cloud.savePrefs({ readopts: readOpts() });
-      });
-    });
-    $("nineCopyPrompt").addEventListener("click", function () {
-      if (!curNine) return;
-      copyText(window.NineSteps.buildPrompt(curNine, curResult, readOpts()), this, "已复制 ✓ 贴给 AI 后把结果粘回来");
-    });
-    $("pasteRead").addEventListener("click", function () {
-      const box = $("pasteBox");
-      box.style.display = box.style.display === "none" ? "" : "none";
-    });
-    $("pasteSave").addEventListener("click", function () {
-      const parsed = window.NineSteps.parseChapters($("pasteTa").value);
-      if (!parsed) { $("pasteTa").placeholder = "解析失败:请确认包含「第一章…第五章」标题或为 JSON 格式"; $("pasteTa").value = ""; return; }
-      const c = activeChart();
-      if (!c) return;
-      c.reading = Object.assign({ ts: new Date().toISOString().slice(0, 10) }, readOpts(), parsed);
-      window.Cloud.updateChart(c).catch(function (e) { console.warn("云同步失败", e); });
-      $("pasteTa").value = ""; $("pasteBox").style.display = "none";
-      renderReading();
-    });
-    $("genRead").addEventListener("click", function () {
-      const c = activeChart();
-      if (!c) return;
-      if (!window.NineSteps.hasSupabase()) {
-        copyText(window.NineSteps.buildPrompt(curNine, curResult, readOpts()), this, "提示词已复制,贴给 AI 后用「手动粘贴」");
-        $("pasteBox").style.display = "";
-        return;
-      }
-      c.reading = null;
-      window.Cloud.updateChart(c).catch(function () { });
-      renderReading();
-    });
-    // 视口跨过断点时按当前模式重排章节
-    let lastApp = window.innerWidth < 760;
-    window.addEventListener("resize", function () {
-      const nowApp = window.innerWidth < 760;
-      if (nowApp !== lastApp) { lastApp = nowApp; renderReading(); }
-    });
     $("posHead").addEventListener("click", function () {
       const tb = $("posTable");
       const closed = tb.style.display === "none";
