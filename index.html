@@ -6,8 +6,8 @@
 <meta name="theme-color" content="#f5eedd">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="星历盘">
-<title>星历盘 · 占星学习</title>
+<meta name="apple-mobile-web-app-title" content="我的生命蓝图">
+<title>我的生命蓝图 · 认识真正的自己</title>
 <style>
   :root{
     --night:#f2ead8;        /* 米色底 */
@@ -263,7 +263,7 @@
 </head>
 <body>
 <header class="top">
-  <h1><span class="star">✶</span> 星历盘</h1>
+  <h1><span class="star">✶</span> 我的生命蓝图</h1>
   <span class="sub">本命盘学习工具</span>
   <span class="acc" id="accNote">与 Swiss Ephemeris 同精度</span>
 </header>
@@ -351,28 +351,20 @@
           </div>
           <div class="panel">
             <h3 style="display:flex;align-items:center;justify-content:space-between" id="nineHead">
-              <span>命盘解读</span>
+              <span>你的生命蓝图</span>
               <span id="readState" style="font-size:11.5px;color:var(--muted);font-weight:400"></span>
             </h3>
             <div id="nineBody"></div>
-            <div id="nineBtns" style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
-              <select id="readDepth" style="font-family:inherit;font-size:12.5px;padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:var(--ink);color:var(--parchment)">
-                <option value="deep">完整版(每章800–1000字)</option>
-                <option value="standard">标准版(每章300–400字)</option>
-                <option value="short">精简版(每章150字)</option>
-              </select>
-              <select id="readTone" style="font-family:inherit;font-size:12.5px;padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:var(--ink);color:var(--parchment)">
-                <option value="balanced">语气·平衡</option>
-                <option value="gentle">语气·温柔</option>
-                <option value="direct">语气·直接</option>
-              </select>
-              <button class="btn" id="genRead" style="width:auto;padding:8px 16px;font-size:13px">生成完整解读</button>
-              <button class="btn ghost" id="nineCopyPrompt" style="width:auto;padding:8px 14px;font-size:12.5px">复制解读提示词</button>
-              <button class="btn ghost" id="pasteRead" style="width:auto;padding:8px 14px;font-size:12.5px">粘贴 AI 解读</button>
+            <div id="nineBtns" style="display:none;gap:8px;margin-top:14px;flex-wrap:wrap">
+              <button class="btn ghost" id="genRead" style="width:auto;padding:8px 16px;font-size:13px">重新生成</button>
+              <button class="btn ghost" id="nineCopyPrompt" style="width:auto;padding:8px 14px;font-size:12.5px">复制提示词</button>
+              <button class="btn ghost" id="pasteRead" style="width:auto;padding:8px 14px;font-size:12.5px">手动粘贴</button>
+              <select id="readDepth" style="display:none"><option value="standard" selected>standard</option></select>
+              <select id="readTone" style="display:none"><option value="balanced" selected>balanced</option></select>
             </div>
             <div id="pasteBox" style="display:none;margin-top:10px">
-              <textarea id="pasteTa" rows="6" style="width:100%;box-sizing:border-box;font-family:inherit;font-size:13px;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--ink);color:var(--parchment)" placeholder="把 AI 生成的五章全文粘贴到这里(支持「第一章…第五章」标题或 JSON 格式)"></textarea>
-              <button class="btn" id="pasteSave" style="width:auto;padding:7px 16px;font-size:12.5px;margin-top:8px">保存解读</button>
+              <textarea id="pasteTa" rows="6" style="width:100%;box-sizing:border-box;font-family:inherit;font-size:13px;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--ink);color:var(--parchment)" placeholder="把 AI 生成的内容粘贴到这里"></textarea>
+              <button class="btn" id="pasteSave" style="width:auto;padding:7px 16px;font-size:12.5px;margin-top:8px">保存</button>
             </div>
           </div>
         </div>
@@ -383,8 +375,8 @@
 
 <div id="authOverlay" style="position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;background:var(--night);padding:20px">
   <div style="width:100%;max-width:360px;border:1px solid var(--line);border-radius:16px;background:var(--night-2);padding:26px 24px;box-shadow:0 10px 40px rgba(0,0,0,.18)">
-    <div style="font-size:19px;letter-spacing:.3em;color:var(--gold);text-align:center;margin-bottom:4px">星 历 盘</div>
-    <div style="font-size:12px;color:var(--muted);text-align:center;margin-bottom:20px">登录后,你的星盘与解读将安全存放在云端</div>
+    <div style="font-size:19px;letter-spacing:.22em;color:var(--gold);text-align:center;margin-bottom:4px">我的生命蓝图</div>
+    <div style="font-size:12px;color:var(--muted);text-align:center;margin-bottom:20px">登录后,你的生命蓝图将安全存放在云端</div>
     <div class="field"><label>邮箱</label><input id="authEmail" type="email" autocomplete="email" placeholder="you@example.com"></div>
     <div class="field" style="margin-top:10px"><label>密码</label><input id="authPw" type="password" autocomplete="current-password" placeholder="至少 6 位"></div>
     <div id="authMsg" style="min-height:18px;font-size:12px;color:var(--fire);margin:8px 0 4px"></div>
@@ -2157,13 +2149,11 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   const ASPECT_CN = { con: "合", sex: "六合", squ: "刑", tri: "拱", opp: "冲" };
   function buildPrompt(ns, res, opts) {
     opts = opts || {};
-    const depth = opts.depth || "deep";     // short | standard | deep
-    const tone = opts.tone || "balanced";   // gentle | balanced | direct
     const J = o => JSON.stringify(o);
-    const pos = res.planets.map(p => P_CN[p.key] + ":" + signCN(p.signIdx) + " " + p.degInSign.toFixed(2) + "° 第" + p.house + "宫" + (p.retro ? " 逆行" : "")).join("\n") +
+    const pos = res.planets.map(p => P_CN[p.key] + ":" + signCN(p.signIdx) + " 第" + p.house + "宫" + (p.retro ? " 逆行" : "")).join("\n") +
       "\n上升:" + signCN(Math.floor(((res.ang.asc % 360) + 360) % 360 / 30));
 
-    // 程序预检出的候选主轴(帮 AI 锁定 Dominant Signature,避免模板化)
+    // 程序预检出的候选主轴(锁定这张盘最具辨识度的结构,避免千人一面)
     const sig = [];
     const E = ns.step2.elements;
     if (E.dominantPct >= 40) sig.push("元素严重偏重:" + E.dominant + " " + E.dominantPct + "%");
@@ -2181,69 +2171,70 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     if (ns.step8.pointerCheck.verdict === "aligned") sig.push("多重指针同向(课题极聚焦)");
     if (ns.step8.pointerCheck.verdict === "scattered") sig.push("指针分散(多线人生,无单一主旋律)");
 
-    const DEPTH_RULE = {
-      short: "每章不超过 150 字,只保留:核心一句 + 一个重点解释 + 一个建议。全文精炼,不铺陈。",
-      standard: "每章 300–400 字,聚焦最重要的 2–3 个讯号,不面面俱到。",
-      deep: "每章 800–1000 字,全文约 4000–5000 字。每章必须有独立主题与新观点,五章互相呼应但绝不重复解释同一件事,不换句话说凑字数。"
-    };
-    const TONE_RULE = {
-      gentle: "语气档位=温柔:避免直接指出创伤,多用资源导向语言;敏感内容一律以「可能/倾向」表达并给出温和出口。",
-      balanced: "语气档位=平衡:温暖真诚地陈述模式,敏感处放缓,肯定与课题并重。",
-      direct: "语气档位=直接:允许清楚指出明显模式与反复出现的行为,但禁止绝对化与宿命断言,指出后须给出可行方向。"
-    };
-
     return [
-      "你是一位以「理解、共鸣、陪伴」为核心的占星咨询师与书写者。请为下面这张本命盘撰写一份完整的命盘解读。",
+      "你要为一个第一次接触星盘的普通人,写一份帮助他「认识自己」的生命蓝图。",
       "",
-      "【最终目标】让阅读的人产生「这份内容真的在描述我」的感受——不是占星知识报告,而是一份完整的人格画像。",
+      "【最重要的两件事】",
+      "1. 用最日常的大白话写。读的人完全不懂占星,也不想学占星——他只想知道「我是个什么样的人」。",
+      "2. 让他读完说出「这就是我」「真的很像我」。所以要写具体的行为、场景、感受,不要写抽象的形容词堆砌。",
       "",
-      "【第〇步 · 命盘主轴(先做,决定全文骨架)】",
-      "在生成任何分析之前,先识别这张盘最具辨识度的结构(Dominant Signature)。程序已预检出以下候选:",
+      "【语言要求(非常重要,违反即失败)】",
+      "- 正文一个占星术语都不许出现:不准写行星名、星座名、宫位数字、相位名、「星盘」「命盘」「能量」「课题」「疗愈」「宇宙」等字眼。",
+      "- 不要文学腔、不要诗化比喻、不要玄学口吻。就像一个很懂你的朋友,坐下来把你这个人讲清楚。",
+      "- 句子要短、要白话。避免「你是…」「你会…」「你容易…」连续堆叠,多用具体情境:「开会时你常常…」「答应别人之后你会…」。",
+      "- 有温度但不浮夸,不说奉承话,也不制造焦虑。",
+      "- 涉及童年、家庭、情绪缺口、创伤时:一律用「可能」「往往」「容易形成」,不要断言,不要推测具体事件,并在段落最后给一句务实的出口。",
+      "- 不说宿命话:不写「你注定」「这是你的命」。",
+      "",
+      "【要写的内容 · 分成两层】",
+      "第一层「生命字卡」:9 张卡,每张只有一句话(20–35 字),一句话说透一个重点,读者扫一眼就有共鸣。",
+      "  卡片顺序与主题固定为:",
+      "   1 你生命最初的设定",
+      "   2 你如何面对世界",
+      "   3 你成长路上的礼物与考验",
+      "   4 生命想带你去的地方",
+      "   5 属于你的生命剧本",
+      "   6 你的核心人格模式",
+      "   7 你的情绪运作方式",
+      "   8 你的天赋特质",
+      "   9 你的理想状态",
+      "第二层「详细内容」:只针对前 5 个主题,每个主题给:",
+      "  summary:30–80 字的核心摘要,不喜欢看长文的人只读这段就够。",
+      "  body:400–600 字的完整内容,要包含 为什么会这样(成因)、这带来的优势、容易遇到的困难、以及一个具体可做的建议。分 2–4 个自然段,段落之间空一行。",
+      "",
+      "【五个主题各自要讲什么】",
+      "1 你生命最初的设定——天生的性子:怎么看世界、最自然的反应、待着最舒服的状态、别人第一眼感觉到的你。",
+      "2 你如何面对世界——怎么想事情、情绪怎么来怎么走、怎么跟人讲话、怎么做决定、怎么跟人靠近、压力大时会变成什么样、动力从哪来。",
+      "3 你成长路上的礼物与考验——你天生就比别人顺手的地方;以及那些一再重复发生、总卡在同一处的事,为什么会反复出现。",
+      "4 生命想带你去的地方——你习惯待着的舒适模式、和往哪走会越活越自在。写成「越靠近这个方向,你会越舒展」,不是命令。",
+      "5 属于你的生命剧本——把前面全部收拢成一个人的完整样子,一段话让他看见自己。",
+      "",
+      "【先做:找出这个人最突出的地方】",
+      "写之前先确认这张盘最有辨识度的 1–3 个结构,全文围绕它们展开,不要平均用力。程序已预检出候选:",
       sig.length ? sig.map(x => "- " + x).join("\n") : "- (未检出显著结构)",
-      "请从中确认 1–3 个最强的作为全文主轴;也可依据完整数据自行补充。整份报告必须围绕这些主轴展开,而不是按固定章节平均描述。",
-      "若盘面属于发散型(没有明显主轴),请如实写「这张盘没有单一主旋律,而是几股力量共同拉扯」,不要强行制造一个不存在的故事。",
+      "如果这个人的配置很分散、没有单一主线,就如实写「你不是那种只有一个主题的人,而是几股力量同时在你身上」,不要硬编一个故事。",
       "",
-      "【第〇步之二 · 主旋律(Narrative Spine)】",
-      "在正文之前,先提炼一句话回答:「如果这张命盘只能留下一个主题,它会是什么?」(如:『你的一生,是学习如何在追求卓越与允许脆弱之间取得平衡。』)",
-      "这句话写入输出的 spine 字段;后续所有章节都必须围绕它展开,而不是各自独立分析。",
+      "【内部判断规则(只用于分析,绝不写进正文)】",
+      "- " + (ns.step1.sect === "day" ? "内在感受与外在目标冲突时,以「想去哪、要成为谁」这一侧为主" : "内在感受与外在目标冲突时,以「情绪安不安稳、有没有安全感」这一侧为主") + ",另一侧写成他身上并存的另一面。",
+      "- 这个人的整体形态:" + ns.mind.lifePattern + "(集中度" + ns.mind.concentration + "/醒目度" + ns.mind.visibility + "),全文气质要与此一致。",
+      "- 强的讯号写透,弱的一笔带过;互相矛盾的数据写成「你身上同时有这两种力量」。",
       "",
-      "【写作铁律】",
-      "1. 禁止模板化、百科式、教科书式说明;禁止「太阳代表…」式逐颗行星解释。",
-      "2. 必须综合行星、星座、宫位、相位、能量分布与整体结构做整合式解读,不得仅凭单一配置下结论。",
-      "3. " + TONE_RULE[tone],
-      "4. 避免大量重复「你是…/你会…/你容易…」句式;多用描述、情境、比喻、心理历程与行为画面。",
-      "5. 避免绝对化与宿命论:不说「你注定/这是你的命」;方向性内容表达为「当你越来越靠近这个方向,你会越来越自在」。",
-      "6. 【敏感内容】凡涉及童年经验、依附模式、创伤、家庭关系、情绪缺口:一律用「可能/倾向/容易形成」表达,不直接断言;无法从命盘明确推导的,不推测具体事件;这类章节结尾加一段资源性收尾,如「这些倾向并不代表命运,而是你可以逐渐理解与调整的模式。觉察本身,就是改变的开始。」",
-      "7. 简体中文,第二人称「你」。",
-      "",
-      "【结构与篇幅】固定五章。" + DEPTH_RULE[depth],
-      "第一章|你生命最初的设定——与生俱来的核心气质。不是优缺点分析。",
-      "第二章|你如何面对世界——思考、情绪、沟通、决策、关系、压力反应、行动力来源。",
-      "第三章|你成长路上的礼物与考验——天赋与反复出现的课题并呈,重点是理解它们为何出现、想带来什么成长。",
-      "第四章|生命想带你去的地方——人生课题、成长方向、越活越自在的路径。",
-      "第五章|属于你的生命剧本——不是摘要,是最终浓缩:有文学性与画面感的完整人生画像,紧扣 spine。",
-      "",
-      "【可信度标注】为每一章给出 confidence(high/medium/low):high=由盘中最明显的结构直接支撑;low=较弱的推论。行文中,低信度的判断必须使用更保留的措辞。",
-      "",
-      "【解读辅助规则(内部使用,不得写进正文)】",
-      "- 本盘为" + (ns.step1.sect === "day" ? "日盘:内外讯号矛盾时以太阳侧(意志、目标)为主基调" : "夜盘:内外讯号矛盾时以月亮侧(情绪、安全感)为主基调") + ",另一侧写成并存的另一面。",
-      "- 集中度=" + ns.mind.concentration + ",醒目度=" + ns.mind.visibility + ",人生形态「" + ns.mind.lifePattern + "」:全文整体气质须与此一致。",
-      "- 强弱等级决定笔墨:极强/precision 的讯号写透,普通的一笔带过;矛盾数据写成「你身上并存的两种力量」。",
-      "",
-      "【命盘数据】",
-      "行星位置(仅供分析,正文不得罗列度数):",
+      "【这个人的资料】",
+      "位置:",
       pos,
-      "结构档案(九步演算):",
-      J({ step1: ns.step1, step2: ns.step2, step3: ns.step3, step4: ns.step4, step5: ns.step5, step6: { planetScores: ns.step6.planetScores, ace: ns.step6.ace, burden: ns.step6.burden, flyingStars: ns.step6.flyingStars }, step7: { tightestThree: ns.step7.tightestThree, patterns: ns.step7.patterns, specialFlags: ns.step7.specialFlags }, step8: ns.step8, mind: ns.mind }),
+      "结构分析:",
+      J({ step1: ns.step1, step2: ns.step2, step3: ns.step3, step4: ns.step4, step5: ns.step5, step6: { planetScores: ns.step6.planetScores, ace: ns.step6.ace, burden: ns.step6.burden }, step7: { tightestThree: ns.step7.tightestThree, patterns: ns.step7.patterns, specialFlags: ns.step7.specialFlags }, step8: ns.step8, mind: ns.mind }),
       "",
-      "【第末步 · 自我校验(输出前逐条检查)】",
-      "- 每一段是否都有命盘依据?",
-      "- 是否引用了实际存在的配置,而不是泛泛而谈?",
-      "- 是否有任何一句可以套用到多数人身上?",
-      "- 如果删除所有星体资讯,这段是否仍然成立?若是,重写该段。",
+      "【交稿前自己检查】",
+      "- 每一段是不是都有具体依据,而不是泛泛而谈?",
+      "- 有没有哪一句话,换成任何人都成立?有就重写。",
+      "- 有没有不小心用了占星术语?有就换成大白话。",
+      "- 一个完全不懂占星的人读得顺吗?",
       "",
-      "【输出格式】只输出 JSON,不要任何其他文字:",
-      '{"spine":"一句话主旋律","chapters":[{"title":"你生命最初的设定","confidence":"high","body":"..."},{"title":"你如何面对世界","confidence":"...","body":"..."},{"title":"你成长路上的礼物与考验","confidence":"...","body":"..."},{"title":"生命想带你去的地方","confidence":"...","body":"..."},{"title":"属于你的生命剧本","confidence":"...","body":"..."}]}'
+      "【只输出下面这个 JSON,不要任何其他文字】",
+      '{"spine":"一句话说清这个人的一生主题(30字内,大白话)",',
+      ' "cards":[{"title":"你生命最初的设定","line":"一句话"},{"title":"你如何面对世界","line":"一句话"},{"title":"你成长路上的礼物与考验","line":"一句话"},{"title":"生命想带你去的地方","line":"一句话"},{"title":"属于你的生命剧本","line":"一句话"},{"title":"你的核心人格模式","line":"一句话"},{"title":"你的情绪运作方式","line":"一句话"},{"title":"你的天赋特质","line":"一句话"},{"title":"你的理想状态","line":"一句话"}],',
+      ' "chapters":[{"title":"你生命最初的设定","summary":"30-80字","body":"400-600字"},{"title":"你如何面对世界","summary":"...","body":"..."},{"title":"你成长路上的礼物与考验","summary":"...","body":"..."},{"title":"生命想带你去的地方","summary":"...","body":"..."},{"title":"属于你的生命剧本","summary":"...","body":"..."}]}'
     ].join("\n");
   }
 
@@ -2251,7 +2242,6 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   const CH_TITLES = ["你生命最初的设定", "你如何面对世界", "你成长路上的礼物与考验", "生命想带你去的地方", "属于你的生命剧本"];
   function parseChapters(txt) {
     txt = String(txt || "").trim();
-    // 尝试 JSON
     const m = txt.match(/\{[\s\S]*\}/);
     if (m) {
       try {
@@ -2259,20 +2249,24 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
         if (o.chapters && o.chapters.length >= 3)
           return {
             spine: String(o.spine || "").trim(),
-            chapters: o.chapters.slice(0, 5).map((c, i) => ({ title: c.title || CH_TITLES[i], confidence: c.confidence || "", body: String(c.body || "").trim() }))
+            cards: Array.isArray(o.cards) ? o.cards.map(c => ({ title: String(c.title || "").trim(), line: String(c.line || "").trim() })).filter(c => c.title && c.line) : [],
+            chapters: o.chapters.slice(0, 5).map((c, i) => ({
+              title: c.title || CH_TITLES[i],
+              summary: String(c.summary || "").trim(),
+              body: String(c.body || "").trim()
+            }))
           };
       } catch (e) { }
     }
-    // 「第X章」切分
     const parts = txt.split(/第[一二三四五]章[|｜:：·\s]*/).filter(p => p.trim());
     if (parts.length >= 3)
-      return { spine: "", chapters: parts.slice(0, 5).map(function (p, i) {
+      return { spine: "", cards: [], chapters: parts.slice(0, 5).map(function (p, i) {
         const lines = p.trim().split("\n");
         let title = lines[0].replace(/[#*■\s]+/g, "").slice(0, 20);
         let body = p.trim();
         if (title && CH_TITLES.some(t => title.indexOf(t) !== -1 || t.indexOf(title) !== -1)) body = lines.slice(1).join("\n").trim();
         else title = CH_TITLES[i];
-        return { title: title, confidence: "", body: body };
+        return { title: title, summary: "", body: body };
       }) };
     return null;
   }
@@ -2292,7 +2286,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   // ---------- 调 Supabase Edge Function ----------
   function fetchReading(ns, res, opts, fpSeed) {
     const prompt = buildPrompt(ns, res, opts);
-    const base = String(fpSeed || "") + "|" + (opts && opts.depth) + "|" + (opts && opts.tone) + "|v4";
+    const base = String(fpSeed || "") + "|v5";  // 仅出生资料决定内容:同一组资料永远读到同一份
     function attempt(seed) {
       return fingerprint(seed).then(function (fp) {
         const bearer = (window.Cloud && window.Cloud.token && window.Cloud.token()) || SUPABASE_ANON_KEY;
@@ -2331,36 +2325,52 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   function renderChapters(reading, mount) {
     const chs = Array.isArray(reading) ? reading : (reading.chapters || []);
     const spine = Array.isArray(reading) ? "" : (reading.spine || "");
-    const stars = c => c.confidence === "high" ? " \u2605\u2605\u2605" : c.confidence === "medium" ? " \u2605\u2605\u2606" : c.confidence === "low" ? " \u2605\u2606\u2606" : "";
-    const spineHtml = spine
-      ? '<div style="margin:2px 0 16px;padding:13px 16px;border-left:3px solid var(--gold);background:rgba(var(--accent-rgb),.07);border-radius:0 10px 10px 0;font-size:14.5px;line-height:1.9;color:var(--parchment)"><span style="font-size:11px;letter-spacing:.15em;color:var(--gold);display:block;margin-bottom:4px">主旋律</span>' + spine.replace(/</g, "&lt;") + "</div>"
-      : "";
-    const app = window.innerWidth < 760; // 自动切换
-    if (!app) {
-      // Web:章节导航 + 连排长读
-      let nav = '<div style="display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 14px">' +
-        chs.map((c, i) => '<a href="#rd-ch' + i + '" style="text-decoration:none;font-size:12px;padding:3px 11px;border:1px solid var(--line);border-radius:14px;color:var(--gold)">' + (i + 1) + " · " + c.title + "</a>").join("") + "</div>";
-      mount.innerHTML = spineHtml + nav + chs.map((c, i) =>
-        '<div id="rd-ch' + i + '" style="margin:0 0 26px">' +
-        '<div style="font-size:15px;font-weight:700;color:var(--gold);margin:0 0 10px;letter-spacing:.06em">第' + "一二三四五"[i] + '章 · ' + c.title + '<span style="font-size:11px;color:var(--muted);font-weight:400">' + stars(c) + "</span></div>" +
-        '<div style="font-size:14px;line-height:2.05;color:var(--parchment);white-space:pre-wrap">' + c.body.replace(/</g, "&lt;") + "</div></div>").join("");
-    } else {
-      // App:卡片式,每章独立展开
-      mount.innerHTML = spineHtml + chs.map((c, i) =>
-        '<div class="rd-card" style="border:1px solid var(--line);border-radius:12px;padding:13px 15px;margin:0 0 10px;background:var(--card-soft)">' +
-        '<div class="rd-head" data-i="' + i + '" style="display:flex;justify-content:space-between;align-items:center;cursor:pointer">' +
-        '<span style="font-size:13.5px;font-weight:700;color:var(--gold)">' + (i + 1) + " · " + c.title + '<span style="font-size:10px;color:var(--muted);font-weight:400">' + stars(c) + "</span></span>" +
-        '<span class="rd-arrow" style="color:var(--muted);font-size:13px">' + (i === 0 ? "\u2227" : "\u2228") + "</span></div>" +
-        '<div class="rd-body" style="' + (i === 0 ? "" : "display:none;") + 'margin-top:9px;font-size:13.5px;line-height:2;color:var(--parchment);white-space:pre-wrap">' + c.body.replace(/</g, "&lt;") + "</div></div>").join("");
-      mount.querySelectorAll(".rd-head").forEach(function (h) {
-        h.addEventListener("click", function () {
-          const bd = h.parentNode.querySelector(".rd-body");
-          const closed = bd.style.display === "none";
-          bd.style.display = closed ? "" : "none";
-          h.querySelector(".rd-arrow").textContent = closed ? "\u2227" : "\u2228";
-        });
-      });
+    const cards = Array.isArray(reading) ? [] : (reading.cards || []);
+    const esc = t => String(t || "").replace(/</g, "&lt;");
+    const para = t => esc(t).split(/\n\s*\n|\n/).filter(x => x.trim()).map(x => '<p style="margin:0 0 12px">' + x.trim() + "</p>").join("");
+    let h = "";
+
+    // 一句话主线
+    if (spine) {
+      h += '<div style="margin:2px 0 18px;padding:15px 18px;border-left:3px solid var(--gold);background:rgba(var(--accent-rgb),.07);border-radius:0 12px 12px 0">' +
+        '<div style="font-size:10.5px;letter-spacing:.18em;color:var(--gold);margin-bottom:5px">一句话说你</div>' +
+        '<div style="font-size:15px;line-height:1.85;color:var(--parchment)">' + esc(spine) + "</div></div>";
     }
+
+    // 第一层:生命字卡
+    if (cards.length) {
+      h += '<div style="font-size:11px;letter-spacing:.16em;color:var(--gold);margin:0 0 9px">生 命 字 卡</div>' +
+        '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:9px;margin-bottom:24px">' +
+        cards.map(function (c) {
+          return '<div style="border:1px solid var(--line);border-radius:12px;padding:13px 15px;background:var(--card-soft)">' +
+            '<div style="font-size:11.5px;color:var(--gold-soft);margin-bottom:6px;letter-spacing:.04em">' + esc(c.title) + "</div>" +
+            '<div style="font-size:13.5px;line-height:1.75;color:var(--parchment)">' + esc(c.line) + "</div></div>";
+        }).join("") + "</div>";
+    }
+
+    // 第二层:摘要 + 展开全文
+    if (chs.length) {
+      h += '<div style="font-size:11px;letter-spacing:.16em;color:var(--gold);margin:0 0 10px">想 深 入 了 解</div>';
+      h += chs.map(function (c, i) {
+        const sum = c.summary || (c.body || "").slice(0, 80);
+        return '<div class="rd-item" style="border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin:0 0 10px;background:var(--card-soft)">' +
+          '<div style="font-size:13.5px;font-weight:700;color:var(--gold);margin-bottom:7px">' + (i + 1) + " · " + esc(c.title) + "</div>" +
+          '<div style="font-size:13.5px;line-height:1.9;color:var(--parchment)">' + esc(sum) + "</div>" +
+          (c.body ? '<div class="rd-full" style="display:none;margin-top:12px;padding-top:12px;border-top:1px dashed var(--line);font-size:13.5px;line-height:2;color:var(--parchment)">' + para(c.body) + "</div>" +
+            '<button class="rd-more" style="margin-top:10px;font-family:inherit;font-size:12.5px;padding:5px 14px;border:1px solid var(--line);border-radius:14px;background:transparent;color:var(--gold);cursor:pointer">展开阅读 \u2228</button>' : "") +
+          "</div>";
+      }).join("");
+    }
+
+    mount.innerHTML = h;
+    mount.querySelectorAll(".rd-more").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        const full = btn.parentNode.querySelector(".rd-full");
+        const closed = full.style.display === "none";
+        full.style.display = closed ? "" : "none";
+        btn.textContent = closed ? "\u6536\u8d77 \u2227" : "\u5c55\u5f00\u9605\u8bfb \u2228";
+      });
+    });
   }
 
   // ---------- 叙事引擎:把九步结果写成"你的盘"的解读 ----------
@@ -3504,17 +3514,41 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   }
 
   // 解读面板:有完整解读显示五章,否则显示本地简版
+  let autoGenBusy = false;
   function renderReading() {
     const c = activeChart(), body = $("nineBody");
     if (!c || !curNine) { body.innerHTML = ""; return; }
     if (c.reading && c.reading.chapters) {
       window.NineSteps.renderChapters(c.reading, body);
-      $("readState").textContent = "完整版 · " + (c.reading.ts || "");
-      $("genRead").textContent = "重新生成";
+      $("readState").textContent = "";
+      $("nineBtns").style.display = "flex";
+      return;
+    }
+    // 没有内容:自动生成,无需用户点击
+    if (window.NineSteps.hasSupabase() && !autoGenBusy) {
+      autoGenBusy = true;
+      body.innerHTML = '<div style="padding:26px 8px;text-align:center;color:var(--muted);font-size:13px;line-height:2">' +
+        '<div style="font-size:20px;color:var(--gold);margin-bottom:8px">✶</div>' +
+        '正在为你整理这份生命蓝图…<br><span style="font-size:11.5px;opacity:.75">第一次需要 1–2 分钟,之后打开就是秒开</span></div>';
+      $("nineBtns").style.display = "none";
+      const fpSeed = [c.date, c.time, c.lat.toFixed(4), c.lon.toFixed(4)].join("|");
+      window.NineSteps.fetchReading(curNine, curResult, { depth: "standard", tone: "balanced" }, fpSeed)
+        .then(function (parsed) {
+          autoGenBusy = false;
+          if (!activeChart() || activeChart().id !== c.id) return;
+          c.reading = Object.assign({ ts: new Date().toISOString().slice(0, 10) }, parsed);
+          window.Cloud.updateChart(c).catch(function (e) { console.warn("云同步失败", e); });
+          renderReading();
+        })
+        .catch(function (e) {
+          autoGenBusy = false;
+          window.NineSteps.render(curNine, body);
+          $("readState").textContent = "自动生成未成功:" + e.message;
+          $("nineBtns").style.display = "flex";
+        });
     } else {
       window.NineSteps.render(curNine, body);
-      $("readState").textContent = "简版(自动生成) · 点「生成完整解读」获得五章全文";
-      $("genRead").textContent = "生成完整解读";
+      $("nineBtns").style.display = "flex";
     }
   }
 
@@ -3622,25 +3656,16 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       renderReading();
     });
     $("genRead").addEventListener("click", function () {
-      const btn = this, c = activeChart();
-      if (!c || !curNine) return;
+      const c = activeChart();
+      if (!c) return;
       if (!window.NineSteps.hasSupabase()) {
-        // 未配置 Supabase:引导走复制/粘贴流程
-        copyText(window.NineSteps.buildPrompt(curNine, curResult, readOpts()), btn, "未接 API:提示词已复制,贴给 AI 后用「粘贴 AI 解读」");
+        copyText(window.NineSteps.buildPrompt(curNine, curResult, readOpts()), this, "提示词已复制,贴给 AI 后用「手动粘贴」");
         $("pasteBox").style.display = "";
         return;
       }
-      btn.disabled = true; btn.textContent = "生成中…(约 1–2 分钟)";
-      const fpSeed = [c.date, c.time, c.lat, c.lon, c.sys || "placidus", "tropical"].join("|");
-      window.NineSteps.fetchReading(curNine, curResult, readOpts(), fpSeed).then(function (parsed) {
-        c.reading = Object.assign({ ts: new Date().toISOString().slice(0, 10) }, readOpts(), parsed);
-        window.Cloud.updateChart(c).catch(function (e) { console.warn("云同步失败", e); });
-        btn.disabled = false;
-        renderReading();
-      }).catch(function (e) {
-        btn.disabled = false; btn.textContent = "生成失败,重试";
-        $("readState").textContent = "生成失败:" + e.message;
-      });
+      c.reading = null;
+      window.Cloud.updateChart(c).catch(function () { });
+      renderReading();
     });
     // 视口跨过断点时按当前模式重排章节
     let lastApp = window.innerWidth < 760;
