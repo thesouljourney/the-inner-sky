@@ -364,7 +364,6 @@
         <h3><span>人生探索地图</span></h3>
         <div style="font-size:12px;color:var(--muted);margin:-4px 0 14px;line-height:1.7">看见自己 → 理解关系 → 发挥自己 → 建立人生 → 向内探索 → 活出自己</div>
         <div id="topicGrid"></div>
-        <div id="topicBody" style="margin-top:16px"></div>
       </div>
 
     </div><!-- /chartView -->
@@ -2556,15 +2555,15 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       id: "see", icon: "\uD83C\uDF31", name: "看见自己",
       lead: "所有探索的起点:我到底是一个怎样的人?",
       items: [
-        { id: "who", q: "我是谁?", real: "为什么我总是用这种方式活着,而这样是不是可以的?",
+        { id: "who", q: "我是谁?", teaser: "你活成今天的样子,不是偶然。\n那些反复出现的选择,其实一直在说同一件事。", real: "为什么我总是用这种方式活着,而这样是不是可以的?",
           data: { houses: [1], planets: ["Sun", "Moon"], ruler: true, focus: true } },
-        { id: "charm", q: "我最大的魅力是什么?", real: "为什么有些人会被我吸引,那个东西到底是什么?",
+        { id: "charm", q: "我最大的魅力是什么?", teaser: "有些人一认识你,就会觉得很舒服。\n那个东西,并不是你刻意做出来的。", real: "为什么有些人会被我吸引,那个东西到底是什么?",
           data: { houses: [1, 5, 7], planets: ["Venus", "Moon"], ruler: true } },
-        { id: "gift", q: "我最大的天赋是什么?", real: "我身上有什么是别人要很努力、我却天生就会的?",
+        { id: "gift", q: "我最大的天赋是什么?", teaser: "有件事你做起来毫不费力,\n所以你一直以为,大家都做得到。", real: "我身上有什么是别人要很努力、我却天生就会的?",
           data: { planets: ["Sun", "Mercury", "Jupiter"], ace: true, patterns: true, focus: true } },
-        { id: "strength", q: "我真正的优势是什么?", real: "在真实的竞争与生活里,我真正靠得住的是什么?",
+        { id: "strength", q: "我真正的优势是什么?", teaser: "被夸的地方,不一定是你真正的强项。\n真正靠得住的,往往安静得多。", real: "在真实的竞争与生活里,我真正靠得住的是什么?",
           data: { houses: [1, 10], planets: ["Sun", "Mars", "Saturn"], ace: true, ruler: true } },
-        { id: "pattern", q: "我为什么总会陷入某些模式?", real: "为什么同一种事在我身上一再发生?",
+        { id: "pattern", q: "我为什么总会陷入某些模式?", teaser: "同样的事,好像每隔几年就会再来一次。\n它不是巧合,是在等你看懂什么。", real: "为什么同一种事在我身上一再发生?",
           data: { planets: ["Moon", "Saturn", "Pluto"], burden: true, patterns: true, tightest: true } }
       ]
     },
@@ -2572,15 +2571,15 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       id: "relate", icon: "\u2764\uFE0F", name: "理解关系",
       lead: "认识自己之后,自然想知道:为什么人与人的关系总是这样发展?",
       items: [
-        { id: "howlove", q: "我会怎样去爱一个人?", real: "当我真的喜欢一个人,我会变成什么样子?",
+        { id: "howlove", q: "我会怎样去爱一个人?", teaser: "喜欢一个人的时候,你会变成另一个版本的自己。\n那个版本,你未必喜欢。", real: "当我真的喜欢一个人,我会变成什么样子?",
           data: { houses: [5, 7], planets: ["Venus", "Mars", "Moon"], points: ["Eros433"] } },
-        { id: "needrel", q: "我真正需要什么样的关系?", real: "什么样的关系会让我安稳,而不是消耗我?",
+        { id: "needrel", q: "我真正需要什么样的关系?", teaser: "让你心动的,和让你安稳的,\n常常不是同一种人。", real: "什么样的关系会让我安稳,而不是消耗我?",
           data: { houses: [7, 4], planets: ["Moon", "Venus", "Saturn"], points: ["Juno"] } },
-        { id: "sametype", q: "为什么我总是吸引同一种人?", real: "我身上什么东西,让某一类人一再出现?",
+        { id: "sametype", q: "为什么我总是吸引同一种人?", teaser: "你以为是巧合,\n其实很多关系都遵循同一种模式。", real: "我身上什么东西,让某一类人一再出现?",
           data: { houses: [7], planets: ["Venus", "Mars", "Neptune"], ruler: true, tightest: true } },
-        { id: "companion", q: "什么样的人适合长期同行?", real: "什么样的关系才真的适合我,我又该怎么认出它?",
+        { id: "companion", q: "什么样的人适合长期同行?", teaser: "能走得久的关系,\n靠的往往不是感觉最强烈的那一刻。", real: "什么样的关系才真的适合我,我又该怎么认出它?",
           data: { houses: [7], planets: ["Venus", "Mars"], points: ["Vertex"], ruler: true, seventhChain: true } },
-        { id: "intimacy", q: "我的亲密关系会呈现什么模式?", real: "关系进入深处之后,我们之间会怎么运转?",
+        { id: "intimacy", q: "我的亲密关系会呈现什么模式?", teaser: "关系越靠近,人越会露出真正的样子。\n包括你自己。", real: "关系进入深处之后,我们之间会怎么运转?",
           data: { houses: [7, 8], planets: ["Moon", "Venus", "Pluto"], points: ["Juno"] } }
       ]
     },
@@ -2588,15 +2587,15 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       id: "express", icon: "\uD83D\uDCBC", name: "发挥自己",
       lead: "不只是工作与赚钱,而是:我要怎样活,才能真正发挥自己?",
       items: [
-        { id: "work", q: "我适合什么样的工作?", real: "我需要怎样的工作方式,才能真正发挥自己?",
+        { id: "work", q: "我适合什么样的工作?", teaser: "有些工作累得值得,有些累得空。\n差别不在做什么,而在怎么做。", real: "我需要怎样的工作方式,才能真正发挥自己?",
           data: { houses: [10, 6, 2], mc: true, planets: ["Sun", "Mars", "Saturn"], ruler: true } },
-        { id: "edge", q: "我的职业优势在哪里?", real: "在工作里,我真正被需要的是什么?",
+        { id: "edge", q: "我的职业优势在哪里?", teaser: "在团队里,你总是被找去做同一类的事。\n那不是巧合。", real: "在工作里,我真正被需要的是什么?",
           data: { houses: [10, 6], planets: ["Sun", "Mercury", "Mars", "Jupiter"], ace: true, mc: true } },
-        { id: "founder", q: "我适合创业吗?", real: "我需要多少自主权,才不会把自己耗掉?",
+        { id: "founder", q: "我适合创业吗?", teaser: "问题不是你能不能创业,\n而是你能不能忍受被安排。", real: "我需要多少自主权,才不会把自己耗掉?",
           data: { houses: [1, 10, 2], planets: ["Mars", "Jupiter", "Saturn", "Uranus"], ruler: true, mind: true } },
-        { id: "wealth", q: "我的财富会从哪里累积?", real: "钱在我的人生里怎么来、怎么留得住?",
+        { id: "wealth", q: "我的财富会从哪里累积?", teaser: "钱怎么进来,和钱怎么留下,\n是两件不同的事。", real: "钱在我的人生里怎么来、怎么留得住?",
           data: { houses: [2, 8, 11], planets: ["Venus", "Jupiter", "Saturn"], points: ["PoF"], ruler: true } },
-        { id: "leak", q: "为什么努力却留不住成果?", real: "我的力气都花到哪里去了?",
+        { id: "leak", q: "为什么努力却留不住成果?", teaser: "明明很努力,回头看却好像没剩下什么。\n力气到底花去哪了?", real: "我的力气都花到哪里去了?",
           data: { houses: [2, 6, 12], planets: ["Saturn", "Neptune", "Pluto"], burden: true, tightest: true } }
       ]
     },
@@ -2604,15 +2603,15 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       id: "build", icon: "\uD83C\uDF0D", name: "建立人生",
       lead: "开始理解:为什么我的人生会走成今天这样?",
       items: [
-        { id: "family", q: "家庭如何影响今天的我?", real: "家给了我什么,又让我带走了什么?",
+        { id: "family", q: "家庭如何影响今天的我?", teaser: "你以为早就走出来了,\n但有些反应还是会自动发生。", real: "家给了我什么,又让我带走了什么?",
           data: { houses: [4, 10], ic: true, planets: ["Moon", "Saturn", "Sun"], points: ["Chiron"] } },
-        { id: "env", q: "我适合怎样的生活环境?", real: "什么样的日常节奏,能让我真的放松下来?",
+        { id: "env", q: "我适合怎样的生活环境?", teaser: "有的地方待久了会累,\n有的地方一进去就松下来。", real: "什么样的日常节奏,能让我真的放松下来?",
           data: { houses: [4, 6], planets: ["Moon", "Venus"], ic: true, elements: true } },
-        { id: "move", q: "我适合到不同城市发展吗?", real: "换一个地方生活,对我是打开还是消耗?",
+        { id: "move", q: "我适合到不同城市发展吗?", teaser: "换一个城市,有人被打开,有人被掏空。\n你是哪一种?", real: "换一个地方生活,对我是打开还是消耗?",
           data: { houses: [4, 9, 3], planets: ["Jupiter", "Uranus", "Moon"], nodes: true } },
-        { id: "social", q: "我的人际关系为什么会这样?", real: "在一群人里,我为什么会站在那个位置?",
+        { id: "social", q: "我的人际关系为什么会这样?", teaser: "在一群人里,你几乎总是坐在同一个位置上。", real: "在一群人里,我为什么会站在那个位置?",
           data: { houses: [11, 3, 7], planets: ["Mercury", "Venus", "Saturn"], ruler: true } },
-        { id: "base", q: "我适合建立怎样的生活基础?", real: "什么样的落脚方式,会让我有归属感?",
+        { id: "base", q: "我适合建立怎样的生活基础?", teaser: "所谓安定,对每个人的意思都不一样。\n对你来说是什么?", real: "什么样的落脚方式,会让我有归属感?",
           data: { houses: [4, 2], planets: ["Moon", "Saturn", "Venus"], ic: true, ruler: true } }
       ]
     },
@@ -2620,15 +2619,15 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       id: "inward", icon: "\uD83C\uDF19", name: "向内探索",
       lead: "开始探索:为什么自己总会卡住?",
       items: [
-        { id: "drain", q: "为什么我容易内耗?", real: "我的力气是在哪里、被什么悄悄用掉的?",
+        { id: "drain", q: "为什么我容易内耗?", teaser: "什么都没做,却已经很累。\n消耗常常发生在看不见的地方。", real: "我的力气是在哪里、被什么悄悄用掉的?",
           data: { houses: [12, 6], planets: ["Moon", "Saturn", "Neptune"], burden: true, tightest: true } },
-        { id: "emotion", q: "我的情绪如何影响人生?", real: "情绪一来,我的人生会往哪个方向偏?",
+        { id: "emotion", q: "我的情绪如何影响人生?", teaser: "情绪来的时候,你的人生会悄悄拐一个弯。", real: "情绪一来,我的人生会往哪个方向偏?",
           data: { houses: [4, 8, 12], planets: ["Moon", "Pluto", "Neptune"], sect: true } },
-        { id: "safety", q: "我的安全感来自哪里?", real: "什么东西在,我才敢真的放松?",
+        { id: "safety", q: "我的安全感来自哪里?", teaser: "要什么在,你才敢真的放松下来?", real: "什么东西在,我才敢真的放松?",
           data: { houses: [2, 4], planets: ["Moon", "Saturn", "Venus"], ic: true } },
-        { id: "breakthrough", q: "我真正需要突破什么?", real: "哪一件事只要松动,我整个人会不一样?",
+        { id: "breakthrough", q: "我真正需要突破什么?", teaser: "有一件事只要松动,\n你整个人都会不一样。", real: "哪一件事只要松动,我整个人会不一样?",
           data: { planets: ["Saturn", "Pluto"], points: ["Chiron"], burden: true, patterns: true, nodes: true } },
-        { id: "unused", q: "我还有哪些尚未发挥出来的力量?", real: "我身上有什么,一直没被好好用过?",
+        { id: "unused", q: "我还有哪些尚未发挥出来的力量?", teaser: "你身上有一部分,一直没被好好用过。", real: "我身上有什么,一直没被好好用过?",
           data: { planets: ["Jupiter", "Uranus", "Pluto"], ace: true, emptyHouses: true, dignityFlags: true } }
       ]
     },
@@ -2636,15 +2635,15 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       id: "become", icon: "\u2728", name: "活出自己",
       lead: "最深的问题:如果越来越理解自己,我会成为怎样的人?",
       items: [
-        { id: "why", q: "我为什么来到这里?", real: "把这些年串起来看,我在学的是什么?",
+        { id: "why", q: "我为什么来到这里?", teaser: "把这些年串起来看,\n好像一直在学同一堂课。", real: "把这些年串起来看,我在学的是什么?",
           data: { nodes: true, points: ["Chiron"], pointer: true, mind: true } },
-        { id: "mission", q: "我的人生真正想完成什么?", real: "抛开该做的事,我心里真正想完成的是什么?",
+        { id: "mission", q: "我的人生真正想完成什么?", teaser: "抛开那些该做的事,\n你心里真正想完成的是什么?", real: "抛开该做的事,我心里真正想完成的是什么?",
           data: { houses: [10, 9], mc: true, planets: ["Sun", "Jupiter"], endpoint: true, pointer: true } },
-        { id: "luck", q: "我的幸运通常会在哪里出现?", real: "什么状态下的我,事情特别顺?",
+        { id: "luck", q: "我的幸运通常会在哪里出现?", teaser: "顺的时候,你通常都在做同一件事。", real: "什么状态下的我,事情特别顺?",
           data: { houses: [9, 11, 5], planets: ["Jupiter", "Venus"], points: ["PoF"], ruler: true } },
-        { id: "turning", q: "什么样的经历会成为人生的转折点?", real: "什么样的事情,会真的把我推到下一段人生?",
+        { id: "turning", q: "什么样的经历会成为人生的转折点?", teaser: "回头看,人生的转弯往往不在计划里。", real: "什么样的事情,会真的把我推到下一段人生?",
           data: { planets: ["Uranus", "Pluto", "Saturn"], nodes: true, tightest: true, patterns: true } },
-        { id: "fullself", q: "当我真正活出自己,会是什么样子?", real: "如果不再委屈自己,我会长成什么样?",
+        { id: "fullself", q: "当我真正活出自己,会是什么样子?", teaser: "如果不再委屈自己,\n你会长成什么样子?", real: "如果不再委屈自己,我会长成什么样?",
           data: { houses: [1, 10], planets: ["Sun", "Moon"], ruler: true, nodes: true, mind: true, pointer: true } }
       ]
     }
@@ -3831,7 +3830,6 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     drawWheel();
     drawPosTable();
     curQ = null; openLayer = null;
-    $("topicBody").innerHTML = "";
     renderReading();
     renderTopics();
   }
@@ -3863,25 +3861,40 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       });
   }
 
-  // ---------- 人生探索地图 ----------
+  // ---------- 人生探索地图(Accordion:就地展开) ----------
   let curQ = null, openLayer = null, topicBusy = false;
+  const esc0 = x => String(x || "").replace(/</g, "&lt;");
+
+  function answerHtml(q, data) {
+    const para = x => esc0(x).split(/\n\s*\n|\n/).filter(y => y.trim()).map(y => '<p style="margin:0 0 11px">' + y.trim() + "</p>").join("");
+    let h = '<div style="padding:2px 2px 4px">';
+    if (data.tagline)
+      h += '<div style="font-size:14.5px;line-height:1.85;color:var(--parchment);padding:13px 15px;margin:0 0 15px;border-left:2px solid var(--gold-soft);background:rgba(var(--accent-rgb),.06);border-radius:0 9px 9px 0">' + esc0(data.tagline) + "</div>";
+    h += (data.sections || []).map(function (sc) {
+      return '<div style="margin:0 0 16px">' +
+        (sc.title ? '<div style="font-size:13px;font-weight:700;color:var(--gold-soft);margin-bottom:7px">' + esc0(sc.title) + "</div>" : "") +
+        '<div style="font-size:13.5px;line-height:2;color:var(--parchment)">' + para(sc.body) + "</div></div>";
+    }).join("");
+    return h + "</div>";
+  }
+
   function renderTopics() {
     const c = activeChart(), grid = $("topicGrid");
     if (!c || !curNine) { $("topicPanel").style.display = "none"; return; }
     $("topicPanel").style.display = "";
     const saved = c.answers || {};
     grid.innerHTML = "";
-    window.NineSteps.JOURNEY.forEach(function (L, li) {
+    const J = window.NineSteps.JOURNEY;
+    J.forEach(function (L, li) {
       const doneCount = L.items.filter(it => !!window.NineSteps.reviveTopic(saved[it.id])).length;
       const expanded = openLayer === L.id;
       const wrap = document.createElement("div");
-      wrap.style.cssText = "position:relative;padding-left:30px;padding-bottom:" + (li === window.NineSteps.JOURNEY.length - 1 ? "0" : "14px");
-      // 旅程连线与节点
+      wrap.style.cssText = "position:relative;padding-left:30px;padding-bottom:" + (li === J.length - 1 ? "0" : "14px");
       wrap.innerHTML =
-        (li < window.NineSteps.JOURNEY.length - 1 ? '<div style="position:absolute;left:11px;top:26px;bottom:0;width:1px;background:var(--line)"></div>' : "") +
+        (li < J.length - 1 ? '<div style="position:absolute;left:11px;top:26px;bottom:0;width:1px;background:var(--line)"></div>' : "") +
         '<div style="position:absolute;left:4px;top:9px;width:15px;height:15px;border-radius:50%;border:1.5px solid ' +
         (doneCount ? "var(--gold)" : "var(--line)") + ';background:' + (doneCount ? "rgba(var(--accent-rgb),.25)" : "var(--night-2)") + '"></div>';
-      // 层标题
+
       const head = document.createElement("button");
       head.style.cssText = "width:100%;text-align:left;font-family:inherit;cursor:pointer;border:1px solid " +
         (expanded ? "var(--gold-soft)" : "var(--line)") + ";border-radius:12px;padding:12px 14px;background:" +
@@ -3891,27 +3904,47 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
         '<span style="font-size:16px">' + L.icon + "</span>" +
         '<span style="font-size:14px;font-weight:700;color:var(--gold)">' + L.name + "</span>" +
         (doneCount ? '<span style="font-size:10.5px;color:var(--gold-soft)">已探索 ' + doneCount + "/5</span>" : "") +
-        '<span style="margin-left:auto;color:var(--muted);font-size:12px">' + (expanded ? "\u2227" : "\u2228") + "</span></div>" +
+        '<span style="margin-left:auto;color:var(--muted);font-size:12px">' + (expanded ? "\u25B4" : "\u25BE") + "</span></div>" +
         '<div style="font-size:11.5px;color:var(--muted);margin-top:5px;line-height:1.65">' + L.lead + "</div>";
-      head.addEventListener("click", function () {
-        openLayer = expanded ? null : L.id;
-        renderTopics();
-      });
+      head.addEventListener("click", function () { openLayer = expanded ? null : L.id; renderTopics(); });
       wrap.appendChild(head);
-      // 五个探索问题
+
       if (expanded) {
         const list = document.createElement("div");
-        list.style.cssText = "display:grid;gap:6px;margin-top:8px";
+        list.style.cssText = "display:grid;gap:7px;margin-top:9px";
         L.items.forEach(function (it) {
-          const done = !!window.NineSteps.reviveTopic(saved[it.id]);
+          const ans = window.NineSteps.reviveTopic(saved[it.id]);
           const on = curQ === it.id;
-          const b = document.createElement("button");
-          b.style.cssText = "width:100%;text-align:left;font-family:inherit;font-size:13px;line-height:1.6;padding:10px 13px;border-radius:10px;cursor:pointer;transition:.15s;border:1px solid " +
-            (on ? "var(--gold-soft)" : "var(--line)") + ";background:" + (on ? "rgba(var(--accent-rgb),.14)" : "transparent") +
-            ";color:" + (on ? "var(--gold)" : "var(--parchment)");
-          b.innerHTML = it.q + (done ? '<span style="color:var(--gold);font-size:11px;margin-left:6px">\u2713</span>' : "");
-          b.addEventListener("click", function () { openQuestion(it.id); });
-          list.appendChild(b);
+          const item = document.createElement("div");
+          item.style.cssText = "border:1px solid " + (on ? "var(--gold-soft)" : "var(--line)") +
+            ";border-radius:11px;background:" + (on ? "rgba(var(--accent-rgb),.07)" : "transparent") + ";overflow:hidden;transition:.15s";
+
+          // 问题头:标题 + 探索引言 + 展开箭头
+          const qb = document.createElement("button");
+          qb.style.cssText = "width:100%;text-align:left;font-family:inherit;padding:12px 14px;border:none;background:transparent;cursor:pointer";
+          qb.innerHTML =
+            '<div style="display:flex;align-items:flex-start;gap:8px">' +
+            '<span style="color:var(--gold);font-size:12px;line-height:1.7;flex:none">' + (on ? "\u25BC" : "\u25B8") + "</span>" +
+            '<div style="flex:1">' +
+            '<div style="font-size:13.5px;font-weight:600;color:' + (on ? "var(--gold)" : "var(--parchment)") + ';line-height:1.6">' +
+            esc0(it.q) + (ans ? '<span style="color:var(--gold);font-size:11px;margin-left:6px">\u2713</span>' : "") + "</div>" +
+            (!on && it.teaser ? '<div style="font-size:12px;color:var(--muted);line-height:1.75;margin-top:5px;white-space:pre-line">' + esc0(it.teaser) + "</div>" +
+              '<div style="font-size:11.5px;color:var(--gold-soft);margin-top:6px">展开阅读 \u2192</div>' : "") +
+            "</div></div>";
+          qb.addEventListener("click", function () { openQuestion(it.id); });
+          item.appendChild(qb);
+
+          // 内容区:就地展开
+          if (on) {
+            const box = document.createElement("div");
+            box.id = "qbody-" + it.id;
+            box.style.cssText = "padding:0 14px 14px";
+            if (ans) box.innerHTML = answerHtml(it, ans);
+            else box.innerHTML = '<div style="padding:18px 4px;text-align:center;color:var(--muted);font-size:12.5px;line-height:2">' +
+              '<span style="font-size:17px;color:var(--gold)">' + it.icon + "</span><br>正在为你探索…</div>";
+            item.appendChild(box);
+          }
+          list.appendChild(item);
         });
         wrap.appendChild(list);
       }
@@ -3920,21 +3953,18 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   }
 
   function openQuestion(qid) {
-    const c = activeChart(), body = $("topicBody");
+    const c = activeChart();
     if (!c || !curNine || topicBusy) return;
-    if (curQ === qid) { curQ = null; renderTopics(); body.innerHTML = ""; return; }
+    if (curQ === qid) { curQ = null; renderTopics(); return; }
     curQ = qid;
-    renderTopics();
     const q = window.NineSteps.findQ(qid);
     const saved = window.NineSteps.reviveTopic((c.answers || {})[qid]);
+    renderTopics();
     if (saved) {
       if (saved !== (c.answers || {})[qid]) { c.answers[qid] = saved; window.Cloud.updateChart(c).catch(function () { }); }
-      paintAnswer(q, saved);
       return;
     }
     topicBusy = true;
-    body.innerHTML = '<div style="padding:26px 8px;text-align:center;color:var(--muted);font-size:13px;line-height:2">' +
-      '<div style="font-size:19px;color:var(--gold);margin-bottom:8px">' + q.icon + "</div>正在为你探索「" + q.q + "」…</div>";
     const fpSeed = [c.date, c.time, c.lat.toFixed(4), c.lon.toFixed(4)].join("|");
     window.NineSteps.fetchQuestion(curNine, curResult, qid, fpSeed, c.reading).then(function (data) {
       topicBusy = false;
@@ -3943,35 +3973,19 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       c.answers[qid] = data;
       window.Cloud.updateChart(c).catch(function (e) { console.warn("云同步失败", e); });
       renderTopics();
-      paintAnswer(q, data);
     }).catch(function (e) {
       topicBusy = false;
-      body.innerHTML = '<div style="padding:20px 8px;text-align:center;color:var(--muted);font-size:12.5px;line-height:1.9">内容暂时无法完成。<a href="#" id="topicRetry" style="color:var(--gold)">点此再试一次</a>' +
-        '<div id="topicDiag" style="margin-top:8px;font-size:11.5px;opacity:.8"></div></div>';
-      const r = document.getElementById("topicRetry");
+      const box = document.getElementById("qbody-" + qid);
+      if (!box) return;
+      box.innerHTML = '<div style="padding:14px 4px;text-align:center;color:var(--muted);font-size:12.5px;line-height:1.9">内容暂时无法完成。<a href="#" id="qRetry" style="color:var(--gold)">点此再试一次</a>' +
+        '<div id="qDiag" style="margin-top:8px;font-size:11.5px;opacity:.8"></div></div>';
+      const r = document.getElementById("qRetry");
       if (r) r.addEventListener("click", function (ev) { ev.preventDefault(); curQ = null; openQuestion(qid); });
       diagnose(e).then(function (d) {
-        const box = document.getElementById("topicDiag");
-        if (box) box.innerHTML = "诊断:" + d.hint + '<br><span style="opacity:.65">(' + d.raw + " · 探测 " + d.probe + " " + d.detail + ")</span>";
+        const dg = document.getElementById("qDiag");
+        if (dg) dg.innerHTML = "诊断:" + d.hint + '<br><span style="opacity:.65">(' + d.raw + " · 探测 " + d.probe + " " + d.detail + ")</span>";
       });
     });
-  }
-
-  function paintAnswer(q, data) {
-    const esc = x => String(x || "").replace(/</g, "&lt;");
-    const para = x => esc(x).split(/\n\s*\n|\n/).filter(y => y.trim()).map(y => '<p style="margin:0 0 11px">' + y.trim() + "</p>").join("");
-    let h = '<div style="border:1px solid var(--line);border-radius:13px;padding:18px 20px;background:var(--card-soft)">' +
-      '<div style="font-size:10.5px;letter-spacing:.14em;color:var(--muted);margin-bottom:5px">' + q.icon + " " + q.layerName + "</div>" +
-      '<div style="font-size:15px;font-weight:700;color:var(--gold);margin-bottom:12px">' + esc(q.q) + "</div>";
-    if (data.tagline)
-      h += '<div style="font-size:14.5px;line-height:1.85;color:var(--parchment);padding:13px 15px;margin-bottom:15px;border-left:2px solid var(--gold-soft);background:rgba(var(--accent-rgb),.06);border-radius:0 9px 9px 0">' + esc(data.tagline) + "</div>";
-    h += data.sections.map(function (sc) {
-      return '<div style="margin:0 0 16px">' +
-        (sc.title ? '<div style="font-size:13px;font-weight:700;color:var(--gold-soft);margin-bottom:7px">' + esc(sc.title) + "</div>" : "") +
-        '<div style="font-size:13.5px;line-height:2;color:var(--parchment)">' + para(sc.body) + "</div></div>";
-    }).join("");
-    h += "</div>";
-    $("topicBody").innerHTML = h;
   }
 
   let autoGenBusy = false;
