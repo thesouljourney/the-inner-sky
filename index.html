@@ -361,9 +361,9 @@
       </div>
 
       <div class="panel" style="margin-top:18px" id="topicPanel">
-        <h3><span>主题专区</span></h3>
-        <div style="font-size:12px;color:var(--muted);margin:-4px 0 12px;line-height:1.7">想深入了解哪一块,点开就好</div>
-        <div id="topicGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:9px"></div>
+        <h3><span>人生探索地图</span></h3>
+        <div style="font-size:12px;color:var(--muted);margin:-4px 0 14px;line-height:1.7">看见自己 → 理解关系 → 发挥自己 → 建立人生 → 向内探索 → 活出自己</div>
+        <div id="topicGrid"></div>
         <div id="topicBody" style="margin-top:16px"></div>
       </div>
 
@@ -2549,19 +2549,111 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   }
 
   // ========== 主题专区:后台调用规则(前端不出现任何术语) ==========
-  const TOPICS = [
-    { id: "personal", icon: "\uD83D\uDC64", name: "个人议题",   tone: "一个人是否容易活出真正的自己,看他的主导力量落在哪里、状态如何。" },
-    { id: "wealth",   icon: "\uD83D\uDCB0", name: "财运议题",   tone: "财富通常流向「金钱领域的主导力量」所连接的人生领域。" },
-    { id: "emotion",  icon: "\u2764\uFE0F",  name: "情感议题",   tone: "爱的需求由亲密偏好决定,关系的发展模式由伴侣领域决定。" },
-    { id: "love",     icon: "\uD83D\uDC95", name: "爱情议题",   tone: "恋爱发生的位置看第五领域,心动的触发点看亲密偏好。" },
-    { id: "destined", icon: "\uD83D\uDC8D", name: "正缘画像",   tone: "分三层回答:他是什么样的人、容易在哪里相遇、你们的关系模式。" },
-    { id: "career",   icon: "\uD83D\uDCBC", name: "事业议题",   tone: "事业方向由生涯顶点与事业领域的主导力量共同决定。" },
-    { id: "study",    icon: "\uD83D\uDCDA", name: "求学议题",   tone: "学习方式看思维模式,知识成长方向看远方与信念领域。" },
-    { id: "family",   icon: "\uD83C\uDFE0", name: "家庭议题",   tone: "家庭给予的情感基础,以及最深层的安全感来源。" },
-    { id: "sibling",  icon: "\uD83D\uDC6A", name: "兄弟姐妹议题", tone: "与手足之间的互动模式,以及彼此带来的影响。" }
+  // ========== 人生探索地图:六层旅程 × 每层五个探索 ==========
+  // 每个探索声明后台要调用的资料(宫位/行星/特殊点),前端绝不出现术语
+  const JOURNEY = [
+    {
+      id: "see", icon: "\uD83C\uDF31", name: "看见自己",
+      lead: "所有探索的起点:我到底是一个怎样的人?",
+      items: [
+        { id: "who", q: "我是谁?", real: "为什么我总是用这种方式活着,而这样是不是可以的?",
+          data: { houses: [1], planets: ["Sun", "Moon"], ruler: true, focus: true } },
+        { id: "charm", q: "我最大的魅力是什么?", real: "为什么有些人会被我吸引,那个东西到底是什么?",
+          data: { houses: [1, 5, 7], planets: ["Venus", "Moon"], ruler: true } },
+        { id: "gift", q: "我最大的天赋是什么?", real: "我身上有什么是别人要很努力、我却天生就会的?",
+          data: { planets: ["Sun", "Mercury", "Jupiter"], ace: true, patterns: true, focus: true } },
+        { id: "strength", q: "我真正的优势是什么?", real: "在真实的竞争与生活里,我真正靠得住的是什么?",
+          data: { houses: [1, 10], planets: ["Sun", "Mars", "Saturn"], ace: true, ruler: true } },
+        { id: "pattern", q: "我为什么总会陷入某些模式?", real: "为什么同一种事在我身上一再发生?",
+          data: { planets: ["Moon", "Saturn", "Pluto"], burden: true, patterns: true, tightest: true } }
+      ]
+    },
+    {
+      id: "relate", icon: "\u2764\uFE0F", name: "理解关系",
+      lead: "认识自己之后,自然想知道:为什么人与人的关系总是这样发展?",
+      items: [
+        { id: "howlove", q: "我会怎样去爱一个人?", real: "当我真的喜欢一个人,我会变成什么样子?",
+          data: { houses: [5, 7], planets: ["Venus", "Mars", "Moon"], points: ["Eros433"] } },
+        { id: "needrel", q: "我真正需要什么样的关系?", real: "什么样的关系会让我安稳,而不是消耗我?",
+          data: { houses: [7, 4], planets: ["Moon", "Venus", "Saturn"], points: ["Juno"] } },
+        { id: "sametype", q: "为什么我总是吸引同一种人?", real: "我身上什么东西,让某一类人一再出现?",
+          data: { houses: [7], planets: ["Venus", "Mars", "Neptune"], ruler: true, tightest: true } },
+        { id: "companion", q: "什么样的人适合长期同行?", real: "什么样的关系才真的适合我,我又该怎么认出它?",
+          data: { houses: [7], planets: ["Venus", "Mars"], points: ["Vertex"], ruler: true, seventhChain: true } },
+        { id: "intimacy", q: "我的亲密关系会呈现什么模式?", real: "关系进入深处之后,我们之间会怎么运转?",
+          data: { houses: [7, 8], planets: ["Moon", "Venus", "Pluto"], points: ["Juno"] } }
+      ]
+    },
+    {
+      id: "express", icon: "\uD83D\uDCBC", name: "发挥自己",
+      lead: "不只是工作与赚钱,而是:我要怎样活,才能真正发挥自己?",
+      items: [
+        { id: "work", q: "我适合什么样的工作?", real: "我需要怎样的工作方式,才能真正发挥自己?",
+          data: { houses: [10, 6, 2], mc: true, planets: ["Sun", "Mars", "Saturn"], ruler: true } },
+        { id: "edge", q: "我的职业优势在哪里?", real: "在工作里,我真正被需要的是什么?",
+          data: { houses: [10, 6], planets: ["Sun", "Mercury", "Mars", "Jupiter"], ace: true, mc: true } },
+        { id: "founder", q: "我适合创业吗?", real: "我需要多少自主权,才不会把自己耗掉?",
+          data: { houses: [1, 10, 2], planets: ["Mars", "Jupiter", "Saturn", "Uranus"], ruler: true, mind: true } },
+        { id: "wealth", q: "我的财富会从哪里累积?", real: "钱在我的人生里怎么来、怎么留得住?",
+          data: { houses: [2, 8, 11], planets: ["Venus", "Jupiter", "Saturn"], points: ["PoF"], ruler: true } },
+        { id: "leak", q: "为什么努力却留不住成果?", real: "我的力气都花到哪里去了?",
+          data: { houses: [2, 6, 12], planets: ["Saturn", "Neptune", "Pluto"], burden: true, tightest: true } }
+      ]
+    },
+    {
+      id: "build", icon: "\uD83C\uDF0D", name: "建立人生",
+      lead: "开始理解:为什么我的人生会走成今天这样?",
+      items: [
+        { id: "family", q: "家庭如何影响今天的我?", real: "家给了我什么,又让我带走了什么?",
+          data: { houses: [4, 10], ic: true, planets: ["Moon", "Saturn", "Sun"], points: ["Chiron"] } },
+        { id: "env", q: "我适合怎样的生活环境?", real: "什么样的日常节奏,能让我真的放松下来?",
+          data: { houses: [4, 6], planets: ["Moon", "Venus"], ic: true, elements: true } },
+        { id: "move", q: "我适合到不同城市发展吗?", real: "换一个地方生活,对我是打开还是消耗?",
+          data: { houses: [4, 9, 3], planets: ["Jupiter", "Uranus", "Moon"], nodes: true } },
+        { id: "social", q: "我的人际关系为什么会这样?", real: "在一群人里,我为什么会站在那个位置?",
+          data: { houses: [11, 3, 7], planets: ["Mercury", "Venus", "Saturn"], ruler: true } },
+        { id: "base", q: "我适合建立怎样的生活基础?", real: "什么样的落脚方式,会让我有归属感?",
+          data: { houses: [4, 2], planets: ["Moon", "Saturn", "Venus"], ic: true, ruler: true } }
+      ]
+    },
+    {
+      id: "inward", icon: "\uD83C\uDF19", name: "向内探索",
+      lead: "开始探索:为什么自己总会卡住?",
+      items: [
+        { id: "drain", q: "为什么我容易内耗?", real: "我的力气是在哪里、被什么悄悄用掉的?",
+          data: { houses: [12, 6], planets: ["Moon", "Saturn", "Neptune"], burden: true, tightest: true } },
+        { id: "emotion", q: "我的情绪如何影响人生?", real: "情绪一来,我的人生会往哪个方向偏?",
+          data: { houses: [4, 8, 12], planets: ["Moon", "Pluto", "Neptune"], sect: true } },
+        { id: "safety", q: "我的安全感来自哪里?", real: "什么东西在,我才敢真的放松?",
+          data: { houses: [2, 4], planets: ["Moon", "Saturn", "Venus"], ic: true } },
+        { id: "breakthrough", q: "我真正需要突破什么?", real: "哪一件事只要松动,我整个人会不一样?",
+          data: { planets: ["Saturn", "Pluto"], points: ["Chiron"], burden: true, patterns: true, nodes: true } },
+        { id: "unused", q: "我还有哪些尚未发挥出来的力量?", real: "我身上有什么,一直没被好好用过?",
+          data: { planets: ["Jupiter", "Uranus", "Pluto"], ace: true, emptyHouses: true, dignityFlags: true } }
+      ]
+    },
+    {
+      id: "become", icon: "\u2728", name: "活出自己",
+      lead: "最深的问题:如果越来越理解自己,我会成为怎样的人?",
+      items: [
+        { id: "why", q: "我为什么来到这里?", real: "把这些年串起来看,我在学的是什么?",
+          data: { nodes: true, points: ["Chiron"], pointer: true, mind: true } },
+        { id: "mission", q: "我的人生真正想完成什么?", real: "抛开该做的事,我心里真正想完成的是什么?",
+          data: { houses: [10, 9], mc: true, planets: ["Sun", "Jupiter"], endpoint: true, pointer: true } },
+        { id: "luck", q: "我的幸运通常会在哪里出现?", real: "什么状态下的我,事情特别顺?",
+          data: { houses: [9, 11, 5], planets: ["Jupiter", "Venus"], points: ["PoF"], ruler: true } },
+        { id: "turning", q: "什么样的经历会成为人生的转折点?", real: "什么样的事情,会真的把我推到下一段人生?",
+          data: { planets: ["Uranus", "Pluto", "Saturn"], nodes: true, tightest: true, patterns: true } },
+        { id: "fullself", q: "当我真正活出自己,会是什么样子?", real: "如果不再委屈自己,我会长成什么样?",
+          data: { houses: [1, 10], planets: ["Sun", "Moon"], ruler: true, nodes: true, mind: true, pointer: true } }
+      ]
+    }
   ];
+  const ALL_Q = [];
+  JOURNEY.forEach(function (L) { L.items.forEach(function (it) { ALL_Q.push(Object.assign({ layer: L.id, layerName: L.name, icon: L.icon }, it)); }); });
+  function findQ(qid) { return ALL_Q.find(x => x.id === qid) || null; }
 
-  // 取指定宫的:宫头星座、宫内行星、宫主星(现代/传统)及其飞向
+  // 取指定宫的:宫头星座、宫内行星、宫主星及其飞向
   function houseInfo(ns, res, h) {
     const cuspLon = ((res.cusps[h - 1] % 360) + 360) % 360;
     const sIdx = Math.floor(cuspLon / 30);
@@ -2571,7 +2663,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     return {
       house: h, cuspSign: signCN(sIdx), element: ELEM_CN[ELEM(sIdx)],
       planetsInside: inside,
-      rulerModern: { planet: fm.ruler, fliesToHouse: fm.fliesTo, sign: signCN(res.planets.find(p => p.key === fm.ruler).signIdx), score: ns.step6.planetScores[fm.ruler] },
+      rulerModern: { planet: fm.ruler, fliesToHouse: fm.fliesTo, sign: signCN(res.planets.find(p => p.key === fm.ruler).signIdx), state: ns.step6.planetScores[fm.ruler] },
       rulerTraditional: { planet: ft.ruler, fliesToHouse: ft.fliesTo }
     };
   }
@@ -2589,75 +2681,37 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     return x ? { point: key, sign: signCN(x.signIdx), house: x.house } : null;
   }
 
-  // 按主题抽取后台数据(严格对应规范第五节)
-  function topicData(ns, res, id) {
-    const H = h => houseInfo(ns, res, h);
-    const P = k => planetInfo(ns, res, k);
-    const X = k => extraInfo(res, k);
-    const ascIdx = Math.floor(((res.ang.asc % 360) + 360) % 360 / 30);
-    switch (id) {
-      case "personal": return {
-        ascSign: signCN(ascIdx), house1: H(1),
-        sun: P("Sun"), moon: P("Moon"),
-        chartRuler: ns.step5.chartRuler.modern,
-        chartRulerState: ns.step6.planetScores[ns.step5.chartRuler.modern.planet],
-        stelliumFocus: ns.step3.focusPointer, stelliums: ns.step3.stelliums, mind: ns.mind
-      };
-      case "wealth": return {
-        house2: H(2), house8: H(8),
-        venus: P("Venus"), mars: P("Mars"), jupiter: P("Jupiter"), saturn: P("Saturn"), pluto: P("Pluto"),
-        fortune: X("PoF"), sect: ns.step1.sect
-      };
-      case "emotion": return {
-        venus: P("Venus"), mars: P("Mars"), moon: P("Moon"),
-        house5: H(5), house7: H(7),
-        juno: X("Juno"), eros: X("Eros433")
-      };
-      case "love": return {
-        venus: P("Venus"), mars: P("Mars"), house5: H(5),
-        eros: X("Eros433"), partEros: X("PoE"), sunMoonMid: X("SMmid")
-      };
-      case "destined": return {
-        layer1_whoTheyAre: { house7: H(7), planetsInside: H(7).planetsInside.map(k => P(k)) },
-        layer2_whereToMeet: { seventhRulerFliesTo: H(7).rulerModern.fliesToHouse, seventhRulerTradFliesTo: H(7).rulerTraditional.fliesToHouse, vertex: X("Vertex") },
-        layer3_dynamic: { venus: P("Venus"), mars: P("Mars"), chartRuler: ns.step5.chartRuler.modern, seventhRuler: H(7).rulerModern,
-          rulerVsSeventh: ns.step7.allAspects.filter(a => [ns.step5.chartRuler.modern.planet, H(7).rulerModern.planet].every(k => a.a === k || a.b === k)) }
-      };
-      case "career": return {
-        house10: H(10), house6: H(6), house2: H(2),
-        mcSign: signCN(Math.floor(((res.ang.mc % 360) + 360) % 360 / 30)),
-        sun: P("Sun"), saturn: P("Saturn"), mars: P("Mars"), jupiter: P("Jupiter")
-      };
-      case "study": return { mercury: P("Mercury"), jupiter: P("Jupiter"), house3: H(3), house9: H(9) };
-      case "family": return {
-        moon: P("Moon"), saturn: P("Saturn"), sun: P("Sun"),
-        house4: H(4), icSign: signCN(Math.floor(((res.ang.mc + 180) % 360 + 360) % 360 / 30)),
-        chiron: X("Chiron")
-      };
-      case "sibling": return { house3: H(3), mercury: P("Mercury"), moon: P("Moon") };
-      default: return {};
-    }
+  // 按探索问题的声明,抽取对应后台资料
+  function questionData(ns, res, qid) {
+    const q = findQ(qid);
+    if (!q) return {};
+    const d = q.data, out = {};
+    if (d.houses) { out.houses = {}; d.houses.forEach(h => { out.houses["h" + h] = houseInfo(ns, res, h); }); }
+    if (d.planets) { out.planets = {}; d.planets.forEach(k => { out.planets[k] = planetInfo(ns, res, k); }); }
+    if (d.points) { out.points = {}; d.points.forEach(k => { out.points[k] = extraInfo(res, k); }); }
+    if (d.ruler) out.chartRuler = Object.assign({}, ns.step5.chartRuler.modern, { state: ns.step6.planetScores[ns.step5.chartRuler.modern.planet] });
+    if (d.seventhChain) { const h7 = houseInfo(ns, res, 7); out.seventhChain = { cusp: h7.cuspSign, rulerFliesTo: h7.rulerModern.fliesToHouse, inside: h7.planetsInside }; }
+    if (d.mc) out.mc = signCN(Math.floor(((res.ang.mc % 360) + 360) % 360 / 30));
+    if (d.ic) out.ic = signCN(Math.floor((((res.ang.mc + 180) % 360) + 360) % 360 / 30));
+    if (d.ace) out.strongest = { planets: ns.step6.ace, detail: ns.step6.ace.map(k => planetInfo(ns, res, k)) };
+    if (d.burden) out.mostStrained = { planets: ns.step6.burden, detail: ns.step6.burden.map(k => planetInfo(ns, res, k)) };
+    if (d.patterns) out.structures = ns.step7.patterns;
+    if (d.tightest) out.tightestAspects = ns.step7.tightestThree;
+    if (d.focus) out.focus = { stelliums: ns.step3.stelliums, pointer: ns.step3.focusPointer };
+    if (d.nodes) out.direction = ns.step8.nodes;
+    if (d.pointer) out.pointerCheck = ns.step8.pointerCheck;
+    if (d.endpoint) out.endpoint = ns.step5.endpointPointer;
+    if (d.emptyHouses) out.untouchedAreas = ns.step3.emptyHouses;
+    if (d.dignityFlags) out.specialFlags = ns.step7.specialFlags;
+    if (d.elements) out.elements = ns.step2.elements;
+    if (d.sect) out.sect = ns.step1.sect;
+    if (d.mind) out.lifePattern = ns.mind;
+    return out;
   }
 
-  // 探索主题的真正提问(表层问题 → 真正想知道的)
-  const REAL_Q = {
-    personal: { surface: "我是个什么样的人?", real: "为什么我总是用这种方式活着,而这样是不是可以的?" },
-    wealth:   { surface: "我的财运好不好?", real: "钱在我的人生里扮演什么角色,我要怎么做才不会一直觉得不安全?" },
-    emotion:  { surface: "我的感情运如何?", real: "为什么我在亲密关系里会变成那个样子?" },
-    love:     { surface: "我什么时候会遇到爱情?", real: "什么样的人会让我心动,而我为什么总是被同一类人吸引?" },
-    destined: { surface: "我的正缘是谁?", real: "什么样的关系才真的适合我,我又该怎么认出它?" },
-    career:   { surface: "我适合做什么工作?", real: "我需要怎样的工作方式,才能真正发挥自己?" },
-    study:    { surface: "我适合读什么?", real: "我是怎么学会一件事的,为什么有些方式对我特别有效?" },
-    family:   { surface: "我的家庭关系好吗?", real: "家给了我什么,又让我带走了什么,我要怎么和它相处?" },
-    sibling:  { surface: "我和手足关系如何?", real: "身边最亲近的同辈,如何塑造了今天与人相处的我?" }
-  };
-
-  function buildTopicPrompt(ns, res, id, blueprint) {
-    const t = TOPICS.find(x => x.id === id);
-    const q = REAL_Q[id] || { surface: t.name, real: t.name };
-    const d = topicData(ns, res, id);
-    const isDestined = id === "destined";
-    // 已在生命蓝图说过的内容,避免重复
+  function buildQuestionPrompt(ns, res, qid, blueprint) {
+    const q = findQ(qid);
+    const d = questionData(ns, res, qid);
     let said = "";
     if (blueprint) {
       const parts = [];
@@ -2666,39 +2720,38 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       (blueprint.chapters || []).forEach(c => parts.push(c.title + ":" + (c.summary || "").slice(0, 60)));
       said = parts.join("\n");
     }
-
     return [
       "你是 The Inner Sky 的人生探索解读师。",
       "你的工作不是分析星盘、不是解释占星、更不是教学。你要利用已经完成的分析结果,理解这个人的生命模式,回答他真正想知道的人生问题。占星只是证据,真正要理解的是人。",
       "",
-      "【第一原则】先完成完整思考,再开始写。思考过程不要输出,只输出最终文章。",
+      "【他这次想探索的是】「" + q.q + "」",
+      "但他真正想知道的是:「" + q.real + "」。回答真正的那个问题。",
+      "",
+      "【第一原则】先完成完整思考,再开始写。思考过程不要输出。",
       "",
       "━━━ 思考阶段(不输出) ━━━",
       "",
-      "【一 · 理解问题】他表面问的是「" + q.surface + "」,真正想知道的是「" + q.real + "」。回答真正的那个问题。",
-      "再想一步:他读完之后,应该突然理解到什么?不是给他资讯,是给他一个理解。",
+      "【一 · 理解问题】他读完之后,应该突然理解到什么?不是给他资讯,是给他一个理解。",
       "",
-      "【二 · 寻找证据】下面的分析结果里,哪些真正支持这个问题?哪些只是背景?不要平均使用所有资讯,只挑真正重要的。每个重要结论都必须有分析结果支撑;没有证据的话不要写。",
+      "【二 · 寻找证据】下面的分析结果里,哪些真正支持这个问题?哪些只是背景?不要平均使用所有资讯,只挑真正重要的。每个重要结论都要有分析结果支撑;没有证据就不要写。",
       "",
       "【三 · 避免重复】他已经读过自己的生命蓝图,里面说过:",
       said || "(暂无)",
-      "这些人格介绍不要重讲。探索主题要回答的是:同样的人格,为什么会形成今天这个具体的人生问题?例如蓝图说过「你很有观察力」,这里就不要再介绍观察力,而要写观察力如何影响他的工作/感情/金钱/信任/孤独。",
+      "这些不要重讲。这次要回答的是:同样的他,为什么会形成「" + q.q + "」这个具体的人生问题?",
       "",
-      "【四 · 建立核心观点】整篇只能有一个核心观点。先补完这句话:「真正的原因不是____,而是____。」",
+      "【四 · 核心观点】整篇只能有一个核心观点。先补完这句:「真正的原因不是____,而是____。」",
       "例:不是因为你敏感,而是因为你太早开始替别人负责。/ 不是因为你不适合创业,而是因为你需要高度自主。",
-      "整篇文章都围绕这一句,不要偏离。这句话写进输出的 tagline。",
+      "整篇围绕这一句,不要偏离。这句写进 tagline。",
       "",
-      "【五 · 一个核心洞见】问自己:如果他读完只能带走一个新的自我理解,那会是什么?整篇只服务这一个洞见,不要塞满所有分析结果。",
+      "【五 · 一个核心洞见】如果他读完只能带走一个新的自我理解,那会是什么?整篇只服务这一个洞见,不要塞满所有分析。",
       "",
-      "【六 · 检查阅读体验】如果我是他,读第一段会不会立刻认出自己?不会就重来。每一段有没有生活画面(工作、家庭、聊天、伴侣、冲突、会议、旅行、金钱)?是不是一直在描述现象,却没回答为什么?只有描述就重想。",
+      "【六 · 阅读体验】如果我是他,读第一段会不会立刻认出自己?不会就重来。每段有没有生活画面(工作、家庭、聊天、伴侣、冲突、会议、旅行、金钱)?是不是只在描述现象、没回答为什么?只有描述就重想。",
       "",
       "━━━ 写作阶段(输出) ━━━",
       "",
-      isDestined
-        ? "【文章节奏】五段,依序:1 先让他认出自己在关系里的样子 2 什么样的人会真正吸引他,以及为什么是这一类 3 这种吸引力是怎么形成的 4 容易在什么状态、什么场合里遇见(写成情境,不写地点清单) 5 当他成熟之后,这段关系会长成什么样子。"
-        : "【文章节奏】五段,依序:1 先让他认出自己(具体场景,不介绍人格) 2 开始解释真正的原因 3 深入说明这是怎么形成的 4 说明它如何影响他的人生 5 描述成熟之后的样子。",
+      "【文章节奏】五段:1 先让他认出自己(具体场景,不介绍人格) 2 开始解释真正的原因 3 深入说明这是怎么形成的 4 说明它如何影响他的人生 5 描述成熟之后的样子。",
       "每段一个小标题(8 字内、大白话、不含术语),每段 180–260 字。",
-      "每一段都遵循这个节奏:生活经验 → 真正原因 → 新的理解。不要「现象→现象→现象」。",
+      "每段内部走这个节奏:生活经验 → 真正原因 → 新的理解。不要「现象→现象→现象」。",
       "",
       "【写作原则】",
       "- 像一位陪伴很久、真正理解他的人在说话。不是老师、不是命理师、不是心理学家、更不像 AI。",
@@ -2707,16 +2760,16 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       "- 不下定论:避免「你一定」「你就是」「你注定」;改用「很多时候」「你往往」「有些情况下」「比较容易」「可能会」。",
       "- 不命令:避免「你应该」「你必须」「你需要」;改用「或许可以」「可以试着」「当你开始」「如果有一天」。",
       "- 不贴标签:不说「你是敏感型人格」,而是描述经验,如「当重要的人越靠近,你越容易开始担心失去」。",
-      "- 不把人格拆成优点缺点。同一种特质在不同阶段可能是优势也可能是挑战,请描述它如何演变。",
-      "- 不给具体身份:不写职业、姓氏、年龄、年份。只写气质、容易出现的情境、你们之间的互动模式。",
+      "- 不把人格拆成优点缺点。同一种特质在不同阶段可能是优势也可能是挑战,描述它如何演变。",
+      "- 不给具体身份与时间:不写职业、姓氏、年龄、年份、哪一年会发生。只写气质、容易出现的情境、互动模式。",
+      "- 不算命:不预测事件与时机,只谈这个人如何运作、如何成长。",
       "",
       "━━━ 分析结果(证据库,绝不可出现在正文) ━━━",
-      "此人整体形态「" + ns.mind.lifePattern + "」;" + (ns.step1.sect === "day" ? "内外冲突时以「想成为谁」为主" : "内外冲突时以「安不安稳」为主") + "。",
-      "本主题相关:",
+      "整体形态「" + ns.mind.lifePattern + "」;" + (ns.step1.sect === "day" ? "内外冲突时以「想成为谁」为主" : "内外冲突时以「安不安稳」为主") + "。",
       JSON.stringify(d),
       "",
       "━━━ 最终自检(不输出) ━━━",
-      "1 是否真正回答了这个主题,而不是介绍人格? 2 重要结论是否都有证据支撑? 3 有没有重复生命蓝图说过的话? 4 是否只有一个核心观点? 5 每段是否都回到同一个问题? 6 是否大量使用生活情境而非抽象概念? 7 是否避开了术语、标签与命令语气? 8 如果删掉所有占星背景,这篇是否仍然是一篇真实、有深度的人生理解?",
+      "1 是否真正回答了这个探索,而不是介绍人格? 2 重要结论是否都有证据? 3 有没有重复生命蓝图? 4 是否只有一个核心观点? 5 每段是否都回到同一个问题? 6 是否大量使用生活情境? 7 是否避开术语、标签、命令语气与算命口吻? 8 删掉所有占星背景后,这篇是否仍是一篇真实、有深度的人生理解?",
       "全部通过才输出。",
       "",
       "【只输出这个 JSON,不要其他文字】",
@@ -2737,8 +2790,8 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     } catch (e) { return null; }
   }
 
-  function fetchTopic(ns, res, id, fpSeed, blueprint) {
-    const prompt = buildTopicPrompt(ns, res, id, blueprint);
+  function fetchQuestion(ns, res, qid, fpSeed, blueprint) {
+    const prompt = buildQuestionPrompt(ns, res, qid, blueprint);
     function attempt(seed) {
       return fingerprint(seed).then(function (fp) {
         const bearer = (window.Cloud && window.Cloud.token && window.Cloud.token()) || SUPABASE_ANON_KEY;
@@ -2764,7 +2817,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
         return parsed;
       });
     }
-    const base = String(fpSeed || "") + "|topic:" + id + "|v2";
+    const base = String(fpSeed || "") + "|q:" + qid + "|v1";
     return attempt(base).catch(function (e) {
       if (e.parseFail) return attempt(base + "|retry" + Date.now());
       throw e;
@@ -2809,7 +2862,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     return null;
   }
 
-  window.NineSteps = { reviveReading: reviveReading, reviveTopic: reviveTopic, TOPICS: TOPICS, buildTopicPrompt: buildTopicPrompt, parseTopic: parseTopic, fetchTopic: fetchTopic, compute: computeNineSteps, render: renderNine, buildPrompt: buildPrompt, planetNote: planetNote, parseChapters: parseChapters, fetchReading: fetchReading, renderChapters: renderChapters, hasSupabase: function () { return !!(SUPABASE_FUNC_URL && SUPABASE_ANON_KEY); } };
+  window.NineSteps = { reviveReading: reviveReading, reviveTopic: reviveTopic, JOURNEY: JOURNEY, findQ: findQ, buildQuestionPrompt: buildQuestionPrompt, parseTopic: parseTopic, fetchQuestion: fetchQuestion, compute: computeNineSteps, render: renderNine, buildPrompt: buildPrompt, planetNote: planetNote, parseChapters: parseChapters, fetchReading: fetchReading, renderChapters: renderChapters, hasSupabase: function () { return !!(SUPABASE_FUNC_URL && SUPABASE_ANON_KEY); } };
 })();
 </script>
 <script>
@@ -3777,7 +3830,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     ensureToggleBar();
     drawWheel();
     drawPosTable();
-    curTopic = null;
+    curQ = null; openLayer = null;
     $("topicBody").innerHTML = "";
     renderReading();
     renderTopics();
@@ -3810,60 +3863,93 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       });
   }
 
-  // ---------- 主题专区 ----------
-  let curTopic = null, topicBusy = false;
+  // ---------- 人生探索地图 ----------
+  let curQ = null, openLayer = null, topicBusy = false;
   function renderTopics() {
-    const c = activeChart(), grid = $("topicGrid"), body = $("topicBody");
+    const c = activeChart(), grid = $("topicGrid");
     if (!c || !curNine) { $("topicPanel").style.display = "none"; return; }
     $("topicPanel").style.display = "";
-    const saved = c.topics || {};
+    const saved = c.answers || {};
     grid.innerHTML = "";
-    window.NineSteps.TOPICS.forEach(function (t) {
-      const on = curTopic === t.id;
-      const done = !!window.NineSteps.reviveTopic(saved[t.id]);
-      const b = document.createElement("button");
-      b.style.cssText = "font-family:inherit;font-size:13px;padding:11px 12px;border-radius:12px;cursor:pointer;text-align:left;line-height:1.5;transition:.15s;border:1px solid " +
-        (on ? "var(--gold-soft)" : "var(--line)") + ";background:" + (on ? "rgba(var(--accent-rgb),.14)" : "var(--card-soft)") +
-        ";color:" + (on ? "var(--gold)" : "var(--parchment)");
-      b.innerHTML = '<span style="font-size:15px;margin-right:6px">' + t.icon + "</span>" + t.name.replace("议题", "") +
-        (done ? '<span style="color:var(--gold);font-size:11px;margin-left:5px">\u2713</span>' : "");
-      b.addEventListener("click", function () { openTopic(t.id); });
-      grid.appendChild(b);
+    window.NineSteps.JOURNEY.forEach(function (L, li) {
+      const doneCount = L.items.filter(it => !!window.NineSteps.reviveTopic(saved[it.id])).length;
+      const expanded = openLayer === L.id;
+      const wrap = document.createElement("div");
+      wrap.style.cssText = "position:relative;padding-left:30px;padding-bottom:" + (li === window.NineSteps.JOURNEY.length - 1 ? "0" : "14px");
+      // 旅程连线与节点
+      wrap.innerHTML =
+        (li < window.NineSteps.JOURNEY.length - 1 ? '<div style="position:absolute;left:11px;top:26px;bottom:0;width:1px;background:var(--line)"></div>' : "") +
+        '<div style="position:absolute;left:4px;top:9px;width:15px;height:15px;border-radius:50%;border:1.5px solid ' +
+        (doneCount ? "var(--gold)" : "var(--line)") + ';background:' + (doneCount ? "rgba(var(--accent-rgb),.25)" : "var(--night-2)") + '"></div>';
+      // 层标题
+      const head = document.createElement("button");
+      head.style.cssText = "width:100%;text-align:left;font-family:inherit;cursor:pointer;border:1px solid " +
+        (expanded ? "var(--gold-soft)" : "var(--line)") + ";border-radius:12px;padding:12px 14px;background:" +
+        (expanded ? "rgba(var(--accent-rgb),.10)" : "var(--card-soft)") + ";transition:.15s";
+      head.innerHTML =
+        '<div style="display:flex;align-items:center;gap:9px">' +
+        '<span style="font-size:16px">' + L.icon + "</span>" +
+        '<span style="font-size:14px;font-weight:700;color:var(--gold)">' + L.name + "</span>" +
+        (doneCount ? '<span style="font-size:10.5px;color:var(--gold-soft)">已探索 ' + doneCount + "/5</span>" : "") +
+        '<span style="margin-left:auto;color:var(--muted);font-size:12px">' + (expanded ? "\u2227" : "\u2228") + "</span></div>" +
+        '<div style="font-size:11.5px;color:var(--muted);margin-top:5px;line-height:1.65">' + L.lead + "</div>";
+      head.addEventListener("click", function () {
+        openLayer = expanded ? null : L.id;
+        renderTopics();
+      });
+      wrap.appendChild(head);
+      // 五个探索问题
+      if (expanded) {
+        const list = document.createElement("div");
+        list.style.cssText = "display:grid;gap:6px;margin-top:8px";
+        L.items.forEach(function (it) {
+          const done = !!window.NineSteps.reviveTopic(saved[it.id]);
+          const on = curQ === it.id;
+          const b = document.createElement("button");
+          b.style.cssText = "width:100%;text-align:left;font-family:inherit;font-size:13px;line-height:1.6;padding:10px 13px;border-radius:10px;cursor:pointer;transition:.15s;border:1px solid " +
+            (on ? "var(--gold-soft)" : "var(--line)") + ";background:" + (on ? "rgba(var(--accent-rgb),.14)" : "transparent") +
+            ";color:" + (on ? "var(--gold)" : "var(--parchment)");
+          b.innerHTML = it.q + (done ? '<span style="color:var(--gold);font-size:11px;margin-left:6px">\u2713</span>' : "");
+          b.addEventListener("click", function () { openQuestion(it.id); });
+          list.appendChild(b);
+        });
+        wrap.appendChild(list);
+      }
+      grid.appendChild(wrap);
     });
-    if (!curTopic) body.innerHTML = "";
   }
 
-  function openTopic(id) {
+  function openQuestion(qid) {
     const c = activeChart(), body = $("topicBody");
     if (!c || !curNine || topicBusy) return;
-    if (curTopic === id) { curTopic = null; renderTopics(); body.innerHTML = ""; return; }
-    curTopic = id;
+    if (curQ === qid) { curQ = null; renderTopics(); body.innerHTML = ""; return; }
+    curQ = qid;
     renderTopics();
-    const t = window.NineSteps.TOPICS.find(x => x.id === id);
-    const saved = window.NineSteps.reviveTopic((c.topics || {})[id]);
+    const q = window.NineSteps.findQ(qid);
+    const saved = window.NineSteps.reviveTopic((c.answers || {})[qid]);
     if (saved) {
-      if (saved !== (c.topics || {})[id]) { c.topics[id] = saved; window.Cloud.updateChart(c).catch(function () { }); }
-      paintTopic(t, saved);
+      if (saved !== (c.answers || {})[qid]) { c.answers[qid] = saved; window.Cloud.updateChart(c).catch(function () { }); }
+      paintAnswer(q, saved);
       return;
     }
     topicBusy = true;
     body.innerHTML = '<div style="padding:26px 8px;text-align:center;color:var(--muted);font-size:13px;line-height:2">' +
-      '<div style="font-size:19px;color:var(--gold);margin-bottom:8px">' + t.icon + "</div>正在为你整理「" + t.name.replace("议题", "") + "」…</div>";
+      '<div style="font-size:19px;color:var(--gold);margin-bottom:8px">' + q.icon + "</div>正在为你探索「" + q.q + "」…</div>";
     const fpSeed = [c.date, c.time, c.lat.toFixed(4), c.lon.toFixed(4)].join("|");
-    window.NineSteps.fetchTopic(curNine, curResult, id, fpSeed, c.reading).then(function (data) {
+    window.NineSteps.fetchQuestion(curNine, curResult, qid, fpSeed, c.reading).then(function (data) {
       topicBusy = false;
-      if (curTopic !== id || !activeChart() || activeChart().id !== c.id) return;
-      c.topics = c.topics || {};
-      c.topics[id] = data;
+      if (curQ !== qid || !activeChart() || activeChart().id !== c.id) return;
+      c.answers = c.answers || {};
+      c.answers[qid] = data;
       window.Cloud.updateChart(c).catch(function (e) { console.warn("云同步失败", e); });
       renderTopics();
-      paintTopic(t, data);
+      paintAnswer(q, data);
     }).catch(function (e) {
       topicBusy = false;
       body.innerHTML = '<div style="padding:20px 8px;text-align:center;color:var(--muted);font-size:12.5px;line-height:1.9">内容暂时无法完成。<a href="#" id="topicRetry" style="color:var(--gold)">点此再试一次</a>' +
         '<div id="topicDiag" style="margin-top:8px;font-size:11.5px;opacity:.8"></div></div>';
       const r = document.getElementById("topicRetry");
-      if (r) r.addEventListener("click", function (ev) { ev.preventDefault(); curTopic = null; openTopic(id); });
+      if (r) r.addEventListener("click", function (ev) { ev.preventDefault(); curQ = null; openQuestion(qid); });
       diagnose(e).then(function (d) {
         const box = document.getElementById("topicDiag");
         if (box) box.innerHTML = "诊断:" + d.hint + '<br><span style="opacity:.65">(' + d.raw + " · 探测 " + d.probe + " " + d.detail + ")</span>";
@@ -3871,15 +3957,16 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     });
   }
 
-  function paintTopic(t, data) {
+  function paintAnswer(q, data) {
     const esc = x => String(x || "").replace(/</g, "&lt;");
     const para = x => esc(x).split(/\n\s*\n|\n/).filter(y => y.trim()).map(y => '<p style="margin:0 0 11px">' + y.trim() + "</p>").join("");
-    let h = '<div style="border:1px solid var(--line);border-radius:13px;padding:17px 19px;background:var(--card-soft)">' +
-      '<div style="font-size:14.5px;font-weight:700;color:var(--gold);margin-bottom:10px">' + t.icon + " " + t.name.replace("议题", "") + "</div>";
+    let h = '<div style="border:1px solid var(--line);border-radius:13px;padding:18px 20px;background:var(--card-soft)">' +
+      '<div style="font-size:10.5px;letter-spacing:.14em;color:var(--muted);margin-bottom:5px">' + q.icon + " " + q.layerName + "</div>" +
+      '<div style="font-size:15px;font-weight:700;color:var(--gold);margin-bottom:12px">' + esc(q.q) + "</div>";
     if (data.tagline)
-      h += '<div style="font-size:14.5px;line-height:1.85;color:var(--parchment);padding:12px 14px;margin-bottom:14px;border-left:2px solid var(--gold-soft);background:rgba(var(--accent-rgb),.06);border-radius:0 9px 9px 0">' + esc(data.tagline) + "</div>";
+      h += '<div style="font-size:14.5px;line-height:1.85;color:var(--parchment);padding:13px 15px;margin-bottom:15px;border-left:2px solid var(--gold-soft);background:rgba(var(--accent-rgb),.06);border-radius:0 9px 9px 0">' + esc(data.tagline) + "</div>";
     h += data.sections.map(function (sc) {
-      return '<div style="margin:0 0 15px">' +
+      return '<div style="margin:0 0 16px">' +
         (sc.title ? '<div style="font-size:13px;font-weight:700;color:var(--gold-soft);margin-bottom:7px">' + esc(sc.title) + "</div>" : "") +
         '<div style="font-size:13.5px;line-height:2;color:var(--parchment)">' + para(sc.body) + "</div></div>";
     }).join("");
