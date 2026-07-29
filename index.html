@@ -2302,12 +2302,14 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
           try { return JSON.parse(t); } catch (e) { throw new Error("返回不是 JSON:" + t.slice(0, 120)); }
         });
       }).then(function (d) {
-        const parsed = parseChapters(d.text || d.content || "");
+        const raw = d.text || d.content || "";
+        const parsed = parseChapters(raw);
         if (!parsed) {
           const e = new Error("返回内容无法解析为五章(可能被截断)");
           e.parseFail = true;
           throw e;
         }
+        parsed.raw = raw;   // 原始文本随内容一起保存,日后改版可本地重解析,永不重生成
         return parsed;
       });
     }
@@ -2637,37 +2639,88 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     }
   }
 
-  function buildTopicPrompt(ns, res, id) {
+  // 探索主题的真正提问(表层问题 → 真正想知道的)
+  const REAL_Q = {
+    personal: { surface: "我是个什么样的人?", real: "为什么我总是用这种方式活着,而这样是不是可以的?" },
+    wealth:   { surface: "我的财运好不好?", real: "钱在我的人生里扮演什么角色,我要怎么做才不会一直觉得不安全?" },
+    emotion:  { surface: "我的感情运如何?", real: "为什么我在亲密关系里会变成那个样子?" },
+    love:     { surface: "我什么时候会遇到爱情?", real: "什么样的人会让我心动,而我为什么总是被同一类人吸引?" },
+    destined: { surface: "我的正缘是谁?", real: "什么样的关系才真的适合我,我又该怎么认出它?" },
+    career:   { surface: "我适合做什么工作?", real: "我需要怎样的工作方式,才能真正发挥自己?" },
+    study:    { surface: "我适合读什么?", real: "我是怎么学会一件事的,为什么有些方式对我特别有效?" },
+    family:   { surface: "我的家庭关系好吗?", real: "家给了我什么,又让我带走了什么,我要怎么和它相处?" },
+    sibling:  { surface: "我和手足关系如何?", real: "身边最亲近的同辈,如何塑造了今天与人相处的我?" }
+  };
+
+  function buildTopicPrompt(ns, res, id, blueprint) {
     const t = TOPICS.find(x => x.id === id);
+    const q = REAL_Q[id] || { surface: t.name, real: t.name };
     const d = topicData(ns, res, id);
     const isDestined = id === "destined";
+    // 已在生命蓝图说过的内容,避免重复
+    let said = "";
+    if (blueprint) {
+      const parts = [];
+      if (blueprint.spine) parts.push("主线:" + blueprint.spine);
+      (blueprint.cards || []).forEach(c => parts.push(c.title + ":" + c.line));
+      (blueprint.chapters || []).forEach(c => parts.push(c.title + ":" + (c.summary || "").slice(0, 60)));
+      said = parts.join("\n");
+    }
+
     return [
-      "你要为一个完全不懂占星的普通人,写一段关于「" + t.name.replace("议题", "") + "」的解读。",
+      "你是 The Inner Sky 的人生探索解读师。",
+      "你的工作不是分析星盘、不是解释占星、更不是教学。你要利用已经完成的分析结果,理解这个人的生命模式,回答他真正想知道的人生问题。占星只是证据,真正要理解的是人。",
       "",
-      "【铁律 · 违反即失败】",
-      "1. 正文里一个占星术语都不许出现:不准写「第几宫」「宫主星」「飞星」「相位」「尊贵」「落陷」以及任何行星名、星座名、「凯龙」「MC」「IC」「星盘」「命盘」「能量」「宇宙」。全部换成大白话与生活情境。",
-      "   例:✗「你的金星落入九宫」 ✓「你容易因为共同成长、一起学习或来自远方的文化背景,而对一个人产生好感」。",
-      "2. 不做宿命论:不写「你注定」「一定会」「永远」「命中只有一个」。改写成「你比较容易…」「你往往会…」「你通常会被…吸引」「在关系里,你常出现…」。",
-      "3. 不给具体身份:不写对方职业、姓氏、出现年龄、结婚年份。只写对方通常具备什么气质、容易出现在哪类环境、你们之间容易形成什么互动。",
-      "4. 每个困难都要有出口:讲完卡点后,一定补上如何成长、可以学会什么、这段经历想带来什么,保持温暖不制造焦虑。",
-      "5. 语言风格与《生命蓝图》一致:日常口语、句子短、简单易懂、有温度不浮夸,不用文学式长句,不解释任何理论。",
+      "【第一原则】先完成完整思考,再开始写。思考过程不要输出,只输出最终文章。",
       "",
-      "【这个主题的核心定调】" + t.tone,
-      "先在心里跑一遍这条链路(结果不要写出来):这件事发生的人生领域 → 主导这个领域的力量流向了哪里 → 相关力量的状态是资源还是课题 → 收成一句话定调。然后再用自然语言写出来。",
+      "━━━ 思考阶段(不输出) ━━━",
+      "",
+      "【一 · 理解问题】他表面问的是「" + q.surface + "」,真正想知道的是「" + q.real + "」。回答真正的那个问题。",
+      "再想一步:他读完之后,应该突然理解到什么?不是给他资讯,是给他一个理解。",
+      "",
+      "【二 · 寻找证据】下面的分析结果里,哪些真正支持这个问题?哪些只是背景?不要平均使用所有资讯,只挑真正重要的。每个重要结论都必须有分析结果支撑;没有证据的话不要写。",
+      "",
+      "【三 · 避免重复】他已经读过自己的生命蓝图,里面说过:",
+      said || "(暂无)",
+      "这些人格介绍不要重讲。探索主题要回答的是:同样的人格,为什么会形成今天这个具体的人生问题?例如蓝图说过「你很有观察力」,这里就不要再介绍观察力,而要写观察力如何影响他的工作/感情/金钱/信任/孤独。",
+      "",
+      "【四 · 建立核心观点】整篇只能有一个核心观点。先补完这句话:「真正的原因不是____,而是____。」",
+      "例:不是因为你敏感,而是因为你太早开始替别人负责。/ 不是因为你不适合创业,而是因为你需要高度自主。",
+      "整篇文章都围绕这一句,不要偏离。这句话写进输出的 tagline。",
+      "",
+      "【五 · 一个核心洞见】问自己:如果他读完只能带走一个新的自我理解,那会是什么?整篇只服务这一个洞见,不要塞满所有分析结果。",
+      "",
+      "【六 · 检查阅读体验】如果我是他,读第一段会不会立刻认出自己?不会就重来。每一段有没有生活画面(工作、家庭、聊天、伴侣、冲突、会议、旅行、金钱)?是不是一直在描述现象,却没回答为什么?只有描述就重想。",
+      "",
+      "━━━ 写作阶段(输出) ━━━",
       "",
       isDestined
-        ? "【结构】固定输出三层,对应 sections 的三段:1「他是什么样的人」(气质、给人的感觉、相处时的调性) 2「容易在哪里相遇」(哪类场合、什么状态下的你更容易遇见,写成情境不写地点清单) 3「你们的关系模式」(互动怎么运转、你在关系里的位置、容易甜的地方与容易卡的地方 + 出口)。"
-        : "【结构】输出 3 段,每段一个小标题(标题 8 字内、大白话、不含术语),依序讲:1 你在这件事上的天生倾向与实际表现 2 优势与最顺手的地方 3 容易卡住的地方 + 具体可做的成长方向。",
-      "每段 200–300 字。整段总字数 700–900 字。",
+        ? "【文章节奏】五段,依序:1 先让他认出自己在关系里的样子 2 什么样的人会真正吸引他,以及为什么是这一类 3 这种吸引力是怎么形成的 4 容易在什么状态、什么场合里遇见(写成情境,不写地点清单) 5 当他成熟之后,这段关系会长成什么样子。"
+        : "【文章节奏】五段,依序:1 先让他认出自己(具体场景,不介绍人格) 2 开始解释真正的原因 3 深入说明这是怎么形成的 4 说明它如何影响他的人生 5 描述成熟之后的样子。",
+      "每段一个小标题(8 字内、大白话、不含术语),每段 180–260 字。",
+      "每一段都遵循这个节奏:生活经验 → 真正原因 → 新的理解。不要「现象→现象→现象」。",
       "",
-      "【后台资料(仅供你分析,绝不可出现在正文)】",
+      "【写作原则】",
+      "- 像一位陪伴很久、真正理解他的人在说话。不是老师、不是命理师、不是心理学家、更不像 AI。",
+      "- 成熟、自然、有温度。不刻意文学、不故作神秘、不鸡汤、不煽情、不华丽。",
+      "- 一个占星术语都不许出现:不准写「第几宫」「宫主星」「飞星」「相位」「尊贵」「落陷」以及任何行星名、星座名、「凯龙」「MC」「IC」「星盘」「命盘」「能量」「宇宙」。全部翻成生活语言。",
+      "- 不下定论:避免「你一定」「你就是」「你注定」;改用「很多时候」「你往往」「有些情况下」「比较容易」「可能会」。",
+      "- 不命令:避免「你应该」「你必须」「你需要」;改用「或许可以」「可以试着」「当你开始」「如果有一天」。",
+      "- 不贴标签:不说「你是敏感型人格」,而是描述经验,如「当重要的人越靠近,你越容易开始担心失去」。",
+      "- 不把人格拆成优点缺点。同一种特质在不同阶段可能是优势也可能是挑战,请描述它如何演变。",
+      "- 不给具体身份:不写职业、姓氏、年龄、年份。只写气质、容易出现的情境、你们之间的互动模式。",
+      "",
+      "━━━ 分析结果(证据库,绝不可出现在正文) ━━━",
+      "此人整体形态「" + ns.mind.lifePattern + "」;" + (ns.step1.sect === "day" ? "内外冲突时以「想成为谁」为主" : "内外冲突时以「安不安稳」为主") + "。",
+      "本主题相关:",
       JSON.stringify(d),
-      "补充判断:此人整体形态「" + ns.mind.lifePattern + "」," + (ns.step1.sect === "day" ? "内外冲突时以「想成为谁」为主" : "内外冲突时以「安不安稳」为主") + "。",
       "",
-      "【交稿前自查】有没有术语漏网?有没有哪句换成任何人都成立?有没有断言式宿命句?有没有留下没有出口的困难?",
+      "━━━ 最终自检(不输出) ━━━",
+      "1 是否真正回答了这个主题,而不是介绍人格? 2 重要结论是否都有证据支撑? 3 有没有重复生命蓝图说过的话? 4 是否只有一个核心观点? 5 每段是否都回到同一个问题? 6 是否大量使用生活情境而非抽象概念? 7 是否避开了术语、标签与命令语气? 8 如果删掉所有占星背景,这篇是否仍然是一篇真实、有深度的人生理解?",
+      "全部通过才输出。",
       "",
       "【只输出这个 JSON,不要其他文字】",
-      '{"tagline":"一句话定调(30字内,大白话)","sections":[{"title":"小标题","body":"200-300字"},{"title":"小标题","body":"..."},{"title":"小标题","body":"..."}]}'
+      '{"tagline":"真正的原因不是____,而是____(一句话核心观点)","sections":[{"title":"小标题","body":"180-260字"},{"title":"小标题","body":"..."},{"title":"小标题","body":"..."},{"title":"小标题","body":"..."},{"title":"小标题","body":"..."}]}'
     ].join("\n");
   }
 
@@ -2684,8 +2737,8 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     } catch (e) { return null; }
   }
 
-  function fetchTopic(ns, res, id, fpSeed) {
-    const prompt = buildTopicPrompt(ns, res, id);
+  function fetchTopic(ns, res, id, fpSeed, blueprint) {
+    const prompt = buildTopicPrompt(ns, res, id, blueprint);
     function attempt(seed) {
       return fingerprint(seed).then(function (fp) {
         const bearer = (window.Cloud && window.Cloud.token && window.Cloud.token()) || SUPABASE_ANON_KEY;
@@ -2704,19 +2757,59 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
           try { return JSON.parse(t); } catch (e) { throw new Error("返回异常"); }
         });
       }).then(function (d) {
-        const parsed = parseTopic(d.text || d.content || "");
+        const raw = d.text || d.content || "";
+        const parsed = parseTopic(raw);
         if (!parsed) { const e = new Error("内容解析失败"); e.parseFail = true; throw e; }
+        parsed.raw = raw;
         return parsed;
       });
     }
-    const base = String(fpSeed || "") + "|topic:" + id + "|v1";
+    const base = String(fpSeed || "") + "|topic:" + id + "|v2";
     return attempt(base).catch(function (e) {
       if (e.parseFail) return attempt(base + "|retry" + Date.now());
       throw e;
     });
   }
 
-  window.NineSteps = { TOPICS: TOPICS, buildTopicPrompt: buildTopicPrompt, parseTopic: parseTopic, fetchTopic: fetchTopic, compute: computeNineSteps, render: renderNine, buildPrompt: buildPrompt, planetNote: planetNote, parseChapters: parseChapters, fetchReading: fetchReading, renderChapters: renderChapters, hasSupabase: function () { return !!(SUPABASE_FUNC_URL && SUPABASE_ANON_KEY); } };
+  // ---------- 兼容层:老版本内容自动升级,永不因改版而丢失 ----------
+  // 规则:1 先看结构是否够用 2 不够就用保存的原始文本重解析 3 都不行才算真的没有
+  function reviveReading(saved) {
+    if (!saved) return null;
+    if (saved.chapters && saved.chapters.length) {
+      // 结构在:补齐后来新增的字段,避免渲染出错
+      if (!Array.isArray(saved.cards)) saved.cards = [];
+      saved.chapters.forEach(function (c) {
+        if (typeof c.summary !== "string") c.summary = "";
+        if (typeof c.body !== "string") c.body = "";
+        if (typeof c.title !== "string") c.title = "";
+      });
+      if (typeof saved.spine !== "string") saved.spine = "";
+      return saved;
+    }
+    if (saved.raw) {                      // 结构坏了但原文还在 → 本地重解析
+      const re = parseChapters(saved.raw);
+      if (re) { re.raw = saved.raw; re.ts = saved.ts; return re; }
+    }
+    return null;
+  }
+  function reviveTopic(saved) {
+    if (!saved) return null;
+    if (saved.sections && saved.sections.length) {
+      if (typeof saved.tagline !== "string") saved.tagline = "";
+      saved.sections.forEach(function (x) {
+        if (typeof x.title !== "string") x.title = "";
+        if (typeof x.body !== "string") x.body = "";
+      });
+      return saved;
+    }
+    if (saved.raw) {
+      const re = parseTopic(saved.raw);
+      if (re) { re.raw = saved.raw; return re; }
+    }
+    return null;
+  }
+
+  window.NineSteps = { reviveReading: reviveReading, reviveTopic: reviveTopic, TOPICS: TOPICS, buildTopicPrompt: buildTopicPrompt, parseTopic: parseTopic, fetchTopic: fetchTopic, compute: computeNineSteps, render: renderNine, buildPrompt: buildPrompt, planetNote: planetNote, parseChapters: parseChapters, fetchReading: fetchReading, renderChapters: renderChapters, hasSupabase: function () { return !!(SUPABASE_FUNC_URL && SUPABASE_ANON_KEY); } };
 })();
 </script>
 <script>
@@ -3691,6 +3784,32 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   }
 
   // 解读面板:有完整解读显示五章,否则显示本地简版
+  // ---------- 故障诊断:一眼看出卡在哪一环 ----------
+  function diagnose(err) {
+    const cfg = window.CloudCfg || {};
+    const msg = (err && err.message) || String(err || "");
+    return fetch(cfg.funcUrl, { method: "GET", headers: { "apikey": cfg.anon } })
+      .then(function (r) { return r.text().then(function (t) { return { status: r.status, text: t }; }); })
+      .catch(function (e) { return { status: 0, text: String(e) }; })
+      .then(function (probe) {
+        let hint = "", detail = "";
+        try {
+          const o = JSON.parse(probe.text);
+          if (o.anthropic_key_set === false) hint = "服务端还没有设置 AI 密钥(ANTHROPIC_API_KEY)";
+          else if (o.function) detail = "函数版本:" + o.function;
+        } catch (e) { }
+        if (!hint) {
+          if (probe.status === 401 || /401/.test(msg)) hint = "身份验证没通过:请到 Supabase → Edge Functions → read-chart → Details,把 Verify JWT 关掉后重新部署";
+          else if (probe.status === 404 || /404/.test(msg)) hint = "找不到这个函数:确认函数名是 read-chart 且已部署";
+          else if (probe.status === 0) hint = "连不上服务器:检查网络,或函数地址是否正确";
+          else if (/502/.test(msg)) hint = "AI 服务返回错误:多半是密钥无效或账户额度不足";
+          else if (/504|timeout|时/.test(msg)) hint = "生成超时:内容太长,稍后重试通常可成功";
+          else if (/解析|截断/.test(msg)) hint = "AI 回答格式异常,再试一次通常可解决";
+        }
+        return { hint: hint || "未知错误", raw: msg, probe: probe.status, detail: detail };
+      });
+  }
+
   // ---------- 主题专区 ----------
   let curTopic = null, topicBusy = false;
   function renderTopics() {
@@ -3701,7 +3820,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     grid.innerHTML = "";
     window.NineSteps.TOPICS.forEach(function (t) {
       const on = curTopic === t.id;
-      const done = !!saved[t.id];
+      const done = !!window.NineSteps.reviveTopic(saved[t.id]);
       const b = document.createElement("button");
       b.style.cssText = "font-family:inherit;font-size:13px;padding:11px 12px;border-radius:12px;cursor:pointer;text-align:left;line-height:1.5;transition:.15s;border:1px solid " +
         (on ? "var(--gold-soft)" : "var(--line)") + ";background:" + (on ? "rgba(var(--accent-rgb),.14)" : "var(--card-soft)") +
@@ -3721,13 +3840,17 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     curTopic = id;
     renderTopics();
     const t = window.NineSteps.TOPICS.find(x => x.id === id);
-    const saved = (c.topics || {})[id];
-    if (saved) { paintTopic(t, saved); return; }
+    const saved = window.NineSteps.reviveTopic((c.topics || {})[id]);
+    if (saved) {
+      if (saved !== (c.topics || {})[id]) { c.topics[id] = saved; window.Cloud.updateChart(c).catch(function () { }); }
+      paintTopic(t, saved);
+      return;
+    }
     topicBusy = true;
     body.innerHTML = '<div style="padding:26px 8px;text-align:center;color:var(--muted);font-size:13px;line-height:2">' +
       '<div style="font-size:19px;color:var(--gold);margin-bottom:8px">' + t.icon + "</div>正在为你整理「" + t.name.replace("议题", "") + "」…</div>";
     const fpSeed = [c.date, c.time, c.lat.toFixed(4), c.lon.toFixed(4)].join("|");
-    window.NineSteps.fetchTopic(curNine, curResult, id, fpSeed).then(function (data) {
+    window.NineSteps.fetchTopic(curNine, curResult, id, fpSeed, c.reading).then(function (data) {
       topicBusy = false;
       if (curTopic !== id || !activeChart() || activeChart().id !== c.id) return;
       c.topics = c.topics || {};
@@ -3737,9 +3860,14 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       paintTopic(t, data);
     }).catch(function (e) {
       topicBusy = false;
-      body.innerHTML = '<div style="padding:20px 8px;text-align:center;color:var(--muted);font-size:12.5px;line-height:1.9">内容暂时无法完成。<a href="#" id="topicRetry" style="color:var(--gold)">点此再试一次</a></div>';
+      body.innerHTML = '<div style="padding:20px 8px;text-align:center;color:var(--muted);font-size:12.5px;line-height:1.9">内容暂时无法完成。<a href="#" id="topicRetry" style="color:var(--gold)">点此再试一次</a>' +
+        '<div id="topicDiag" style="margin-top:8px;font-size:11.5px;opacity:.8"></div></div>';
       const r = document.getElementById("topicRetry");
       if (r) r.addEventListener("click", function (ev) { ev.preventDefault(); curTopic = null; openTopic(id); });
+      diagnose(e).then(function (d) {
+        const box = document.getElementById("topicDiag");
+        if (box) box.innerHTML = "诊断:" + d.hint + '<br><span style="opacity:.65">(' + d.raw + " · 探测 " + d.probe + " " + d.detail + ")</span>";
+      });
     });
   }
 
@@ -3763,8 +3891,13 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   function renderReading(retrying) {
     const c = activeChart(), body = $("nineBody");
     if (!c || !curNine) { body.innerHTML = ""; return; }
-    if (c.reading && c.reading.chapters) {
-      window.NineSteps.renderChapters(c.reading, body);
+    const revived = window.NineSteps.reviveReading(c.reading);
+    if (revived) {
+      if (revived !== c.reading) {          // 本地修复成功:回存,以后直接可用
+        c.reading = revived;
+        window.Cloud.updateChart(c).catch(function () { });
+      }
+      window.NineSteps.renderChapters(revived, body);
       $("readState").textContent = "";
       renderTopics();
       return;
@@ -3781,7 +3914,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
         .then(function (parsed) {
           autoGenBusy = false;
           if (!activeChart() || activeChart().id !== c.id) return;
-          c.reading = Object.assign({ ts: new Date().toISOString().slice(0, 10) }, parsed);
+          c.reading = Object.assign({ ts: new Date().toISOString().slice(0, 10) }, parsed);   // 含 raw 原文
           window.Cloud.updateChart(c).catch(function (e) { console.warn("云同步失败", e); });
           renderReading();
         })
@@ -3793,10 +3926,15 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
           $("readState").textContent = "";
           const tip = document.createElement("div");
           tip.style.cssText = "margin-top:16px;padding:12px 14px;border:1px dashed var(--line);border-radius:10px;font-size:12.5px;color:var(--muted);line-height:1.8";
-          tip.innerHTML = '内容暂时无法完成,已先为你显示基础版本。<a href="#" id="againLink" style="color:var(--gold)">点此再试一次</a>';
+          tip.innerHTML = '内容暂时无法完成,已先为你显示基础版本。<a href="#" id="againLink" style="color:var(--gold)">点此再试一次</a>' +
+            '<div id="diagBox" style="margin-top:8px;font-size:11.5px;opacity:.8"></div>';
           body.appendChild(tip);
           const a2 = document.getElementById("againLink");
           if (a2) a2.addEventListener("click", function (ev) { ev.preventDefault(); renderReading(); });
+          diagnose(e).then(function (d) {
+            const box = document.getElementById("diagBox");
+            if (box) box.innerHTML = "诊断:" + d.hint + '<br><span style="opacity:.65">(' + d.raw + " · 探测 " + d.probe + " " + d.detail + ")</span>";
+          });
         });
     } else if (!autoGenBusy) {
       window.NineSteps.render(curNine, body);
