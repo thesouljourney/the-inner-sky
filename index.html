@@ -21,7 +21,7 @@
     --fire:#c0532a; --earth:#5f7d3c; --air:#3f7fa0; --water:#3a7a9a;
     /* —— 主题化扩展变量(由 JS 按所选主题覆盖) —— */
     --accent-rgb:168,121,42;
-    --card-soft:var(--card-soft);
+    --card-soft:rgba(255,251,240,.5);
     --bg-layers:
       radial-gradient(1200px 700px at 70% -10%, #f7f0df 0%, rgba(247,240,223,0) 55%),
       radial-gradient(900px 600px at 0% 100%, #ece1c6 0%, rgba(236,225,198,0) 60%),
@@ -264,7 +264,7 @@
 <body>
 <header class="top">
   <h1><span class="star">✶</span> 我的生命蓝图</h1>
-  <span class="sub">本命盘学习工具</span>
+  <span class="sub">认识真正的自己</span>
   <span class="acc" id="accNote">与 Swiss Ephemeris 同精度</span>
 </header>
 
@@ -315,7 +315,7 @@
         <button class="btn" id="saveBtn" style="width:auto;padding:9px 20px;font-size:13.5px">保存并绘制</button>
         <button class="btn ghost" id="clearBtn" style="width:auto;padding:9px 16px;font-size:13.5px">清空</button>
       </div>
-      <p class="hint">数据只存在本机浏览器,不上传。时区固定为马来西亚/新加坡时间(UTC+8)。</p>
+      <p class="hint">资料安全存放在你的云端账号,只有你能看到。时区固定为马来西亚/新加坡时间(UTC+8)。</p>
       </div>
     </div>
   </aside>
@@ -891,42 +891,6 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     return 12;
   }
 
-  // ---------- 庙旺陷落 ----------
-  // 键:行星 key;值:[入庙星座idx数组, 曜升idx, 落陷idx数组, 弱势idx]
-  const DIGNITY = {
-    Sun:     { rul: [4],     exa: 0,  det: [10],    fal: 6  },
-    Moon:    { rul: [3],     exa: 1,  det: [9],     fal: 7  },
-    Mercury: { rul: [2, 5],  exa: 5,  det: [8, 11], fal: 11 },
-    Venus:   { rul: [1, 6],  exa: 11, det: [7, 0],  fal: 5  },
-    Mars:    { rul: [0, 7],  exa: 9,  det: [6, 1],  fal: 3  },
-    Jupiter: { rul: [8, 11], exa: 3,  det: [2, 5],  fal: 9  },
-    Saturn:  { rul: [9, 10], exa: 6,  det: [3, 4],  fal: 0  },
-    Uranus:  { rul: [10],    exa: 7,  det: [4],     fal: 1  },
-    Neptune: { rul: [11],    exa: 3,  det: [5],     fal: 9  },
-    Pluto:   { rul: [7],     exa: 0,  det: [1],     fal: 6  }
-  };
-  function dignityOf(planetKey, signIdx) {
-    const d = DIGNITY[planetKey];
-    if (!d) return null;
-    if (d.rul.includes(signIdx)) return "入庙(力量最强)";
-    if (d.exa === signIdx) return "曜升(发挥出色)";
-    if (d.det.includes(signIdx)) return "落陷(需要磨合)";
-    if (d.fal === signIdx) return "弱势(表达受抑)";
-    return null;
-  }
-
-  // ---------- 临界度数 ----------
-  function criticalDegree(degInSign, signIdx) {
-    const d = Math.floor(degInSign);
-    if (d === 29) return "29° 临界尾度:该星座课题的收尾与急迫感";
-    if (d === 0) return "0° 起始度:该星座能量最纯粹的新起点";
-    const mode = SIGNS[signIdx].mode;
-    if (mode === "开创" && (d === 13 || d === 26)) return d + "° 开创敏感度:行动课题被放大";
-    if (mode === "固定" && (d === 8 || d === 9 || d === 21 || d === 22)) return d + "° 固定敏感度:坚持课题被放大";
-    if (mode === "变动" && (d === 4 || d === 17)) return d + "° 变动敏感度:适应课题被放大";
-    return null;
-  }
-
   // ---------- 行星黄经(当日回归黄道) ----------
   function bodyLon(body, date) {
     const v = A.GeoVector(body, date, true);
@@ -1081,47 +1045,9 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     return { date, lat, lon, system, ang, cusps, planets, aspects, stats };
   }
 
-  // ---------- 学习释义库 ----------
-  const MEANINGS = {
-    planets: {
-      Sun: "太阳是星盘的核心:你「正在成为」的那个人。它代表意志、生命力、荣誉感和人生想要点亮的方向。太阳所在星座是能量的表达风格,所在宫位是最想发光的人生领域。",
-      Moon: "月亮是你的内在小孩:情绪反应、依恋方式、什么让你觉得被照顾。看月亮能懂一个人「不设防时」的样子,也对应与母亲/家的早期经验。",
-      Mercury: "水星掌管思维与语言:怎么学习、怎么表达、怎么处理信息。水星星座是说话和思考的口音,水星宫位是脑子最常转动的领域。",
-      Venus: "金星是吸引力法则:你欣赏什么、如何去爱、金钱与美感的品味。金星顺不顺,关系里的甜与自我价值感都会有感觉。",
-      Mars: "火星是行动引擎:欲望、脾气、竞争和开干的方式。火星星座是出招风格,火星宫位是最容易投入战斗(或内耗)的场域。",
-      Jupiter: "木星是放大器:哪里有木星,哪里就想更多、更远、更好。它带来机遇、乐观与信念,也可能带来过度与挥霍。",
-      Saturn: "土星是考官:边界、责任、时间与恐惧。土星落的宫位常是「怕却必须修」的功课,三十岁前后(土星回归)会集中验收。",
-      Uranus: "天王星是闪电:突变、觉醒、脱轨与自由。世代行星,落宫比落座更个人化——那个宫位的人生领域拒绝按部就班。",
-      Neptune: "海王星是雾与海:梦想、灵感、共情,也是幻觉与逃避。它模糊边界:艺术与灵性在这里,上瘾与受骗也在这里。",
-      Pluto: "冥王星是深渊与凤凰:控制、危机、彻底的失去与重生。它落的宫位往往经历「推倒重来」,也埋着最强的再生力。"
-    },
-    houses: [
-      "第1宫 · 自我之宫:外貌气质、第一印象、生命的出场方式。上升点所在。",
-      "第2宫 · 财帛之宫:金钱、资源、自我价值感,以及「我拥有什么」。",
-      "第3宫 · 沟通之宫:说话、学习、短途、兄弟姐妹与邻里网络。",
-      "第4宫 · 家庭之宫:原生家庭、根、内心的归属,与晚年的居所。天底所在。",
-      "第5宫 · 创造之宫:恋爱、游戏、创作、子女——一切让你发光的自我表达。",
-      "第6宫 · 劳务之宫:日常工作、健康习惯、服务与被使用的方式。",
-      "第7宫 · 伴侣之宫:婚姻、合伙、公开的敌人——所有一对一关系。下降点所在。",
-      "第8宫 · 转化之宫:亲密、共享资源、遗产、危机与心理深层。",
-      "第9宫 · 远方之宫:高等教育、信仰、异国、出版——意义的追寻。",
-      "第10宫 · 事业之宫:社会成就、名声、天职与权威形象。天顶所在。",
-      "第11宫 · 朋友之宫:社群、盟友、理想与未来愿景。",
-      "第12宫 · 隐秘之宫:潜意识、独处、疗愈与自我消融,业力的仓库。"
-    ],
-    aspects: {
-      con: "合相 0°:两股能量绑在一起,不分彼此。强烈、聚焦,吉凶取决于行星组合本身。",
-      sex: "六合 60°:友好机会相位。两能量互相帮衬,但需要主动使用才见效。",
-      squ: "刑相 90°:摩擦与推力。两能量互相别扭,带来压力,也是最能逼人成长的相位。",
-      tri: "拱相 120°:天赋的顺流。能量自然流通,舒服到常被视为理所当然而懒得开发。",
-      opp: "冲相 180°:跷跷板。两端拉扯、常投射到关系里,课题是整合而非二选一。"
-    }
-  };
-
   window.AstroCore = {
-    SIGNS, BODIES, ASPECTS, MEANINGS,
+    SIGNS, BODIES, ASPECTS,
     n360, diff180, fmtDeg, lonToSign, lonToHouse,
-    dignityOf, criticalDegree,
     computeChart, chartStats, computeAngles, bodyLon
   };
 })();
@@ -1316,203 +1242,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     return out;
   }
 
-  // ---------- 释义库(神话原型 / 掌管主题 / 心理意义 / 专题应用) ----------
-  const LORE = {
-    Sun: {
-      myth: "太阳神赫利俄斯/阿波罗:驾驭金色战车划过天空,是光明、预言与艺术之神,众星围绕的中心。",
-      rule: "自我认同、生命力、意志与荣誉;父亲形象、权威、人生想要成就的核心方向。",
-      psy: "太阳是「我正在成为谁」。活出太阳会有由内而外的笃定;压抑太阳则易借他人光芒生活,总觉得自己不够重要。",
-      app: "事业:太阳宫位是最需要被看见的舞台。关系:双方太阳的元素相容度是长期相处的底色。"
-    },
-    Moon: {
-      myth: "月神塞勒涅/阿尔忒弥斯:夜之守望者,潮汐与生育的主宰,盈亏不定却从未离开。",
-      rule: "情绪、需求、安全感;母亲与养育、家、饮食睡眠等本能节律。",
-      psy: "月亮是「不设防的我」。月亮被满足,人有回血的港湾;月亮受创,则容易情绪性进食、讨好或退缩。",
-      app: "亲密关系:月亮合盘看「住在一起舒不舒服」。育儿:孩子的月亮告诉你他如何需要被安抚。"
-    },
-    Mercury: {
-      myth: "神使赫尔墨斯:穿翼靴往返于神界与冥府,掌管信息、贸易、盗贼与机智。",
-      rule: "思维方式、语言表达、学习、短途交通、商业往来与一切信息交换。",
-      psy: "水星是心智的口音。它顺畅,想法与表达合一;它受克,常见「心里明白说不出」或言多必失。",
-      app: "学业:水星星座提示最适配的学习法。职场:文案、谈判、编程等用脑行业先看水星状态。"
-    },
-    Venus: {
-      myth: "爱与美之神阿佛洛狄忒:从海沫中诞生,一颦一笑令诸神倾倒,也挑起特洛伊之战。",
-      rule: "爱情观、审美、金钱与享受;吸引力、人际魅力与价值判断。",
-      psy: "金星是「我如何去爱与被爱」。金星健康,懂得取悦自己;金星失衡,易在关系与消费里寻找自我价值。",
-      app: "感情:金星星座=恋爱语言。理财:金星宫位是钱最愿意流向的地方,也提示品味型开销。"
-    },
-    Mars: {
-      myth: "战神阿瑞斯:冲锋陷阵、热血莽撞,是勇气也是冲突的化身。",
-      rule: "行动力、欲望、愤怒、竞争与性驱力;开启事情的原始引擎。",
-      psy: "火星是「我如何要我想要的」。火星通畅,敢争取敢拒绝;火星压抑,愤怒会转成内耗或突然爆发。",
-      app: "职场:火星宫位是拼劲所在。健康:运动方式按火星星座选更易坚持。冲突:合盘火星相位看吵架模式。"
-    },
-    Jupiter: {
-      myth: "众神之王宙斯:雷霆在握、恩泽广布,慷慨与放纵并存的天空之主。",
-      rule: "扩张、机遇、信仰、高等教育与远行;乐观、慷慨,也管过度与浪费。",
-      psy: "木星是「我相信世界会好」的能力。它给人生留出余地和运气,失衡时则盲目乐观、承诺过多。",
-      app: "流年:木星过境的宫位约一年一换,是当年的机会窗口。事业:木星宫位适合放大投入。"
-    },
-    Saturn: {
-      myth: "时间之神克洛诺斯:手持镰刀吞噬诸子,冷峻的规则与收割者。",
-      rule: "限制、责任、纪律、时间与恐惧;权威、骨骼与长期结构。",
-      psy: "土星是「不得不长大的地方」。它让人先苦后甜:年轻时是匮乏与自我怀疑,磨过之后变成最硬的底气。",
-      app: "人生周期:29岁与58岁前后的土星回归是大考。职业:土星宫位的成就来得慢但最扎实。"
-    },
-    Uranus: {
-      myth: "原初天空之神乌拉诺斯:被推翻的旧天,象征颠覆秩序的觉醒之雷。",
-      rule: "突变、革命、科技、独立与集体前卫思潮;意外与解放。",
-      psy: "天王星是「我拒绝被定义」。它所在的领域无法忍受一成不变,常以突然的断裂换取自由。",
-      app: "世代:同龄人共享天王星星座。个人:看宫位——那里的人生剧本常被自己亲手撕掉重写。"
-    },
-    Neptune: {
-      myth: "海神波塞冬:深海无形无界,风暴与幻影皆出于此。",
-      rule: "梦境、艺术灵感、灵性、慈悲;也掌幻觉、成瘾与逃避。",
-      psy: "海王星是「边界消融处」。高频是共情与创作,低频是自我欺骗与牺牲者情结。",
-      app: "创作:海王星宫位是灵感泉眼。风险:该领域易理想化,签约投资需格外清醒。"
-    },
-    Pluto: {
-      myth: "冥王哈迪斯:地底财富与亡者之主,劫走珀耳塞福涅,让四季从此有了枯荣。",
-      rule: "死亡与重生、权力、危机、深层心理与共享资源。",
-      psy: "冥王星是「不破不立」。它所在之处经历失控与彻底转化,穿越后获得的是他处没有的力量。",
-      app: "心理:冥王宫位常藏创伤也藏天赋。财务:与8宫/2宫互动时看深度资源整合能力。"
-    },
-    ASC: {
-      myth: "地平线东端的日出之门:灵魂降生时刻,天空为你揭幕的第一格布景。",
-      rule: "外貌气质、第一印象、面对世界的姿态;整张盘的坐标原点。",
-      psy: "上升是「人格的外衣」与人生剧本的开场设定。它不是伪装,而是你与世界接触的天然界面。",
-      app: "识人:初见印象多来自上升。运势:流年行星过上升即开启新一轮人生周期。"
-    },
-    DSC: {
-      myth: "日落之门:与上升相对,是「我」走向「我们」的地平线。",
-      rule: "婚姻伴侣、合作对象、公开的对手;一对一关系的原型。",
-      psy: "下降是「我缺的那一半」:常被投射为理想伴侣的样子,实际是自己有待整合的特质。",
-      app: "择偶:下降星座描摹吸引你的人格类型。合作:合伙人是否互补看彼此下降与对方行星的呼应。"
-    },
-    MC: {
-      myth: "天穹最高点:正午的太阳所在,众目睽睽之处。",
-      rule: "事业成就、社会名声、天职方向与公众形象。",
-      psy: "天顶是「我想在世上留下什么」。它牵动野心与使命感,也承载来自社会与父母的期待。",
-      app: "职业定位:天顶星座+十宫行星组合出天职画像。流年:行星过天顶常伴升迁、曝光或转行。"
-    },
-    IC: {
-      myth: "子夜的地心之根:天空最深处,一切生长的暗土。",
-      rule: "原生家庭、根源、内心归属与晚年生活。",
-      psy: "天底是「回到自己」的地方。它记录童年底色;根扎得稳,天顶的树才敢长高。",
-      app: "疗愈:家庭议题从天底与四宫入手。置业:天底状态常反映理想居所的样貌。"
-    },
-    NNode: {
-      myth: "罗睺(Rahu):偷饮不死甘露被斩首的巨蛇之首,永远饥渴地追逐着未竟之物。",
-      rule: "此生的成长方向、灵魂要开发的新领域;集体缘分的入口。",
-      psy: "北交点指向「陌生但必须去的地方」。走向它总有阻力与笨拙,但每一步都带来命运感的展开。",
-      app: "人生方向:迷茫时回看北交点星座与宫位。大运:交点回归(约18.6年)前后常有命运节点。"
-    },
-    SNode: {
-      myth: "计都(Ketu):巨蛇之尾,拥有过去一切经验却失去了头颅的方向。",
-      rule: "与生俱来的惯性、前世/早年积累的舒适区;需放下的执念。",
-      psy: "南交点是「闭着眼也会做的事」。它是天赋库存,也是退行的温床——停留太久会消耗人生。",
-      app: "断舍离:反复内耗的旧模式多与南交点有关。技能:可提取南交天赋服务北交方向。"
-    },
-    EP: {
-      myth: "东方地平的纯几何点:赤道与地平在东天的交点投影。",
-      rule: "(收而不用)传统上表示自我呈现的次级敏感点。",
-      psy: "本工具仅列出其位置供研究,不参与解读体系。",
-      app: "如需研究,可观察行运行星经过东升点时的自我表达变化。"
-    },
-    Chiron: {
-      myth: "半人马凯隆:被毒箭误伤的不死疗愈师,治得好所有人,唯独治不好自己,最终以死换取普罗米修斯的自由。",
-      rule: "内在旧伤、无法根治的痛点,以及由此生出的疗愈天赋与师者身份。",
-      psy: "凯龙是「伤口即礼物」。最深的自卑处,恰是最能共情与帮助他人的地方;接纳伤口,伤口开始供光。",
-      app: "疗愈职业:咨询、医疗、教学者常有强凯龙。自我成长:凯龙宫位是反复作痛却通往智慧的门。"
-    },
-    Ceres: {
-      myth: "丰收女神得墨忒耳:爱女被冥王劫走,她让大地枯萎,直到母女重逢才归还春天。",
-      rule: "养育与被养育、食物、身体照护;失去与重聚的循环。",
-      psy: "谷神星是「我如何滋养」。它揭示照顾人的方式,也揭示匮乏感:得不到的照顾,常变成给不出的爱。",
-      app: "亲子:谷神星星座=你的养育语言。饮食:与进食习惯、身体安抚方式相关的议题看它。"
-    },
-    Pallas: {
-      myth: "智慧女神雅典娜:从宙斯头颅全副武装跃出,以谋略而非蛮力取胜的战略家。",
-      rule: "谋略、模式识别、创造性智慧;艺术与政治的手腕,父女议题。",
-      psy: "智神星是「看见格局的眼睛」。它整合直觉与逻辑,擅长在混乱中一眼认出图案。",
-      app: "职场:策划、设计、法律、棋类等策略型工作看智神星。健康:传统上也关联免疫与身心整合。"
-    },
-    Juno: {
-      myth: "天后赫拉:婚姻的守护神,忠诚而善妒,在背叛中一次次捍卫盟约的尊严。",
-      rule: "婚姻承诺、长期盟约、伴侣间的权力平衡与忠诚课题。",
-      psy: "婚神星是「我在承诺里要什么」。它比金星更接近婚姻现实:公平、名分与被尊重的需求。",
-      app: "合盘:双方婚神星的相位提示婚约质量。择偶:婚神星星座描摹「过日子的伴」的样貌。"
-    },
-    Vesta: {
-      myth: "灶火女神赫斯提亚:永燃圣火的守护者,不参与诸神纷争,专注即是她的神性。",
-      rule: "专注、奉献、神圣感;独处的能量管理与工作中的心流。",
-      psy: "灶神星是「心中那盏不灭的火」。它指出愿意为之守夜的事;火被亵渎则出现倦怠与性/亲密的疏离。",
-      app: "事业:灶神星宫位适合深耕型投入。身心:能量枯竭时,回到灶神星星座的方式独处充电。"
-    },
-    Lilith: {
-      myth: "亚当的第一位妻子莉莉丝:拒绝俯卧于人下,宁被放逐荒野也不肯屈从的暗夜女性。",
-      rule: "原始欲望、禁忌、拒绝驯化的野性;被压抑后以暗流回归的力量。(此处为平均黑月)",
-      psy: "莉莉丝是「不被允许的我」。她所在之处藏着羞耻与渴望的纠缠;承认她,野性变创造力;否认她,则以失控报复。",
-      app: "深层心理:反复的禁忌吸引/权力纠葛看莉莉丝。女性议题:自我主权与身体自主的敏感点。"
-    },
-    Eros433: {
-      myth: "小爱神厄洛斯:金箭点燃不可抗拒的迷恋,连神也无法幸免。",
-      rule: "情欲的开关、迷恋对象的类型;创造激情的引信。(小行星433)",
-      psy: "爱神星是「让我瞬间通电的东西」。它比金星更原始:未必适合长久,却真实标记欲望的坐标。",
-      app: "亲密:合盘中爱神星与对方个人行星的合相常是「一见倾心」的技术注脚。创作:激情项目的点火器。"
-    },
-    Psyche16: {
-      myth: "人间少女赛姬:历经冥府考验终与厄洛斯成婚,灵魂(Psyche)因爱而不朽。",
-      rule: "灵魂层面的联结、心灵敏感度;深度共鸣与心理直觉。(小行星16)",
-      psy: "赛姬星是「被真正看见的渴望」。它标记灵魂裸露的位置:在哪里,你无法忍受貌合神离。",
-      app: "深度关系:双方赛姬星互动看「灵魂伴侣感」。咨询/疗愈:心灵工作者的敏感天线。"
-    },
-    PoF: {
-      myth: "希腊点术之首「幸运点」:日月与上升三者交织出的丰盛坐标。",
-      rule: "身心顺遂与物质福气自然汇聚之处;昼盘 ASC+月−日,夜盘互换。",
-      psy: "福点是「顺流之门」:不必用力对抗,顺着做就有回报的领域。",
-      app: "求财:福点宫位是福气入口。择时:流年吉星过福点常有实际进账或身心轻盈期。"
-    },
-    PoSpirit: {
-      myth: "与福点互为镜像的「精神点」:太阳性的意志坐标。",
-      rule: "精神追求、主动创造与灵魂目标;昼盘 ASC+日−月。",
-      psy: "福点是承接,精神点是发出:它指向「我主动去点燃什么,人生才有意义感」。",
-      app: "志业:物质看福点,使命看精神点,两者宫位对照阅读。"
-    },
-    PoE: {
-      myth: "古典点术中的爱欲点:以金星与精神点推演的爱之坐标。",
-      rule: "爱情机缘的敏感点;公式 ASC + 金星 − 精神点。",
-      psy: "爱情点提示「爱以何种途径找到你」——它落的宫位常是浪漫故事的发生地。",
-      app: "感情流年:行运金星/木星触发爱情点时留意桃花窗口。"
-    },
-    PoM: {
-      myth: "古典点术中的婚约点:以第七宫头与金星推演。",
-      rule: "婚姻缘分的敏感点;公式 ASC + 第7宫头 − 金星。",
-      psy: "婚姻点关乎「步入盟约的契机」,与婚神星互参可看婚姻的时与质。",
-      app: "择时:重要行运同时触发婚姻点与七宫时,常见订婚、领证等节点。"
-    },
-    Vertex: {
-      myth: "西方地平深处的「命运之门」:非选择所能及的交会点。",
-      rule: "宿命般的相遇与转折;总落在盘的西侧(5-8宫附近)。",
-      psy: "宿命点是「计划之外的必然」。被他人行星合上宿命点的关系,常有强烈的命中注定感。",
-      app: "合盘:对方日月合你宿命点=标志性缘分。低纬出生者此点数值不稳,仅供参考。"
-    },
-    SMmid: {
-      myth: "日月的炼金婚礼:意志与情感在中点交融。",
-      rule: "自我(日)与需求(月)的整合坐标;内在阴阳的平衡点。",
-      psy: "日月中点被触动时,人生的「里与外」被同时牵动——它是身心一致感的枢纽。",
-      app: "合盘经典:一方行星(尤其金星/木星)落另一方日月中点,常是「结婚轴」被点亮的信号。"
-    },
-    Eris: {
-      myth: "不和女神厄里斯:未被邀请赴宴,掷出「献给最美者」的金苹果,引爆特洛伊战争。",
-      rule: "被排除者的愤怒、揭露虚伪的破坏力;为尊严而战的边缘力量。",
-      psy: "阋神星是「不被邀请的我」。它以掀桌的方式要求承认;整合后成为为弱势发声的勇气。",
-      app: "本工具默认收起阋神星;仅当它与日月水金火形成 <2° 的紧密相位时才建议纳入解读。"
-    }
-  };
-
-  window.AstroExtra = { EPH, astGeoLon, astSpeed, meanNodeLon, meanLilithLon, computeExtras, META, LORE };
+  window.AstroExtra = { EPH, astGeoLon, astSpeed, meanNodeLon, meanLilithLon, computeExtras, META };
 })();
 
 </script>
@@ -1683,474 +1413,42 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
 </script>
 <script>
 /* ============================================================
-   九步定调 · computeNineSteps()
-   依据《命盘基础定调 · 九步演算 Schema 规格书 v1.1》
-   计算层:Step 1–8 + 集中度×醒目度心法象限(纯离线)
-   解读层:五卡 Prompt 一键复制(贴给任意 AI 即可生成卡片)
+   解读层(前端只负责请求与呈现)
+   · 九步定调演算、写作规则、主题定义全部在 Supabase Edge Function
+   · 这里只有:发请求 → 解析 → 渲染 → 本地缓存兼容
    ============================================================ */
 (function () {
   "use strict";
-  const C = window.AstroCore;
-  const n360 = d => ((d % 360) + 360) % 360;
-  const d180 = d => { d = n360(d); return d > 180 ? 360 - d : d; };
-
-  // ---------- 全局配置(规格书 〇 节,只改这里) ----------
-  const CFG = {
-    weightsProfile: { Sun: 10, Moon: 10, ASC: 10, Mercury: 8, Venus: 8, Mars: 8, Jupiter: 7, Saturn: 7, Uranus: 5, Neptune: 5, Pluto: 5, chartRulerMultiplier: 1.5 },
-    weightsStellium: { Sun: 10, Moon: 10, Mercury: 8, Venus: 8, Mars: 8, Jupiter: 6, Saturn: 6, Uranus: 4, Neptune: 4, Pluto: 4 },
-    stelliumThreshold: { weak: 3, strong: 4, super: 5 },
-    aspects: {
-      con: { angle: 0, orb: 8, tiers: [2, 5, 8] },
-      opp: { angle: 180, orb: 8, tiers: [2, 5, 8] },
-      squ: { angle: 90, orb: 6, tiers: [2, 4, 6] },
-      tri: { angle: 120, orb: 6, tiers: [2, 4, 6] },
-      sex: { angle: 60, orb: 4, tiers: [1.5, 3, 4] }
-    },
-    dignityScore: { rulership: 5, exaltation: 4, neutral: 0, fall: -4, detriment: -5 },
-    accidental: { angular: 2, succedent: 1, cadent: -1, fast: 1, retrograde: -2, combust: -3, combustOrb: 8.5 },
-    totalDignityTiers: { veryStrong: 6, strong: 3, neutralLow: -2, weak: -5 },
-    avgSpeed: { Moon: 13.2, Mercury: 1.38, Venus: 1.20, Mars: 0.52, Jupiter: 0.083, Saturn: 0.033 }
-  };
-
-  // 守护星(索引 0=白羊 … 11=双鱼)
-  const RUL_MOD = ["Mars", "Venus", "Mercury", "Moon", "Sun", "Mercury", "Venus", "Pluto", "Jupiter", "Saturn", "Uranus", "Neptune"];
-  const RUL_TRA = ["Mars", "Venus", "Mercury", "Moon", "Sun", "Mercury", "Venus", "Mars", "Jupiter", "Saturn", "Saturn", "Jupiter"];
-  // 必然尊贵:rul庙 exa旺 det陷 fall弱
-  const DIG = {
-    Sun: { rul: [4], exa: [0], det: [10], fall: [6] },
-    Moon: { rul: [3], exa: [1], det: [9], fall: [7] },
-    Mercury: { rul: [2, 5], exa: [5], det: [8, 11], fall: [11] },
-    Venus: { rul: [1, 6], exa: [11], det: [7, 0], fall: [5] },
-    Mars: { rul: [0, 7], exa: [9], det: [6, 1], fall: [3] },
-    Jupiter: { rul: [8, 11], exa: [3], det: [2, 5], fall: [9] },
-    Saturn: { rul: [9, 10], exa: [6], det: [3, 4], fall: [0] },
-    Uranus: { rul: [10], exa: [7], det: [4], fall: [1], modernOnly: true },
-    Neptune: { rul: [11], exa: [3], det: [5], fall: [9], modernOnly: true },
-    Pluto: { rul: [7], exa: [0], det: [1], fall: [6], modernOnly: true }
-  };
-  const ELEM = i => ["fire", "earth", "air", "water"][i % 4];
-  const MODE = i => ["cardinal", "fixed", "mutable"][i % 3];
-  const ELEM_CN = { fire: "火", earth: "土", air: "风", water: "水" };
-  const MODE_CN = { cardinal: "开创", fixed: "固定", mutable: "变动" };
-  const P_CN = { Sun: "太阳", Moon: "月亮", Mercury: "水星", Venus: "金星", Mars: "火星", Jupiter: "木星", Saturn: "土星", Uranus: "天王星", Neptune: "海王星", Pluto: "冥王星" };
-  const signCN = i => C.SIGNS[i].name;
-
-  function essential(key, signIdx, system) {
-    const d = DIG[key];
-    if (!d) return 0;
-    if (system === "traditional" && d.modernOnly) return 0;
-    if (d.rul.includes(signIdx)) return CFG.dignityScore.rulership;
-    if (d.exa.includes(signIdx)) return CFG.dignityScore.exaltation;
-    if (d.det.includes(signIdx)) return CFG.dignityScore.detriment;
-    if (d.fall.includes(signIdx)) return CFG.dignityScore.fall;
-    return 0;
-  }
-  function housePos(h) { return [1, 4, 7, 10].includes(h) ? "angular" : [2, 5, 8, 11].includes(h) ? "succedent" : "cadent"; }
-  function levelOf(t) {
-    const T = CFG.totalDignityTiers;
-    return t >= T.veryStrong ? "veryStrong" : t >= T.strong ? "strong" : t >= T.neutralLow ? "neutral" : t >= T.weak ? "weak" : "veryWeak";
-  }
-  const LEVEL_CN = { veryStrong: "极强", strong: "强", neutral: "中性", weak: "弱", veryWeak: "极弱" };
-
-  // 按配置容许度算两黄经间相位
-  function aspBetween(l1, l2) {
-    const d = d180(l1 - l2);
-    let best = null;
-    Object.keys(CFG.aspects).forEach(function (k) {
-      const a = CFG.aspects[k], orb = Math.abs(d - a.angle);
-      if (orb <= a.orb && (!best || orb < best.orb)) {
-        const tier = orb <= a.tiers[0] ? "veryStrong" : orb <= a.tiers[1] ? "strong" : "normal";
-        best = { type: k, orb: +orb.toFixed(2), tier: tier, precision: orb < 1 };
-      }
-    });
-    return best;
-  }
-
-  function computeNineSteps(res, extras, lat) {
-    const P = res.planets, asc = res.ang.asc, cusps = res.cusps;
-    const byKey = {}; P.forEach(p => { byKey[p.key] = p; });
-    const ascIdx = Math.floor(n360(asc) / 30);
-    const ex = k => extras.find(x => x.key === k);
-
-    // ===== Step 1 昼夜盘 =====
-    const isDay = n360(byKey.Sun.lon - asc) >= 180;
-    const step1 = { sect: isDay ? "day" : "night", sunHouse: byKey.Sun.house, referee: isDay ? "sun" : "moon" };
-
-    // ===== Step 5 前置:命主星 =====
-    const crModKey = RUL_MOD[ascIdx], crTraKey = RUL_TRA[ascIdx];
-
-    // ===== Step 6 尊贵计分(先算,多步引用) =====
-    const planetScores = {};
-    P.forEach(function (p) {
-      const essM = essential(p.key, p.signIdx, "modern");
-      const essT = essential(p.key, p.signIdx, "traditional");
-      const pos = housePos(p.house);
-      let acc = CFG.accidental[pos];
-      const fastable = CFG.avgSpeed[p.key] != null;
-      const fast = fastable && p.speed > CFG.avgSpeed[p.key];
-      if (fast) acc += CFG.accidental.fast;
-      const retro = p.retro && p.key !== "Sun" && p.key !== "Moon";
-      if (retro) acc += CFG.accidental.retrograde;
-      const combustable = ["Mercury", "Venus", "Mars", "Jupiter", "Saturn"].includes(p.key);
-      const combust = combustable && d180(p.lon - byKey.Sun.lon) <= CFG.accidental.combustOrb;
-      if (combust) acc += CFG.accidental.combust;
-      const tot = essM + acc;
-      planetScores[p.key] = {
-        essential: essM, essentialTraditional: essT, accidental: acc,
-        total: tot, totalTraditional: essT + acc, level: levelOf(tot),
-        flags: { retro: !!retro, combust: !!combust, fast: !!fast, housePos: pos }
-      };
-    });
-    let aceScore = -99, burdenScore = 99;
-    P.forEach(p => { const t = planetScores[p.key].total; aceScore = Math.max(aceScore, t); burdenScore = Math.min(burdenScore, t); });
-    const ace = P.filter(p => planetScores[p.key].total === aceScore).map(p => p.key);
-    const burden = P.filter(p => planetScores[p.key].total === burdenScore).map(p => p.key);
-    // 飞星
-    function flying(rulTable) {
-      return cusps.map(function (cl, i) {
-        const sIdx = Math.floor(n360(cl) / 30);
-        const ruler = rulTable[sIdx];
-        const to = byKey[ruler].house;
-        return { house: i + 1, ruler: ruler, fliesTo: to, returnsHome: to === i + 1 };
-      });
-    }
-    const step6 = { planetScores: planetScores, flyingStars: { modern: flying(RUL_MOD), traditional: flying(RUL_TRA) }, ace: ace, burden: burden };
-
-    // ===== Step 2 元素×模式×阴阳×半球×Jones =====
-    const wOf = k => (k === crModKey ? CFG.weightsProfile[k] * CFG.weightsProfile.chartRulerMultiplier : CFG.weightsProfile[k]);
-    const eSum = { fire: 0, earth: 0, air: 0, water: 0 }, mSum = { cardinal: 0, fixed: 0, mutable: 0 };
-    let yang = 0, yin = 0, wTot = 0;
-    function addW(sIdx, w) {
-      eSum[ELEM(sIdx)] += w; mSum[MODE(sIdx)] += w;
-      (ELEM(sIdx) === "fire" || ELEM(sIdx) === "air") ? yang += w : yin += w;
-      wTot += w;
-    }
-    P.forEach(p => addW(p.signIdx, wOf(p.key)));
-    addW(ascIdx, CFG.weightsProfile.ASC);
-    const pct = v => Math.round(v / wTot * 100);
-    const ePct = { fire: pct(eSum.fire), earth: pct(eSum.earth), air: pct(eSum.air), water: pct(eSum.water) };
-    const mPct = { cardinal: pct(mSum.cardinal), fixed: pct(mSum.fixed), mutable: pct(mSum.mutable) };
-    const eKeys = Object.keys(ePct);
-    const domE = eKeys.reduce((a, b) => ePct[a] >= ePct[b] ? a : b);
-    const lacking = eKeys.filter(k => ePct[k] <= 10);
-    const balanced = eKeys.every(k => ePct[k] >= 15 && ePct[k] <= 35);
-    const domM = Object.keys(mPct).reduce((a, b) => mPct[a] >= mPct[b] ? a : b);
-    // 半球(十大行星,数颗数)
-    let up = 0, low = 0, east = 0, west = 0;
-    P.forEach(function (p) {
-      p.house >= 7 ? up++ : low++;
-      [10, 11, 12, 1, 2, 3].includes(p.house) ? east++ : west++;
-    });
-    const hemi = {
-      vertical: Math.abs(up - low) >= 3 ? (up > low ? "upper" : "lower") : "balanced",
-      horizontal: Math.abs(east - west) >= 3 ? (east > west ? "east" : "west") : "balanced",
-      verticalCount: [low, up], horizontalCount: [east, west]
-    };
-    // Jones 盘型
-    const lons = P.map(p => p.lon).sort((a, b) => a - b);
-    const gaps = lons.map((l, i) => n360(lons[(i + 1) % 10] - l));
-    const maxGap = Math.max.apply(null, gaps);
-    const span = 360 - maxGap;
-    function isBucket() {
-      for (let i = 0; i < 10; i++) {
-        const rest = lons.filter((_, j) => j !== i).sort((a, b) => a - b);
-        const rg = rest.map((l, j) => n360(rest[(j + 1) % 9] - l));
-        if (360 - Math.max.apply(null, rg) <= 180) {
-          const prev = n360(lons[i] - lons[(i + 9) % 10]);
-          const next = n360(lons[(i + 1) % 10] - lons[i]);
-          if (prev >= 60 && next >= 60) return true;
-        }
-      }
-      return false;
-    }
-    const bigGaps = gaps.filter(g => g >= 60).length;
-    let jones;
-    if (span <= 120) jones = "bundle";
-    else if (isBucket()) jones = "bucket";
-    else if (span <= 180) jones = "bowl";
-    else if (span <= 240) jones = "locomotive";
-    else if (bigGaps === 2) jones = "seesaw";
-    else if (maxGap < 60) jones = "splash";
-    else jones = "splay";
-    const JONES_CN = { bundle: "集团型", bucket: "提桶型", bowl: "碗型", locomotive: "火车头型", seesaw: "跷跷板型", splash: "散落型", splay: "扩展型" };
-    const HEMI_CN = { upper: "外显(上半球)", lower: "内在积累(下半球)", east: "自主驱动(东半球)", west: "关系驱动(西半球)", balanced: "均衡" };
-    const step2 = {
-      elements: Object.assign({}, ePct, { dominant: balanced ? "balanced" : (ePct[domE] >= 40 ? domE : domE), dominantPct: ePct[domE], lacking: lacking }),
-      modes: Object.assign({}, mPct, { dominant: domM }),
-      polarity: { yang: pct(yang), yin: pct(yin) },
-      hemisphere: hemi, jonesPattern: jones,
-      chartToneHint: HEMI_CN[hemi.vertical] + " · " + HEMI_CN[hemi.horizontal] + " · " + JONES_CN[jones]
-    };
-
-    // ===== Step 3 星群 + 空宫 =====
-    const stelliums = [];
-    function scanTrack(track) {
-      const groups = {};
-      P.forEach(function (p) {
-        const t = track === "sign" ? p.signIdx : p.house;
-        (groups[t] = groups[t] || []).push(p);
-      });
-      Object.keys(groups).forEach(function (t) {
-        const g = groups[t];
-        if (g.length < CFG.stelliumThreshold.weak) return;
-        const score = g.reduce((s, p) => s + CFG.weightsStellium[p.key], 0);
-        const level = g.length >= CFG.stelliumThreshold.super ? "super" : g.length >= CFG.stelliumThreshold.strong ? "strong" : "weak";
-        stelliums.push({
-          track: track, target: track === "sign" ? signCN(+t) : (+t + "宫"),
-          targetIdx: +t, planets: g.map(p => p.key), count: g.length,
-          weightScore: score, level: level, upgradeHint: level === "weak" && score >= 26,
-          spread: track === "sign" ? Array.from(new Set(g.map(p => p.house))).sort((a, b) => a - b)
-                                   : Array.from(new Set(g.map(p => p.signIdx))).map(signCN)
-        });
-      });
-    }
-    scanTrack("sign"); scanTrack("house");
-    stelliums.sort(function (a, b) {
-      const L = { super: 3, strong: 2, weak: 1 };
-      return L[b.level] - L[a.level] || b.weightScore - a.weightScore;
-    });
-    const emptyHouses = [];
-    for (let h = 1; h <= 12; h++) {
-      if (P.some(p => p.house === h)) continue;
-      const sIdx = Math.floor(n360(cusps[h - 1]) / 30);
-      emptyHouses.push({
-        house: h, cuspSign: signCN(sIdx),
-        rulerModern: { planet: RUL_MOD[sIdx], inHouse: byKey[RUL_MOD[sIdx]].house },
-        rulerTraditional: { planet: RUL_TRA[sIdx], inHouse: byKey[RUL_TRA[sIdx]].house }
-      });
-    }
-    let focusPointer = null;
-    if (stelliums.length) {
-      const s = stelliums[0];
-      if (s.track === "sign") {
-        const hs = {}; s.planets.forEach(k => { hs[byKey[k].house] = (hs[byKey[k].house] || 0) + 1; });
-        const h = +Object.keys(hs).reduce((a, b) => hs[a] >= hs[b] ? a : b);
-        focusPointer = { signIdx: s.targetIdx, sign: signCN(s.targetIdx), house: h, element: ELEM(s.targetIdx) };
-      } else {
-        const ss = {}; s.planets.forEach(k => { ss[byKey[k].signIdx] = (ss[byKey[k].signIdx] || 0) + 1; });
-        const si = +Object.keys(ss).reduce((a, b) => ss[a] >= ss[b] ? a : b);
-        focusPointer = { signIdx: si, sign: signCN(si), house: s.targetIdx, element: ELEM(si) };
-      }
-    }
-    const step3 = { stelliums: stelliums, emptyHouses: emptyHouses, focusPointer: focusPointer };
-
-    // ===== Step 4 日月升三主星 · 合频 =====
-    const compatible = (e1, e2) => (e1 === e2) ? 2 :
-      ((e1 === "fire" && e2 === "air") || (e1 === "air" && e2 === "fire") ||
-       (e1 === "earth" && e2 === "water") || (e1 === "water" && e2 === "earth")) ? 1 : 0;
-    const eS = ELEM(byKey.Sun.signIdx), eM = ELEM(byKey.Moon.signIdx), eA = ELEM(ascIdx);
-    const elemScore = compatible(eS, eM) + compatible(eS, eA) + compatible(eM, eA);
-    function aspScoreOf(a) {
-      if (!a) return 0;
-      return (a.type === "tri" || a.type === "sex") ? 2 : a.type === "con" ? 1 : (a.type === "squ" || a.type === "opp") ? -2 : 0;
-    }
-    const pairAsp = {
-      sunMoon: aspBetween(byKey.Sun.lon, byKey.Moon.lon),
-      sunAsc: aspBetween(byKey.Sun.lon, asc),
-      moonAsc: aspBetween(byKey.Moon.lon, asc)
-    };
-    const aspScore = aspScoreOf(pairAsp.sunMoon) + aspScoreOf(pairAsp.sunAsc) + aspScoreOf(pairAsp.moonAsc);
-    const combined = elemScore + aspScore;
-    const axis = [];
-    if (pairAsp.sunMoon && aspScoreOf(pairAsp.sunMoon) < 0) axis.push(["sun", "moon"]);
-    if (pairAsp.sunAsc && aspScoreOf(pairAsp.sunAsc) < 0) axis.push(["sun", "asc"]);
-    if (pairAsp.moonAsc && aspScoreOf(pairAsp.moonAsc) < 0) axis.push(["moon", "asc"]);
-    const step4 = {
-      sun: { sign: signCN(byKey.Sun.signIdx), house: byKey.Sun.house, essential: planetScores.Sun.essential, total: planetScores.Sun.total },
-      moon: { sign: signCN(byKey.Moon.signIdx), house: byKey.Moon.house, essential: planetScores.Moon.essential, total: planetScores.Moon.total },
-      asc: { sign: signCN(ascIdx), chartRulerRef: crModKey },
-      coherence: {
-        elemScore: elemScore, elemVerdict: elemScore >= 4 ? "元素合" : elemScore >= 2 ? "部分" : "元素弱",
-        aspScore: aspScore, aspVerdict: aspScore >= 2 ? "相位合" : aspScore >= -1 ? "中性" : "相位拉扯",
-        score: combined, verdict: combined >= 5 ? "coherent" : combined >= 1 ? "partial" : "tension",
-        axis: axis, priority: step1.referee
-      }
-    };
-
-    // ===== Step 5 命主星 + 定位链 =====
-    function rulerProfile(key) {
-      const p = byKey[key];
-      const kas = [];
-      P.forEach(function (q) {
-        if (q.key === key) return;
-        const a = aspBetween(p.lon, q.lon);
-        if (a) kas.push({ with: q.key, type: a.type, orb: a.orb });
-      });
-      kas.sort((a, b) => a.orb - b.orb);
-      return { planet: key, sign: signCN(p.signIdx), house: p.house, total: planetScores[key].total, keyAspects: kas.slice(0, 3) };
-    }
-    function buildChain(rulTable) {
-      const map = {};
-      P.forEach(p => { map[p.key] = rulTable[p.signIdx]; });
-      const finals = P.filter(p => map[p.key] === p.key).map(p => p.key);
-      const loops = [];
-      const seenLoop = {};
-      P.forEach(function (p) {
-        let cur = p.key, path = [];
-        while (!path.includes(cur) && !finals.includes(cur)) { path.push(cur); cur = map[cur]; }
-        if (!finals.includes(cur)) {
-          const loop = path.slice(path.indexOf(cur)).sort();
-          const sig = loop.join(",");
-          if (loop.length > 1 && !seenLoop[sig]) { seenLoop[sig] = 1; loops.push(loop); }
-        }
-      });
-      const nEnds = finals.length + loops.length;
-      return { finalDispositors: finals, loops: loops, convergence: nEnds <= 1 ? "single" : "multi", chainMap: map };
-    }
-    const chMod = buildChain(RUL_MOD), chTra = buildChain(RUL_TRA);
-    const sameEndpoint = JSON.stringify(chMod.finalDispositors.slice().sort()) === JSON.stringify(chTra.finalDispositors.slice().sort());
-    let endpointPointer = null;
-    const endCands = chMod.finalDispositors.length ? chMod.finalDispositors : (chMod.loops[0] || []);
-    if (endCands.length) {
-      const best = endCands.reduce((a, b) => planetScores[a].total >= planetScores[b].total ? a : b);
-      const bp = byKey[best];
-      endpointPointer = { planet: best, signIdx: bp.signIdx, sign: signCN(bp.signIdx), house: bp.house, element: ELEM(bp.signIdx) };
-    }
-    const step5 = {
-      chartRuler: { modern: rulerProfile(crModKey), traditional: rulerProfile(crTraKey) },
-      dispositorChain: { modern: chMod, traditional: chTra, sameEndpoint: sameEndpoint },
-      endpointPointer: endpointPointer
-    };
-
-    // ===== Step 7 相位与格局 =====
-    const allAsp = [];
-    for (let i = 0; i < P.length; i++)
-      for (let j = i + 1; j < P.length; j++) {
-        const a = aspBetween(P[i].lon, P[j].lon);
-        if (a) allAsp.push(Object.assign({ a: P[i].key, b: P[j].key }, a));
-      }
-    allAsp.sort((x, y) => x.orb - y.orb);
-    const tightestThree = allAsp.slice(0, 3);
-    const coreAspects = allAsp.filter(x => ["Sun", "Moon", crModKey].includes(x.a) || ["Sun", "Moon", crModKey].includes(x.b));
-    const has = (t, k1, k2) => allAsp.some(x => x.type === t && ((x.a === k1 && x.b === k2) || (x.a === k2 && x.b === k1)));
-    const patterns = [];
-    // T 三角 / 大十字
-    const opps = allAsp.filter(x => x.type === "opp");
-    opps.forEach(function (o) {
-      P.forEach(function (c) {
-        if (c.key === o.a || c.key === o.b) return;
-        if (has("squ", c.key, o.a) && has("squ", c.key, o.b)) {
-          if (!patterns.some(pt => pt.type === "tSquare" && pt.planets.includes(c.key) && pt.planets.includes(o.a) && pt.planets.includes(o.b)))
-            patterns.push({ type: "tSquare", planets: [o.a, o.b, c.key], apex: c.key, mode: MODE_CN[MODE(byKey[c.key].signIdx)] });
-        }
-      });
-    });
-    for (let i = 0; i < opps.length; i++)
-      for (let j = i + 1; j < opps.length; j++) {
-        const s = [opps[i].a, opps[i].b, opps[j].a, opps[j].b];
-        if (new Set(s).size === 4 && has("squ", opps[i].a, opps[j].a) && has("squ", opps[i].a, opps[j].b) &&
-            has("squ", opps[i].b, opps[j].a) && has("squ", opps[i].b, opps[j].b))
-          patterns.push({ type: "grandCross", planets: s });
-      }
-    // 大三角
-    for (let i = 0; i < P.length; i++)
-      for (let j = i + 1; j < P.length; j++)
-        for (let k = j + 1; k < P.length; k++)
-          if (has("tri", P[i].key, P[j].key) && has("tri", P[j].key, P[k].key) && has("tri", P[i].key, P[k].key)) {
-            const es = [P[i], P[j], P[k]].map(p => ELEM(p.signIdx));
-            const ce = es.filter(e => e === es[0]).length >= 2 ? es[0] : es[1];
-            patterns.push({ type: "grandTrine", planets: [P[i].key, P[j].key, P[k].key], element: ELEM_CN[ce] });
-          }
-    // Yod(150°±2.5,仅此用途)
-    const quin = (l1, l2) => Math.abs(d180(l1 - l2) - 150) <= 2.5;
-    for (let i = 0; i < P.length; i++)
-      for (let j = i + 1; j < P.length; j++)
-        if (has("sex", P[i].key, P[j].key))
-          P.forEach(function (c) {
-            if (c.key === P[i].key || c.key === P[j].key) return;
-            if (quin(c.lon, P[i].lon) && quin(c.lon, P[j].lon))
-              patterns.push({ type: "yod", planets: [P[i].key, P[j].key, c.key], apex: c.key });
-          });
-    // 互容(两套)
-    ["modern", "traditional"].forEach(function (sys) {
-      const T = sys === "modern" ? RUL_MOD : RUL_TRA;
-      for (let i = 0; i < P.length; i++)
-        for (let j = i + 1; j < P.length; j++)
-          if (T[P[i].signIdx] === P[j].key && T[P[j].signIdx] === P[i].key)
-            patterns.push({ type: "mutualReception", system: sys, planets: [P[i].key, P[j].key] });
-    });
-    const specialFlags = [];
-    if (byKey[crModKey].house === 1 || byKey[crModKey].signIdx === ascIdx)
-      specialFlags.push({ type: "rulerReturnsHome", planet: crModKey });
-    P.forEach(function (p) {
-      const sc = planetScores[p.key];
-      if (sc.essential <= -4 && sc.accidental >= 3) specialFlags.push({ type: "dignityRescue", planet: p.key });
-      if (sc.essential >= 4 && sc.accidental <= -3) specialFlags.push({ type: "wastedTalent", planet: p.key });
-    });
-    const step7 = { tightestThree: tightestThree, coreAspects: coreAspects, allAspects: allAsp, patterns: patterns, specialFlags: specialFlags };
-
-    // ===== Step 8 凯龙 + 交点 + 指针校验 =====
-    const chi = ex("Chiron"), nn = ex("NNode"), sn = ex("SNode");
-    const tightContacts = [];
-    if (chi) ["Sun", "Moon", "Mercury", "Venus", "Mars"].forEach(function (k) {
-      const d = d180(chi.lon - byKey[k].lon);
-      [["con", 0], ["sex", 60], ["squ", 90], ["tri", 120], ["opp", 180]].forEach(function (t) {
-        const orb = Math.abs(d - t[1]);
-        if (orb <= 3) tightContacts.push({ planet: k, type: t[0], orb: +orb.toFixed(2) });
-      });
-    });
-    let nodeRuler = null;
-    if (nn) {
-      const rk = RUL_TRA[nn.signIdx];
-      nodeRuler = { planet: rk, sign: signCN(byKey[rk].signIdx), house: byKey[rk].house };
-    }
-    // 指针校验
-    const pointers = [];
-    if (focusPointer) pointers.push(Object.assign({ from: "stellium" }, focusPointer));
-    if (endpointPointer) pointers.push(Object.assign({ from: "endpoint" }, endpointPointer));
-    if (nn) pointers.push({ from: "northNode", signIdx: nn.signIdx, sign: signCN(nn.signIdx), house: nn.house, element: ELEM(nn.signIdx) });
-    let ptScore = 0;
-    for (let i = 0; i < pointers.length; i++)
-      for (let j = i + 1; j < pointers.length; j++) {
-        const a = pointers[i], b = pointers[j];
-        ptScore += (a.signIdx === b.signIdx) ? 3 : (a.element === b.element ? 1 : 0);
-        if (a.house === b.house) ptScore += 2;
-      }
-    const twoOnly = pointers.length === 2;
-    const th = twoOnly ? [2, 1] : [4, 2];
-    const verdict = ptScore >= th[0] ? "aligned" : ptScore >= th[1] ? "partial" : "scattered";
-    // 共同主题
-    const shared = {};
-    if (pointers.length >= 2) {
-      const es = pointers.map(p => p.element), hs = pointers.map(p => p.house);
-      es.forEach(e => { if (es.filter(x => x === e).length >= 2) shared.element = e; });
-      hs.forEach(h => { if (hs.filter(x => x === h).length >= 2) shared.house = h; });
-    }
-    const step8 = {
-      chiron: chi ? { sign: signCN(chi.signIdx), house: chi.house, tightContacts: tightContacts } : null,
-      nodes: nn ? {
-        south: { sign: signCN(sn.signIdx), house: sn.house },
-        north: { sign: signCN(nn.signIdx), house: nn.house, traditionalRuler: nodeRuler }
-      } : null,
-      pointerCheck: { score: ptScore, verdict: verdict, pointers: pointers, sharedTheme: shared }
-    };
-
-    // ===== 心法:集中度 × 醒目度 =====
-    const themeHouse = shared.house || (focusPointer && focusPointer.house) || (nn && nn.house) || byKey.Sun.house;
-    const visibility = [1, 10].includes(themeHouse) ? "visible" : [3, 6, 8, 12].includes(themeHouse) ? "hidden" : "mid";
-    const conc = verdict === "aligned" ? "aligned" : "scattered";
-    const LP = {
-      "aligned:visible": "聚光灯型", "aligned:hidden": "深水聚焦型", "aligned:mid": "稳步推进型",
-      "scattered:visible": "多面舞台型", "scattered:hidden": "暗河漫游型", "scattered:mid": "多线穿行型"
-    };
-    const mind = { concentration: conc, pointerVerdict: verdict, visibility: visibility, themeHouse: themeHouse, lifePattern: LP[conc + ":" + visibility] };
-
-    return { config: "v1.1", res_planets_order: P.map(p => p.key), step1: step1, step2: step2, step3: step3, step4: step4, step5: step5, step6: step6, step7: step7, step8: step8, mind: mind };
-  }
-
-  /* ==================================================================
-     ★★★★★★★★  完整解读 · Supabase 接口设置  ★★★★★★★★
-     部署好 Edge Function 后,把下面两行填上即可启用「生成完整解读」按钮:
-       SUPABASE_FUNC_URL  = "https://<你的项目ref>.functions.supabase.co/read-chart"
-       SUPABASE_ANON_KEY  = "<你的 anon public key>"
-     留空则按钮自动降级为「复制解读提示词 → 粘贴 AI 解读」流程。
-     ================================================================== */
   const SUPABASE_FUNC_URL = (window.CloudCfg || {}).funcUrl || "";
   const SUPABASE_ANON_KEY = (window.CloudCfg || {}).anon || "";
 
-  // ---------- V3 完整解读 Prompt(五章 · 4000–5000 字) ----------
-  const ASPECT_CN = { con: "合", sex: "六合", squ: "刑", tri: "拱", opp: "冲" };
-  // ---------- 解析 AI 返回(JSON 或「第X章」纯文本) ----------
+  // 内容架构版本:服务端 Prompt 有重大升级时 +1,旧内容自动重新生成
+  const CONTENT_VER = 8;
+
+  // ---------- 九个主题(仅 UI 文案;写作规则与资料调用都在服务端) ----------
+  const TOPICS9 = [
+    { id: "self",    icon: "\u2B50",       name: "个人",     sub: "人格 · 天赋 · 使命",
+      teaser: "别人眼中的你,和你自己知道的你,\n中间那段距离,才是真正的你。" },
+    { id: "emotion", icon: "\u2764\uFE0F", name: "情感模式", sub: "你如何去爱",
+      teaser: "喜欢一个人的时候,你会变成另一个版本的自己。\n那个版本,你未必喜欢。" },
+    { id: "career",  icon: "\uD83D\uDCBC", name: "事业",     sub: "怎样工作才发挥得出来",
+      teaser: "有些累是值得的,有些累是空的。\n差别不在做什么,而在怎么做。" },
+    { id: "family",  icon: "\uD83C\uDFE1", name: "家庭",     sub: "父母 · 兄弟姐妹",
+      teaser: "你以为早就走出来了,\n但有些反应还是会自动发生。" },
+    { id: "love",    icon: "\uD83D\uDC8D", name: "感情",     sub: "长期关系怎么运转",
+      teaser: "让你心动的,和让你安稳的,\n常常不是同一种人。" },
+    { id: "partner", icon: "\uD83D\uDC64", name: "正缘特质", sub: "容易吸引什么样的人",
+      teaser: "你反复遇到的那一类人,\n其实一直在提醒你同一件事。" },
+    { id: "wealth",  icon: "\uD83D\uDCB0", name: "财运",     sub: "你的赚钱模式",
+      teaser: "钱怎么进来,和钱怎么留下,\n是两件不同的事。" },
+    { id: "study",   icon: "\uD83C\uDF93", name: "求学",     sub: "你怎么学会一件事",
+      teaser: "同样一堂课,有人听懂,有人做懂。\n你是哪一种?" },
+    { id: "body",    icon: "\uD83C\uDF19", name: "身心状态", sub: "压力怎么来,力气怎么回",
+      teaser: "什么都没做,却已经很累。\n消耗常常发生在看不见的地方。" }
+  ];
+  function findTopic(id) { return TOPICS9.find(x => x.id === id) || null; }
+
+  // ---------- 解析服务端返回 ----------
   const CH_TITLES = ["你生命最初的设定", "你如何面对世界", "你成长路上的礼物与考验", "生命想带你去的地方", "属于你的生命剧本"];
   function parseChapters(txt) {
     txt = String(txt || "").trim();
@@ -2182,26 +1480,40 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       }) };
     return null;
   }
+  function parseTopic(txt) {
+    const m = String(txt || "").match(/\{[\s\S]*\}/);
+    if (!m) return null;
+    try {
+      const o = JSON.parse(m[0]);
+      if (!Array.isArray(o.sections) || !o.sections.length) return null;
+      return {
+        tagline: String(o.tagline || "").trim(),
+        sections: o.sections.map(x => ({ title: String(x.title || "").trim(), body: String(x.body || "").trim() })).filter(x => x.body),
+        aha: Array.isArray(o.aha) ? o.aha.map(x => String(x).trim()).filter(Boolean) : [],
+        steps: Array.isArray(o.steps) ? o.steps.map(x => ({ title: String(x.title || "").trim(), body: String(x.body || "").trim() })).filter(x => x.body) : [],
+        question: String(o.question || "").trim(),
+        action: String(o.action || "").trim()
+      };
+    } catch (e) { return null; }
+  }
 
-  // ---------- 命盘指纹(缓存键:同盘同参数直接读库) ----------
+  // ---------- 指纹(缓存键) ----------
   function fingerprint(str) {
     if (window.crypto && crypto.subtle && crypto.subtle.digest) {
       return crypto.subtle.digest("SHA-256", new TextEncoder().encode(str))
         .then(buf => Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join(""));
     }
-    // file:// 等非安全上下文降级
     let h1 = 5381, h2 = 52711;
     for (let i = 0; i < str.length; i++) { const c = str.charCodeAt(i); h1 = (h1 * 33 ^ c) >>> 0; h2 = (h2 * 31 + c) >>> 0; }
     return Promise.resolve("djb2_" + h1.toString(16) + h2.toString(16) + "_" + str.length);
   }
 
-  // ---------- 调 Supabase Edge Function ----------
-  // 只发送星盘计算结果;写作规则与问题定义都在服务端,前端源码不含任何 Prompt
+  // ---------- 请求:只送星盘计算结果 ----------
   function chartPayload(res) {
     return {
       ang: { asc: res.ang.asc, mc: res.ang.mc },
       cusps: res.cusps,
-      planets: res.planets.map(p => ({ key: p.key, lon: p.lon, house: p.house, retro: !!p.retro })),
+      planets: res.planets.map(p => ({ key: p.key, lon: p.lon, house: p.house, retro: !!p.retro, speed: p.speed })),
       extras: (res.extras || []).map(x => ({ key: x.key, lon: x.lon, house: x.house }))
     };
   }
@@ -2222,196 +1534,36 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       });
     });
   }
-  function fetchReading(ns, res, opts, fpSeed) {
+  function askServer(kind, extra, res, fpSeed, parseFn) {
     const chart = chartPayload(res);
     function attempt(seed) {
       return fingerprint(seed).then(function (fp) {
-        return callFunc({ kind: "blueprint", fingerprint: fp, ns: ns, chart: chart });
+        return callFunc(Object.assign({ kind: kind, fingerprint: fp, chart: chart }, extra));
       }).then(function (d) {
         const raw = d.text || d.content || "";
-        const parsed = parseChapters(raw);
-        if (!parsed) { const e = new Error("返回内容无法解析(可能被截断)"); e.parseFail = true; throw e; }
+        const parsed = parseFn(raw);
+        if (!parsed) { const e = new Error("内容解析失败(可能被截断)"); e.parseFail = true; throw e; }
         parsed.raw = raw;
         return parsed;
       });
     }
-    const base = String(fpSeed || "") + "|v7";
+    const base = String(fpSeed || "") + "|" + kind + (extra.tid ? ":" + extra.tid : "") + "|v8";
     return attempt(base).catch(function (e) {
       if (e.parseFail) return attempt(base + "|retry" + Date.now());
       throw e;
     });
   }
-
-  // ---------- 章节渲染:宽屏=章节式长读 / 窄屏=卡片式 ----------
-  // ---------- 叙事引擎:把九步结果写成"你的盘"的解读 ----------
-  const KW = { Sun: "意志与自我", Moon: "情绪与安全感", Mercury: "思维与表达", Venus: "爱与价值", Mars: "行动与欲望", Jupiter: "扩张与信念", Saturn: "结构与责任", Uranus: "变革与独立", Neptune: "梦想与消融", Pluto: "深度与转化" };
-  const HOUSE_T = ["自我与外在形象", "金钱与自我价值", "沟通、学习与近环境", "家庭与内在根基", "创造、恋爱与自我表达", "日常、工作与身心状态", "伴侣与一对一关系", "深度亲密与共享资源", "远方、信念与视野", "事业与社会位置", "朋友、社群与愿景", "独处、潜意识与幕后"];
-  const ELEM_T = { fire: "火(行动与热情)", earth: "土(落实与稳固)", air: "风(思考与联结)", water: "水(感受与共情)" };
-  const ELEM_LACK = { fire: "主动点火、直接争取", earth: "落地执行与日常稳定", air: "抽离客观、把感受说清楚", water: "沉进情绪、与人深度共感" };
-  const MODE_T = { cardinal: "开创——习惯先发起再说", fixed: "固定——认定了就深耕到底", mutable: "变动——随时观察随时调整" };
-  const JONES_T = {
-    bundle: "集团型:全部能量收在一个窄区,火力极度集中,你对特定领域的专注远超常人,但视野容易只剩这一块",
-    bucket: "提桶型:大部队之外有一颗孤星,它是整盘能量的出水口——那颗星的主题会成为你反复回去处理的事",
-    bowl: "碗型:能量占半边天,你自带「拥有的一侧」与「空缺的一侧」——常被空的那半边吸引,想去补完",
-    locomotive: "火车头型:留了一块空,领头星拖着全盘跑,你的驱动力强,人生像一列不太停站的车",
-    seesaw: "跷跷板型:能量分成对峙的两团,你常在两种生活/两种自我之间来回摆,平衡本身就是主题",
-    splash: "散落型:能量均匀铺开,兴趣广、适应快,课题是别摊太薄",
-    splay: "扩展型:能量三三两两不规则聚集,你按自己的节奏长成自己的形状,不太服从单一路线"
-  };
-  const LEVEL_T = { veryStrong: "资源丰富,是全盘重要的支持力", strong: "稳定有力,可以放心倚重", neutral: "中性——表现好坏取决于宫位与相位的配合", weak: "承压,需要更多耐心经营", veryWeak: "明显受压。这不是缺陷宣判,而是此生重要的成长课题" };
-  const pn = k => P_CN[k] || k;
-  const hT = h => "第" + h + "宫(" + HOUSE_T[h - 1] + ")";
-  const soft = t => t === "tri" || t === "sex";
-
-  function narrative(ns) {
-    const S = [];
-    const sec = (t, b) =>
-      '<div style="margin:14px 0 4px;font-size:12px;letter-spacing:.12em;color:var(--gold)">' + t + '</div>' +
-      '<div style="font-size:13.5px;line-height:1.95;color:var(--parchment)">' + b + '</div>';
-
-    // —— 一、底色 ——
-    let b1 = [];
-    b1.push(ns.step1.sect === "day"
-      ? "这是一张<b>日盘</b>:当内在感受与外在目标打架时,你的主基调由太阳一侧(意志、方向、自我认同)裁决——先把要去哪想清楚,情绪就跟得上。"
-      : "这是一张<b>夜盘</b>:当内在感受与外在目标打架时,你的主基调由月亮一侧(情绪、需求、安全感)裁决——先把自己安顿好,事情才推得动。");
-    const E = ns.step2.elements;
-    if (E.dominantPct >= 40) b1.push("你的能量以 <b>" + ELEM_T[Object.keys(ELEM_T).includes(E.dominant) ? E.dominant : "fire"] + "</b> 为主导(" + E.dominantPct + "%),这是你天生省力的处世方式。");
-    if (E.lacking.length) b1.push("相对缺乏 " + E.lacking.map(e => ELEM_T[e]).join("、") + ":" + E.lacking.map(e => ELEM_LACK[e]).join(";") + "——这些对你不是本能,是要刻意练的动作,也因此练成后格外珍贵。");
-    b1.push("行事模式偏<b>" + MODE_T[ns.step2.modes.dominant].split("——")[0] + "</b>," + MODE_T[ns.step2.modes.dominant].split("——")[1] + "。");
-    b1.push(JONES_T[ns.step2.jonesPattern] + "。半球分布:" + ns.step2.chartToneHint.split(" · ").slice(0, 2).join("、") + "。");
-    if (ns.step3.stelliums.length) {
-      const st = ns.step3.stelliums[0];
-      const strength = st.level === "super" ? "整个人都被这个主题染色,行为处处可见" : st.level === "strong" ? "这是你的人格主轴" : st.upgradeHint ? "颗数虽是弱星群,但成员分量重(含日月级),实际染色力接近人格主轴" : "这是一条明显的人生偏好";
-      b1.push("你有一组<b>" + st.target + "星群</b>(" + st.planets.map(pn).join("、") + "):" + strength + "。人生主战场大致落在 " + (st.track === "house" ? hT(st.targetIdx) : "与" + st.target + "气质相关的场景,集中在" + st.spread.map(h => h + "宫").join("、")) + "。");
-    }
-    if (ns.step3.emptyHouses.length) {
-      const eg = ns.step3.emptyHouses.slice(0, 3).map(e => e.house + "宫由" + pn(e.rulerModern.planet) + "在" + e.rulerModern.inHouse + "宫代管");
-      b1.push("空宫不是空白:" + eg.join(";") + "——这些领域你习惯「借别处的方式」来经营,不直接驻军。");
-    }
-    S.push(sec("第一章 · 你生命最初的设定", b1.join("<br>")));
-
-    // —— 二、你如何运转 ——
-    let b2 = [];
-    const co = ns.step4.coherence;
-    b2.push("意志面(太阳 " + ns.step4.sun.sign + ns.step4.sun.house + "宫)、情绪面(月亮 " + ns.step4.moon.sign + ns.step4.moon.house + "宫)、面具面(上升 " + ns.step4.asc.sign + ")——");
-    const elemLine = co.elemVerdict === "元素合" ? "三者气质相合,别人看到的你和你想成为的你差距不大" : co.elemVerdict === "部分" ? "三者气质部分相合:有的面向天然合拍,有的要磨" : "三者气质差异大,你常觉得「几个自己」不像一家人";
-    const aspLine = co.aspVerdict === "相位合" ? "运作上也互相帮衬" : co.aspVerdict === "中性" ? "运作上互不干涉,各管各的" : "运作上会打架,尤其在压力下";
-    b2.push(elemLine + ";" + aspLine + "。" + (co.axis.length ? "主要拉扯在 <b>" + co.axis.map(a => a.map(x => x === "sun" ? "太阳" : x === "moon" ? "月亮" : "上升").join("–")).join("、") + "</b> 之间:矛盾时以<b>" + (co.priority === "sun" ? "太阳侧(想去哪)" : "月亮侧(舒不舒服)") + "</b>为准,另一面当作你的另一副面孔,不必消灭它。" : ""));
-    const cr = ns.step5.chartRuler.modern;
-    b2.push("你的命主星是<b>" + pn(cr.planet) + "</b>,落" + cr.sign + hT(cr.house) + ":上升只是门面,这颗星才是替你出门办事的人——它的状态(" + LEVEL_T[levelOf(cr.total)].split(",")[0] + ")就是你执行力的底色,人生引擎从" + HOUSE_T[cr.house - 1] + "点火。");
-    if (ns.step5.endpointPointer) {
-      const ep = ns.step5.endpointPointer;
-      b2.push("全盘定位链最终收束于<b>" + pn(ep.planet) + "</b>(" + ep.sign + hT(ep.house) + "):你所有的努力绕来绕去,最后都是为了「" + HOUSE_T[ep.house - 1] + "」这件事。");
-    } else if (ns.step5.dispositorChain.modern.loops.length) {
-      b2.push("你的定位链收在一个<b>互容环</b>(" + ns.step5.dispositorChain.modern.loops.map(l => l.map(pn).join("↔")).join("、") + ")里:能量在环内自我供血,不依赖单一终点——自成生态,但也容易在环里打转。");
-    }
-    b2.push("全盘状态最好的是<b>" + ns.step6.ace.map(pn).join("、") + "</b>(你最可靠的内在资源,关键时刻先调它);最吃力的是<b>" + ns.step6.burden.map(pn).join("、") + "</b>(" + LEVEL_T[ns.step6.planetScores[ns.step6.burden[0]].level] + ")。");
-    S.push(sec("第二章 · 你如何面对世界", b2.join("<br>")));
-
-    // —— 三、引擎与卡点 ——
-    let b3 = [];
-    ns.step7.tightestThree.forEach(function (a, i) {
-      const nature = a.type === "con" ? "融合" : soft(a.type) ? "和谐" : "张力";
-      let line = "<b>" + pn(a.a) + ASPECT_CN[a.type] + pn(a.b) + "</b>(" + a.orb + "°" + (a.precision ? " · 精准" : "") + "):" + KW[a.a] + " × " + KW[a.b] + " 以" + nature + "方式咬合";
-      line += a.precision ? "——orb 小于 1°,这是你一生反复出现的主旋律," + (soft(a.type) || a.type === "con" ? "顺手到常被你当成理所当然的天赋" : "它反复出题,也反复推你成长") + "。" : (soft(a.type) ? ",是顺畅的内建回路。" : ",是常态化的内部摩擦,也是动力来源。");
-      b3.push(line);
-    });
-    ns.step7.patterns.forEach(function (p) {
-      if (p.type === "tSquare") b3.push("你盘里有一个<b>T 三角</b>(" + p.planets.map(pn).join("、") + "):两端对峙、压力汇聚到焦点<b>" + pn(p.apex) + "</b>——它既是最紧绷的点,也是唯一的出口:把力气花在" + KW[p.apex] + "上,僵局就动了。");
-      if (p.type === "grandCross") b3.push("你盘里有一个<b>大十字</b>(" + p.planets.map(pn).join("、") + "):四方拉扯的十字路口,张力极大,但撑得住的人往往成为最有承载力的人。");
-      if (p.type === "grandTrine") b3.push("你有一个<b>" + p.element + "象大三角</b>(" + p.planets.map(pn).join("、") + "):一条封闭顺滑的天赋回路,顺到你可能从没把它当回事——刻意使用它,它才变成成果。");
-      if (p.type === "yod") b3.push("你有一个<b>Yod(命定之指)</b>,指向<b>" + pn(p.apex) + "</b>:两股不相干的能量别扭地汇到这里,这颗星的主题带有「非做不可」的宿命感。");
-      if (p.type === "mutualReception") b3.push(pn(p.planets[0]) + "与" + pn(p.planets[1]) + "<b>互容</b>(" + (p.system === "modern" ? "现代" : "传统") + "):互为地主,彼此照应,即使各自状态不佳也能互相救场。");
-    });
-    ns.step7.specialFlags.forEach(function (f) {
-      if (f.type === "rulerReturnsHome") b3.push("你的命主星<b>回归本位</b>:自己的地盘自己坐镇,自我感清晰,人生方向不容易被别人带偏。");
-      if (f.type === "dignityRescue") b3.push("<b>" + pn(f.planet) + "</b>先天落陷却处在有力位置——「困境中被托起」:这份能力你得来不易,反而用得比天生好命的人更用心。");
-      if (f.type === "wastedTalent") b3.push("<b>" + pn(f.planet) + "</b>先天强旺却缺乏舞台——「有本钱没舞台」:课题不是能力,而是主动给它找出口。");
-    });
-    S.push(sec("第三章 · 你成长路上的礼物与考验", b3.join("<br>")));
-
-    // —— 四、此生方向 ——
-    let b4 = [];
-    if (ns.step8.nodes) {
-      const nd = ns.step8.nodes;
-      b4.push("旧惯性(南交 " + nd.south.sign + nd.south.house + "宫):" + HOUSE_T[nd.south.house - 1] + "的模式你闭着眼也会做,舒适、熟练,却会渐渐消耗你。");
-      b4.push("方向(北交 " + nd.north.sign + nd.north.house + "宫):往「" + HOUSE_T[nd.north.house - 1] + "」走——陌生、笨拙,但每走一步都带来展开感。这门课的执行人是<b>" + pn(nd.north.traditionalRuler.planet) + "</b>(落" + nd.north.traditionalRuler.house + "宫):课题最终要在那里落地。");
-    }
-    if (ns.step8.chiron) {
-      const ch = ns.step8.chiron;
-      b4.push("凯龙落 " + ch.sign + ch.house + "宫:在「" + HOUSE_T[ch.house - 1] + "」上你带着一道不太愈合的伤,也正因为疼过,你在这里最能理解别人、最有资格陪伴别人。" +
-        (ch.tightContacts.length ? "它与" + ch.tightContacts.map(t => pn(t.planet)).join("、") + "紧密纠缠,这道伤会具体缠绕在" + ch.tightContacts.map(t => KW[t.planet]).join("、") + "的情境里。" : ""));
-    }
-    const pc = ns.step8.pointerCheck;
-    b4.push(pc.verdict === "aligned"
-      ? "指针校验 " + pc.score + " 分——<b>课题极清晰</b>:星群落点、能量终点、北交方向几条线索指向同一处,你的人生像一道明确的题。"
-      : pc.verdict === "partial"
-        ? "指针校验 " + pc.score + " 分——<b>部分聚焦</b>:几条线索有交集但不完全重合,主线清楚,支线也真实。"
-        : "指针校验 " + pc.score + " 分——<b>多线人生</b>:几条线索各指一方,不必强求把自己收拢成一个答案,多轨并行本身就是你的形状。");
-    S.push(sec("第四章 · 生命想带你去的地方", b4.join("<br>")));
-
-    // —— 五、一页定调 ——
-    const LP_T = {
-      "聚光灯型": "课题清晰且发生在台前:目标明确,也注定被看见——大方站到光里。",
-      "深水聚焦型": "课题清晰但在幕后发力:你不需要观众,深潜的浓度就是你的力量。",
-      "稳步推进型": "课题清晰,舞台居中:不抢镜也不隐身,按自己的节奏一格一格推进。",
-      "多面舞台型": "多线并进且活在台前:你是几个角色的集合体,切换自如就是天赋。",
-      "暗河漫游型": "多线且内在化:你的丰富发生在别人看不见的地方,不必解释给所有人听。",
-      "多线穿行型": "多线并行,台前幕后自由穿行:弹性是你最大的资产。"
-    };
-    let b5 = "综合定调:<b>" + ns.mind.lifePattern + "</b>——" + (LP_T[ns.mind.lifePattern] || "") +
-      "<br>一句话:" + (ns.step2.elements.dominantPct >= 35 ? "一个以" + ELEM_T[ns.step2.elements.dominant].slice(0, 1) + "为底色、" : "一个") +
-      JONES_T[ns.step2.jonesPattern].split(":")[0].replace("型", "式") + "分布的人," +
-      (ns.step5.endpointPointer ? "所有努力最终汇向「" + HOUSE_T[ns.step5.endpointPointer.house - 1] + "」," : "") +
-      (ns.step8.nodes ? "此生的功课是从「" + HOUSE_T[ns.step8.nodes.south.house - 1] + "」的舒适区,一步步走向「" + HOUSE_T[ns.step8.nodes.north.house - 1] + "」。" : "");
-    S.push(sec("第五章 · 属于你的生命剧本", b5));
-
-    return S.join("");
+  function fetchReading(res, fpSeed) {
+    return askServer("blueprint", {}, res, fpSeed, parseChapters);
+  }
+  function fetchTopic(res, tid, fpSeed, blueprint, topics) {
+    return askServer("topic", { tid: tid, blueprint: blueprint, topics: topics }, res, fpSeed, parseTopic);
+  }
+  function fetchMap(res, fpSeed, blueprint, topics) {
+    return askServer("map", { blueprint: blueprint, topics: topics }, res, fpSeed, parseTopic);
   }
 
-  // ---------- 单颗行星的个性化注解(注入行星抽屉) ----------
-  function planetNote(ns, key) {
-    if (!ns || !ns.step6.planetScores[key]) return "";
-    const sc = ns.step6.planetScores[key];
-    const L = [];
-    let head = "综合尊贵 <b>" + sc.total + "</b> 分(" + LEVEL_CN[sc.level] + "):" + LEVEL_T[sc.level] + "。";
-    const fl = [];
-    if (sc.flags.combust) fl.push("被太阳灼伤——这股能量被自我意志盖过,不易客观");
-    if (sc.flags.retro) fl.push("逆行——能量内化,走复盘与重来的路线");
-    if (sc.flags.fast) fl.push("运行快——反应敏捷,起效直接");
-    if (fl.length) head += fl.join(";") + "。";
-    L.push(head);
-    const roles = [];
-    if (ns.step4.asc.chartRulerRef === key) roles.push("<b>命主星</b>(现代):它是替你的上升出门办事的人,状态好坏直接写在你的执行力上");
-    if (ns.step5.chartRuler.traditional.planet === key && ns.step4.asc.chartRulerRef !== key) roles.push("<b>命主星</b>(传统)");
-    if (key === "Sun" && ns.step1.referee === "sun") roles.push("日盘<b>裁判星</b>:内外矛盾时,全盘以它为准");
-    if (key === "Moon" && ns.step1.referee === "moon") roles.push("夜盘<b>裁判星</b>:内外矛盾时,全盘以它为准");
-    if (ns.step6.ace.includes(key)) roles.push("全盘<b>王牌星</b>:你最可靠的内在资源");
-    if (ns.step6.burden.includes(key)) roles.push("全盘<b>拖后腿星</b>:最需要耐心陪伴的部分,也是重要成长课题");
-    if (ns.step5.endpointPointer && ns.step5.endpointPointer.planet === key) roles.push("<b>终定星</b>:全盘能量最终收束在它身上");
-    ns.step3.stelliums.forEach(function (st) { if (st.planets.includes(key)) roles.push("参与 <b>" + st.target + "星群</b>(" + (st.level === "super" ? "超强" : st.level === "strong" ? "强" : "弱") + ")"); });
-    ns.step7.tightestThree.forEach(function (a) {
-      if (a.a === key || a.b === key) roles.push("身处全盘<b>最紧相位</b>之一(" + pn(a.a) + ASPECT_CN[a.type] + pn(a.b) + " " + a.orb + "°" + (a.precision ? " · 一生主旋律" : "") + ")");
-    });
-    ns.step7.patterns.forEach(function (p) {
-      if (p.type === "tSquare" && p.apex === key) roles.push("<b>T 三角焦点</b>:全盘张力的汇聚点与出口");
-      else if (p.planets && p.planets.includes(key)) {
-        const nm = { tSquare: "T 三角", grandCross: "大十字", grandTrine: "大三角", yod: "Yod", mutualReception: "互容" }[p.type];
-        if (nm) roles.push("参与" + nm);
-      }
-    });
-    if (ns.step8.nodes && ns.step8.nodes.north.traditionalRuler.planet === key) roles.push("北交<b>课题执行人</b>:此生功课由它落地");
-    const managed = ns.step3.emptyHouses.filter(e => e.rulerModern.planet === key).map(e => e.house + "宫");
-    if (managed.length) roles.push("代管空宫 " + managed.join("、") + ":那些领域的事务由它间接打理");
-    if (roles.length) L.push("在这张盘里的角色:" + roles.join(";") + "。");
-    return L.join("<br>");
-  }
-
-  // ---------- 面板渲染(叙事版) ----------
-  function renderNine(ns, mount) {
-    mount.innerHTML = narrative(ns);
-  }
-
+  // ---------- 渲染:生命蓝图 ----------
   function renderChapters(reading, mount) {
     const chs = Array.isArray(reading) ? reading : (reading.chapters || []);
     const spine = Array.isArray(reading) ? "" : (reading.spine || "");
@@ -2421,15 +1573,11 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     const inChapter = {};
     chs.forEach(c => { inChapter[c.title] = 1; });
     let h = "";
-
-    // ① 一句话说你
     if (spine) {
       h += '<div style="margin:2px 0 20px;padding:16px 18px;border-left:3px solid var(--gold);background:rgba(var(--accent-rgb),.07);border-radius:0 12px 12px 0">' +
         '<div style="font-size:10.5px;letter-spacing:.18em;color:var(--gold);margin-bottom:6px">一句话说你</div>' +
         '<div style="font-size:15.5px;line-height:1.85;color:var(--parchment)">' + esc(spine) + "</div></div>";
     }
-
-    // ② 关于你的几件事(重点字卡)
     const quick = cards.filter(c => !inChapter[c.title]);
     if (quick.length) {
       h += '<div style="font-size:11px;letter-spacing:.16em;color:var(--gold);margin:0 0 10px">关 于 你 的 几 件 事</div>' +
@@ -2440,8 +1588,6 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
             '<div style="font-size:13.5px;line-height:1.8;color:var(--parchment)">' + esc(c.line) + "</div></div>";
         }).join("") + "</div>";
     }
-
-    // ③ 你的生命蓝图:字卡句 + 摘要 + 展开全文(同一张卡)
     if (chs.length) {
       const cardMap = {};
       cards.forEach(c => { cardMap[c.title] = c.line; });
@@ -2458,7 +1604,6 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
           "</div>";
       }).join("") + "</div>";
     }
-
     mount.innerHTML = h;
     mount.querySelectorAll(".rd-more").forEach(function (btn) {
       btn.addEventListener("click", function () {
@@ -2470,91 +1615,10 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     });
   }
 
-  // ========== 主题专区:后台调用规则(前端不出现任何术语) ==========
-  // ========== 人生探索地图:六层旅程 × 每层五个探索 ==========
-  // 每个探索声明后台要调用的资料(宫位/行星/特殊点),前端绝不出现术语
-  // 第二部分:九个主题探索(UI 用;写作规则与资料调用都在服务端)
-  const TOPICS9 = [
-    { id: "self",    icon: "\u2B50",       name: "个人",     sub: "人格 · 天赋 · 使命",
-      teaser: "别人眼中的你,和你自己知道的你,\n中间那段距离,才是真正的你。" },
-    { id: "emotion", icon: "\u2764\uFE0F", name: "情感模式", sub: "你如何去爱",
-      teaser: "喜欢一个人的时候,你会变成另一个版本的自己。\n那个版本,你未必喜欢。" },
-    { id: "career",  icon: "\uD83D\uDCBC", name: "事业",     sub: "怎样工作才发挥得出来",
-      teaser: "有些累是值得的,有些累是空的。\n差别不在做什么,而在怎么做。" },
-    { id: "family",  icon: "\uD83C\uDFE1", name: "家庭",     sub: "父母 · 兄弟姐妹",
-      teaser: "你以为早就走出来了,\n但有些反应还是会自动发生。" },
-    { id: "love",    icon: "\uD83D\uDC8D", name: "感情",     sub: "长期关系怎么运转",
-      teaser: "让你心动的,和让你安稳的,\n常常不是同一种人。" },
-    { id: "partner", icon: "\uD83D\uDC64", name: "正缘特质", sub: "容易吸引什么样的人",
-      teaser: "你反复遇到的那一类人,\n其实一直在提醒你同一件事。" },
-    { id: "wealth",  icon: "\uD83D\uDCB0", name: "财运",     sub: "你的赚钱模式",
-      teaser: "钱怎么进来,和钱怎么留下,\n是两件不同的事。" },
-    { id: "study",   icon: "\uD83C\uDF93", name: "求学",     sub: "你怎么学会一件事",
-      teaser: "同样一堂课,有人听懂,有人做懂。\n你是哪一种?" },
-    { id: "body",    icon: "\uD83C\uDF19", name: "身心状态", sub: "压力怎么来,力气怎么回",
-      teaser: "什么都没做,却已经很累。\n消耗常常发生在看不见的地方。" }
-  ];
-  function findTopic(id) { return TOPICS9.find(x => x.id === id) || null; }
-
-  function parseTopic(txt) {
-    const m = String(txt || "").match(/\{[\s\S]*\}/);
-    if (!m) return null;
-    try {
-      const o = JSON.parse(m[0]);
-      if (!Array.isArray(o.sections) || !o.sections.length) return null;
-      return {
-        tagline: String(o.tagline || "").trim(),
-        sections: o.sections.map(x => ({ title: String(x.title || "").trim(), body: String(x.body || "").trim() })).filter(x => x.body),
-        aha: Array.isArray(o.aha) ? o.aha.map(x => String(x).trim()).filter(Boolean) : [],
-        steps: Array.isArray(o.steps) ? o.steps.map(x => ({ title: String(x.title || "").trim(), body: String(x.body || "").trim() })).filter(x => x.body) : [],
-        question: String(o.question || "").trim(),
-        action: String(o.action || "").trim()
-      };
-    } catch (e) { return null; }
-  }
-
-  function askServer(kind, extra, ns, res, fpSeed, parseFn) {
-    const chart = chartPayload(res);
-    function attempt(seed) {
-      return fingerprint(seed).then(function (fp) {
-        return callFunc(Object.assign({ kind: kind, fingerprint: fp, ns: ns, chart: chart }, extra));
-      }).then(function (d) {
-        const raw = d.text || d.content || "";
-        const parsed = parseFn(raw);
-        if (!parsed) { const e = new Error("内容解析失败(可能被截断)"); e.parseFail = true; throw e; }
-        parsed.raw = raw;
-        return parsed;
-      });
-    }
-    const base = String(fpSeed || "") + "|" + kind + (extra.tid ? ":" + extra.tid : "") + "|v7";
-    return attempt(base).catch(function (e) {
-      if (e.parseFail) return attempt(base + "|retry" + Date.now());
-      throw e;
-    });
-  }
-  function fetchTopic(ns, res, tid, fpSeed, blueprint, topics) {
-    return askServer("topic", { tid: tid, blueprint: blueprint, topics: topics }, ns, res, fpSeed, parseTopic);
-  }
-  function fetchMap(ns, res, fpSeed, blueprint, topics) {
-    return askServer("map", { blueprint: blueprint, topics: topics }, ns, res, fpSeed, parseTopic);
-  }
-
-  // ---------- 兼容层:老版本内容自动升级,永不因改版而丢失 ----------
-  // 规则:1 先看结构是否够用 2 不够就用保存的原始文本重解析 3 都不行才算真的没有
-  // 内容架构版本:Prompt 有重大升级时 +1,旧内容会自动重新生成
-  const CONTENT_VER = 7;
-
-  function isStale(saved) {
-    return !saved || (saved.ver || 0) < CONTENT_VER;
-  }
-  function stamp(obj) {
-    if (obj) obj.ver = CONTENT_VER;
-    return obj;
-  }
-
+  // ---------- 兼容层:版本过期自动重生成;结构损坏用原文重解析 ----------
+  function isStale(saved) { return !saved || (saved.ver || 0) < CONTENT_VER; }
   function reviveReading(saved) {
-    if (!saved) return null;
-    if (isStale(saved)) return null;                 // 旧架构内容:视为无内容,自动重生成
+    if (!saved || isStale(saved)) return null;
     if (saved.chapters && saved.chapters.length) {
       if (!Array.isArray(saved.cards)) saved.cards = [];
       saved.chapters.forEach(function (c) {
@@ -2565,15 +1629,14 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       if (typeof saved.spine !== "string") saved.spine = "";
       return saved;
     }
-    if (saved.raw) {                                  // 结构坏了但原文还在 → 本地重解析
+    if (saved.raw) {
       const re = parseChapters(saved.raw);
       if (re) { re.raw = saved.raw; re.ts = saved.ts; re.ver = saved.ver; return re; }
     }
     return null;
   }
   function reviveTopic(saved) {
-    if (!saved) return null;
-    if (isStale(saved)) return null;
+    if (!saved || isStale(saved)) return null;
     if (saved.sections && saved.sections.length) {
       if (typeof saved.tagline !== "string") saved.tagline = "";
       if (!Array.isArray(saved.aha)) saved.aha = [];
@@ -2590,8 +1653,6 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     }
     return null;
   }
-
-  // 一次性清理:移除历史版本留下的孤立资料(旧 30 题 answers、旧主题 id)
   const LEGACY_TOPIC_IDS = ["personal", "destined", "sibling"];
   function cleanupLegacy(c) {
     let changed = false;
@@ -2605,7 +1666,15 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     return changed;
   }
 
-  window.NineSteps = { CONTENT_VER: CONTENT_VER, cleanupLegacy: cleanupLegacy, reviveReading: reviveReading, reviveTopic: reviveTopic, TOPICS9: TOPICS9, findTopic: findTopic, parseTopic: parseTopic, fetchTopic: fetchTopic, fetchMap: fetchMap, compute: computeNineSteps, render: renderNine, planetNote: planetNote, parseChapters: parseChapters, fetchReading: fetchReading, renderChapters: renderChapters, hasSupabase: function () { return !!(SUPABASE_FUNC_URL && SUPABASE_ANON_KEY); } };
+  window.Reading = {
+    CONTENT_VER: CONTENT_VER,
+    TOPICS9: TOPICS9, findTopic: findTopic,
+    parseChapters: parseChapters, parseTopic: parseTopic,
+    fetchReading: fetchReading, fetchTopic: fetchTopic, fetchMap: fetchMap,
+    renderChapters: renderChapters,
+    reviveReading: reviveReading, reviveTopic: reviveTopic, cleanupLegacy: cleanupLegacy,
+    hasSupabase: function () { return !!(SUPABASE_FUNC_URL && SUPABASE_ANON_KEY); }
+  };
 })();
 </script>
 <script>
@@ -3405,8 +2474,10 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       if (it.isMajor) planetScreen[p.key] = pt(R_CORE - 3, p.lon);
     });
 
-    // 相位线:九步口径(合8/冲8/刑6/拱6/六合4),按类型分色,越紧越显;行星永远盖在线上
-    const NA = (typeof curNine !== "undefined" && curNine && curNine.step7) ? curNine.step7.allAspects : null;
+    // 相位线:按类型分色,越紧越显;行星永远盖在线上
+    const NA = (res.aspects || []).map(function (a) {
+      return { a: res.planets[a.a].key, b: res.planets[a.b].key, type: a.type, orb: a.orb };
+    });
     const ASP_LINE = {
       opp: { color: "#c0392b", dash: null, max: 8 },   // 冲:深红
       squ: { color: "#d9662a", dash: null, max: 6 },   // 刑:橙
@@ -3442,20 +2513,6 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   }
 
   // 引导高亮:keys=null 恢复;否则淡化非 keys 的行星
-  function highlightPlanets(keys) {
-    const svg = $("wheel");
-    svg.querySelectorAll("[data-planet]").forEach(function (g) {
-      if (!keys) { g.classList.remove("dimmed"); return; }
-      g.classList.toggle("dimmed", !keys.includes(g.getAttribute("data-planet")));
-    });
-    svg.querySelectorAll("[data-aspline]").forEach(function (l) {
-      if (!keys) { l.classList.remove("dimmed"); return; }
-      const [a, b] = l.getAttribute("data-aspline").split("-");
-      l.classList.toggle("dimmed", !(keys.includes(a) && keys.includes(b)));
-    });
-  }
-
-  // ---------- 分组位置表 ----------
   function glyphCell(o, px, color) {
     if (o.glyphKey) return GL.symbolSVG(o.glyphKey, px, color);
     return '<span style="font-family:inherit;font-weight:700;font-size:12px;color:' + color + '">' + (o.glyphTxt || "") + "</span>";
@@ -3489,12 +2546,6 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   function sec(title, body) {
     return '<div class="d-section"><p class="eyebrow">' + title + '</p><div class="d-text">' + body + "</div></div>";
   }
-  function loreSecs(key) {
-    const L = X.LORE[key];
-    if (!L) return "";
-    return sec("神话原型", L.myth) + sec("掌管主题", L.rule) + sec("心理意义", L.psy) + sec("专题应用", L.app);
-  }
-
   function openPlanet(p) {
     const res = curResult;
     let chips = '<div class="chips">';
@@ -3505,13 +2556,11 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       const other = res.planets[a.a].key === p.key ? res.planets[a.b] : res.planets[a.a];
       return '<span style="color:' + a.color + '">' + a.glyph + "</span> " + a.name + " " + other.name;
     }).join("<br>") : "无主要相位";
-    const note = (window.NineSteps && typeof curNine !== "undefined" && curNine) ? window.NineSteps.planetNote(curNine, p.key) : "";
     openDrawer(
       '<div class="d-glyph">' + glyphCell(p, 40, "#a8792a") + "</div>" +
       '<div class="d-title">' + p.name + " · " + p.sign + "</div>" +
-      '<div class="d-kw">' + p.kw + (p.retro ? " · 逆行" : "") + "</div>" +
+      '<div class="d-kw">' + (p.retro ? "逆行" : "") + "</div>" +
       chips +
-      (note ? sec("在你的盘中", note) : "") +
       sec("本盘相位", aspHtml)
     );
   }
@@ -3528,29 +2577,10 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       '<div class="d-title">' + x.name + " · " + x.sign + "</div>" +
       '<div class="d-kw">' + (x.house ? "落第 " + x.house + " 宫" : "") + (x.retro ? " · 逆行" : "") + "</div>" +
       '<div class="chips">' + noteChip + "</div>" +
-      erisHtml +
-      loreSecs(x.key)
+      erisHtml
     );
   }
 
-  function openAspect(a) {
-    const res = curResult;
-    const p1 = res.planets[a.a], p2 = res.planets[a.b];
-    openDrawer(
-      '<div class="d-glyph" style="color:' + a.color + '">' + a.glyph + "</div>" +
-      '<div class="d-title">' + p1.name + " " + a.name + " " + p2.name + "</div>" +
-      '<div class="d-kw">' + a.angle + "° · 容许度 " + a.orb.toFixed(1) + "° · " + a.tone + "</div>" +
-      sec("相位含义", C.MEANINGS.aspects[a.type]) +
-      sec("这组组合", p1.name + "(" + p1.kw + ")与" + p2.name + "(" + p2.kw + ")以" + a.name + "连接:" +
-        (a.tone === "和谐" ? "两股能量互相顺水推舟,是可依赖的内在资源。" :
-         a.tone === "张力" ? "两股能量互相牵制,带来反复出现的课题,也是成长最快的引擎。" :
-         "两股能量融为一体,彼此放大,需留意主导权。") +
-        " 容许度越小(此处 " + a.orb.toFixed(1) + "°),体感越明显。")
-    );
-  }
-
-  // ---------- 主视图 ----------
-  let curNine = null;
   function drawActive() {
     const c = activeChart();
     if (!c) {
@@ -3567,14 +2597,11 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     document.querySelectorAll("#sysSeg button").forEach(function (b) {
       b.classList.toggle("on", (c.sys || "placidus") === b.dataset.sys);
     });
-    // 九步先算(盘面相位线与解读都依赖)
-    try { curNine = window.NineSteps.compute(curResult, curResult.extras, c.lat); }
-    catch (e) { curNine = null; }
     ensureToggleBar();
     drawWheel();
     drawPosTable();
     curTopic = null; mapOpen = false;
-    if (window.NineSteps.cleanupLegacy(c)) window.Cloud.updateChart(c).catch(function () { });
+    if (window.Reading.cleanupLegacy(c)) window.Cloud.updateChart(c).catch(function () { });
     renderReading();
     renderTopics();
   }
@@ -3643,12 +2670,12 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
 
   function renderTopics() {
     const c = activeChart(), grid = $("topicGrid");
-    if (!c || !curNine) { $("topicPanel").style.display = "none"; $("mapPanel").style.display = "none"; return; }
+    if (!c || !curResult) { $("topicPanel").style.display = "none"; $("mapPanel").style.display = "none"; return; }
     $("topicPanel").style.display = "";
     const saved = c.topics || {};
     grid.innerHTML = "";
-    window.NineSteps.TOPICS9.forEach(function (t) {
-      const ans = window.NineSteps.reviveTopic(saved[t.id]);
+    window.Reading.TOPICS9.forEach(function (t) {
+      const ans = window.Reading.reviveTopic(saved[t.id]);
       const on = curTopic === t.id;
       const item = document.createElement("div");
       item.style.cssText = "border:1px solid " + (on ? "var(--gold-soft)" : "var(--line)") +
@@ -3683,10 +2710,10 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
 
   function openTopic(tid) {
     const c = activeChart();
-    if (!c || !curNine || topicBusy) return;
+    if (!c || !curResult || topicBusy) return;
     if (curTopic === tid) { curTopic = null; renderTopics(); return; }
     curTopic = tid;
-    const saved = window.NineSteps.reviveTopic((c.topics || {})[tid]);
+    const saved = window.Reading.reviveTopic((c.topics || {})[tid]);
     renderTopics();
     if (saved) {
       if (saved !== (c.topics || {})[tid]) { c.topics[tid] = saved; window.Cloud.updateChart(c).catch(function () { }); }
@@ -3694,11 +2721,11 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     }
     topicBusy = true;
     const fpSeed = [c.date, c.time, c.lat.toFixed(4), c.lon.toFixed(4)].join("|");
-    window.NineSteps.fetchTopic(curNine, curResult, tid, fpSeed, c.reading, c.topics).then(function (data) {
+    window.Reading.fetchTopic(curResult, tid, fpSeed, c.reading, c.topics).then(function (data) {
       topicBusy = false;
       if (curTopic !== tid || !activeChart() || activeChart().id !== c.id) return;
       c.topics = c.topics || {};
-      data.ver = window.NineSteps.CONTENT_VER;
+      data.ver = window.Reading.CONTENT_VER;
       c.topics[tid] = data;
       window.Cloud.updateChart(c).catch(function (e) { console.warn("cloud", e); });
       renderTopics();
@@ -3718,10 +2745,10 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
 
   function renderMap() {
     const c = activeChart(), panel = $("mapPanel"), body = $("mapBody");
-    if (!c || !curNine) { panel.style.display = "none"; return; }
+    if (!c || !curResult) { panel.style.display = "none"; return; }
     const readCount = Object.keys(c.topics || {}).length;
     panel.style.display = "";
-    const saved = window.NineSteps.reviveTopic(c.lifemap);
+    const saved = window.Reading.reviveTopic(c.lifemap);
     const head = $("mapHint");
     if (saved) {
       head.textContent = "";
@@ -3741,17 +2768,17 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   }
   function toggleMap() {
     const c = activeChart();
-    if (!c || !curNine || mapBusy) return;
-    const saved = window.NineSteps.reviveTopic(c.lifemap);
+    if (!c || !curResult || mapBusy) return;
+    const saved = window.Reading.reviveTopic(c.lifemap);
     if (saved) { mapOpen = !mapOpen; renderMap(); return; }
     mapBusy = true;
     $("mapBody").innerHTML = '<div style="padding:22px 4px;text-align:center;color:var(--muted);font-size:12.5px;line-height:2"><span style="font-size:18px;color:var(--gold)">\u2739</span><br>\u6B63\u5728\u628A\u4F60\u7684\u7406\u89E3\u8FDE\u6210\u4E00\u5F20\u5730\u56FE\u2026<br><span style="font-size:11px;opacity:.7">\u7EA6\u9700 1\u20132 \u5206\u949F</span></div>';
     renderMap();
     const fpSeed = [c.date, c.time, c.lat.toFixed(4), c.lon.toFixed(4), Object.keys(c.topics || {}).sort().join(",")].join("|");
-    window.NineSteps.fetchMap(curNine, curResult, fpSeed, c.reading, c.topics).then(function (data) {
+    window.Reading.fetchMap(curResult, fpSeed, c.reading, c.topics).then(function (data) {
       mapBusy = false; mapOpen = true;
       if (!activeChart() || activeChart().id !== c.id) return;
-      data.ver = window.NineSteps.CONTENT_VER;
+      data.ver = window.Reading.CONTENT_VER;
       c.lifemap = data;
       window.Cloud.updateChart(c).catch(function (e) { console.warn("cloud", e); });
       renderMap();
@@ -3770,19 +2797,19 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   let autoGenBusy = false;
   function renderReading(retrying) {
     const c = activeChart(), body = $("nineBody");
-    if (!c || !curNine) { body.innerHTML = ""; return; }
-    const revived = window.NineSteps.reviveReading(c.reading);
+    if (!c || !curResult) { body.innerHTML = ""; return; }
+    const revived = window.Reading.reviveReading(c.reading);
     if (revived) {
       if (revived !== c.reading) {          // 本地修复成功:回存,以后直接可用
         c.reading = revived;
         window.Cloud.updateChart(c).catch(function () { });
       }
-      window.NineSteps.renderChapters(revived, body);
+      window.Reading.renderChapters(revived, body);
       $("readState").textContent = "";
       renderTopics();
       return;
     }
-    if (window.NineSteps.hasSupabase() && !autoGenBusy) {
+    if (window.Reading.hasSupabase() && !autoGenBusy) {
       autoGenBusy = true;
       body.innerHTML = '<div style="padding:30px 8px;text-align:center;color:var(--muted);font-size:13px;line-height:2">' +
         '<div style="font-size:22px;color:var(--gold);margin-bottom:10px">✶</div>' +
@@ -3790,23 +2817,23 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
         '<br><span style="font-size:11.5px;opacity:.75">第一次需要 1–2 分钟,之后打开就是秒开</span></div>';
       $("readState").textContent = "";
       const fpSeed = [c.date, c.time, c.lat.toFixed(4), c.lon.toFixed(4)].join("|");
-      window.NineSteps.fetchReading(curNine, curResult, { depth: "standard", tone: "balanced" }, fpSeed)
+      window.Reading.fetchReading(curResult, fpSeed)
         .then(function (parsed) {
           autoGenBusy = false;
           if (!activeChart() || activeChart().id !== c.id) return;
-          c.reading = Object.assign({ ts: new Date().toISOString().slice(0, 10), ver: window.NineSteps.CONTENT_VER }, parsed);   // 含 raw 原文
+          c.reading = Object.assign({ ts: new Date().toISOString().slice(0, 10), ver: window.Reading.CONTENT_VER }, parsed);   // 含 raw 原文
           window.Cloud.updateChart(c).catch(function (e) { console.warn("云同步失败", e); });
           renderReading();
         })
         .catch(function (e) {
           autoGenBusy = false;
           if (!retrying) { setTimeout(function () { renderReading(true); }, 1500); return; }
-          // 两次都失败:显示本地简版内容,并给一个再试链接
-          window.NineSteps.render(curNine, body);
+          // 两次都失败:给出说明与重试入口
+          body.innerHTML = "";
           $("readState").textContent = "";
           const tip = document.createElement("div");
           tip.style.cssText = "margin-top:16px;padding:12px 14px;border:1px dashed var(--line);border-radius:10px;font-size:12.5px;color:var(--muted);line-height:1.8";
-          tip.innerHTML = '内容暂时无法完成,已先为你显示基础版本。<a href="#" id="againLink" style="color:var(--gold)">点此再试一次</a>' +
+          tip.innerHTML = '内容暂时无法完成。<a href="#" id="againLink" style="color:var(--gold)">点此再试一次</a>' +
             '<div id="diagBox" style="margin-top:8px;font-size:11.5px;opacity:.8"></div>';
           body.appendChild(tip);
           const a2 = document.getElementById("againLink");
@@ -3817,7 +2844,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
           });
         });
     } else if (!autoGenBusy) {
-      window.NineSteps.render(curNine, body);
+      body.innerHTML = '<div style="padding:24px 8px;text-align:center;color:var(--muted);font-size:12.5px;line-height:1.9">尚未连接解读服务。</div>';
     }
   }
 
