@@ -2541,10 +2541,21 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
 
   // ---------- 兼容层:老版本内容自动升级,永不因改版而丢失 ----------
   // 规则:1 先看结构是否够用 2 不够就用保存的原始文本重解析 3 都不行才算真的没有
+  // 内容架构版本:Prompt 有重大升级时 +1,旧内容会自动重新生成
+  const CONTENT_VER = 7;
+
+  function isStale(saved) {
+    return !saved || (saved.ver || 0) < CONTENT_VER;
+  }
+  function stamp(obj) {
+    if (obj) obj.ver = CONTENT_VER;
+    return obj;
+  }
+
   function reviveReading(saved) {
     if (!saved) return null;
+    if (isStale(saved)) return null;                 // 旧架构内容:视为无内容,自动重生成
     if (saved.chapters && saved.chapters.length) {
-      // 结构在:补齐后来新增的字段,避免渲染出错
       if (!Array.isArray(saved.cards)) saved.cards = [];
       saved.chapters.forEach(function (c) {
         if (typeof c.summary !== "string") c.summary = "";
@@ -2554,16 +2565,19 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       if (typeof saved.spine !== "string") saved.spine = "";
       return saved;
     }
-    if (saved.raw) {                      // 结构坏了但原文还在 → 本地重解析
+    if (saved.raw) {                                  // 结构坏了但原文还在 → 本地重解析
       const re = parseChapters(saved.raw);
-      if (re) { re.raw = saved.raw; re.ts = saved.ts; return re; }
+      if (re) { re.raw = saved.raw; re.ts = saved.ts; re.ver = saved.ver; return re; }
     }
     return null;
   }
   function reviveTopic(saved) {
     if (!saved) return null;
+    if (isStale(saved)) return null;
     if (saved.sections && saved.sections.length) {
       if (typeof saved.tagline !== "string") saved.tagline = "";
+      if (!Array.isArray(saved.aha)) saved.aha = [];
+      if (!Array.isArray(saved.steps)) saved.steps = [];
       saved.sections.forEach(function (x) {
         if (typeof x.title !== "string") x.title = "";
         if (typeof x.body !== "string") x.body = "";
@@ -2572,12 +2586,26 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     }
     if (saved.raw) {
       const re = parseTopic(saved.raw);
-      if (re) { re.raw = saved.raw; return re; }
+      if (re) { re.raw = saved.raw; re.ver = saved.ver; return re; }
     }
     return null;
   }
 
-  window.NineSteps = { reviveReading: reviveReading, reviveTopic: reviveTopic, TOPICS9: TOPICS9, findTopic: findTopic, parseTopic: parseTopic, fetchTopic: fetchTopic, fetchMap: fetchMap, compute: computeNineSteps, render: renderNine, planetNote: planetNote, parseChapters: parseChapters, fetchReading: fetchReading, renderChapters: renderChapters, hasSupabase: function () { return !!(SUPABASE_FUNC_URL && SUPABASE_ANON_KEY); } };
+  // 一次性清理:移除历史版本留下的孤立资料(旧 30 题 answers、旧主题 id)
+  const LEGACY_TOPIC_IDS = ["personal", "destined", "sibling"];
+  function cleanupLegacy(c) {
+    let changed = false;
+    if (c.answers) { delete c.answers; changed = true; }
+    if (c.topics) {
+      LEGACY_TOPIC_IDS.forEach(function (k) { if (c.topics[k]) { delete c.topics[k]; changed = true; } });
+      Object.keys(c.topics).forEach(function (k) { if (isStale(c.topics[k])) { delete c.topics[k]; changed = true; } });
+    }
+    if (c.lifemap && isStale(c.lifemap)) { delete c.lifemap; changed = true; }
+    if (c.reading && isStale(c.reading)) { delete c.reading; changed = true; }
+    return changed;
+  }
+
+  window.NineSteps = { CONTENT_VER: CONTENT_VER, cleanupLegacy: cleanupLegacy, reviveReading: reviveReading, reviveTopic: reviveTopic, TOPICS9: TOPICS9, findTopic: findTopic, parseTopic: parseTopic, fetchTopic: fetchTopic, fetchMap: fetchMap, compute: computeNineSteps, render: renderNine, planetNote: planetNote, parseChapters: parseChapters, fetchReading: fetchReading, renderChapters: renderChapters, hasSupabase: function () { return !!(SUPABASE_FUNC_URL && SUPABASE_ANON_KEY); } };
 })();
 </script>
 <script>
@@ -3546,6 +3574,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     drawWheel();
     drawPosTable();
     curTopic = null; mapOpen = false;
+    if (window.NineSteps.cleanupLegacy(c)) window.Cloud.updateChart(c).catch(function () { });
     renderReading();
     renderTopics();
   }
@@ -3669,6 +3698,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       topicBusy = false;
       if (curTopic !== tid || !activeChart() || activeChart().id !== c.id) return;
       c.topics = c.topics || {};
+      data.ver = window.NineSteps.CONTENT_VER;
       c.topics[tid] = data;
       window.Cloud.updateChart(c).catch(function (e) { console.warn("cloud", e); });
       renderTopics();
@@ -3721,6 +3751,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     window.NineSteps.fetchMap(curNine, curResult, fpSeed, c.reading, c.topics).then(function (data) {
       mapBusy = false; mapOpen = true;
       if (!activeChart() || activeChart().id !== c.id) return;
+      data.ver = window.NineSteps.CONTENT_VER;
       c.lifemap = data;
       window.Cloud.updateChart(c).catch(function (e) { console.warn("cloud", e); });
       renderMap();
@@ -3763,7 +3794,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
         .then(function (parsed) {
           autoGenBusy = false;
           if (!activeChart() || activeChart().id !== c.id) return;
-          c.reading = Object.assign({ ts: new Date().toISOString().slice(0, 10) }, parsed);   // 含 raw 原文
+          c.reading = Object.assign({ ts: new Date().toISOString().slice(0, 10), ver: window.NineSteps.CONTENT_VER }, parsed);   // 含 raw 原文
           window.Cloud.updateChart(c).catch(function (e) { console.warn("云同步失败", e); });
           renderReading();
         })
