@@ -1423,7 +1423,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   const SUPABASE_ANON_KEY = (window.CloudCfg || {}).anon || "";
 
   // 内容架构版本:服务端 Prompt 有重大升级时 +1,旧内容自动重新生成
-  const CONTENT_VER = 8;
+  const CONTENT_VER = 9;
 
   // ---------- 九个主题(仅 UI 文案;写作规则与资料调用都在服务端) ----------
   const TOPICS9 = [
@@ -1547,7 +1547,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
         return parsed;
       });
     }
-    const base = String(fpSeed || "") + "|" + kind + (extra.tid ? ":" + extra.tid : "") + "|v8";
+    const base = String(fpSeed || "") + "|" + kind + (extra.tid ? ":" + extra.tid : "") + "|v9";
     return attempt(base).catch(function (e) {
       if (e.parseFail) return attempt(base + "|retry" + Date.now());
       throw e;
