@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="我的生命蓝图">
-<title>我的生命蓝图 · 认识真正的自己</title>
+<title>Know Yourself Through the Stars · 看见完整的自己</title>
 <style>
   :root{
     --night:#f2ead8;        /* 米色底 */
@@ -263,9 +263,8 @@
 </head>
 <body>
 <header class="top">
-  <h1><span class="star">✶</span> 我的生命蓝图</h1>
-  <span class="sub">认识真正的自己</span>
-  <span class="acc" id="accNote">与 Swiss Ephemeris 同精度</span>
+  <h1><span class="star">✶</span> Know Yourself Through the Stars</h1>
+  <span class="sub">看见完整的自己</span>
 </header>
 
 <div class="wrap">
@@ -354,20 +353,28 @@
 
       <div class="panel" style="margin-top:18px">
         <h3 style="display:flex;align-items:center;justify-content:space-between" id="nineHead">
-          <span>&#127756; 你的生命蓝图</span>
+          <span>你的生命蓝图</span>
           <span id="readState" style="font-size:11.5px;color:var(--muted);font-weight:400"></span>
         </h3>
         <div id="nineBody"></div>
       </div>
 
       <div class="panel" style="margin-top:18px" id="topicPanel">
-        <h3><span>&#128269; 主题探索</span></h3>
-        <div style="font-size:12px;color:var(--muted);margin:-4px 0 14px;line-height:1.7">每一个主题都是一次新的发现,不是重复的人格介绍</div>
+        <h3 style="cursor:pointer;display:flex;align-items:center;justify-content:space-between" id="topicHead"><span>你的人生章节</span><span id="topicArrow" style="font-size:14px;color:var(--muted)">∧</span></h3>
         <div id="topicGrid"></div>
       </div>
 
+      <div class="panel" style="margin-top:18px" id="qaPanel">
+        <h3 style="cursor:pointer;display:flex;align-items:center;justify-content:space-between" id="qaHead">
+          <span>人生探索地图</span>
+          <span id="qaArrow" style="font-size:14px;color:var(--muted)">∨</span>
+        </h3>
+        <div id="qaHint" style="font-size:12px;color:var(--muted);margin:-4px 0 12px;line-height:1.7;display:none">六个领域,三十个问题。想弄懂自己哪一部分,就从那里开始。</div>
+        <div id="qaGrid" style="display:none"></div>
+      </div>
+
       <div class="panel" style="margin-top:18px" id="mapPanel">
-        <h3><span>&#128506; 人生探索地图</span></h3>
+        <h3><span>属于你的生命脉络</span></h3>
         <div id="mapHint" style="font-size:12px;color:var(--muted);margin:-4px 0 12px;line-height:1.7"></div>
         <button class="btn" id="mapBtn" style="width:auto;padding:9px 18px;font-size:13px">生成我的探索地图</button>
         <div id="mapBody" style="margin-top:14px"></div>
@@ -1423,7 +1430,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   const SUPABASE_ANON_KEY = (window.CloudCfg || {}).anon || "";
 
   // 内容架构版本:服务端 Prompt 有重大升级时 +1,旧内容自动重新生成
-  const CONTENT_VER = 9;
+  const CONTENT_VER = 10;
 
   // ---------- 九个主题(仅 UI 文案;写作规则与资料调用都在服务端) ----------
   const TOPICS9 = [
@@ -1447,6 +1454,55 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       teaser: "什么都没做,却已经很累。\n消耗常常发生在看不见的地方。" }
   ];
   function findTopic(id) { return TOPICS9.find(x => x.id === id) || null; }
+
+  // ---------- 人生探索地图:6 领域 × 5 问题(仅标题文案;调用规则在服务端) ----------
+  const DOMAINS = [
+    { id: "discover", icon: "\uD83C\uDF31", name: "探索自己", lead: "我是谁?从这里开始。", items: [
+      { id: "q01", q: "我是谁?", sub: "整体人格与人生定位" },
+      { id: "q02", q: "我最大的魅力是什么?", sub: "别人为什么容易喜欢我" },
+      { id: "q03", q: "我最大的天赋是什么?" },
+      { id: "q04", q: "我最大的优势是什么?" },
+      { id: "q05", q: "我容易陷入什么模式?" }
+    ]},
+    { id: "love", icon: "\u2764\uFE0F", name: "爱与关系", lead: "为什么关系总是这样发展?", items: [
+      { id: "q06", q: "我怎么去爱一个人?" },
+      { id: "q07", q: "我真正需要什么样的爱?" },
+      { id: "q08", q: "为什么我总是遇见同一种人?" },
+      { id: "q09", q: "我的正缘是什么样的人?" },
+      { id: "q10", q: "我的婚姻会是什么模式?" }
+    ]},
+    { id: "work", icon: "\uD83D\uDCBC", name: "工作与财富", lead: "怎样活,才能真正发挥自己?", items: [
+      { id: "q11", q: "我适合做什么工作?" },
+      { id: "q12", q: "我的职业天赋是什么?" },
+      { id: "q13", q: "我适合创业吗?" },
+      { id: "q14", q: "我的钱从哪里来?" },
+      { id: "q15", q: "为什么钱留不住?" }
+    ]},
+    { id: "journey", icon: "\uD83C\uDF0D", name: "人生旅程", lead: "为什么我的人生走成今天这样?", items: [
+      { id: "q16", q: "我的家庭带给我什么影响?" },
+      { id: "q17", q: "我适合住在哪里?" },
+      { id: "q18", q: "我适合出国发展吗?" },
+      { id: "q19", q: "我的人际关系为什么会这样?" },
+      { id: "q20", q: "我会有房产运吗?" }
+    ]},
+    { id: "inner", icon: "\uD83C\uDF19", name: "内在成长", lead: "为什么自己总会卡住?", items: [
+      { id: "q21", q: "为什么我这么容易内耗?" },
+      { id: "q22", q: "我的情绪到底怎么运作?" },
+      { id: "q23", q: "我的安全感来自哪里?" },
+      { id: "q24", q: "我最需要突破什么?" },
+      { id: "q25", q: "我的隐藏潜力是什么?" }
+    ]},
+    { id: "soul", icon: "\u2728", name: "灵魂探索", lead: "如果越来越理解自己,我会成为谁?", items: [
+      { id: "q26", q: "我为什么来到这里?" },
+      { id: "q27", q: "我的人生使命是什么?" },
+      { id: "q28", q: "我的幸运藏在哪里?" },
+      { id: "q29", q: "我的人生什么时候开始改变?" },
+      { id: "q30", q: "我真正该活成什么样子?", sub: "整份内容的收束" }
+    ]}
+  ];
+  const ALL_Q = [];
+  DOMAINS.forEach(function (d) { d.items.forEach(function (it) { ALL_Q.push(Object.assign({ domain: d.id, domainName: d.name, icon: d.icon }, it)); }); });
+  function findQ(qid) { return ALL_Q.find(x => x.id === qid) || null; }
 
   // ---------- 解析服务端返回 ----------
   const CH_TITLES = ["你生命最初的设定", "你如何面对世界", "你成长路上的礼物与考验", "生命想带你去的地方", "属于你的生命剧本"];
@@ -1547,7 +1603,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
         return parsed;
       });
     }
-    const base = String(fpSeed || "") + "|" + kind + (extra.tid ? ":" + extra.tid : "") + "|v9";
+    const base = String(fpSeed || "") + "|" + kind + (extra.tid ? ":" + extra.tid : "") + "|v10";
     return attempt(base).catch(function (e) {
       if (e.parseFail) return attempt(base + "|retry" + Date.now());
       throw e;
@@ -1562,8 +1618,18 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   function fetchMap(res, fpSeed, blueprint, topics) {
     return askServer("map", { blueprint: blueprint, topics: topics }, res, fpSeed, parseTopic);
   }
+  function fetchQuestion(res, qid, fpSeed, blueprint, topics, answered) {
+    return askServer("question", { qid: qid, blueprint: blueprint, topics: topics, answered: answered }, res, fpSeed, parseTopic);
+  }
 
   // ---------- 渲染:生命蓝图 ----------
+  // 卡片显示名映射(仅改标题文案,不影响服务端生成)
+  const CARD_LABEL = {
+    "你的核心人格模式": "组合你的核心力量",
+    "你的情绪运作方式": "你如何感受这个世界",
+    "你的天赋特质": "你自带的能力",
+    "你的理想状态": "什么状态最像真正的你"
+  };
   function renderChapters(reading, mount) {
     const chs = Array.isArray(reading) ? reading : (reading.chapters || []);
     const spine = Array.isArray(reading) ? "" : (reading.spine || "");
@@ -1584,14 +1650,14 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
         '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(228px,1fr));gap:10px;margin-bottom:26px">' +
         quick.map(function (c) {
           return '<div style="border:1px solid var(--line);border-radius:12px;padding:14px 16px;background:var(--card-soft)">' +
-            '<div style="font-size:11.5px;color:var(--gold-soft);margin-bottom:6px;letter-spacing:.04em">' + esc(c.title) + "</div>" +
+            '<div style="font-size:11.5px;color:var(--gold-soft);margin-bottom:6px;letter-spacing:.04em">' + esc(CARD_LABEL[c.title] || c.title) + "</div>" +
             '<div style="font-size:13.5px;line-height:1.8;color:var(--parchment)">' + esc(c.line) + "</div></div>";
         }).join("") + "</div>";
     }
     if (chs.length) {
       const cardMap = {};
       cards.forEach(c => { cardMap[c.title] = c.line; });
-      h += '<div style="font-size:11px;letter-spacing:.16em;color:var(--gold);margin:0 0 10px">你 的 生 命 蓝 图</div>' +
+      h += '<div style="font-size:11px;letter-spacing:.16em;color:var(--gold);margin:0 0 10px">你 的 内 在 地 图</div>' +
         '<div style="display:grid;gap:11px">' + chs.map(function (c, i) {
         const line = cardMap[c.title] || "";
         const sum = c.summary || "";
@@ -1661,6 +1727,9 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       LEGACY_TOPIC_IDS.forEach(function (k) { if (c.topics[k]) { delete c.topics[k]; changed = true; } });
       Object.keys(c.topics).forEach(function (k) { if (isStale(c.topics[k])) { delete c.topics[k]; changed = true; } });
     }
+    if (c.qa) {
+      Object.keys(c.qa).forEach(function (k) { if (isStale(c.qa[k])) { delete c.qa[k]; changed = true; } });
+    }
     if (c.lifemap && isStale(c.lifemap)) { delete c.lifemap; changed = true; }
     if (c.reading && isStale(c.reading)) { delete c.reading; changed = true; }
     return changed;
@@ -1668,9 +1737,9 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
 
   window.Reading = {
     CONTENT_VER: CONTENT_VER,
-    TOPICS9: TOPICS9, findTopic: findTopic,
+    TOPICS9: TOPICS9, findTopic: findTopic, DOMAINS: DOMAINS, findQ: findQ,
     parseChapters: parseChapters, parseTopic: parseTopic,
-    fetchReading: fetchReading, fetchTopic: fetchTopic, fetchMap: fetchMap,
+    fetchReading: fetchReading, fetchTopic: fetchTopic, fetchMap: fetchMap, fetchQuestion: fetchQuestion,
     renderChapters: renderChapters,
     reviveReading: reviveReading, reviveTopic: reviveTopic, cleanupLegacy: cleanupLegacy,
     hasSupabase: function () { return !!(SUPABASE_FUNC_URL && SUPABASE_ANON_KEY); }
@@ -2011,7 +2080,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
           '<i style="width:14px;height:14px;border-radius:50%;background:' + th.dot[0] + ';border:1px solid rgba(0,0,0,.15)"></i>' +
           '<i style="width:14px;height:14px;border-radius:50%;background:' + th.dot[1] + ';margin-left:-5px;border:1px solid rgba(0,0,0,.15)"></i></span>' +
           '<span>' + th.name + '</span>' + (th.id === curTheme ? '<span style="margin-left:auto;color:var(--gold)">\u2713</span>' : "");
-        row.addEventListener("click", function () { applyTheme(th.id); renderPop(); });
+        row.addEventListener("click", function () { applyTheme(th.id); pop.style.display = "none"; });
         pop.appendChild(row);
       });
     }
@@ -2600,7 +2669,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     ensureToggleBar();
     drawWheel();
     drawPosTable();
-    curTopic = null; mapOpen = false;
+    curTopic = null; mapOpen = false; curDomain = null; curQ = null;
     if (window.Reading.cleanupLegacy(c)) window.Cloud.updateChart(c).catch(function () { });
     renderReading();
     renderTopics();
@@ -2681,6 +2750,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       item.style.cssText = "border:1px solid " + (on ? "var(--gold-soft)" : "var(--line)") +
         ";border-radius:12px;background:" + (on ? "rgba(var(--accent-rgb),.07)" : "var(--card-soft)") + ";overflow:hidden;margin-bottom:8px;transition:.15s";
       const btn = document.createElement("button");
+      btn.id = "thead-" + t.id;
       btn.style.cssText = "width:100%;text-align:left;font-family:inherit;padding:14px 16px;border:none;background:transparent;cursor:pointer";
       btn.innerHTML =
         '<div style="display:flex;align-items:flex-start;gap:10px">' +
@@ -2706,15 +2776,31 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       grid.appendChild(item);
     });
     renderMap();
+    renderQA();
+  }
+
+  // 展开/收合后保持点击项在视窗中的位置
+  function keepPosition(anchorId, fn) {
+    const before = document.getElementById(anchorId);
+    const top0 = before ? before.getBoundingClientRect().top : null;
+    fn();
+    if (top0 === null) return;
+    const after = document.getElementById(anchorId);
+    if (!after) return;
+    const delta = after.getBoundingClientRect().top - top0;
+    if (Math.abs(delta) < 1) return;
+    const sc = document.getElementById("main");
+    if (sc && sc.scrollHeight > sc.clientHeight) sc.scrollTop += delta;
+    else window.scrollBy(0, delta);
   }
 
   function openTopic(tid) {
     const c = activeChart();
     if (!c || !curResult || topicBusy) return;
-    if (curTopic === tid) { curTopic = null; renderTopics(); return; }
+    if (curTopic === tid) { curTopic = null; keepPosition("thead-" + tid, renderTopics); return; }
     curTopic = tid;
     const saved = window.Reading.reviveTopic((c.topics || {})[tid]);
-    renderTopics();
+    keepPosition("thead-" + tid, renderTopics);
     if (saved) {
       if (saved !== (c.topics || {})[tid]) { c.topics[tid] = saved; window.Cloud.updateChart(c).catch(function () { }); }
       return;
@@ -2739,6 +2825,119 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       diagnose(e).then(function (d) {
         const dg = document.getElementById("tDiag");
         if (dg) dg.innerHTML = "\u8BCA\u65AD:" + d.hint + '<br><span style="opacity:.65">(' + d.raw + " \u00B7 " + d.probe + ")</span>";
+      });
+    });
+  }
+
+  // ---------- 人生探索地图(6 领域 × 5 问题) ----------
+  let curDomain = null, curQ = null, qaBusy = false, qaOpen = false;
+  function renderQA() {
+    const c = activeChart(), grid = $("qaGrid");
+    if (!c || !curResult) { $("qaPanel").style.display = "none"; return; }
+    $("qaPanel").style.display = "";
+    $("qaHint").style.display = qaOpen ? "" : "none";
+    grid.style.display = qaOpen ? "" : "none";
+    $("qaArrow").textContent = qaOpen ? "\u2227" : "\u2228";
+    if (!qaOpen) { grid.innerHTML = ""; return; }
+    const saved = c.qa || {};
+    grid.innerHTML = "";
+    window.Reading.DOMAINS.forEach(function (d, di) {
+      const doneCount = d.items.filter(it => !!window.Reading.reviveTopic(saved[it.id])).length;
+      const expanded = curDomain === d.id;
+      const wrap = document.createElement("div");
+      wrap.style.cssText = "position:relative;padding-left:30px;padding-bottom:" + (di === window.Reading.DOMAINS.length - 1 ? "0" : "12px");
+      wrap.innerHTML =
+        (di < window.Reading.DOMAINS.length - 1 ? '<div style="position:absolute;left:11px;top:26px;bottom:0;width:1px;background:var(--line)"></div>' : "") +
+        '<div style="position:absolute;left:4px;top:9px;width:15px;height:15px;border-radius:50%;border:1.5px solid ' +
+        (doneCount ? "var(--gold)" : "var(--line)") + ';background:' + (doneCount ? "rgba(var(--accent-rgb),.25)" : "var(--night-2)") + '"></div>';
+      const head = document.createElement("button");
+      head.id = "dhead-" + d.id;
+      head.style.cssText = "width:100%;text-align:left;font-family:inherit;cursor:pointer;border:1px solid " +
+        (expanded ? "var(--gold-soft)" : "var(--line)") + ";border-radius:12px;padding:12px 14px;background:" +
+        (expanded ? "rgba(var(--accent-rgb),.10)" : "var(--card-soft)") + ";transition:.15s";
+      head.innerHTML =
+        '<div style="display:flex;align-items:center;gap:9px">' +
+        '<span style="font-size:16px">' + d.icon + "</span>" +
+        '<span style="font-size:14px;font-weight:700;color:var(--gold)">' + d.name + "</span>" +
+        (doneCount ? '<span style="font-size:10.5px;color:var(--gold-soft)">已探索 ' + doneCount + "/5</span>" : "") +
+        '<span style="margin-left:auto;color:var(--muted);font-size:12px">' + (expanded ? "\u25B4" : "\u25BE") + "</span></div>" +
+        '<div style="font-size:11.5px;color:var(--muted);margin-top:5px;line-height:1.65">' + d.lead + "</div>";
+      head.addEventListener("click", function () {
+        keepPosition("dhead-" + d.id, function () {
+          curDomain = expanded ? null : d.id;
+          if (expanded) curQ = null;
+          renderQA();
+        });
+      });
+      wrap.appendChild(head);
+      if (expanded) {
+        const list = document.createElement("div");
+        list.style.cssText = "display:grid;gap:7px;margin-top:9px";
+        d.items.forEach(function (it) {
+          const ans = window.Reading.reviveTopic(saved[it.id]);
+          const on = curQ === it.id;
+          const item = document.createElement("div");
+          item.style.cssText = "border:1px solid " + (on ? "var(--gold-soft)" : "var(--line)") +
+            ";border-radius:11px;background:" + (on ? "rgba(var(--accent-rgb),.07)" : "transparent") + ";overflow:hidden;transition:.15s";
+          const qb = document.createElement("button");
+          qb.id = "qhead-" + it.id;
+          qb.style.cssText = "width:100%;text-align:left;font-family:inherit;padding:12px 14px;border:none;background:transparent;cursor:pointer";
+          qb.innerHTML =
+            '<div style="display:flex;align-items:flex-start;gap:8px">' +
+            '<span style="color:var(--gold);font-size:12px;line-height:1.7;flex:none">' + (on ? "\u25BC" : "\u25B8") + "</span>" +
+            '<div style="flex:1"><div style="font-size:13.5px;font-weight:600;color:' + (on ? "var(--gold)" : "var(--parchment)") + ';line-height:1.6">' +
+            esc0(it.q) + (ans ? '<span style="color:var(--gold);font-size:11px;margin-left:6px">\u2713</span>' : "") + "</div>" +
+            (it.sub ? '<div style="font-size:11.5px;color:var(--muted);margin-top:4px">' + esc0(it.sub) + "</div>" : "") +
+            "</div></div>";
+          qb.addEventListener("click", function () { openQ(it.id); });
+          item.appendChild(qb);
+          if (on) {
+            const box = document.createElement("div");
+            box.id = "qbody-" + it.id;
+            box.style.cssText = "padding:0 14px 14px";
+            box.innerHTML = ans ? answerHtml(ans)
+              : '<div style="padding:18px 4px;text-align:center;color:var(--muted);font-size:12.5px;line-height:2">正在为你探索…<br><span style="font-size:11px;opacity:.7">约需 1 分钟</span></div>';
+            item.appendChild(box);
+          }
+          list.appendChild(item);
+        });
+        wrap.appendChild(list);
+      }
+      grid.appendChild(wrap);
+    });
+  }
+
+  function openQ(qid) {
+    const c = activeChart();
+    if (!c || !curResult || qaBusy) return;
+    if (curQ === qid) { curQ = null; keepPosition("qhead-" + qid, renderQA); return; }
+    curQ = qid;
+    const saved = window.Reading.reviveTopic((c.qa || {})[qid]);
+    keepPosition("qhead-" + qid, renderQA);
+    if (saved) {
+      if (saved !== (c.qa || {})[qid]) { c.qa[qid] = saved; window.Cloud.updateChart(c).catch(function () { }); }
+      return;
+    }
+    qaBusy = true;
+    const fpSeed = [c.date, c.time, c.lat.toFixed(4), c.lon.toFixed(4)].join("|");
+    window.Reading.fetchQuestion(curResult, qid, fpSeed, c.reading, c.topics, c.qa).then(function (data) {
+      qaBusy = false;
+      if (curQ !== qid || !activeChart() || activeChart().id !== c.id) return;
+      c.qa = c.qa || {};
+      data.ver = window.Reading.CONTENT_VER;
+      c.qa[qid] = data;
+      window.Cloud.updateChart(c).catch(function (e) { console.warn("cloud", e); });
+      renderQA();
+    }).catch(function (e) {
+      qaBusy = false;
+      const box = document.getElementById("qbody-" + qid);
+      if (!box) return;
+      box.innerHTML = '<div style="padding:14px 4px;text-align:center;color:var(--muted);font-size:12.5px;line-height:1.9">内容暂时无法完成。<a href="#" id="qRetry" style="color:var(--gold)">点此再试一次</a><div id="qDiag" style="margin-top:8px;font-size:11.5px;opacity:.8"></div></div>';
+      const r = document.getElementById("qRetry");
+      if (r) r.addEventListener("click", function (ev) { ev.preventDefault(); curQ = null; openQ(qid); });
+      diagnose(e).then(function (d) {
+        const dg = document.getElementById("qDiag");
+        if (dg) dg.innerHTML = "\u8BCA\u65AD:" + d.hint;
       });
     });
   }
@@ -2861,7 +3060,9 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       if (!bar) {
         bar = document.createElement("div");
         bar.id = "acctBar";
-        bar.style.cssText = "position:fixed;top:10px;right:14px;z-index:60;display:flex;gap:8px;align-items:center;font-size:11.5px;color:var(--muted);background:var(--card-soft);border:1px solid var(--line);border-radius:16px;padding:4px 6px 4px 12px";
+        bar.style.cssText = "position:fixed;top:10px;right:14px;z-index:75;display:flex;gap:8px;align-items:center;font-size:11.5px;color:var(--muted);" +
+          "background:var(--night-2);border:1px solid var(--line);border-radius:16px;padding:4px 6px 4px 12px;" +
+          "box-shadow:0 2px 10px rgba(0,0,0,.10);backdrop-filter:saturate(1.2) blur(6px)";
         bar.innerHTML = '<span>' + window.Cloud.email() + '</span><button id="logoutBtn" style="font-family:inherit;font-size:11.5px;border:1px solid var(--line);border-radius:12px;background:transparent;color:var(--gold);padding:2px 10px;cursor:pointer">退出</button>';
         document.body.appendChild(bar);
         document.getElementById("logoutBtn").addEventListener("click", function () {
@@ -2921,6 +3122,18 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       else fallback();
     }
     $("mapBtn").addEventListener("click", toggleMap);
+    // 「你的人生章节」整区收合
+    $("topicHead").addEventListener("click", function () {
+      const g = $("topicGrid");
+      const closed = g.style.display === "none";
+      g.style.display = closed ? "" : "none";
+      $("topicArrow").textContent = closed ? "\u2227" : "\u2228";
+    });
+    // 「人生探索地图」整区收合
+    $("qaHead").addEventListener("click", function () {
+      qaOpen = !qaOpen;
+      renderQA();
+    });
     $("posHead").addEventListener("click", function () {
       const tb = $("posTable");
       const closed = tb.style.display === "none";
@@ -2939,7 +3152,6 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     $("drawerX").addEventListener("click", closeDrawer);
     $("scrim").addEventListener("click", closeDrawer);
     document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeDrawer(); });
-    $("accNote").textContent = "主星与 Swiss Ephemeris 同精度 · 小天体 ±0.5°";
     renderChartList();
     drawActive();
   }
