@@ -1564,9 +1564,10 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     qaAboutMin:       ["约需 1 分钟", "About a minute"],
 
     /* —— 英文解读的生成入口(不自动呼叫 AI)—— */
-    enNotYet:         ["这份内容尚未有英文版本。", "This reading isn’t available in English yet."],
-    enNotYetHint:     ["已生成的版本会保留,不会被覆盖。", "Your existing reading is kept and will not be overwritten."],
-    enGenerate:       ["生成英文版本", "Generate the English version"],
+    enNotYet:         ["这份内容尚未有英文版本。", "This reading hasn’t been written in English yet."],
+    enNotYetHint:     ["英文版本会以英文重新书写,不是翻译;已生成的版本会保留,不会被覆盖。",
+                       "The English version is written fresh in English — not translated. Your existing reading is kept and won’t be overwritten."],
+    enGenerate:       ["生成英文版本", "Write it in English"],
     zhNotYet:         ["这份内容尚未有中文版本。", "This reading has no Chinese version yet."],
     zhGenerate:       ["生成中文版本", "Generate the Chinese version"],
 
@@ -1881,6 +1882,39 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   // 英文另存 *_en。既有中文资料永远不会被覆盖或删除。
   function LK(base) { return curLang() === "en" ? base + "_en" : base; }
 
+  // 核心对齐锚点:生成英文时,把已存在的中文版压缩成大纲一起送出。
+  // 目的只有一个 —— 让两种语言读到的是同一个人,而不是重新分析了一张不同的盘。
+  // 服务端明确要求「不得翻译、不得照抄结构」,只用来对齐核心结论。
+  // 中文生成时一律回传 null(payload 与本次修改前完全一致)。
+  function coreAnchor(c, kind, key) {
+    if (curLang() !== "en" || !c) return null;
+    const clip = function (x, n) { return String(x == null ? "" : x).replace(/\s+/g, " ").slice(0, n); };
+    if (kind === "blueprint") {
+      const r = c.reading;
+      if (!r || !r.chapters || !r.chapters.length) return null;
+      return {
+        spine: clip(r.spine, 220),
+        chapters: r.chapters.slice(0, 5).map(function (x) {
+          return { title: clip(x.title, 40), gist: clip(x.summary || x.body, 160) };
+        }),
+        cards: (r.cards || []).slice(0, 4).map(function (x) {
+          return { title: clip(x.title, 30), gist: clip(x.body, 120) };
+        })
+      };
+    }
+    const src = kind === "map" ? c.lifemap
+              : ((kind === "topic" ? c.topics : c.qa) || {})[key];
+    if (!src || !src.sections || !src.sections.length) return null;
+    return {
+      tagline: clip(src.tagline, 220),
+      sections: src.sections.slice(0, 6).map(function (x) {
+        return { title: clip(x.title, 40), gist: clip(x.body, 160) };
+      }),
+      aha: (src.aha || []).slice(0, 2).map(function (x) { return clip(x, 120); }),
+      question: clip(src.question, 150)
+    };
+  }
+
   function chartPayload(res) {
     return {
       ang: { asc: res.ang.asc, mc: res.ang.mc },
@@ -1935,17 +1969,24 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       throw e;
     });
   }
-  function fetchReading(res, fpSeed) {
-    return askServer("blueprint", {}, res, fpSeed, parseChapters);
+  // 第三个之后的参数 chart:传入当前星盘物件,仅用于取出中文版大纲(生成英文时)
+  function fetchReading(res, fpSeed, chart) {
+    return askServer("blueprint", withAnchor({}, chart, "blueprint"), res, fpSeed, parseChapters);
   }
-  function fetchTopic(res, tid, fpSeed, blueprint, topics) {
-    return askServer("topic", { tid: tid, blueprint: blueprint, topics: topics }, res, fpSeed, parseTopic);
+  function fetchTopic(res, tid, fpSeed, blueprint, topics, chart) {
+    return askServer("topic", withAnchor({ tid: tid, blueprint: blueprint, topics: topics }, chart, "topic", tid), res, fpSeed, parseTopic);
   }
-  function fetchMap(res, fpSeed, blueprint, topics) {
-    return askServer("map", { blueprint: blueprint, topics: topics }, res, fpSeed, parseTopic);
+  function fetchMap(res, fpSeed, blueprint, topics, chart) {
+    return askServer("map", withAnchor({ blueprint: blueprint, topics: topics }, chart, "map"), res, fpSeed, parseTopic);
   }
-  function fetchQuestion(res, qid, fpSeed, blueprint, topics, answered) {
-    return askServer("question", { qid: qid, blueprint: blueprint, topics: topics, answered: answered }, res, fpSeed, parseTopic);
+  function fetchQuestion(res, qid, fpSeed, blueprint, topics, answered, chart) {
+    return askServer("question", withAnchor({ qid: qid, blueprint: blueprint, topics: topics, answered: answered }, chart, "question", qid), res, fpSeed, parseTopic);
+  }
+  // 只有生成英文且中文版存在时才附加 anchor;中文一律原样返回
+  function withAnchor(extra, chart, kind, key) {
+    const a = coreAnchor(chart, kind, key);
+    if (a) extra.anchor = a;
+    return extra;
   }
 
   // ---------- 渲染:生命蓝图 ----------
@@ -2072,6 +2113,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     TOPICS9: TOPICS9, findTopic: findTopic, DOMAINS: DOMAINS, findQ: findQ,
     parseChapters: parseChapters, parseTopic: parseTopic,
     fetchReading: fetchReading, fetchTopic: fetchTopic, fetchMap: fetchMap, fetchQuestion: fetchQuestion,
+    coreAnchor: coreAnchor,
     renderChapters: renderChapters,
     reviveReading: reviveReading, reviveTopic: reviveTopic, cleanupLegacy: cleanupLegacy,
     hasSupabase: function () { return !!(SUPABASE_FUNC_URL && SUPABASE_ANON_KEY); }
@@ -3150,7 +3192,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     topicBusy = true;
     renderTopics();
     const fpSeed = [c.date, c.time, c.lat.toFixed(4), c.lon.toFixed(4)].join("|");
-    window.Reading.fetchTopic(curResult, tid, fpSeed, c[window.Reading.LK("reading")], c[TK]).then(function (data) {
+    window.Reading.fetchTopic(curResult, tid, fpSeed, c[window.Reading.LK("reading")], c[TK], c).then(function (data) {
       topicBusy = false;
       if (curTopic !== tid || !activeChart() || activeChart().id !== c.id) return;
       c[TK] = c[TK] || {};
@@ -3268,7 +3310,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     }
     qaBusy = true;
     const fpSeed = [c.date, c.time, c.lat.toFixed(4), c.lon.toFixed(4)].join("|");
-    window.Reading.fetchQuestion(curResult, qid, fpSeed, c[window.Reading.LK("reading")], c[window.Reading.LK("topics")], c[QK]).then(function (data) {
+    window.Reading.fetchQuestion(curResult, qid, fpSeed, c[window.Reading.LK("reading")], c[window.Reading.LK("topics")], c[QK], c).then(function (data) {
       qaBusy = false;
       if (curQ !== qid || !activeChart() || activeChart().id !== c.id) return;
       c[QK] = c[QK] || {};
@@ -3323,7 +3365,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     $("mapBody").innerHTML = '<div style="padding:22px 4px;text-align:center;color:var(--muted);font-size:12.5px;line-height:2"><span style="font-size:18px;color:var(--gold)">\u2739</span><br>' + esc0(T("weavingMap")) + '<br><span style="font-size:11px;opacity:.7">' + esc0(T("aboutOneMin")) + '</span></div>';
     renderMap();
     const fpSeed = [c.date, c.time, c.lat.toFixed(4), c.lon.toFixed(4), Object.keys(c[TK2] || {}).sort().join(",")].join("|");
-    window.Reading.fetchMap(curResult, fpSeed, c[window.Reading.LK("reading")], c[TK2]).then(function (data) {
+    window.Reading.fetchMap(curResult, fpSeed, c[window.Reading.LK("reading")], c[TK2], c).then(function (data) {
       mapBusy = false; mapOpen = true;
       if (!activeChart() || activeChart().id !== c.id) return;
       data.ver = window.Reading.CONTENT_VER;
@@ -3379,7 +3421,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
         '<br><span style="font-size:11.5px;opacity:.75">' + T("firstTimeHint") + '</span></div>';
       $("readState").textContent = "";
       const fpSeed = [c.date, c.time, c.lat.toFixed(4), c.lon.toFixed(4)].join("|");
-      window.Reading.fetchReading(curResult, fpSeed)
+      window.Reading.fetchReading(curResult, fpSeed, c)
         .then(function (parsed) {
           autoGenBusy = false;
           if (!activeChart() || activeChart().id !== c.id) return;
