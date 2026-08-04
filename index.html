@@ -63,6 +63,15 @@
     border:1px solid var(--line);border-radius:16px;padding:4px 6px 4px 12px;max-width:100%
   }
   .acct-bar span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:190px}
+  /* 语言切换(与账户条同处页面顶部,随页面滚动一起离开画面) */
+  .lang-switch{display:inline-flex;margin-left:auto;border:1px solid var(--line);border-radius:16px;overflow:hidden;flex:none}
+  .lang-switch + .acct-bar{margin-left:8px}
+  .lang-switch button{
+    font-family:inherit;font-size:11.5px;letter-spacing:.06em;padding:4px 12px;border:none;
+    background:transparent;color:var(--muted);cursor:pointer;transition:.15s
+  }
+  .lang-switch button:hover{color:var(--gold)}
+  .lang-switch button.on{background:rgba(var(--accent-rgb),.16);color:var(--gold);font-weight:700}
   .acct-bar button{
     font-family:inherit;font-size:11.5px;border:1px solid var(--line);border-radius:12px;
     background:transparent;color:var(--gold);padding:2px 10px;cursor:pointer;flex:none
@@ -276,58 +285,61 @@
 <body>
 <header class="top">
   <h1><span class="star">✶</span> Know Yourself Through the Stars</h1>
-  <span class="sub">看见完整的自己</span>
+  <span class="sub" data-i18n="tagline">看见完整的自己</span>
+  <div class="lang-switch" id="langSwitch" role="group">
+    <button type="button" data-lang="zh">中文</button><button type="button" data-lang="en">EN</button>
+  </div>
   <div id="acctBar" class="acct-bar" style="display:none"></div>
 </header>
 
 <div class="wrap">
   <aside>
     <div>
-      <p class="eyebrow">星盘</p>
+      <p class="eyebrow" data-i18n="charts">星盘</p>
       <div class="chart-list" id="chartList"></div>
     </div>
     <div>
       <p class="eyebrow form-toggle" id="formTitle" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between">
-        <span id="formTitleText">新建星盘</span>
-        <span id="formToggleArrow" style="font-size:11px;color:var(--muted)">收起</span>
+        <span id="formTitleText" data-i18n="newChart">新建星盘</span>
+        <span id="formToggleArrow" style="font-size:11px;color:var(--muted)" data-i18n="collapse">收起</span>
       </p>
       <div id="newChartBody">
       <div class="field">
-        <label>名字</label>
+        <label data-i18n="fName">名字</label>
         <input id="f_nick" placeholder="">
       </div>
       <div class="row2">
         <div class="field">
-          <label>出生日期</label>
+          <label data-i18n="fDate">出生日期</label>
           <input id="f_date" type="date" value="1990-01-01">
         </div>
         <div class="field">
-          <label>出生时间</label>
+          <label data-i18n="fTime">出生时间</label>
           <input id="f_time" type="time" value="12:00">
         </div>
       </div>
       <div class="field">
-        <label>出生地区(可搜索)</label>
-        <input id="f_citysearch" placeholder="输入中文或英文搜索,如 巴生 / Klang" style="margin-bottom:6px">
+        <label data-i18n="fPlace">出生地区(可搜索)</label>
+        <input id="f_citysearch" data-i18n-ph="fPlacePh" placeholder="输入中文或英文搜索,如 巴生 / Klang" style="margin-bottom:6px">
         <select id="f_city">
           <option value="">— 选择地区 —</option>
         </select>
       </div>
       <div class="row2" style="display:none">
         <div class="field">
-          <label>纬度 °(北+南−)</label>
+          <label data-i18n="fLat">纬度 °(北+南−)</label>
           <input id="f_lat" type="number" step="0.0001" value="31.2304" class="mono">
         </div>
         <div class="field">
-          <label>经度 °(东+西−)</label>
+          <label data-i18n="fLon">经度 °(东+西−)</label>
           <input id="f_lon" type="number" step="0.0001" value="121.4737" class="mono">
         </div>
       </div>
       <div style="display:flex;gap:8px;margin-top:4px">
-        <button class="btn" id="saveBtn" style="width:auto;padding:9px 20px;font-size:13.5px">保存并绘制</button>
-        <button class="btn ghost" id="clearBtn" style="width:auto;padding:9px 16px;font-size:13.5px">清空</button>
+        <button class="btn" id="saveBtn" data-i18n="save" style="width:auto;padding:9px 20px;font-size:13.5px">保存并绘制</button>
+        <button class="btn ghost" id="clearBtn" data-i18n="clear" style="width:auto;padding:9px 16px;font-size:13.5px">清空</button>
       </div>
-      <p class="hint">资料安全存放在你的云端账号,只有你能看到。时区固定为马来西亚/新加坡时间(UTC+8)。</p>
+      <p class="hint" data-i18n="formHint">资料安全存放在你的云端账号,只有你能看到。时区固定为马来西亚/新加坡时间(UTC+8)。</p>
       </div>
     </div>
   </aside>
@@ -335,8 +347,8 @@
   <main id="main">
     <div class="empty" id="emptyState">
       <div class="big">✶</div>
-      <div>左侧填写出生信息,给它起个名字</div>
-      <div class="hint">每张盘以名字管理,可随时切换对照学习</div>
+      <div data-i18n="emptyMain">左侧填写出生信息,给它起个名字</div>
+      <div class="hint" data-i18n="emptyHint">每张盘以名字管理,可随时切换对照学习</div>
     </div>
     <div id="chartView" style="display:none">
       <div class="toolbar">
@@ -358,7 +370,7 @@
         </div>
         <div>
           <div class="panel">
-            <h3 style="cursor:pointer;display:flex;align-items:center;justify-content:space-between" id="posHead"><span>行星位置</span><span id="posArrow" style="font-size:14px;color:var(--muted)">∧</span></h3>
+            <h3 style="cursor:pointer;display:flex;align-items:center;justify-content:space-between" id="posHead"><span data-i18n="positions">行星位置</span><span id="posArrow" style="font-size:14px;color:var(--muted)">∧</span></h3>
             <table class="pos" id="posTable"></table>
           </div>
         </div>
@@ -366,18 +378,22 @@
 
       <div class="panel" style="margin-top:18px">
         <h3 style="display:flex;align-items:center;justify-content:space-between" id="nineHead">
-          <span>你的生命蓝图</span>
+          <span data-i18n="secBlueprint">你的生命蓝图</span>
           <span id="readState" style="font-size:11.5px;color:var(--muted);font-weight:400"></span>
         </h3>
         <div id="nineBody"></div>
       </div>
 
       <div class="panel" style="margin-top:18px" id="topicPanel">
-        <h3 style="cursor:pointer;display:flex;align-items:center;justify-content:space-between" id="topicHead"><span>你的人生章节</span><span id="topicArrow" style="font-size:14px;color:var(--muted)">∧</span></h3>
+        <h3 style="cursor:pointer;display:flex;align-items:center;justify-content:space-between" id="topicHead"><span data-i18n="secChapters">你的人生章节</span><span id="topicArrow" style="font-size:14px;color:var(--muted)">∧</span></h3>
         <div id="topicGrid"></div>
       </div>
 
-      <div class="panel" style="margin-top:18px" id="qaPanel">
+      <!-- Version 1:「人生探索地图(30 题)」暂时不对使用者显示。
+           以下整个 panel 由 SHOW_EXPLORATION_MAP 开关控制,预设隐藏。
+           前端资料结构(DOMAINS)、请求函式(fetchQuestion)、渲染逻辑(renderQA / openQ)、
+           以及服务端的 30 题配置与 Prompt 全部原样保留,改回 true 即可恢复。 -->
+      <div class="panel" style="margin-top:18px;display:none" id="qaPanel">
         <h3 style="cursor:pointer;display:flex;align-items:center;justify-content:space-between" id="qaHead">
           <span>人生探索地图</span>
           <span id="qaArrow" style="font-size:14px;color:var(--muted)">∨</span>
@@ -387,7 +403,7 @@
       </div>
 
       <div class="panel" style="margin-top:18px" id="mapPanel">
-        <h3><span>属于你的生命脉络</span></h3>
+        <h3><span data-i18n="secThread">属于你的生命脉络</span></h3>
         <div id="mapHint" style="font-size:12px;color:var(--muted);margin:-4px 0 12px;line-height:1.7"></div>
         <button class="btn" id="mapBtn" style="width:auto;padding:9px 18px;font-size:13px">生成我的探索地图</button>
         <div id="mapBody" style="margin-top:14px"></div>
@@ -398,13 +414,13 @@
 
 <div id="authOverlay" style="position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;background:var(--night);padding:20px">
   <div style="width:100%;max-width:360px;border:1px solid var(--line);border-radius:16px;background:var(--night-2);padding:26px 24px;box-shadow:0 10px 40px rgba(0,0,0,.18)">
-    <div style="font-size:19px;letter-spacing:.22em;color:var(--gold);text-align:center;margin-bottom:4px">我的生命蓝图</div>
-    <div style="font-size:12px;color:var(--muted);text-align:center;margin-bottom:20px">登录后,你的生命蓝图将安全存放在云端</div>
-    <div class="field"><label>邮箱</label><input id="authEmail" type="email" autocomplete="email" placeholder="you@example.com"></div>
-    <div class="field" style="margin-top:10px"><label>密码</label><input id="authPw" type="password" autocomplete="current-password" placeholder="至少 6 位"></div>
+    <div style="font-size:19px;letter-spacing:.22em;color:var(--gold);text-align:center;margin-bottom:4px" data-i18n="authTitle">我的生命蓝图</div>
+    <div style="font-size:12px;color:var(--muted);text-align:center;margin-bottom:20px" data-i18n="authSub">登录后,你的生命蓝图将安全存放在云端</div>
+    <div class="field"><label data-i18n="email">邮箱</label><input id="authEmail" type="email" autocomplete="email" placeholder="you@example.com"></div>
+    <div class="field" style="margin-top:10px"><label data-i18n="password">密码</label><input id="authPw" type="password" autocomplete="current-password" data-i18n-ph="pwPh" placeholder="至少 6 位"></div>
     <div id="authMsg" style="min-height:18px;font-size:12px;color:var(--fire);margin:8px 0 4px"></div>
-    <button class="btn" id="authLogin" style="width:100%;padding:11px;font-size:14px">登 录</button>
-    <button class="btn ghost" id="authSignup" style="width:100%;padding:10px;font-size:13px;margin-top:9px">没有账号?注 册</button>
+    <button class="btn" id="authLogin" data-i18n="login" style="width:100%;padding:11px;font-size:14px">登 录</button>
+    <button class="btn ghost" id="authSignup" data-i18n="signup" style="width:100%;padding:10px;font-size:13px;margin-top:9px">没有账号?注 册</button>
   </div>
 </div>
 <div class="scrim" id="scrim"></div>
@@ -1433,6 +1449,282 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
 </script>
 <script>
 /* ============================================================
+   语言层 i18n(中文 / English)
+   · 只负责介面文案与显示名称的切换
+   · 不参与任何占星计算、九步定调、Prompt 或 Reading 逻辑
+   · 切换语言不会重新分析、不会覆盖、不会删除任何既有资料
+   ============================================================ */
+(function () {
+  "use strict";
+  const LS_KEY = "inner_sky_lang_v1";
+
+  const DICT = {
+    /* —— 顶部 / 账户 —— */
+    tagline:          ["看见完整的自己", "See yourself, whole"],
+    docTitle:         ["Know Yourself Through the Stars · 看见完整的自己", "Know Yourself Through the Stars · See yourself, whole"],
+    logout:           ["退出", "Sign out"],
+
+    /* —— 侧栏 / 表单 —— */
+    charts:           ["星盘", "Charts"],
+    newChart:         ["新建星盘", "New chart"],
+    editChart:        ["编辑:", "Editing: "],
+    collapse:         ["收起", "Hide"],
+    expand:           ["展开", "Show"],
+    fName:            ["名字", "Name"],
+    fDate:            ["出生日期", "Birth date"],
+    fTime:            ["出生时间", "Birth time"],
+    fPlace:           ["出生地区(可搜索)", "Birth place (searchable)"],
+    fPlacePh:         ["输入中文或英文搜索,如 巴生 / Klang", "Search in English or Chinese, e.g. Klang"],
+    fPlacePick:       ["— 选择地区 —", "— Select a place —"],
+    fLat:             ["纬度 °(北+南−)", "Latitude ° (N+ / S−)"],
+    fLon:             ["经度 °(东+西−)", "Longitude ° (E+ / W−)"],
+    save:             ["保存并绘制", "Save & draw"],
+    clear:            ["清空", "Clear"],
+    formHint:         ["资料安全存放在你的云端账号,只有你能看到。时区固定为马来西亚/新加坡时间(UTC+8)。",
+                       "Your data is stored in your own cloud account and visible only to you. Times are fixed to Malaysia / Singapore time (UTC+8)."],
+    noCharts:         ["还没有星盘,在下方新建一张。", "No charts yet — create one below."],
+    edit:             ["编辑", "Edit"],
+    del:              ["删除", "Delete"],
+    confirmDel:       ["确认删除", "Confirm"],
+    unnamed:          ["未命名", "Untitled"],
+    alertFields:      ["请填完整出生日期、时间与经纬度", "Please fill in the birth date, time and coordinates."],
+    alertLat:         ["纬度需在 -89.9 ~ 89.9 之间", "Latitude must be between -89.9 and 89.9."],
+
+    /* —— 空状态 —— */
+    emptyMain:        ["左侧填写出生信息,给它起个名字", "Enter the birth details on the left and give it a name"],
+    emptyHint:        ["每张盘以名字管理,可随时切换对照学习", "Each chart is saved under its name — switch between them anytime"],
+
+    /* —— 盘面 / 表格 —— */
+    positions:        ["行星位置", "Planet positions"],
+    symbols:          ["符号", "Glyphs"],
+    names:            ["名称", "Names"],
+    wheelSettings:    ["\u2699 行星设定", "\u2699 Points"],
+    wheelSwipeHint:   ["左右滑动盘面可切换符号/名称", "Swipe the wheel to switch glyphs / names"],
+    alwaysShown:      ["标准显示(不可关闭):上升 · 太阳 · 月亮 · 水星 金星 火星 木星 土星 天王星 海王星 冥王星",
+                       "Always shown: Ascendant · Sun · Moon · Mercury Venus Mars Jupiter Saturn Uranus Neptune Pluto"],
+    selectAll:        ["全选", "Select all"],
+    selectNone:       ["取消全选", "Clear all"],
+    ascendant:        ["上升", "Ascendant"],
+    inHouse:          ["落第 %s 宫", "In house %s"],
+    retro:            ["逆行", "Retrograde"],
+    aspectsHere:      ["本盘相位", "Aspects in this chart"],
+    noAspects:        ["无主要相位", "No major aspects"],
+    trigger:          ["触发判定", "Activation"],
+    erisOn:           ["与个人行星存在 2° 内紧密相位(%s),此点在你盘中被激活,值得纳入解读。",
+                       "Within 2° of a personal planet (%s) — this point is active in your chart and worth reading."],
+    erisOff:          ["未与个人行星形成 2° 内紧密相位:默认仅作背景,不必强行解读。",
+                       "No contact within 2° of a personal planet — treat it as background only."],
+
+    /* —— 主题 / 音乐 —— */
+    pickTheme:        ["选择主题", "Choose a theme"],
+    musicOn:          ["播放舒缓音乐", "Play ambient music"],
+    musicOff:         ["关闭音乐", "Stop music"],
+    th_solar:         ["日光神殿", "Solar Temple"],
+    th_moontide:      ["月光海洋", "Moonlit Ocean"],
+    th_dream:         ["樱花梦境", "Sakura Dream"],
+    th_neo:           ["银河未来", "Galactic Future"],
+
+    /* —— 章节标题 —— */
+    secBlueprint:     ["你的生命蓝图", "Your Life Blueprint"],
+    secChapters:      ["你的人生章节", "Your Life Chapters"],
+    secThread:        ["属于你的生命脉络", "The Thread of Your Life"],
+
+    /* —— 解读呈现 —— */
+    oneLine:          ["一句话说你", "You, in one line"],
+    aboutYou:         ["关 于 你 的 几 件 事", "A FEW THINGS ABOUT YOU"],
+    innerMap:         ["你 的 内 在 地 图", "YOUR INNER MAP"],
+    whereToStart:     ["可 以 着 手 的 事", "WHERE TO START"],
+    worthKeeping:     ["值 得 记 住 的 话", "WORTH REMEMBERING"],
+    tryThis:          ["\u2192 试试看:", "\u2192 Try this:"],
+    readMore:         ["展开阅读 \u2228", "Read more \u2228"],
+    readLess:         ["收起 \u2227", "Show less \u2227"],
+    openRead:         ["展开阅读 \u2192", "Read \u2192"],
+    collapseUp:       ["收起 \u25B2", "Close \u25B2"],
+    genBlueprint:     ["正在为你整理这份生命蓝图…", "Putting your life blueprint together…"],
+    regenerating:     ["正在重新整理…", "Trying again…"],
+    firstTimeHint:    ["第一次需要 1–2 分钟,之后打开就是秒开", "The first time takes 1–2 minutes; after that it opens instantly"],
+    exploringTopic:   ["正在为你探索「%s」…", "Exploring “%s” for you…"],
+    longChapterHint:  ["这一章比较长,约需 1–2 分钟", "This chapter is long — about 1–2 minutes"],
+    weavingMap:       ["正在把你的理解连成一张地图…", "Weaving everything into one map…"],
+    aboutOneMin:      ["约需 1–2 分钟", "About 1–2 minutes"],
+    failed:           ["内容暂时无法完成。", "That didn’t come through."],
+    tryAgain:         ["点此再试一次", "Try again"],
+    diagnosis:        ["诊断:", "Diagnosis: "],
+    probe:            [" · 探测 ", " · probe "],
+    noService:        ["尚未连接解读服务。", "Reading service is not connected yet."],
+    mapNeedMore:      ["读完至少 3 个主题后,这里会把所有理解连成一条线,并给出可以着手的方向(目前 %s/3)",
+                       "Once you’ve read at least 3 chapters, this pulls everything into one thread and points to where to start (now %s/3)"],
+    mapReady:         ["把前面所有理解,连接到你的人生", "Connect everything you’ve read back to your life"],
+    mapBtn:           ["生成我的探索地图", "Create my map"],
+    mapBusy:          ["生成中…", "Working…"],
+
+    /* —— 人生探索地图(Version 1 隐藏中,字典预先备好)—— */
+    qaExplored:       ["已探索 %s/5", "Explored %s/5"],
+    qaExploring:      ["正在为你探索…", "Exploring for you…"],
+    qaAboutMin:       ["约需 1 分钟", "About a minute"],
+
+    /* —— 英文解读的生成入口(不自动呼叫 AI)—— */
+    enNotYet:         ["这份内容尚未有英文版本。", "This reading isn’t available in English yet."],
+    enNotYetHint:     ["已生成的版本会保留,不会被覆盖。", "Your existing reading is kept and will not be overwritten."],
+    enGenerate:       ["生成英文版本", "Generate the English version"],
+    zhNotYet:         ["这份内容尚未有中文版本。", "This reading has no Chinese version yet."],
+    zhGenerate:       ["生成中文版本", "Generate the Chinese version"],
+
+    /* —— 登录 —— */
+    authTitle:        ["我的生命蓝图", "Your Life Blueprint"],
+    authSub:          ["登录后,你的生命蓝图将安全存放在云端", "Sign in and your blueprint is kept safely in the cloud"],
+    email:            ["邮箱", "Email"],
+    password:         ["密码", "Password"],
+    pwPh:             ["至少 6 位", "At least 6 characters"],
+    login:            ["登 录", "Sign in"],
+    signup:           ["没有账号?注 册", "No account? Sign up"],
+    loggingIn:        ["登录中…", "Signing in…"],
+    signingUp:        ["注册中…", "Creating account…"],
+    authNeed:         ["请输入邮箱与至少 6 位密码", "Enter your email and a password of at least 6 characters"],
+    signupOk:         ["注册成功!请到邮箱点击确认链接,然后回来登录", "Account created — confirm via the link in your inbox, then sign in"],
+
+    /* —— 诊断 —— */
+    dgNoKey:          ["服务端还没有设置 AI 密钥(ANTHROPIC_API_KEY)", "The server has no AI key set (ANTHROPIC_API_KEY)"],
+    dgFnVer:          ["函数版本:", "Function version: "],
+    dg401:            ["身份验证没通过:请到 Supabase → Edge Functions → read-chart → Details,把 Verify JWT 关掉后重新部署",
+                       "Auth failed: in Supabase → Edge Functions → read-chart → Details, turn off Verify JWT and redeploy"],
+    dg404:            ["找不到这个函数:确认函数名是 read-chart 且已部署", "Function not found: check that read-chart is deployed under that name"],
+    dg0:              ["连不上服务器:检查网络,或函数地址是否正确", "Cannot reach the server: check your connection and the function URL"],
+    dg502:            ["AI 服务返回错误:多半是密钥无效或账户额度不足", "The AI service returned an error — usually an invalid key or no remaining credit"],
+    dg504:            ["生成超时:内容太长,稍后重试通常可成功", "Timed out: the content is long — retrying usually works"],
+    dgParse:          ["AI 回答格式异常,再试一次通常可解决", "The reply came back malformed — trying again usually fixes it"],
+    dgUnknown:        ["未知错误", "Unknown error"],
+    syncFail:         ["云同步失败", "Cloud sync failed"],
+    delFail:          ["云删除失败", "Cloud delete failed"]
+  };
+
+  /* —— 九个主题的显示文案(仅 UI;服务端主题定义不变)—— */
+  const TOPIC_TEXT = {
+    self:    { name:["个人","Self"], sub:["人格 · 天赋 · 使命","Personality · Gifts · Direction"],
+               teaser:["别人眼中的你,和你自己知道的你,\n中间那段距离,才是真正的你。",
+                       "The gap between the you others see\nand the you that you know — that’s where you actually live."] },
+    emotion: { name:["情感模式","How You Love"], sub:["你如何去爱","Your pattern in closeness"],
+               teaser:["喜欢一个人的时候,你会变成另一个版本的自己。\n那个版本,你未必喜欢。",
+                       "When you fall for someone you become another version of yourself.\nYou don’t always like that version."] },
+    career:  { name:["事业","Work"], sub:["怎样工作才发挥得出来","What lets you do your best work"],
+               teaser:["有些累是值得的,有些累是空的。\n差别不在做什么,而在怎么做。",
+                       "Some tiredness is worth it, some is hollow.\nThe difference isn’t what you do — it’s how."] },
+    family:  { name:["家庭","Family"], sub:["父母 · 兄弟姐妹","Parents · Siblings"],
+               teaser:["你以为早就走出来了,\n但有些反应还是会自动发生。",
+                       "You thought you’d left it behind,\nbut some reactions still fire on their own."] },
+    love:    { name:["感情","Long-term Love"], sub:["长期关系怎么运转","How lasting relationships work for you"],
+               teaser:["让你心动的,和让你安稳的,\n常常不是同一种人。",
+                       "The one who moves you and the one who steadies you\nare often not the same person."] },
+    partner: { name:["正缘特质","Who Fits You"], sub:["容易吸引什么样的人","The people you keep attracting"],
+               teaser:["你反复遇到的那一类人,\n其实一直在提醒你同一件事。",
+                       "The type you keep meeting\nhas been pointing at the same thing all along."] },
+    wealth:  { name:["财运","Money"], sub:["你的赚钱模式","How value flows to you"],
+               teaser:["钱怎么进来,和钱怎么留下,\n是两件不同的事。",
+                       "How money comes in and how it stays\nare two different questions."] },
+    study:   { name:["求学","Learning"], sub:["你怎么学会一件事","How you actually learn"],
+               teaser:["同样一堂课,有人听懂,有人做懂。\n你是哪一种?",
+                       "Same lesson: some understand by listening, some by doing.\nWhich are you?"] },
+    body:    { name:["身心状态","Body & Mind"], sub:["压力怎么来,力气怎么回","How stress builds, how energy returns"],
+               teaser:["什么都没做,却已经很累。\n消耗常常发生在看不见的地方。",
+                       "Tired without having done a thing.\nThe drain usually happens where you can’t see it."] }
+  };
+
+  /* —— 显示用名称对照(星座 / 行星 / 敏感点 / 相位)——
+       只影响画面显示。传给服务端的仍是原本的 key 与黄经,分析完全不变。 */
+  const SIGN_EN = { "白羊座":"Aries","金牛座":"Taurus","双子座":"Gemini","巨蟹座":"Cancer","狮子座":"Leo","处女座":"Virgo",
+    "天秤座":"Libra","天蝎座":"Scorpio","射手座":"Sagittarius","摩羯座":"Capricorn","水瓶座":"Aquarius","双鱼座":"Pisces" };
+  const NAME_EN = {
+    "太阳":"Sun","月亮":"Moon","水星":"Mercury","金星":"Venus","火星":"Mars","木星":"Jupiter","土星":"Saturn",
+    "天王星":"Uranus","海王星":"Neptune","冥王星":"Pluto",
+    "上升点":"Ascendant","下降点":"Descendant","天顶":"Midheaven","天底":"Imum Coeli",
+    "北交点":"North Node","南交点":"South Node","东升点":"Equatorial Asc.",
+    "凯龙星":"Chiron","谷神星":"Ceres","智神星":"Pallas","婚神星":"Juno","灶神星":"Vesta","莉莉丝":"Lilith",
+    "爱神星":"Eros","赛姬星":"Psyche","福点":"Part of Fortune","精神点":"Part of Spirit",
+    "爱情点":"Part of Eros","婚姻点":"Part of Marriage","宿命点":"Vertex","日月中点":"Sun/Moon Mid","阋神星":"Eris"
+  };
+  const ASPECT_EN = { "合相":"Conjunction","六合":"Sextile","刑相":"Square","拱相":"Trine","冲相":"Opposition" };
+  const NOTE_EN = {
+    "平均黑月":"Mean Black Moon","小行星 433":"Asteroid 433","小行星 16":"Asteroid 16",
+    "收而不用:仅列出,不参与解读":"Listed for reference only — not used in readings",
+    "低纬地区宿命点数值不稳定,仅供参考":"Unstable at low latitudes — for reference only"
+  };
+  const SIGN_CHAR_EN = ["Ari","Tau","Gem","Can","Leo","Vir","Lib","Sco","Sag","Cap","Aqu","Pis"];
+  const NAME1_EN = { Sun:"Sun",Moon:"Moo",Mercury:"Mer",Venus:"Ven",Mars:"Mar",Jupiter:"Jup",Saturn:"Sat",
+    Uranus:"Ura",Neptune:"Nep",Pluto:"Plu",NNode:"NN",SNode:"SN",Lilith:"Lil",Chiron:"Chi",Ceres:"Cer",
+    Pallas:"Pal",Juno:"Jun",Vesta:"Ves",Eros433:"Ero",Psyche16:"Psy",PoF:"PoF",PoSpirit:"PoS",PoE:"PoE",
+    PoM:"PoM",Vertex:"Vx",SMmid:"S/M",Eris:"Eri" };
+  const OPT_EN = { NNode:"North Node",SNode:"South Node",Lilith:"Lilith",Chiron:"Chiron",Ceres:"Ceres",
+    Pallas:"Pallas",Juno:"Juno",Vesta:"Vesta",Eros433:"Eros",Psyche16:"Psyche",PoF:"Part of Fortune",
+    PoSpirit:"Part of Spirit",PoE:"Part of Eros",PoM:"Part of Marriage",Vertex:"Vertex",SMmid:"Sun/Moon Mid",Eris:"Eris" };
+  const REGION_EN = { "吉隆坡 · 布城 · 纳闽":"Kuala Lumpur · Putrajaya · Labuan","雪兰莪":"Selangor","柔佛":"Johor",
+    "槟城":"Penang","霹雳":"Perak","吉打 · 玻璃市":"Kedah · Perlis","吉兰丹":"Kelantan","登嘉楼":"Terengganu",
+    "彭亨":"Pahang","森美兰 · 马六甲":"Negeri Sembilan · Malacca","沙巴":"Sabah","砂拉越":"Sarawak",
+    "新加坡":"Singapore","中国":"China" };
+  const CH_TITLES_EN = ["The setting you were born with","How you meet the world",
+    "Gifts and trials along the way","Where life is taking you","The script that is yours"];
+
+  let lang = "zh";
+  try { const v = localStorage.getItem(LS_KEY); if (v === "en" || v === "zh") lang = v; } catch (e) { }
+
+  const hooks = [];
+  function idx() { return lang === "en" ? 1 : 0; }
+  function T(key, a) {
+    const row = DICT[key];
+    if (!row) return key;
+    const s = row[idx()] != null ? row[idx()] : row[0];
+    return a === undefined ? s : String(s).replace("%s", a);
+  }
+  // 显示名称:找不到对照就原样返回(永远不会因为缺字典而空白)
+  function TN(name) { return lang === "en" ? (NAME_EN[name] || SIGN_EN[name] || ASPECT_EN[name] || NOTE_EN[name] || name) : name; }
+  function TSign(name) { return lang === "en" ? (SIGN_EN[name] || name) : name; }
+  function TTopic(id, field) {
+    const t = TOPIC_TEXT[id];
+    return t && t[field] ? t[field][idx()] : "";
+  }
+  function TRegion(name) { return lang === "en" ? (REGION_EN[name] || name) : name; }
+  function TOpt(key, zhName) { return lang === "en" ? (OPT_EN[key] || zhName) : zhName; }
+  function houseLabel(h) { return lang === "en" ? "H" + h : h + "宫"; }
+
+  function applyStatic(root) {
+    (root || document).querySelectorAll("[data-i18n]").forEach(function (el) {
+      el.textContent = T(el.getAttribute("data-i18n"));
+    });
+    (root || document).querySelectorAll("[data-i18n-ph]").forEach(function (el) {
+      el.setAttribute("placeholder", T(el.getAttribute("data-i18n-ph")));
+    });
+    (root || document).querySelectorAll("[data-i18n-title]").forEach(function (el) {
+      el.setAttribute("title", T(el.getAttribute("data-i18n-title")));
+    });
+    document.title = T("docTitle");
+    document.documentElement.setAttribute("lang", lang === "en" ? "en" : "zh-CN");
+  }
+
+  function setLang(l, opts) {
+    if (l !== "en" && l !== "zh") return;
+    if (l === lang) return;
+    lang = l;
+    try { localStorage.setItem(LS_KEY, l); } catch (e) { }
+    // 写入云端偏好(与主题偏好同一张 prefs 表,不影响星盘与解读资料)
+    if (!(opts && opts.silent) && window.Cloud && window.Cloud.savePrefs) window.Cloud.savePrefs({ lang: l });
+    applyStatic();
+    hooks.forEach(function (fn) { try { fn(l); } catch (e) { console.warn(e); } });
+  }
+
+  window.I18N = {
+    get lang() { return lang; },
+    isEN: function () { return lang === "en"; },
+    T: T, TN: TN, TSign: TSign, TTopic: TTopic, TRegion: TRegion, TOpt: TOpt,
+    houseLabel: houseLabel, setLang: setLang, applyStatic: applyStatic,
+    onChange: function (fn) { hooks.push(fn); },
+    SIGN_CHAR_EN: SIGN_CHAR_EN, NAME1_EN: NAME1_EN, CH_TITLES_EN: CH_TITLES_EN,
+    // 供云端偏好载入时使用(不触发 savePrefs 回写,不触发任何重新生成)
+    adopt: function (l) { if ((l === "en" || l === "zh") && l !== lang) setLang(l, { silent: true }); }
+  };
+  window.T = T;
+})();
+</script>
+<script>
+/* ============================================================
    解读层(前端只负责请求与呈现)
    · 九步定调演算、写作规则、主题定义全部在 Supabase Edge Function
    · 这里只有:发请求 → 解析 → 渲染 → 本地缓存兼容
@@ -1518,7 +1810,12 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   function findQ(qid) { return ALL_Q.find(x => x.id === qid) || null; }
 
   // ---------- 解析服务端返回 ----------
-  const CH_TITLES = ["你生命最初的设定", "你如何面对世界", "你成长路上的礼物与考验", "生命想带你去的地方", "属于你的生命剧本"];
+  const CH_TITLES_ZH = ["你生命最初的设定", "你如何面对世界", "你成长路上的礼物与考验", "生命想带你去的地方", "属于你的生命剧本"];
+  // 仅用于「服务端回传缺标题」时的备用文案,不影响任何生成逻辑
+  function chTitles() {
+    return (window.I18N && window.I18N.lang === "en") ? window.I18N.CH_TITLES_EN : CH_TITLES_ZH;
+  }
+  const CH_TITLES = CH_TITLES_ZH;
   function parseChapters(txt) {
     txt = String(txt || "").trim();
     const m = txt.match(/\{[\s\S]*\}/);
@@ -1530,7 +1827,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
             spine: String(o.spine || "").trim(),
             cards: Array.isArray(o.cards) ? o.cards.map(c => ({ title: String(c.title || "").trim(), line: String(c.line || "").trim() })).filter(c => c.title && c.line) : [],
             chapters: o.chapters.slice(0, 5).map((c, i) => ({
-              title: c.title || CH_TITLES[i],
+              title: c.title || chTitles()[i],
               summary: String(c.summary || "").trim(),
               body: String(c.body || "").trim()
             }))
@@ -1544,7 +1841,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
         let title = lines[0].replace(/[#*■\s]+/g, "").slice(0, 20);
         let body = p.trim();
         if (title && CH_TITLES.some(t => title.indexOf(t) !== -1 || t.indexOf(title) !== -1)) body = lines.slice(1).join("\n").trim();
-        else title = CH_TITLES[i];
+        else title = chTitles()[i];
         return { title: title, summary: "", body: body };
       }) };
     return null;
@@ -1578,6 +1875,12 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   }
 
   // ---------- 请求:只送星盘计算结果 ----------
+  // 目前语言(zh 预设)。zh 时送出的请求与本次修改前完全一致。
+  function curLang() { return (window.I18N && window.I18N.lang === "en") ? "en" : "zh"; }
+  // 分语言的储存键:中文沿用原键(reading / topics / lifemap / qa),
+  // 英文另存 *_en。既有中文资料永远不会被覆盖或删除。
+  function LK(base) { return curLang() === "en" ? base + "_en" : base; }
+
   function chartPayload(res) {
     return {
       ang: { asc: res.ang.asc, mc: res.ang.mc },
@@ -1608,9 +1911,12 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   }
   function askServer(kind, extra, res, fpSeed, parseFn) {
     const chart = chartPayload(res);
+    const lang = curLang();
     function attempt(seed) {
       return fingerprint(seed).then(function (fp) {
-        return callFunc(Object.assign({ kind: kind, fingerprint: fp, chart: chart }, extra));
+        // lang 为额外参数;服务端只在 lang==="en" 时追加一句输出语言指示,
+        // 其余 Prompt、九步定调、资料抽取完全不变。
+        return callFunc(Object.assign({ kind: kind, fingerprint: fp, chart: chart, lang: lang }, extra));
       }).then(function (d) {
         const raw = d.text || d.content || "";
         const parsed = parseFn(raw);
@@ -1621,7 +1927,9 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     }
     // 指纹必须区分每一道题,否则 30 题会共用同一份缓存、互相覆盖
     const sub = extra.tid ? ":" + extra.tid : (extra.qid ? ":" + extra.qid : "");
-    const base = String(fpSeed || "") + "|" + kind + sub + "|v10";
+    // 中文指纹与本次修改前完全一致 → 既有服务端缓存继续命中,不会重新生成;
+    // 英文另起指纹,与中文互不覆盖。
+    const base = String(fpSeed || "") + "|" + kind + sub + "|v10" + (lang === "en" ? "|en" : "");
     return attempt(base).catch(function (e) {
       if (e.parseFail) return attempt(base + "|retry" + Date.now());
       throw e;
@@ -1660,12 +1968,12 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     let h = "";
     if (spine) {
       h += '<div style="margin:2px 0 20px;padding:16px 18px;border-left:3px solid var(--gold);background:rgba(var(--accent-rgb),.07);border-radius:0 12px 12px 0">' +
-        '<div style="font-size:10.5px;letter-spacing:.18em;color:var(--gold);margin-bottom:6px">一句话说你</div>' +
+        '<div style="font-size:10.5px;letter-spacing:.18em;color:var(--gold);margin-bottom:6px">' + esc(T("oneLine")) + "</div>" +
         '<div style="font-size:15.5px;line-height:1.85;color:var(--parchment)">' + esc(spine) + "</div></div>";
     }
     const quick = cards.filter(c => !inChapter[c.title]);
     if (quick.length) {
-      h += '<div style="font-size:11px;letter-spacing:.16em;color:var(--gold);margin:0 0 10px">关 于 你 的 几 件 事</div>' +
+      h += '<div style="font-size:11px;letter-spacing:.16em;color:var(--gold);margin:0 0 10px">' + esc(T("aboutYou")) + "</div>" +
         '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(228px,1fr));gap:10px;margin-bottom:26px">' +
         quick.map(function (c) {
           return '<div style="border:1px solid var(--line);border-radius:12px;padding:14px 16px;background:var(--card-soft)">' +
@@ -1676,7 +1984,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     if (chs.length) {
       const cardMap = {};
       cards.forEach(c => { cardMap[c.title] = c.line; });
-      h += '<div style="font-size:11px;letter-spacing:.16em;color:var(--gold);margin:0 0 10px">你 的 内 在 地 图</div>' +
+      h += '<div style="font-size:11px;letter-spacing:.16em;color:var(--gold);margin:0 0 10px">' + esc(T("innerMap")) + "</div>" +
         '<div style="display:grid;gap:11px">' + chs.map(function (c, i) {
         const line = cardMap[c.title] || "";
         const sum = c.summary || "";
@@ -1685,7 +1993,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
           (line ? '<div style="font-size:14.5px;line-height:1.85;color:var(--parchment);margin-bottom:' + (sum ? "9px" : "0") + '">' + esc(line) + "</div>" : "") +
           (sum ? '<div style="font-size:13.5px;line-height:1.9;color:var(--parchment);opacity:.88">' + esc(sum) + "</div>" : "") +
           (c.body ? '<div class="rd-full" style="display:none;margin-top:13px;padding-top:13px;border-top:1px dashed var(--line);font-size:13.5px;line-height:2;color:var(--parchment)">' + para(c.body) + "</div>" +
-            '<button class="rd-more" style="margin-top:11px;font-family:inherit;font-size:12.5px;padding:5px 15px;border:1px solid var(--line);border-radius:14px;background:transparent;color:var(--gold);cursor:pointer">展开阅读 \u2228</button>' : "") +
+            '<button class="rd-more" style="margin-top:11px;font-family:inherit;font-size:12.5px;padding:5px 15px;border:1px solid var(--line);border-radius:14px;background:transparent;color:var(--gold);cursor:pointer">' + esc(T("readMore")) + "</button>" : "") +
           "</div>";
       }).join("") + "</div>";
     }
@@ -1695,7 +2003,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
         const full = btn.parentNode.querySelector(".rd-full");
         const closed = full.style.display === "none";
         full.style.display = closed ? "" : "none";
-        btn.textContent = closed ? "\u6536\u8d77 \u2227" : "\u5c55\u5f00\u9605\u8bfb \u2228";
+        btn.textContent = closed ? T("readLess") : T("readMore");
       });
     });
   }
@@ -1742,20 +2050,25 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   function cleanupLegacy(c) {
     let changed = false;
     if (c.answers) { delete c.answers; changed = true; }
-    if (c.topics) {
-      LEGACY_TOPIC_IDS.forEach(function (k) { if (c.topics[k]) { delete c.topics[k]; changed = true; } });
-      Object.keys(c.topics).forEach(function (k) { if (isStale(c.topics[k])) { delete c.topics[k]; changed = true; } });
-    }
-    if (c.qa) {
-      Object.keys(c.qa).forEach(function (k) { if (isStale(c.qa[k])) { delete c.qa[k]; changed = true; } });
-    }
-    if (c.lifemap && isStale(c.lifemap)) { delete c.lifemap; changed = true; }
-    if (c.reading && isStale(c.reading)) { delete c.reading; changed = true; }
+    // CONTENT_VER 未变动 → 既有解读(ver === CONTENT_VER)一律保留,不会被清除
+    ["topics", "topics_en"].forEach(function (tk) {
+      if (!c[tk]) return;
+      LEGACY_TOPIC_IDS.forEach(function (k) { if (c[tk][k]) { delete c[tk][k]; changed = true; } });
+      Object.keys(c[tk]).forEach(function (k) { if (isStale(c[tk][k])) { delete c[tk][k]; changed = true; } });
+    });
+    ["qa", "qa_en"].forEach(function (qk) {
+      if (!c[qk]) return;
+      Object.keys(c[qk]).forEach(function (k) { if (isStale(c[qk][k])) { delete c[qk][k]; changed = true; } });
+    });
+    ["lifemap", "lifemap_en", "reading", "reading_en"].forEach(function (rk) {
+      if (c[rk] && isStale(c[rk])) { delete c[rk]; changed = true; }
+    });
     return changed;
   }
 
   window.Reading = {
     CONTENT_VER: CONTENT_VER,
+    curLang: curLang, LK: LK,
     TOPICS9: TOPICS9, findTopic: findTopic, DOMAINS: DOMAINS, findQ: findQ,
     parseChapters: parseChapters, parseTopic: parseTopic,
     fetchReading: fetchReading, fetchTopic: fetchTopic, fetchMap: fetchMap, fetchQuestion: fetchQuestion,
@@ -1896,9 +2209,9 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
 
   // ---------- 主题库(8 套配色) ----------
   const THEMES = [
-    { id: "solar", name: "日光神殿", dot: ["#d9b96a", "#f4ead2"], vars: {} },
+    { id: "solar", name: "日光神殿", i18n: "th_solar", dot: ["#d9b96a", "#f4ead2"], vars: {} },
     {
-      id: "moontide", name: "月光海洋", dot: ["#e7eef1", "#4e88a4"], vars: {
+      id: "moontide", i18n: "th_moontide", name: "月光海洋", dot: ["#e7eef1", "#4e88a4"], vars: {
         "--night": "#e7eef1", "--night-2": "#f3f8fa", "--ink": "#ffffff", "--parchment": "#2b4552",
         "--muted": "#6d8894", "--line": "#bfd4dc", "--gold": "#4e88a4", "--gold-soft": "#3c7290",
         "--accent-rgb": "78,136,164", "--card-soft": "rgba(255,255,255,.55)",
@@ -1909,7 +2222,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       }
     },
     {
-      id: "dream", name: "樱花梦境", dot: ["#fbeef3", "#cf7396"], vars: {
+      id: "dream", i18n: "th_dream", name: "樱花梦境", dot: ["#fbeef3", "#cf7396"], vars: {
         "--night": "#fbeef3", "--night-2": "#fef7fa", "--ink": "#ffffff", "--parchment": "#5c3f52",
         "--muted": "#a3849a", "--line": "#ecd2de", "--gold": "#cf7396", "--gold-soft": "#b95f82",
         "--accent-rgb": "207,115,150", "--card-soft": "rgba(255,255,255,.6)",
@@ -1920,7 +2233,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       }
     },
     {
-      id: "neo", name: "银河未来", dot: ["#0a0a12", "#35c8ff"], vars: {
+      id: "neo", i18n: "th_neo", name: "银河未来", dot: ["#0a0a12", "#35c8ff"], vars: {
         "--night": "#0a0a12", "--night-2": "#12121e", "--ink": "#191927", "--parchment": "#dfe8ff",
         "--muted": "#8a93c0", "--line": "#2b2b4a", "--gold": "#35c8ff", "--gold-soft": "#21a8e0",
         "--accent-rgb": "53,200,255", "--card-soft": "rgba(18,18,30,.6)",
@@ -2032,7 +2345,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     if (btn) {
       btn.textContent = musicOn ? "\u266B" : "\u266A";
       btn.style.background = musicOn ? "rgba(var(--accent-rgb),.25)" : "var(--night-2)";
-      btn.title = musicOn ? "关闭音乐" : "播放舒缓音乐";
+      btn.title = musicOn ? T("musicOff") : T("musicOn");
     }
   }
 
@@ -2046,7 +2359,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       b.style.cssText = "width:46px;height:46px;border-radius:50%;border:1px solid var(--line);background:var(--night-2);color:var(--gold);font-size:19px;cursor:pointer;box-shadow:0 3px 10px rgba(0,0,0,.18);transition:.2s";
       return b;
     }
-    const musicBtn = mkBtn("\u266A", "播放舒缓音乐");
+    const musicBtn = mkBtn("\u266A", T("musicOn"));
     musicBtn.addEventListener("click", function () { toggleMusic(musicBtn); });
     // 主题弹层
     const pop = document.createElement("div");
@@ -2061,12 +2374,13 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
         row.innerHTML = '<span style="display:inline-flex">' +
           '<i style="width:14px;height:14px;border-radius:50%;background:' + th.dot[0] + ';border:1px solid rgba(0,0,0,.15)"></i>' +
           '<i style="width:14px;height:14px;border-radius:50%;background:' + th.dot[1] + ';margin-left:-5px;border:1px solid rgba(0,0,0,.15)"></i></span>' +
-          '<span>' + th.name + '</span>' + (th.id === curTheme ? '<span style="margin-left:auto;color:var(--gold)">\u2713</span>' : "");
+          '<span></span>' + (th.id === curTheme ? '<span style="margin-left:auto;color:var(--gold)">\u2713</span>' : "");
+        row.querySelector("span:nth-child(2)").textContent = th.i18n ? T(th.i18n) : th.name;
         row.addEventListener("click", function () { applyTheme(th.id); pop.style.display = "none"; });
         pop.appendChild(row);
       });
     }
-    const themeBtn = mkBtn("\uD83C\uDFA8", "选择主题");
+    const themeBtn = mkBtn("\uD83C\uDFA8", T("pickTheme"));
     themeBtn.addEventListener("click", function () {
       const open = pop.style.display === "none";
       if (open) renderPop();
@@ -2103,6 +2417,8 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     if (p.wheelShow) OPT_KEYS.forEach(function (k) { wheelShow[k[0]] = !!p.wheelShow[k[0]]; });
     if (p.glyphMode === "sym" || p.glyphMode === "name") glyphMode = p.glyphMode;
     if (p.theme) applyTheme(p.theme);
+    // 云端语言偏好:只在本机尚未设定时采用,避免覆盖使用者刚刚的选择
+    if (p.lang && !localStorage.getItem("inner_sky_lang_v1")) window.I18N.adopt(p.lang);
     if (p.activeId) store.activeId = p.activeId;
   }
   function saveShow() {
@@ -2129,19 +2445,21 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     const sel = $("f_city");
     function fillCity(q) {
       q = (q || "").trim().toLowerCase();
-      sel.innerHTML = '<option value="">— 选择地区 —</option>';
+      sel.innerHTML = '<option value=""></option>';
+      sel.firstChild.textContent = T("fPlacePick");
       let idx = 0, shown = 0, firstMatch = null;
       CITY_GROUPS.forEach(function (g) {
         const matched = [];
         g[1].forEach(function (ct) {
           const myIdx = idx++;
-          if (!q || ct[0].toLowerCase().indexOf(q) !== -1 || g[0].toLowerCase().indexOf(q) !== -1) {
+          if (!q || ct[0].toLowerCase().indexOf(q) !== -1 || g[0].toLowerCase().indexOf(q) !== -1
+              || window.I18N.TRegion(g[0]).toLowerCase().indexOf(q) !== -1) {
             matched.push([myIdx, ct[0]]);
           }
         });
         if (matched.length) {
           const og = document.createElement("optgroup");
-          og.label = g[0];
+          og.label = window.I18N.TRegion(g[0]);
           matched.forEach(function (m) {
             const o = document.createElement("option");
             o.value = m[0]; o.textContent = m[1];
@@ -2170,35 +2488,38 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       const b = $("newChartBody");
       const closed = b.style.display === "none";
       b.style.display = closed ? "" : "none";
-      $("formToggleArrow").textContent = closed ? "收起" : "展开";
+      $("formToggleArrow").textContent = closed ? T("collapse") : T("expand");
+      $("formToggleArrow").setAttribute("data-i18n", closed ? "collapse" : "expand");
     });
     $("clearBtn").addEventListener("click", function () {
       editingId = null;
-      $("formTitleText").textContent = "新建星盘";
+      $("formTitleText").textContent = T("newChart");
+      $("formTitleText").setAttribute("data-i18n", "newChart");
       $("f_nick").value = ""; $("f_city").value = "";
       $("f_date").value = "1990-01-01"; $("f_time").value = "12:00";
       $("f_lat").value = 31.2304; $("f_lon").value = 121.4737;
     });
     $("saveBtn").addEventListener("click", function () {
-      const nick = $("f_nick").value.trim() || "未命名";
+      const nick = $("f_nick").value.trim() || T("unnamed");
       const date = $("f_date").value, time = $("f_time").value;
       const lat = parseFloat($("f_lat").value), lon = parseFloat($("f_lon").value);
-      if (!date || !time || !isFinite(lat) || !isFinite(lon)) { alert("请填完整出生日期、时间与经纬度"); return; }
-      if (lat < -89.9 || lat > 89.9) { alert("纬度需在 -89.9 ~ 89.9 之间"); return; }
+      if (!date || !time || !isFinite(lat) || !isFinite(lon)) { alert(T("alertFields")); return; }
+      if (lat < -89.9 || lat > 89.9) { alert(T("alertLat")); return; }
       if (editingId) {
         const c = store.charts.find(x => x.id === editingId);
         if (c) {
           Object.assign(c, { nick, date, time, lat, lon });
           store.activeId = c.id;
-          window.Cloud.updateChart(c).catch(e => console.warn("云同步失败", e));
+          window.Cloud.updateChart(c).catch(e => console.warn(T("syncFail"), e));
         }
         editingId = null;
-        $("formTitleText").textContent = "新建星盘";
+        $("formTitleText").textContent = T("newChart");
+        $("formTitleText").setAttribute("data-i18n", "newChart");
       } else {
         const c = { id: window.Cloud.uuid(), nick, date, time, lat, lon, sys: "placidus" };
         store.charts.push(c);
         store.activeId = c.id;
-        window.Cloud.insertChart(c).catch(e => console.warn("云同步失败", e));
+        window.Cloud.insertChart(c).catch(e => console.warn(T("syncFail"), e));
       }
       saveStore(); renderChartList(); drawActive();
     });
@@ -2209,14 +2530,17 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     const box = $("chartList");
     box.innerHTML = "";
     if (!store.charts.length) {
-      box.innerHTML = '<div class="hint">还没有星盘,在下方新建一张。</div>';
+      box.innerHTML = '<div class="hint" data-i18n="noCharts"></div>';
+      box.firstChild.textContent = T("noCharts");
       return;
     }
     store.charts.forEach(function (c) {
       const btn = document.createElement("button");
       btn.className = "chart-item" + (c.id === store.activeId ? " active" : "");
       btn.innerHTML = '<span class="nick"></span><span class="meta"></span>' +
-        '<button class="edit" title="编辑">✎</button><button class="del" title="删除">×</button>';
+        '<button class="edit" data-i18n-title="edit">✎</button><button class="del" data-i18n-title="del">×</button>';
+      btn.querySelector(".edit").title = T("edit");
+      btn.querySelector(".del").title = T("del");
       btn.querySelector(".nick").textContent = c.nick;
       btn.querySelector(".meta").textContent = c.date + " " + c.time;
       btn.addEventListener("click", function (e) {
@@ -2226,8 +2550,10 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       btn.querySelector(".edit").addEventListener("click", function (e) {
         e.stopPropagation();
         editingId = c.id;
-        $("formTitleText").textContent = "编辑:" + c.nick;
-        $("newChartBody").style.display = ""; $("formToggleArrow").textContent = "收起";
+        $("formTitleText").textContent = T("editChart") + c.nick;
+        $("formTitleText").removeAttribute("data-i18n");
+        $("newChartBody").style.display = ""; $("formToggleArrow").textContent = T("collapse");
+        $("formToggleArrow").setAttribute("data-i18n", "collapse");
         $("f_nick").value = c.nick; $("f_date").value = c.date; $("f_time").value = c.time;
         $("f_lat").value = c.lat; $("f_lon").value = c.lon; $("f_city").value = "";
       });
@@ -2235,12 +2561,12 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       del.addEventListener("click", function (e) {
         e.stopPropagation();
         if (confirmDelId !== c.id) {
-          confirmDelId = c.id; del.classList.add("confirm"); del.textContent = "确认删除";
+          confirmDelId = c.id; del.classList.add("confirm"); del.textContent = T("confirmDel");
           setTimeout(function () { if (confirmDelId === c.id) { confirmDelId = null; del.classList.remove("confirm"); del.textContent = "×"; } }, 2500);
           return;
         }
         store.charts = store.charts.filter(x => x.id !== c.id);
-        window.Cloud.deleteChart(c.id).catch(e => console.warn("云删除失败", e));
+        window.Cloud.deleteChart(c.id).catch(e => console.warn(T("delFail"), e));
         if (store.activeId === c.id) store.activeId = store.charts.length ? store.charts[0].id : null;
         confirmDelId = null;
         saveStore(); renderChartList(); drawActive();
@@ -2290,7 +2616,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     // 符号/名称 切换
     const segWrap = document.createElement("div");
     segWrap.style.cssText = "display:flex;border:1px solid var(--line);border-radius:20px;overflow:hidden";
-    [["sym", "符号"], ["name", "名称"]].forEach(function (m) {
+    [["sym", T("symbols")], ["name", T("names")]].forEach(function (m) {
       const b = document.createElement("button");
       const on = glyphMode === m[0];
       b.textContent = m[1];
@@ -2305,7 +2631,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     bar.appendChild(segWrap);
     // 行星设定按钮
     const gear = document.createElement("button");
-    gear.textContent = "\u2699 行星设定";
+    gear.textContent = T("wheelSettings");
     gear.style.cssText = "font-family:inherit;font-size:12px;padding:3px 12px;border-radius:20px;cursor:pointer;transition:.15s;" +
       (settingsOpen ? "border:1px solid var(--gold-soft);background:rgba(var(--accent-rgb),.16);color:var(--gold)"
                     : "border:1px solid var(--line);background:transparent;color:var(--muted)");
@@ -2315,7 +2641,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     });
     bar.appendChild(gear);
     const hint = document.createElement("span");
-    hint.textContent = "左右滑动盘面可切换符号/名称";
+    hint.textContent = T("wheelSwipeHint");
     hint.style.cssText = "font-size:10.5px;color:var(--muted);opacity:.7";
     bar.appendChild(hint);
     // 设定面板
@@ -2334,11 +2660,11 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       head.style.cssText = "display:flex;align-items:flex-start;gap:12px;margin-bottom:8px";
       const std = document.createElement("div");
       std.style.cssText = "flex:1;font-size:11.5px;color:var(--muted);line-height:1.6";
-      std.textContent = "标准显示(不可关闭):上升 · 太阳 · 月亮 · 水星 金星 火星 木星 土星 天王星 海王星 冥王星";
+      std.textContent = T("alwaysShown");
       head.appendChild(std);
       const allOn = OPT_KEYS.every(function (k) { return wheelShow[k[0]]; });
       const selAll = document.createElement("button");
-      selAll.textContent = allOn ? "取消全选" : "全选";
+      selAll.textContent = allOn ? T("selectNone") : T("selectAll");
       selAll.style.cssText = "flex:none;font-family:inherit;font-size:12px;padding:3px 14px;border-radius:16px;cursor:pointer;transition:.15s;white-space:nowrap;" +
         (allOn ? "border:1px solid var(--gold-soft);background:rgba(var(--accent-rgb),.16);color:var(--gold)"
                : "border:1px solid var(--line);background:transparent;color:var(--parchment)");
@@ -2363,7 +2689,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
           saveShow(); ensureToggleBar(); drawWheel();
         });
         lab.appendChild(cb);
-        lab.appendChild(document.createTextNode(k[1]));
+        lab.appendChild(document.createTextNode(window.I18N.TOpt(k[0], k[1])));
         grid.appendChild(lab);
       });
       panel.appendChild(grid);
@@ -2407,9 +2733,11 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       const [gx, gy] = pt(276, lonB + 15);
       svg.appendChild(GL.symbolGroup(svgNS, C.SIGNS[i].glyph, gx, gy, 20, "var(--w-sglyph)"));
       // 星座单字名
-      const SIGN_CHAR = ["羊", "牛", "双", "蟹", "狮", "处", "秤", "蝎", "射", "摩", "瓶", "鱼"];
+      const SIGN_CHAR = window.I18N.isEN()
+        ? window.I18N.SIGN_CHAR_EN
+        : ["羊", "牛", "双", "蟹", "狮", "处", "秤", "蝎", "射", "摩", "瓶", "鱼"];
       const [zx, zy] = pt(253, lonB + 15);
-      const zc = el("text", { x: zx, y: zy + 4.2, "text-anchor": "middle", "font-size": 12, "font-weight": 600, fill: "var(--w-schar)", "font-family": "inherit" }, svg);
+      const zc = el("text", { x: zx, y: zy + 4.2, "text-anchor": "middle", "font-size": window.I18N.isEN() ? 9 : 12, "font-weight": 600, fill: "var(--w-schar)", "font-family": "inherit" }, svg);
       zc.textContent = SIGN_CHAR[i];
       for (let d = 5; d < 30; d += 5) {
         const L = lonB + d, len = (d % 10 === 0) ? 8 : 5;
@@ -2505,9 +2833,10 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       const color = it.isMajor ? "var(--w-ink)" : "var(--w-sub)";
       const size = it.isMajor ? 19 : 14;
       const grp = el("g", { cursor: "pointer", "data-planet": p.key }, svg);
-      if (glyphMode === "name" && NAME1[p.key]) {
-        const t = el("text", { x: gx, y: gy + (it.isMajor ? 5 : 4), "text-anchor": "middle", "font-size": it.isMajor ? 15 : 12, "font-weight": 700, fill: color, "font-family": "inherit" }, grp);
-        t.textContent = NAME1[p.key];
+      const NM = window.I18N.isEN() ? window.I18N.NAME1_EN : NAME1;
+      if (glyphMode === "name" && NM[p.key]) {
+        const t = el("text", { x: gx, y: gy + (it.isMajor ? 5 : 4), "text-anchor": "middle", "font-size": window.I18N.isEN() ? (it.isMajor ? 10.5 : 9) : (it.isMajor ? 15 : 12), "font-weight": 700, fill: color, "font-family": "inherit" }, grp);
+        t.textContent = NM[p.key];
       } else if (p.glyphKey) {
         grp.appendChild(GL.symbolGroup(svgNS, p.glyphKey, gx, gy, size, color));
       } else {
@@ -2574,14 +2903,14 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     if (!res) return;
     const rows = res.planets.map(function (p) {
       return "<tr><td style='padding:5px 10px 5px 0;width:34px'>" + glyphCell(p, 20, "var(--w-sglyph)") + "</td>" +
-             "<td style='padding:5px 8px 5px 0'>" + p.name + "</td>" +
-             "<td style='padding:5px 8px 5px 0;color:var(--gold-soft)'>" + p.sign + "</td>" +
-             "<td style='padding:5px 0;text-align:right;width:44px;white-space:nowrap;font-variant-numeric:tabular-nums'>" + p.house + "宫</td></tr>";
+             "<td style='padding:5px 8px 5px 0'>" + window.I18N.TN(p.name) + "</td>" +
+             "<td style='padding:5px 8px 5px 0;color:var(--gold-soft)'>" + window.I18N.TSign(p.sign) + "</td>" +
+             "<td style='padding:5px 0;text-align:right;width:44px;white-space:nowrap;font-variant-numeric:tabular-nums'>" + window.I18N.houseLabel(p.house) + "</td></tr>";
     });
     const ascIdx = Math.floor(((res.ang.asc % 360) + 360) % 360 / 30);
     rows.push("<tr><td style='padding:5px 10px 5px 0;text-align:center;font-weight:700;color:var(--w-axis)'>ASC</td>" +
-              "<td style='padding:5px 8px 5px 0'>上升</td>" +
-              "<td style='padding:5px 8px 5px 0;color:var(--gold-soft)'>" + C.SIGNS[ascIdx].name + "</td>" +
+              "<td style='padding:5px 8px 5px 0'>" + T("ascendant") + "</td>" +
+              "<td style='padding:5px 8px 5px 0;color:var(--gold-soft)'>" + window.I18N.TSign(C.SIGNS[ascIdx].name) + "</td>" +
               "<td style='padding:5px 0;text-align:right;white-space:nowrap'>—</td></tr>");
     tb.innerHTML = rows.join("");
   }
@@ -2600,33 +2929,33 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   function openPlanet(p) {
     const res = curResult;
     let chips = '<div class="chips">';
-    if (p.retro) chips += '<span class="chip" style="color:var(--fire)">逆行 ℞</span>';
+    if (p.retro) chips += '<span class="chip" style="color:var(--fire)">' + T("retro") + ' ℞</span>';
     chips += "</div>";
     const rel = res.aspects.filter(a => res.planets[a.a].key === p.key || res.planets[a.b].key === p.key);
     const aspHtml = rel.length ? rel.map(function (a) {
       const other = res.planets[a.a].key === p.key ? res.planets[a.b] : res.planets[a.a];
-      return '<span style="color:' + a.color + '">' + a.glyph + "</span> " + a.name + " " + other.name;
-    }).join("<br>") : "无主要相位";
+      return '<span style="color:' + a.color + '">' + a.glyph + "</span> " + window.I18N.TN(a.name) + " " + window.I18N.TN(other.name);
+    }).join("<br>") : T("noAspects");
     openDrawer(
       '<div class="d-glyph">' + glyphCell(p, 40, "#a8792a") + "</div>" +
-      '<div class="d-title">' + p.name + " · " + p.sign + "</div>" +
-      '<div class="d-kw">' + (p.retro ? "逆行" : "") + "</div>" +
+      '<div class="d-title">' + window.I18N.TN(p.name) + " · " + window.I18N.TSign(p.sign) + "</div>" +
+      '<div class="d-kw">' + (p.retro ? T("retro") : "") + "</div>" +
       chips +
-      sec("本盘相位", aspHtml)
+      sec(T("aspectsHere"), aspHtml)
     );
   }
   function openExtra(x) {
-    const noteChip = x.note ? '<span class="chip" style="color:var(--gold-soft)">' + x.note + "</span>" : "";
+    const noteChip = x.note ? '<span class="chip" style="color:var(--gold-soft)">' + window.I18N.TN(x.note) + "</span>" : "";
     let erisHtml = "";
     if (x.key === "Eris" && x.trigger) {
-      erisHtml = sec("触发判定", x.trigger.length
-        ? "与个人行星存在 2° 内紧密相位(" + x.trigger.join("、") + "),此点在你盘中被激活,值得纳入解读。"
-        : "未与个人行星形成 2° 内紧密相位:默认仅作背景,不必强行解读。");
+      erisHtml = sec(T("trigger"), x.trigger.length
+        ? T("erisOn", x.trigger.join(window.I18N.isEN() ? ", " : "、"))
+        : T("erisOff"));
     }
     openDrawer(
       '<div class="d-glyph">' + glyphCell(x, 40, "#a8792a") + "</div>" +
-      '<div class="d-title">' + x.name + " · " + x.sign + "</div>" +
-      '<div class="d-kw">' + (x.house ? "落第 " + x.house + " 宫" : "") + (x.retro ? " · 逆行" : "") + "</div>" +
+      '<div class="d-title">' + window.I18N.TN(x.name) + " · " + window.I18N.TSign(x.sign) + "</div>" +
+      '<div class="d-kw">' + (x.house ? T("inHouse", x.house) : "") + (x.retro ? " · " + T("retro") : "") + "</div>" +
       '<div class="chips">' + noteChip + "</div>" +
       erisHtml
     );
@@ -2669,18 +2998,18 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
         let hint = "", detail = "";
         try {
           const o = JSON.parse(probe.text);
-          if (o.anthropic_key_set === false) hint = "服务端还没有设置 AI 密钥(ANTHROPIC_API_KEY)";
-          else if (o.function) detail = "函数版本:" + o.function;
+          if (o.anthropic_key_set === false) hint = T("dgNoKey");
+          else if (o.function) detail = T("dgFnVer") + o.function;
         } catch (e) { }
         if (!hint) {
-          if (probe.status === 401 || /401/.test(msg)) hint = "身份验证没通过:请到 Supabase → Edge Functions → read-chart → Details,把 Verify JWT 关掉后重新部署";
-          else if (probe.status === 404 || /404/.test(msg)) hint = "找不到这个函数:确认函数名是 read-chart 且已部署";
-          else if (probe.status === 0) hint = "连不上服务器:检查网络,或函数地址是否正确";
-          else if (/502/.test(msg)) hint = "AI 服务返回错误:多半是密钥无效或账户额度不足";
-          else if (/504|timeout|时/.test(msg)) hint = "生成超时:内容太长,稍后重试通常可成功";
-          else if (/解析|截断/.test(msg)) hint = "AI 回答格式异常,再试一次通常可解决";
+          if (probe.status === 401 || /401/.test(msg)) hint = T("dg401");
+          else if (probe.status === 404 || /404/.test(msg)) hint = T("dg404");
+          else if (probe.status === 0) hint = T("dg0");
+          else if (/502/.test(msg)) hint = T("dg502");
+          else if (/504|timeout|时/.test(msg)) hint = T("dg504");
+          else if (/解析|截断/.test(msg)) hint = T("dgParse");
         }
-        return { hint: hint || "未知错误", raw: msg, probe: probe.status, detail: detail };
+        return { hint: hint || T("dgUnknown"), raw: msg, probe: probe.status, detail: detail };
       });
   }
 
@@ -2688,6 +3017,18 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   let curTopic = null, topicBusy = false, mapOpen = false, mapBusy = false;
   const esc0 = x => String(x || "").replace(/</g, "&lt;");
   const para0 = x => esc0(x).split(/\n\s*\n|\n/).filter(y => y.trim()).map(y => '<p style="margin:0 0 12px">' + y.trim() + "</p>").join("");
+
+  // 尚未有该语言版本时的提示卡(不会自动呼叫 AI,由使用者按下才生成)
+  function missingLangHtml(btnId) {
+    const en = window.I18N.isEN();
+    return '<div style="padding:22px 6px;text-align:center;color:var(--muted);font-size:12.5px;line-height:2">' +
+      '<div style="font-size:18px;color:var(--gold);margin-bottom:8px">\u2739</div>' +
+      esc0(T(en ? "enNotYet" : "zhNotYet")) + '<br>' +
+      '<span style="font-size:11.5px;opacity:.75">' + esc0(T(en ? "enNotYetHint" : "enNotYetHint")) + '</span><br>' +
+      '<button id="' + btnId + '" style="margin-top:12px;font-family:inherit;font-size:12.5px;padding:6px 18px;' +
+      'border:1px solid var(--gold-soft);border-radius:16px;background:transparent;color:var(--gold);cursor:pointer">' +
+      esc0(T(en ? "enGenerate" : "zhGenerate")) + '</button></div>';
+  }
 
   function answerHtml(data) {
     let h = '<div style="padding:2px 2px 4px">';
@@ -2699,7 +3040,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
         '<div style="font-size:13.5px;line-height:2.05;color:var(--parchment)">' + para0(sc.body) + "</div></div>";
     }).join("");
     if (data.steps && data.steps.length) {
-      h += '<div style="font-size:11px;letter-spacing:.15em;color:var(--gold);margin:20px 0 10px">\u53EF \u4EE5 \u7740 \u624B \u7684 \u4E8B</div>';
+      h += '<div style="font-size:11px;letter-spacing:.15em;color:var(--gold);margin:20px 0 10px">' + esc0(T("whereToStart")) + '</div>';
       h += data.steps.map(function (st, i) {
         return '<div style="border:1px solid var(--line);border-radius:11px;padding:13px 15px;margin:0 0 9px;background:rgba(var(--accent-rgb),.04)">' +
           '<div style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:6px">' + (i + 1) + " \u00B7 " + esc0(st.title) + "</div>" +
@@ -2707,7 +3048,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       }).join("");
     }
     if (data.aha && data.aha.length) {
-      h += '<div style="font-size:11px;letter-spacing:.15em;color:var(--gold);margin:20px 0 9px">\u503C \u5F97 \u8BB0 \u4F4F \u7684 \u8BDD</div>' +
+      h += '<div style="font-size:11px;letter-spacing:.15em;color:var(--gold);margin:20px 0 9px">' + esc0(T("worthKeeping")) + '</div>' +
         '<div style="display:grid;gap:8px">' + data.aha.map(function (q) {
           return '<div style="border:1px solid var(--gold-soft);border-radius:11px;padding:13px 16px;background:rgba(var(--accent-rgb),.07);font-size:14px;line-height:1.85;color:var(--parchment)">' + esc0(q) + "</div>";
         }).join("") + "</div>";
@@ -2715,7 +3056,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     if (data.question)
       h += '<div style="margin-top:20px;padding:15px 17px;border-radius:11px;background:rgba(var(--accent-rgb),.05);border:1px dashed var(--gold-soft);font-size:13.5px;line-height:2;color:var(--parchment);font-style:italic">' + para0(data.question) + "</div>";
     if (data.action)
-      h += '<div style="margin-top:10px;font-size:13px;line-height:1.9;color:var(--parchment)"><span style="color:var(--gold);font-weight:700">\u2192 \u8BD5\u8BD5\u770B:</span> ' + esc0(data.action) + "</div>";
+      h += '<div style="margin-top:10px;font-size:13px;line-height:1.9;color:var(--parchment)"><span style="color:var(--gold);font-weight:700">' + esc0(T("tryThis")) + '</span> ' + esc0(data.action) + "</div>";
     return h + "</div>";
   }
 
@@ -2723,10 +3064,13 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     const c = activeChart(), grid = $("topicGrid");
     if (!c || !curResult) { $("topicPanel").style.display = "none"; $("mapPanel").style.display = "none"; return; }
     $("topicPanel").style.display = "";
-    const saved = c.topics || {};
+    const saved = c[window.Reading.LK("topics")] || {};
     grid.innerHTML = "";
     window.Reading.TOPICS9.forEach(function (t) {
       const ans = window.Reading.reviveTopic(saved[t.id]);
+      const tName = window.I18N.TTopic(t.id, "name") || t.name;
+      const tSub = window.I18N.TTopic(t.id, "sub") || t.sub;
+      const tTeaser = window.I18N.TTopic(t.id, "teaser") || t.teaser;
       const on = curTopic === t.id;
       const item = document.createElement("div");
       item.style.cssText = "border:1px solid " + (on ? "var(--gold-soft)" : "var(--line)") +
@@ -2739,10 +3083,10 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
         '<span style="font-size:17px;line-height:1.4;flex:none">' + t.icon + "</span>" +
         '<div style="flex:1">' +
         '<div style="font-size:14px;font-weight:700;color:' + (on ? "var(--gold)" : "var(--parchment)") + '">' +
-        esc0(t.name) + '<span style="font-size:11.5px;font-weight:400;color:var(--muted);margin-left:8px">' + esc0(t.sub) + "</span>" +
+        esc0(tName) + '<span style="font-size:11.5px;font-weight:400;color:var(--muted);margin-left:8px">' + esc0(tSub) + "</span>" +
         (ans ? '<span style="color:var(--gold);font-size:11px;margin-left:6px">\u2713</span>' : "") + "</div>" +
-        (!on ? '<div style="font-size:12px;color:var(--muted);line-height:1.75;margin-top:6px;white-space:pre-line">' + esc0(t.teaser) + "</div>" +
-          '<div style="font-size:11.5px;color:var(--gold-soft);margin-top:7px">\u5C55\u5F00\u9605\u8BFB \u2192</div>' : "") +
+        (!on ? '<div style="font-size:12px;color:var(--muted);line-height:1.75;margin-top:6px;white-space:pre-line">' + esc0(tTeaser) + "</div>" +
+          '<div style="font-size:11.5px;color:var(--gold-soft);margin-top:7px">' + esc0(T("openRead")) + '</div>' : "") +
         "</div>" +
         '<span style="color:var(--gold);font-size:12px;flex:none;line-height:1.6">' + (on ? "\u25B2" : "\u25BC") + "</span></div>";
       btn.addEventListener("click", function () { openTopic(t.id); });
@@ -2752,8 +3096,12 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
         box.id = "tbody-" + t.id;
         box.style.cssText = "padding:0 16px 16px";
         box.innerHTML = ans ? answerHtml(ans)
-          : '<div style="padding:20px 4px;text-align:center;color:var(--muted);font-size:12.5px;line-height:2"><span style="font-size:17px;color:var(--gold)">' + t.icon + '</span><br>\u6B63\u5728\u4E3A\u4F60\u63A2\u7D22\u300C' + esc0(t.name) + '\u300D\u2026<br><span style="font-size:11px;opacity:.7">\u8FD9\u4E00\u7AE0\u6BD4\u8F83\u957F,\u7EA6\u9700 1\u20132 \u5206\u949F</span></div>';
+          : ((topicBusy || !window.I18N.isEN())
+            ? '<div style="padding:20px 4px;text-align:center;color:var(--muted);font-size:12.5px;line-height:2"><span style="font-size:17px;color:var(--gold)">' + t.icon + '</span><br>' + esc0(T("exploringTopic", tName)) + '<br><span style="font-size:11px;opacity:.7">' + esc0(T("longChapterHint")) + '</span></div>'
+            : missingLangHtml("tGen-" + t.id));
         item.appendChild(box);
+        const gb = box.querySelector("#tGen-" + t.id);
+        if (gb) gb.addEventListener("click", function () { generateTopic(t.id); });
       }
       grid.appendChild(item);
     });
@@ -2779,49 +3127,65 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   function openTopic(tid) {
     const c = activeChart();
     if (!c || !curResult || topicBusy) return;
+    const TK = window.Reading.LK("topics");
     if (curTopic === tid) { curTopic = null; keepPosition("thead-" + tid, renderTopics); return; }
     curTopic = tid;
-    const saved = window.Reading.reviveTopic((c.topics || {})[tid]);
+    const saved = window.Reading.reviveTopic((c[TK] || {})[tid]);
     keepPosition("thead-" + tid, renderTopics);
     if (saved) {
-      if (saved !== (c.topics || {})[tid]) { c.topics[tid] = saved; window.Cloud.updateChart(c).catch(function () { }); }
+      if (saved !== (c[TK] || {})[tid]) { c[TK][tid] = saved; window.Cloud.updateChart(c).catch(function () { }); }
       return;
     }
+    // 中文维持原本行为:点开即自动整理
+    // 英文尚未生成时不自动呼叫 AI,显示按钮由使用者决定(既有中文版本不受影响)
+    if (!window.I18N.isEN()) generateTopic(tid);
+  }
+
+  // 由使用者主动触发的生成(不会覆盖任何既有语言版本)
+  function generateTopic(tid) {
+    const c = activeChart();
+    if (!c || !curResult || topicBusy) return;
+    const TK = window.Reading.LK("topics");
+    curTopic = tid;
     topicBusy = true;
+    renderTopics();
     const fpSeed = [c.date, c.time, c.lat.toFixed(4), c.lon.toFixed(4)].join("|");
-    window.Reading.fetchTopic(curResult, tid, fpSeed, c.reading, c.topics).then(function (data) {
+    window.Reading.fetchTopic(curResult, tid, fpSeed, c[window.Reading.LK("reading")], c[TK]).then(function (data) {
       topicBusy = false;
       if (curTopic !== tid || !activeChart() || activeChart().id !== c.id) return;
-      c.topics = c.topics || {};
+      c[TK] = c[TK] || {};
       data.ver = window.Reading.CONTENT_VER;
-      c.topics[tid] = data;
+      c[TK][tid] = data;
       window.Cloud.updateChart(c).catch(function (e) { console.warn("cloud", e); });
       renderTopics();
     }).catch(function (e) {
       topicBusy = false;
       const box = document.getElementById("tbody-" + tid);
       if (!box) return;
-      box.innerHTML = '<div style="padding:14px 4px;text-align:center;color:var(--muted);font-size:12.5px;line-height:1.9">\u5185\u5BB9\u6682\u65F6\u65E0\u6CD5\u5B8C\u6210\u3002<a href="#" id="tRetry" style="color:var(--gold)">\u70B9\u6B64\u518D\u8BD5\u4E00\u6B21</a><div id="tDiag" style="margin-top:8px;font-size:11.5px;opacity:.8"></div></div>';
+      box.innerHTML = '<div style="padding:14px 4px;text-align:center;color:var(--muted);font-size:12.5px;line-height:1.9">' + esc0(T("failed")) + '<a href="#" id="tRetry" style="color:var(--gold)">' + esc0(T("tryAgain")) + '</a><div id="tDiag" style="margin-top:8px;font-size:11.5px;opacity:.8"></div></div>';
       const r = document.getElementById("tRetry");
-      if (r) r.addEventListener("click", function (ev) { ev.preventDefault(); curTopic = null; openTopic(tid); });
+      if (r) r.addEventListener("click", function (ev) { ev.preventDefault(); generateTopic(tid); });
       diagnose(e).then(function (d) {
         const dg = document.getElementById("tDiag");
-        if (dg) dg.innerHTML = "\u8BCA\u65AD:" + d.hint + '<br><span style="opacity:.65">(' + d.raw + " \u00B7 " + d.probe + ")</span>";
+        if (dg) dg.innerHTML = T("diagnosis") + d.hint + '<br><span style="opacity:.65">(' + d.raw + " \u00B7 " + d.probe + ")</span>";
       });
     });
   }
 
   // ---------- 人生探索地图(6 领域 × 5 问题) ----------
+  // ★ Version 1 暂时关闭:改成 true 即可恢复显示,下方逻辑完全不需要改动。
+  const SHOW_EXPLORATION_MAP = false;
   let curDomain = null, curQ = null, qaBusy = false, qaOpen = false;
   function renderQA() {
     const c = activeChart(), grid = $("qaGrid");
+    if (!SHOW_EXPLORATION_MAP) { $("qaPanel").style.display = "none"; return; }
     if (!c || !curResult) { $("qaPanel").style.display = "none"; return; }
     $("qaPanel").style.display = "";
     $("qaHint").style.display = qaOpen ? "" : "none";
     grid.style.display = qaOpen ? "" : "none";
     $("qaArrow").textContent = qaOpen ? "\u2227" : "\u2228";
     if (!qaOpen) { grid.innerHTML = ""; return; }
-    const saved = c.qa || {};
+    const saved = c[window.Reading.LK("qa")] || {};
     grid.innerHTML = "";
     window.Reading.DOMAINS.forEach(function (d, di) {
       const doneCount = d.items.filter(it => !!window.Reading.reviveTopic(saved[it.id])).length;
@@ -2841,7 +3205,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
         '<div style="display:flex;align-items:center;gap:9px">' +
         '<span style="font-size:16px">' + d.icon + "</span>" +
         '<span style="font-size:14px;font-weight:700;color:var(--gold)">' + d.name + "</span>" +
-        (doneCount ? '<span style="font-size:10.5px;color:var(--gold-soft)">已探索 ' + doneCount + "/5</span>" : "") +
+        (doneCount ? '<span style="font-size:10.5px;color:var(--gold-soft)">' + esc0(T("qaExplored", doneCount)) + "</span>" : "") +
         '<span style="margin-left:auto;color:var(--muted);font-size:12px">' + (expanded ? "\u25B4" : "\u25BE") + "</span></div>" +
         '<div style="font-size:11.5px;color:var(--muted);margin-top:5px;line-height:1.65">' + d.lead + "</div>";
       head.addEventListener("click", function () {
@@ -2878,7 +3242,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
             box.id = "qbody-" + it.id;
             box.style.cssText = "padding:0 14px 14px";
             box.innerHTML = ans ? answerHtml(ans)
-              : '<div style="padding:18px 4px;text-align:center;color:var(--muted);font-size:12.5px;line-height:2">正在为你探索…<br><span style="font-size:11px;opacity:.7">约需 1 分钟</span></div>';
+              : '<div style="padding:18px 4px;text-align:center;color:var(--muted);font-size:12.5px;line-height:2">' + esc0(T("qaExploring")) + '<br><span style="font-size:11px;opacity:.7">' + esc0(T("qaAboutMin")) + '</span></div>';
             item.appendChild(box);
           }
           list.appendChild(item);
@@ -2891,35 +3255,37 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
 
   function openQ(qid) {
     const c = activeChart();
+    if (!SHOW_EXPLORATION_MAP) return;      // Version 1 关闭时不发出任何请求
     if (!c || !curResult || qaBusy) return;
     if (curQ === qid) { curQ = null; keepPosition("qhead-" + qid, renderQA); return; }
     curQ = qid;
-    const saved = window.Reading.reviveTopic((c.qa || {})[qid]);
+    const QK = window.Reading.LK("qa");
+    const saved = window.Reading.reviveTopic((c[QK] || {})[qid]);
     keepPosition("qhead-" + qid, renderQA);
     if (saved) {
-      if (saved !== (c.qa || {})[qid]) { c.qa[qid] = saved; window.Cloud.updateChart(c).catch(function () { }); }
+      if (saved !== (c[QK] || {})[qid]) { c[QK][qid] = saved; window.Cloud.updateChart(c).catch(function () { }); }
       return;
     }
     qaBusy = true;
     const fpSeed = [c.date, c.time, c.lat.toFixed(4), c.lon.toFixed(4)].join("|");
-    window.Reading.fetchQuestion(curResult, qid, fpSeed, c.reading, c.topics, c.qa).then(function (data) {
+    window.Reading.fetchQuestion(curResult, qid, fpSeed, c[window.Reading.LK("reading")], c[window.Reading.LK("topics")], c[QK]).then(function (data) {
       qaBusy = false;
       if (curQ !== qid || !activeChart() || activeChart().id !== c.id) return;
-      c.qa = c.qa || {};
+      c[QK] = c[QK] || {};
       data.ver = window.Reading.CONTENT_VER;
-      c.qa[qid] = data;
+      c[QK][qid] = data;
       window.Cloud.updateChart(c).catch(function (e) { console.warn("cloud", e); });
       renderQA();
     }).catch(function (e) {
       qaBusy = false;
       const box = document.getElementById("qbody-" + qid);
       if (!box) return;
-      box.innerHTML = '<div style="padding:14px 4px;text-align:center;color:var(--muted);font-size:12.5px;line-height:1.9">内容暂时无法完成。<a href="#" id="qRetry" style="color:var(--gold)">点此再试一次</a><div id="qDiag" style="margin-top:8px;font-size:11.5px;opacity:.8"></div></div>';
+      box.innerHTML = '<div style="padding:14px 4px;text-align:center;color:var(--muted);font-size:12.5px;line-height:1.9">' + esc0(T("failed")) + '<a href="#" id="qRetry" style="color:var(--gold)">' + esc0(T("tryAgain")) + '</a><div id="qDiag" style="margin-top:8px;font-size:11.5px;opacity:.8"></div></div>';
       const r = document.getElementById("qRetry");
       if (r) r.addEventListener("click", function (ev) { ev.preventDefault(); curQ = null; openQ(qid); });
       diagnose(e).then(function (d) {
         const dg = document.getElementById("qDiag");
-        if (dg) dg.innerHTML = "\u8BCA\u65AD:" + d.hint;
+        if (dg) dg.innerHTML = T("diagnosis") + d.hint;
       });
     });
   }
@@ -2927,22 +3293,22 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   function renderMap() {
     const c = activeChart(), panel = $("mapPanel"), body = $("mapBody");
     if (!c || !curResult) { panel.style.display = "none"; return; }
-    const readCount = Object.keys(c.topics || {}).length;
+    const readCount = Object.keys(c[window.Reading.LK("topics")] || {}).length;
     panel.style.display = "";
-    const saved = window.Reading.reviveTopic(c.lifemap);
+    const saved = window.Reading.reviveTopic(c[window.Reading.LK("lifemap")]);
     const head = $("mapHint");
     if (saved) {
       head.textContent = "";
       body.innerHTML = mapOpen ? answerHtml(saved) : "";
-      $("mapBtn").textContent = mapOpen ? "\u6536\u8D77 \u25B2" : "\u5C55\u5F00\u9605\u8BFB \u2192";
+      $("mapBtn").textContent = mapOpen ? T("collapseUp") : T("openRead");
       $("mapBtn").style.display = "";
     } else if (readCount < 3) {
-      head.textContent = "\u8BFB\u5B8C\u81F3\u5C11 3 \u4E2A\u4E3B\u9898\u540E,\u8FD9\u91CC\u4F1A\u628A\u6240\u6709\u7406\u89E3\u8FDE\u6210\u4E00\u6761\u7EBF,\u5E76\u7ED9\u51FA\u53EF\u4EE5\u7740\u624B\u7684\u65B9\u5411(\u76EE\u524D " + readCount + "/3)";
+      head.textContent = T("mapNeedMore", readCount);
       $("mapBtn").style.display = "none";
       body.innerHTML = "";
     } else {
-      head.textContent = "\u628A\u524D\u9762\u6240\u6709\u7406\u89E3,\u8FDE\u63A5\u5230\u4F60\u7684\u4EBA\u751F";
-      $("mapBtn").textContent = mapBusy ? "\u751F\u6210\u4E2D\u2026" : "\u751F\u6210\u6211\u7684\u63A2\u7D22\u5730\u56FE";
+      head.textContent = T("mapReady");
+      $("mapBtn").textContent = mapBusy ? T("mapBusy") : T("mapBtn");
       $("mapBtn").style.display = "";
       if (!mapBusy) body.innerHTML = "";
     }
@@ -2950,39 +3316,41 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   function toggleMap() {
     const c = activeChart();
     if (!c || !curResult || mapBusy) return;
-    const saved = window.Reading.reviveTopic(c.lifemap);
+    const MK = window.Reading.LK("lifemap"), TK2 = window.Reading.LK("topics");
+    const saved = window.Reading.reviveTopic(c[MK]);
     if (saved) { mapOpen = !mapOpen; renderMap(); return; }
     mapBusy = true;
-    $("mapBody").innerHTML = '<div style="padding:22px 4px;text-align:center;color:var(--muted);font-size:12.5px;line-height:2"><span style="font-size:18px;color:var(--gold)">\u2739</span><br>\u6B63\u5728\u628A\u4F60\u7684\u7406\u89E3\u8FDE\u6210\u4E00\u5F20\u5730\u56FE\u2026<br><span style="font-size:11px;opacity:.7">\u7EA6\u9700 1\u20132 \u5206\u949F</span></div>';
+    $("mapBody").innerHTML = '<div style="padding:22px 4px;text-align:center;color:var(--muted);font-size:12.5px;line-height:2"><span style="font-size:18px;color:var(--gold)">\u2739</span><br>' + esc0(T("weavingMap")) + '<br><span style="font-size:11px;opacity:.7">' + esc0(T("aboutOneMin")) + '</span></div>';
     renderMap();
-    const fpSeed = [c.date, c.time, c.lat.toFixed(4), c.lon.toFixed(4), Object.keys(c.topics || {}).sort().join(",")].join("|");
-    window.Reading.fetchMap(curResult, fpSeed, c.reading, c.topics).then(function (data) {
+    const fpSeed = [c.date, c.time, c.lat.toFixed(4), c.lon.toFixed(4), Object.keys(c[TK2] || {}).sort().join(",")].join("|");
+    window.Reading.fetchMap(curResult, fpSeed, c[window.Reading.LK("reading")], c[TK2]).then(function (data) {
       mapBusy = false; mapOpen = true;
       if (!activeChart() || activeChart().id !== c.id) return;
       data.ver = window.Reading.CONTENT_VER;
-      c.lifemap = data;
+      c[MK] = data;
       window.Cloud.updateChart(c).catch(function (e) { console.warn("cloud", e); });
       renderMap();
     }).catch(function (e) {
       mapBusy = false;
-      $("mapBody").innerHTML = '<div style="padding:14px 4px;text-align:center;color:var(--muted);font-size:12.5px;line-height:1.9">\u5185\u5BB9\u6682\u65F6\u65E0\u6CD5\u5B8C\u6210\u3002<a href="#" id="mRetry" style="color:var(--gold)">\u70B9\u6B64\u518D\u8BD5\u4E00\u6B21</a><div id="mDiag" style="margin-top:8px;font-size:11.5px;opacity:.8"></div></div>';
+      $("mapBody").innerHTML = '<div style="padding:14px 4px;text-align:center;color:var(--muted);font-size:12.5px;line-height:1.9">' + esc0(T("failed")) + '<a href="#" id="mRetry" style="color:var(--gold)">' + esc0(T("tryAgain")) + '</a><div id="mDiag" style="margin-top:8px;font-size:11.5px;opacity:.8"></div></div>';
       const r = document.getElementById("mRetry");
       if (r) r.addEventListener("click", function (ev) { ev.preventDefault(); toggleMap(); });
       diagnose(e).then(function (d) {
         const dg = document.getElementById("mDiag");
-        if (dg) dg.innerHTML = "\u8BCA\u65AD:" + d.hint;
+        if (dg) dg.innerHTML = T("diagnosis") + d.hint;
       });
     });
   }
 
   let autoGenBusy = false;
-  function renderReading(retrying) {
+  function renderReading(retrying, forceGen) {
     const c = activeChart(), body = $("nineBody");
     if (!c || !curResult) { body.innerHTML = ""; return; }
-    const revived = window.Reading.reviveReading(c.reading);
+    const RK = window.Reading.LK("reading");
+    const revived = window.Reading.reviveReading(c[RK]);
     if (revived) {
-      if (revived !== c.reading) {          // 本地修复成功:回存,以后直接可用
-        c.reading = revived;
+      if (revived !== c[RK]) {          // 本地修复成功:回存,以后直接可用
+        c[RK] = revived;
         window.Cloud.updateChart(c).catch(function () { });
       }
       window.Reading.renderChapters(revived, body);
@@ -2990,47 +3358,87 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       renderTopics();
       return;
     }
+    // 英文版本尚未生成时,不自动呼叫 AI:显示按钮,由使用者决定。
+    // 中文维持原本行为(首次开盘自动整理),既有资料一律直接读取。
+    if (window.I18N.isEN() && !autoGenBusy && !forceGen) {
+      body.innerHTML = "";
+      $("readState").textContent = "";
+      const box = document.createElement("div");
+      box.innerHTML = missingLangHtml("bpGen");
+      body.appendChild(box);
+      const bg = document.getElementById("bpGen");
+      if (bg) bg.addEventListener("click", function () { renderReading(false, true); });
+      renderTopics();
+      return;
+    }
     if (window.Reading.hasSupabase() && !autoGenBusy) {
       autoGenBusy = true;
       body.innerHTML = '<div style="padding:30px 8px;text-align:center;color:var(--muted);font-size:13px;line-height:2">' +
         '<div style="font-size:22px;color:var(--gold);margin-bottom:10px">✶</div>' +
-        (retrying ? "正在重新整理…" : "正在为你整理这份生命蓝图…") +
-        '<br><span style="font-size:11.5px;opacity:.75">第一次需要 1–2 分钟,之后打开就是秒开</span></div>';
+        (retrying ? T("regenerating") : T("genBlueprint")) +
+        '<br><span style="font-size:11.5px;opacity:.75">' + T("firstTimeHint") + '</span></div>';
       $("readState").textContent = "";
       const fpSeed = [c.date, c.time, c.lat.toFixed(4), c.lon.toFixed(4)].join("|");
       window.Reading.fetchReading(curResult, fpSeed)
         .then(function (parsed) {
           autoGenBusy = false;
           if (!activeChart() || activeChart().id !== c.id) return;
-          c.reading = Object.assign({ ts: new Date().toISOString().slice(0, 10), ver: window.Reading.CONTENT_VER }, parsed);   // 含 raw 原文
-          window.Cloud.updateChart(c).catch(function (e) { console.warn("云同步失败", e); });
+          c[RK] = Object.assign({ ts: new Date().toISOString().slice(0, 10), ver: window.Reading.CONTENT_VER }, parsed);   // 含 raw 原文
+          window.Cloud.updateChart(c).catch(function (e) { console.warn(T("syncFail"), e); });
           renderReading();
         })
         .catch(function (e) {
           autoGenBusy = false;
-          if (!retrying) { setTimeout(function () { renderReading(true); }, 1500); return; }
+          if (!retrying) { setTimeout(function () { renderReading(true, true); }, 1500); return; }
           // 两次都失败:给出说明与重试入口
           body.innerHTML = "";
           $("readState").textContent = "";
           const tip = document.createElement("div");
           tip.style.cssText = "margin-top:16px;padding:12px 14px;border:1px dashed var(--line);border-radius:10px;font-size:12.5px;color:var(--muted);line-height:1.8";
-          tip.innerHTML = '内容暂时无法完成。<a href="#" id="againLink" style="color:var(--gold)">点此再试一次</a>' +
+          tip.innerHTML = esc0(T("failed")) + '<a href="#" id="againLink" style="color:var(--gold)">' + esc0(T("tryAgain")) + '</a>' +
             '<div id="diagBox" style="margin-top:8px;font-size:11.5px;opacity:.8"></div>';
           body.appendChild(tip);
           const a2 = document.getElementById("againLink");
-          if (a2) a2.addEventListener("click", function (ev) { ev.preventDefault(); renderReading(); });
+          if (a2) a2.addEventListener("click", function (ev) { ev.preventDefault(); renderReading(false, true); });
           diagnose(e).then(function (d) {
             const box = document.getElementById("diagBox");
-            if (box) box.innerHTML = "诊断:" + d.hint + '<br><span style="opacity:.65">(' + d.raw + " · 探测 " + d.probe + " " + d.detail + ")</span>";
+            if (box) box.innerHTML = T("diagnosis") + d.hint + '<br><span style="opacity:.65">(' + d.raw + T("probe") + d.probe + " " + d.detail + ")</span>";
           });
         });
     } else if (!autoGenBusy) {
-      body.innerHTML = '<div style="padding:24px 8px;text-align:center;color:var(--muted);font-size:12.5px;line-height:1.9">尚未连接解读服务。</div>';
+      body.innerHTML = '<div style="padding:24px 8px;text-align:center;color:var(--muted);font-size:12.5px;line-height:1.9">' + esc0(T("noService")) + '</div>';
     }
   }
 
   // ---------- 初始化 ----------
   function init() {
+    // —— 语言切换器 ——
+    function paintLangBtns() {
+      document.querySelectorAll("#langSwitch button").forEach(function (b) {
+        b.classList.toggle("on", b.dataset.lang === window.I18N.lang);
+      });
+    }
+    document.querySelectorAll("#langSwitch button").forEach(function (b) {
+      b.addEventListener("click", function () { window.I18N.setLang(b.dataset.lang); });
+    });
+    // 语言变更 → 只重画介面与已存在的内容,不发出任何生成请求
+    window.I18N.onChange(function () {
+      paintLangBtns();
+      closeDrawer();
+      renderChartList();
+      if (activeChart() && curResult) {
+        ensureToggleBar();
+        drawWheel();
+        drawPosTable();
+        curTopic = null; mapOpen = false; curDomain = null; curQ = null;
+        renderReading();
+        renderTopics();
+      }
+      if (typeof initThemeMusic === "function") { /* 主题弹层下次开启时会重新绘制 */ }
+    });
+    window.I18N.applyStatic();
+    paintLangBtns();
+
     initForm();
     initThemeMusic();
     // —— 云端登录门 ——
@@ -3042,8 +3450,9 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       if (bar && !bar.dataset.ready) {
         bar.dataset.ready = "1";
         bar.style.display = "flex";
-        bar.innerHTML = '<span></span><button id="logoutBtn">\u9000\u51FA</button>';
+        bar.innerHTML = '<span></span><button id="logoutBtn" data-i18n="logout"></button>';
         bar.firstChild.textContent = window.Cloud.email();
+        document.getElementById("logoutBtn").textContent = T("logout");
         document.getElementById("logoutBtn").addEventListener("click", function () {
           window.Cloud.logout(); location.reload();
         });
@@ -3070,17 +3479,17 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     }
     $("authLogin").addEventListener("click", function () {
       const em = $("authEmail").value.trim(), pw = $("authPw").value;
-      if (!em || pw.length < 6) { setAuthMsg("请输入邮箱与至少 6 位密码"); return; }
-      setAuthMsg("登录中…", true);
+      if (!em || pw.length < 6) { setAuthMsg(T("authNeed")); return; }
+      setAuthMsg(T("loggingIn"), true);
       window.Cloud.login(em, pw).then(enterApp).catch(function (e) { setAuthMsg(e.message); });
     });
     $("authSignup").addEventListener("click", function () {
       const em = $("authEmail").value.trim(), pw = $("authPw").value;
-      if (!em || pw.length < 6) { setAuthMsg("请输入邮箱与至少 6 位密码"); return; }
-      setAuthMsg("注册中…", true);
+      if (!em || pw.length < 6) { setAuthMsg(T("authNeed")); return; }
+      setAuthMsg(T("signingUp"), true);
       window.Cloud.signup(em, pw).then(function (r) {
         if (r.loggedIn) enterApp();
-        else setAuthMsg("注册成功!请到邮箱点击确认链接,然后回来登录", true);
+        else setAuthMsg(T("signupOk"), true);
       }).catch(function (e) { setAuthMsg(e.message); });
     });
     $("authPw").addEventListener("keydown", function (e) { if (e.key === "Enter") $("authLogin").click(); });
@@ -3108,8 +3517,9 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       g.style.display = closed ? "" : "none";
       $("topicArrow").textContent = closed ? "\u2227" : "\u2228";
     });
-    // 「人生探索地图」整区收合
+    // 「人生探索地图」整区收合(Version 1 隐藏中,事件保留)
     $("qaHead").addEventListener("click", function () {
+      if (!SHOW_EXPLORATION_MAP) return;
       qaOpen = !qaOpen;
       renderQA();
     });
@@ -3124,7 +3534,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
         const c = activeChart();
         if (!c) return;
         c.sys = b.dataset.sys;
-        window.Cloud.updateChart(c).catch(function (e) { console.warn("云同步失败", e); });
+        window.Cloud.updateChart(c).catch(function (e) { console.warn(T("syncFail"), e); });
         drawActive();
       });
     });
