@@ -385,7 +385,7 @@
       </div>
 
       <div class="panel" style="margin-top:18px" id="topicPanel">
-        <h3 style="cursor:pointer;display:flex;align-items:center;justify-content:space-between" id="topicHead"><span data-i18n="secChapters">你的人生章节</span><span id="topicArrow" style="font-size:14px;color:var(--muted)">∧</span></h3>
+        <h3 style="cursor:pointer;display:flex;align-items:center;justify-content:space-between" id="topicHead"><span data-i18n="secChapters">你的人生章节</span><span id="topicSub" style="font-size:11.5px;font-weight:400;color:var(--muted);margin-left:10px"></span><span id="topicArrow" style="font-size:14px;color:var(--muted)">∧</span></h3>
         <div id="topicGrid"></div>
       </div>
 
@@ -1481,8 +1481,8 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     save:             ["保存并绘制", "Save & draw"],
     clear:            ["清空", "Clear"],
     formHint:         ["资料安全存放在你的云端账号,只有你能看到。时区固定为马来西亚/新加坡时间(UTC+8)。",
-                       "Your data is stored in your own cloud account and visible only to you. Times are fixed to Malaysia / Singapore time (UTC+8)."],
-    noCharts:         ["还没有星盘,在下方新建一张。", "No charts yet — create one below."],
+                       "This stays in your own account, visible only to you. Times are read as Malaysia / Singapore time (UTC+8)."],
+    noCharts:         ["还没有星盘,在下方新建一张。", "Nothing here yet. Start one below."],
     edit:             ["编辑", "Edit"],
     del:              ["删除", "Delete"],
     confirmDel:       ["确认删除", "Confirm"],
@@ -1491,8 +1491,8 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     alertLat:         ["纬度需在 -89.9 ~ 89.9 之间", "Latitude must be between -89.9 and 89.9."],
 
     /* —— 空状态 —— */
-    emptyMain:        ["左侧填写出生信息,给它起个名字", "Enter the birth details on the left and give it a name"],
-    emptyHint:        ["每张盘以名字管理,可随时切换对照学习", "Each chart is saved under its name — switch between them anytime"],
+    emptyMain:        ["左侧填写出生信息,给它起个名字", "Add a birth date, a time, a place. And a name to keep it under."],
+    emptyHint:        ["每张盘以名字管理,可随时切换对照学习", "You can keep as many as you like and move between them."],
 
     /* —— 盘面 / 表格 —— */
     positions:        ["行星位置", "Planet positions"],
@@ -1528,35 +1528,36 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     secBlueprint:     ["你的生命蓝图", "Your Inner Landscape"],
     secChapters:      ["你的人生章节", "The Chapters of Your Life"],
     secThread:        ["属于你的生命脉络", "The Pattern of Your Life"],
+    secChaptersSub:   ["", "Nine places to look, whenever you feel like looking"],
 
     /* —— 解读呈现 —— */
-    oneLine:          ["一句话说你", "If Your Life Could Be Summed Up in One Thought"],
-    aboutYou:         ["关 于 你 的 几 件 事", "A FEW THINGS THAT SHAPE YOU"],
-    innerMap:         ["你 的 内 在 地 图", "YOUR INNER MAP"],
-    whereToStart:     ["可 以 着 手 的 事", "SOMETHING YOU MIGHT TRY"],
-    worthKeeping:     ["值 得 记 住 的 话", "WORTH RETURNING TO"],
-    tryThis:          ["\u2192 试试看:", "\u2192 You might try:"],
-    readMore:         ["展开阅读 \u2228", "Read more \u2228"],
-    readLess:         ["收起 \u2227", "Show less \u2227"],
-    openRead:         ["展开阅读 \u2192", "Read \u2192"],
+    oneLine:          ["一句话说你", "If it came down to one thing"],
+    aboutYou:         ["关 于 你 的 几 件 事", "A few things that shape you"],
+    innerMap:         ["你 的 内 在 地 图", "Your inner map"],
+    whereToStart:     ["可 以 着 手 的 事", "Somewhere to begin"],
+    worthKeeping:     ["值 得 记 住 的 话", "Worth coming back to"],
+    tryThis:          ["\u2192 试试看:", "\u2192 If you feel like trying something:"],
+    readMore:         ["展开阅读 \u2228", "Keep reading \u2228"],
+    readLess:         ["收起 \u2227", "Close \u2227"],
+    openRead:         ["展开阅读 \u2192", "Open \u2192"],
     collapseUp:       ["收起 \u25B2", "Close \u25B2"],
-    genBlueprint:     ["正在为你整理这份生命蓝图…", "Putting your life blueprint together…"],
-    regenerating:     ["正在重新整理…", "Trying again…"],
-    firstTimeHint:    ["第一次需要 1–2 分钟,之后打开就是秒开", "The first time takes 1–2 minutes; after that it opens instantly"],
-    exploringTopic:   ["正在为你探索「%s」…", "Exploring “%s” for you…"],
-    longChapterHint:  ["这一章比较长,约需 1–2 分钟", "This chapter is long — about 1–2 minutes"],
-    weavingMap:       ["正在把你的理解连成一张地图…", "Weaving everything into one map…"],
-    aboutOneMin:      ["约需 1–2 分钟", "About 1–2 minutes"],
-    failed:           ["内容暂时无法完成。", "That didn’t come through."],
-    tryAgain:         ["点此再试一次", "Try again"],
+    genBlueprint:     ["正在为你整理这份生命蓝图…", "Taking a while with this one."],
+    regenerating:     ["正在重新整理…", "Going back to it."],
+    firstTimeHint:    ["第一次需要 1–2 分钟,之后打开就是秒开", "A minute or two the first time. After that it’s already here."],
+    exploringTopic:   ["正在为你探索「%s」…", "Sitting with %s for a moment."],
+    longChapterHint:  ["这一章比较长,约需 1–2 分钟", "This one runs long. A minute or two."],
+    weavingMap:       ["正在把你的理解连成一张地图…", "Drawing the threads together."],
+    aboutOneMin:      ["约需 1–2 分钟", "A minute or two."],
+    failed:           ["内容暂时无法完成。", "That didn’t come through. "],
+    tryAgain:         ["点此再试一次", "Try once more"],
     diagnosis:        ["诊断:", "Diagnosis: "],
     probe:            [" · 探测 ", " · probe "],
-    noService:        ["尚未连接解读服务。", "Reading service is not connected yet."],
+    noService:        ["尚未连接解读服务。", "Not connected yet."],
     mapNeedMore:      ["读完至少 3 个主题后,这里会把所有理解连成一条线,并给出可以着手的方向(目前 %s/3)",
-                       "Once you’ve read at least 3 chapters, this pulls everything into one thread and points to where to start (now %s/3)"],
-    mapReady:         ["把前面所有理解,连接到你的人生", "Connect everything you’ve read back to your life"],
-    mapBtn:           ["生成我的探索地图", "Create my map"],
-    mapBusy:          ["生成中…", "Working…"],
+                       "Read a few chapters and the threads start to meet here. %s so far — three is usually enough."],
+    mapReady:         ["把前面所有理解,连接到你的人生", "The threads are ready to meet."],
+    mapBtn:           ["生成我的探索地图", "Draw them together"],
+    mapBusy:          ["生成中…", "Working on it."],
 
     /* —— 人生探索地图(Version 1 隐藏中,字典预先备好)—— */
     qaExplored:       ["已探索 %s/5", "Explored %s/5"],
@@ -1564,16 +1565,16 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     qaAboutMin:       ["约需 1 分钟", "About a minute"],
 
     /* —— 英文解读的生成入口(不自动呼叫 AI)—— */
-    enNotYet:         ["这份内容尚未有英文版本。", "This piece hasn’t been written in English yet."],
+    enNotYet:         ["这份内容尚未有英文版本。", "There’s no English version of this one yet."],
     enNotYetHint:     ["英文版本会以英文重新书写,不是翻译;中文版本会完整保留,不会被覆盖。",
-                       "It will be written for English readers rather than translated. Your Chinese reading stays exactly as it is."],
+                       "It gets written in English rather than translated across. Whatever’s already here stays as it is."],
     enGenerate:       ["生成英文版本", "Write it in English"],
     zhNotYet:         ["这份内容尚未有中文版本。", "This reading has no Chinese version yet."],
     zhGenerate:       ["生成中文版本", "Generate the Chinese version"],
 
     /* —— 登录 —— */
-    authTitle:        ["我的生命蓝图", "Your Life Blueprint"],
-    authSub:          ["登录后,你的生命蓝图将安全存放在云端", "Sign in and your blueprint is kept safely in the cloud"],
+    authTitle:        ["我的生命蓝图", "The Inner Sky"],
+    authSub:          ["登录后,你的生命蓝图将安全存放在云端", "Sign in, and everything you read here stays yours."],
     email:            ["邮箱", "Email"],
     password:         ["密码", "Password"],
     pwPh:             ["至少 6 位", "At least 6 characters"],
@@ -1581,8 +1582,8 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     signup:           ["没有账号?注 册", "No account? Sign up"],
     loggingIn:        ["登录中…", "Signing in…"],
     signingUp:        ["注册中…", "Creating account…"],
-    authNeed:         ["请输入邮箱与至少 6 位密码", "Enter your email and a password of at least 6 characters"],
-    signupOk:         ["注册成功!请到邮箱点击确认链接,然后回来登录", "Account created — confirm via the link in your inbox, then sign in"],
+    authNeed:         ["请输入邮箱与至少 6 位密码", "An email and a password of at least six characters."],
+    signupOk:         ["注册成功!请到邮箱点击确认链接,然后回来登录", "You’re in. Confirm through the link in your inbox, then come back and sign in."],
 
     /* —— 诊断 —— */
     dgNoKey:          ["服务端还没有设置 AI 密钥(ANTHROPIC_API_KEY)", "The server has no AI key set (ANTHROPIC_API_KEY)"],
@@ -1601,33 +1602,33 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
 
   /* —— 九个主题的显示文案(仅 UI;服务端主题定义不变)—— */
   const TOPIC_TEXT = {
-    self:    { name:["个人","Self"], sub:["人格 · 天赋 · 使命","Personality · Gifts · Direction"],
+    self:    { name:["个人","Being You"], sub:["人格 · 天赋 · 使命","what you're like when nothing's being asked of you"],
                teaser:["别人眼中的你,和你自己知道的你,\n中间那段距离,才是真正的你。",
-                       "The gap between the you others see\nand the you that you know — that’s where you actually live."] },
-    emotion: { name:["情感模式","How You Love"], sub:["你如何去爱","Your pattern in closeness"],
+                       "There's the you other people meet,\nand the you that you know from the inside.\nSome days there's quite a distance between them."] },
+    emotion: { name:["情感模式","Falling For Someone"], sub:["你如何去爱","what shifts in you when you get close"],
                teaser:["喜欢一个人的时候,你会变成另一个版本的自己。\n那个版本,你未必喜欢。",
-                       "When you fall for someone you become another version of yourself.\nYou don’t always like that version."] },
-    career:  { name:["事业","Work"], sub:["怎样工作才发挥得出来","What lets you do your best work"],
+                       "There are moments in closeness\nwhen you become someone slightly different."] },
+    career:  { name:["事业","Your Working Life"], sub:["怎样工作才发挥得出来","what makes the effort feel worth it"],
                teaser:["有些累是值得的,有些累是空的。\n差别不在做什么,而在怎么做。",
-                       "Some tiredness is worth it, some is hollow.\nThe difference isn’t what you do — it’s how."] },
-    family:  { name:["家庭","Family"], sub:["父母 · 兄弟姐妹","Parents · Siblings"],
+                       "Some days leave you tired and glad.\nOthers just leave you tired.\nUsually it has less to do with the work itself."] },
+    family:  { name:["家庭","Where You Come From"], sub:["父母 · 兄弟姐妹","parents, siblings, the house you grew up in"],
                teaser:["你以为早就走出来了,\n但有些反应还是会自动发生。",
-                       "You thought you’d left it behind,\nbut some reactions still fire on their own."] },
-    love:    { name:["感情","Long-term Love"], sub:["长期关系怎么运转","How lasting relationships work for you"],
+                       "Some reactions seem to arrive\nbefore you've decided anything."] },
+    love:    { name:["感情","Staying Together"], sub:["长期关系怎么运转","how love works over years, not weeks"],
                teaser:["让你心动的,和让你安稳的,\n常常不是同一种人。",
-                       "The one who moves you and the one who steadies you\nare often not the same person."] },
-    partner: { name:["正缘特质","Who Fits You"], sub:["容易吸引什么样的人","The people you keep attracting"],
+                       "The person who moves you\nand the person you can settle beside\naren't always the same person."] },
+    partner: { name:["正缘特质","The People You Keep Meeting"], sub:["容易吸引什么样的人","who tends to find their way to you"],
                teaser:["你反复遇到的那一类人,\n其实一直在提醒你同一件事。",
-                       "The type you keep meeting\nhas been pointing at the same thing all along."] },
-    wealth:  { name:["财运","Money"], sub:["你的赚钱模式","How value flows to you"],
+                       "Certain people keep turning up in your life,\nin different forms."] },
+    wealth:  { name:["财运","Money"], sub:["你的赚钱模式","how it comes in, how it goes"],
                teaser:["钱怎么进来,和钱怎么留下,\n是两件不同的事。",
-                       "How money comes in and how it stays\nare two different questions."] },
-    study:   { name:["求学","Learning"], sub:["你怎么学会一件事","How you actually learn"],
+                       "How money arrives\nand how it stays\nturn out to be two separate questions."] },
+    study:   { name:["求学","How You Learn"], sub:["你怎么学会一件事","what makes something finally click"],
                teaser:["同样一堂课,有人听懂,有人做懂。\n你是哪一种?",
-                       "Same lesson: some understand by listening, some by doing.\nWhich are you?"] },
-    body:    { name:["身心状态","Body & Mind"], sub:["压力怎么来,力气怎么回","How stress builds, how energy returns"],
+                       "Some people learn by listening.\nOthers only really learn once they've tried it."] },
+    body:    { name:["身心状态","Rest and Energy"], sub:["压力怎么来,力气怎么回","where the tiredness actually comes from"],
                teaser:["什么都没做,却已经很累。\n消耗常常发生在看不见的地方。",
-                       "Tired without having done a thing.\nThe drain usually happens where you can’t see it."] }
+                       "Some days end tired without much to show for it.\nThe tiredness is real.\nIt just came from somewhere quieter."] }
   };
 
   /* —— 显示用名称对照(星座 / 行星 / 敏感点 / 相位)——
@@ -1977,9 +1978,8 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     const sub = extra.tid ? ":" + extra.tid : (extra.qid ? ":" + extra.qid : "");
     // 中文指纹与本次修改前完全一致 → 既有服务端缓存继续命中,不会重新生成;
     // 英文另起指纹,与中文互不覆盖。
-    // en-w2:英文写作系统第二版(Bilingual Writing System v1.0 + 内部两步)。
-    //   服务端 readings 缓存的键是不可读的杂凑值,无法只挑英文列删除,
-    //   因此改用换标签的方式让旧英文缓存自然失效 —— 中文标签完全没动。
+    // en-w2:英文写作系统第二版(Bilingual Writing System v1.0 + 内部两步 + 文风修正)。
+    //   只换英文标签 —— 中文标签一个字元都没动,既有中文缓存继续命中。
     const base = String(fpSeed || "") + "|" + kind + sub + "|v10" + (lang === "en" ? "|en-w2" : "");
     return attempt(base).catch(function (e) {
       if (e.parseFail) return attempt(base + "|retry" + Date.now());
@@ -3141,6 +3141,9 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   }
 
   function renderTopics() {
+    // 英文才显示副标(中文原本没有,保持不变)
+    const tsub = document.getElementById("topicSub");
+    if (tsub) tsub.textContent = window.I18N.isEN() ? T("secChaptersSub") : "";
     const c = activeChart(), grid = $("topicGrid");
     if (!c || !curResult) { $("topicPanel").style.display = "none"; $("mapPanel").style.display = "none"; return; }
     $("topicPanel").style.display = "";
