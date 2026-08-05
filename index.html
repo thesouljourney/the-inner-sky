@@ -1525,17 +1525,17 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     th_neo:           ["银河未来", "Galactic Future"],
 
     /* —— 章节标题 —— */
-    secBlueprint:     ["你的生命蓝图", "Your Life Blueprint"],
-    secChapters:      ["你的人生章节", "Your Life Chapters"],
-    secThread:        ["属于你的生命脉络", "The Thread of Your Life"],
+    secBlueprint:     ["你的生命蓝图", "Your Inner Landscape"],
+    secChapters:      ["你的人生章节", "The Chapters of Your Life"],
+    secThread:        ["属于你的生命脉络", "The Pattern of Your Life"],
 
     /* —— 解读呈现 —— */
-    oneLine:          ["一句话说你", "You, in one line"],
-    aboutYou:         ["关 于 你 的 几 件 事", "A FEW THINGS ABOUT YOU"],
+    oneLine:          ["一句话说你", "If Your Life Could Be Summed Up in One Thought"],
+    aboutYou:         ["关 于 你 的 几 件 事", "A FEW THINGS THAT SHAPE YOU"],
     innerMap:         ["你 的 内 在 地 图", "YOUR INNER MAP"],
-    whereToStart:     ["可 以 着 手 的 事", "WHERE TO START"],
-    worthKeeping:     ["值 得 记 住 的 话", "WORTH REMEMBERING"],
-    tryThis:          ["\u2192 试试看:", "\u2192 Try this:"],
+    whereToStart:     ["可 以 着 手 的 事", "SOMETHING YOU MIGHT TRY"],
+    worthKeeping:     ["值 得 记 住 的 话", "WORTH RETURNING TO"],
+    tryThis:          ["\u2192 试试看:", "\u2192 You might try:"],
     readMore:         ["展开阅读 \u2228", "Read more \u2228"],
     readLess:         ["收起 \u2227", "Show less \u2227"],
     openRead:         ["展开阅读 \u2192", "Read \u2192"],
@@ -1564,9 +1564,9 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     qaAboutMin:       ["约需 1 分钟", "About a minute"],
 
     /* —— 英文解读的生成入口(不自动呼叫 AI)—— */
-    enNotYet:         ["这份内容尚未有英文版本。", "This reading hasn’t been written in English yet."],
-    enNotYetHint:     ["英文版本会以英文重新书写,不是翻译;已生成的版本会保留,不会被覆盖。",
-                       "The English version is written fresh in English — not translated. Your existing reading is kept and won’t be overwritten."],
+    enNotYet:         ["这份内容尚未有英文版本。", "This piece hasn’t been written in English yet."],
+    enNotYetHint:     ["英文版本会以英文重新书写,不是翻译;中文版本会完整保留,不会被覆盖。",
+                       "It will be written for English readers rather than translated. Your Chinese reading stays exactly as it is."],
     enGenerate:       ["生成英文版本", "Write it in English"],
     zhNotYet:         ["这份内容尚未有中文版本。", "This reading has no Chinese version yet."],
     zhGenerate:       ["生成中文版本", "Generate the Chinese version"],
@@ -1661,8 +1661,10 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     "槟城":"Penang","霹雳":"Perak","吉打 · 玻璃市":"Kedah · Perlis","吉兰丹":"Kelantan","登嘉楼":"Terengganu",
     "彭亨":"Pahang","森美兰 · 马六甲":"Negeri Sembilan · Malacca","沙巴":"Sabah","砂拉越":"Sarawak",
     "新加坡":"Singapore","中国":"China" };
-  const CH_TITLES_EN = ["The setting you were born with","How you meet the world",
-    "Gifts and trials along the way","Where life is taking you","The script that is yours"];
+  // 英文章节标题:与中文各自成体系,literary 而非 instructional
+  const CH_TITLES_EN = ["Where Your Story Begins", "How You Move Through Life",
+    "Your Gifts and Your Growing Edge", "The Direction Life Keeps Inviting You Toward",
+    "The Shape of Your Journey"];
 
   let lang = "zh";
   try { const v = localStorage.getItem(LS_KEY); if (v === "en" || v === "zh") lang = v; } catch (e) { }
@@ -1882,23 +1884,19 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   // 英文另存 *_en。既有中文资料永远不会被覆盖或删除。
   function LK(base) { return curLang() === "en" ? base + "_en" : base; }
 
-  // 核心对齐锚点:生成英文时,把已存在的中文版压缩成大纲一起送出。
-  // 目的只有一个 —— 让两种语言读到的是同一个人,而不是重新分析了一张不同的盘。
-  // 服务端明确要求「不得翻译、不得照抄结构」,只用来对齐核心结论。
-  // 中文生成时一律回传 null(payload 与本次修改前完全一致)。
-  function coreAnchor(c, kind, key) {
-    if (curLang() !== "en" || !c) return null;
-    const clip = function (x, n) { return String(x == null ? "" : x).replace(/\s+/g, " ").slice(0, n); };
+  // 中文版 = source of truth。生成英文时把中文版「全文」一起送出,
+  // 服务端据此做文学改写(literary adaptation),不是翻译、也不重新分析。
+  // 中文生成时一律回传 null → payload 与指纹与修改前完全一致。
+  function chineseSource(c, kind, key) {
+    if (!c) return null;
     if (kind === "blueprint") {
       const r = c.reading;
       if (!r || !r.chapters || !r.chapters.length) return null;
       return {
-        spine: clip(r.spine, 220),
-        chapters: r.chapters.slice(0, 5).map(function (x) {
-          return { title: clip(x.title, 40), gist: clip(x.summary || x.body, 160) };
-        }),
-        cards: (r.cards || []).slice(0, 4).map(function (x) {
-          return { title: clip(x.title, 30), gist: clip(x.body, 120) };
+        spine: r.spine || "",
+        cards: (r.cards || []).map(function (x) { return { title: x.title, line: x.line || x.body || "" }; }),
+        chapters: r.chapters.map(function (x) {
+          return { title: x.title, summary: x.summary || "", body: x.body || "" };
         })
       };
     }
@@ -1906,13 +1904,28 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
               : ((kind === "topic" ? c.topics : c.qa) || {})[key];
     if (!src || !src.sections || !src.sections.length) return null;
     return {
-      tagline: clip(src.tagline, 220),
-      sections: src.sections.slice(0, 6).map(function (x) {
-        return { title: clip(x.title, 40), gist: clip(x.body, 160) };
-      }),
-      aha: (src.aha || []).slice(0, 2).map(function (x) { return clip(x, 120); }),
-      question: clip(src.question, 150)
+      tagline: src.tagline || "",
+      sections: src.sections.map(function (x) { return { title: x.title, body: x.body || "" }; }),
+      aha: src.aha || [],
+      question: src.question || "",
+      action: src.action || ""
     };
+  }
+  // 中文版是否已存在(决定要不要先产生来源)
+  function hasChinese(c, kind, key) { return !!chineseSource(c, kind, key); }
+
+  // ── 中文栏位写入保护 ──
+  // 自动流程(为英文补中文来源)只允许「填空」,绝不允许覆盖已有中文。
+  // 已有有效中文时回传 false 并放弃写入;呼叫端应改用既有内容。
+  function guardWriteZh(c, kind, key, value) {
+    if (hasChinese(c, kind, key)) {
+      console.warn("[Inner Sky] 中文栏位已有内容,自动流程拒绝覆盖:", kind, key || "");
+      return false;
+    }
+    if (kind === "blueprint") c.reading = value;
+    else if (kind === "map") c.lifemap = value;
+    else { c.topics = c.topics || {}; c.topics[key] = value; }
+    return true;
   }
 
   function chartPayload(res) {
@@ -1943,9 +1956,10 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       });
     });
   }
-  function askServer(kind, extra, res, fpSeed, parseFn) {
+  function askServer(kind, extra, res, fpSeed, parseFn, forceLang) {
     const chart = chartPayload(res);
-    const lang = curLang();
+    // forceLang 只在「先产生中文来源」时使用;其余情况一律跟随介面语言
+    const lang = (forceLang === "zh" || forceLang === "en") ? forceLang : curLang();
     function attempt(seed) {
       return fingerprint(seed).then(function (fp) {
         // lang 为额外参数;服务端只在 lang==="en" 时追加一句输出语言指示,
@@ -1963,34 +1977,52 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     const sub = extra.tid ? ":" + extra.tid : (extra.qid ? ":" + extra.qid : "");
     // 中文指纹与本次修改前完全一致 → 既有服务端缓存继续命中,不会重新生成;
     // 英文另起指纹,与中文互不覆盖。
-    const base = String(fpSeed || "") + "|" + kind + sub + "|v10" + (lang === "en" ? "|en" : "");
+    // en-w2:英文写作系统第二版(Bilingual Writing System v1.0 + 内部两步)。
+    //   服务端 readings 缓存的键是不可读的杂凑值,无法只挑英文列删除,
+    //   因此改用换标签的方式让旧英文缓存自然失效 —— 中文标签完全没动。
+    const base = String(fpSeed || "") + "|" + kind + sub + "|v10" + (lang === "en" ? "|en-w2" : "");
     return attempt(base).catch(function (e) {
       if (e.parseFail) return attempt(base + "|retry" + Date.now());
       throw e;
     });
   }
-  // 第三个之后的参数 chart:传入当前星盘物件,仅用于取出中文版大纲(生成英文时)
-  function fetchReading(res, fpSeed, chart) {
-    return askServer("blueprint", withAnchor({}, chart, "blueprint"), res, fpSeed, parseChapters);
+  // chart:当前星盘物件,用于取出中文版全文(生成英文时)
+  // forceLang:内部使用,"zh" 表示这一次是在产生英文所需的中文来源
+  function fetchReading(res, fpSeed, chart, forceLang) {
+    return askServer("blueprint", withSource({}, chart, "blueprint", null, forceLang), res, fpSeed, parseChapters, forceLang);
   }
-  function fetchTopic(res, tid, fpSeed, blueprint, topics, chart) {
-    return askServer("topic", withAnchor({ tid: tid, blueprint: blueprint, topics: topics }, chart, "topic", tid), res, fpSeed, parseTopic);
+  function fetchTopic(res, tid, fpSeed, blueprint, topics, chart, forceLang) {
+    return askServer("topic", withSource({ tid: tid, blueprint: blueprint, topics: topics }, chart, "topic", tid, forceLang), res, fpSeed, parseTopic, forceLang);
   }
-  function fetchMap(res, fpSeed, blueprint, topics, chart) {
-    return askServer("map", withAnchor({ blueprint: blueprint, topics: topics }, chart, "map"), res, fpSeed, parseTopic);
+  function fetchMap(res, fpSeed, blueprint, topics, chart, forceLang) {
+    return askServer("map", withSource({ blueprint: blueprint, topics: topics }, chart, "map", null, forceLang), res, fpSeed, parseTopic, forceLang);
   }
-  function fetchQuestion(res, qid, fpSeed, blueprint, topics, answered, chart) {
-    return askServer("question", withAnchor({ qid: qid, blueprint: blueprint, topics: topics, answered: answered }, chart, "question", qid), res, fpSeed, parseTopic);
+  function fetchQuestion(res, qid, fpSeed, blueprint, topics, answered, chart, forceLang) {
+    return askServer("question", withSource({ qid: qid, blueprint: blueprint, topics: topics, answered: answered }, chart, "question", qid, forceLang), res, fpSeed, parseTopic, forceLang);
   }
-  // 只有生成英文且中文版存在时才附加 anchor;中文一律原样返回
-  function withAnchor(extra, chart, kind, key) {
-    const a = coreAnchor(chart, kind, key);
-    if (a) extra.anchor = a;
+  // 只有「这一次要产出英文」时才附上中文源本;中文生成一律原样返回
+  function withSource(extra, chart, kind, key, forceLang) {
+    const target = (forceLang === "zh" || forceLang === "en") ? forceLang : curLang();
+    if (target !== "en") return extra;
+    const src = chineseSource(chart, kind, key);
+    if (src) extra.source = src;
     return extra;
   }
 
   // ---------- 渲染:生命蓝图 ----------
   // 卡片显示名映射(仅改标题文案,不影响服务端生成)
+  // 英文卡片标题(与中文各自成体系);中文对照表在下方,完全未改动
+  const CARD_LABEL_EN = {
+    "你的核心人格模式": "What Gives You Your Strength",
+    "组成你的核心力量": "What Gives You Your Strength",
+    "你的核心人格特质": "What Gives You Your Strength",
+    "你的情绪运作方式": "How You Experience the World",
+    "你如何感受这个世界": "How You Experience the World",
+    "你的天赋特质": "A Strength That Comes Naturally",
+    "你自带的能力": "A Strength That Comes Naturally",
+    "你的理想状态": "When You Feel Most Like Yourself",
+    "什么状态最像真正的你": "When You Feel Most Like Yourself"
+  };
   const CARD_LABEL = {
     "你的核心人格模式": "组成你的核心力量",
     "你的核心人格特质": "组成你的核心力量",
@@ -1998,6 +2030,12 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     "你的天赋特质": "你自带的能力",
     "你的理想状态": "什么状态最像真正的你"
   };
+  // 英文模式优先用固定英文标题;找不到对照时用模型输出的标题
+  function cardLabel(title) {
+    if (window.I18N && window.I18N.lang === "en") return CARD_LABEL_EN[title] || title;
+    return CARD_LABEL[title] || title;
+  }
+
   function renderChapters(reading, mount) {
     const chs = Array.isArray(reading) ? reading : (reading.chapters || []);
     const spine = Array.isArray(reading) ? "" : (reading.spine || "");
@@ -2018,7 +2056,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
         '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(228px,1fr));gap:10px;margin-bottom:26px">' +
         quick.map(function (c) {
           return '<div style="border:1px solid var(--line);border-radius:12px;padding:14px 16px;background:var(--card-soft)">' +
-            '<div style="font-size:11.5px;color:var(--gold-soft);margin-bottom:6px;letter-spacing:.04em">' + esc(CARD_LABEL[c.title] || c.title) + "</div>" +
+            '<div style="font-size:11.5px;color:var(--gold-soft);margin-bottom:6px;letter-spacing:.04em">' + esc(cardLabel(c.title)) + "</div>" +
             '<div style="font-size:13.5px;line-height:1.8;color:var(--parchment)">' + esc(c.line) + "</div></div>";
         }).join("") + "</div>";
     }
@@ -2113,7 +2151,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     TOPICS9: TOPICS9, findTopic: findTopic, DOMAINS: DOMAINS, findQ: findQ,
     parseChapters: parseChapters, parseTopic: parseTopic,
     fetchReading: fetchReading, fetchTopic: fetchTopic, fetchMap: fetchMap, fetchQuestion: fetchQuestion,
-    coreAnchor: coreAnchor,
+    chineseSource: chineseSource, hasChinese: hasChinese, guardWriteZh: guardWriteZh,
     renderChapters: renderChapters,
     reviveReading: reviveReading, reviveTopic: reviveTopic, cleanupLegacy: cleanupLegacy,
     hasSupabase: function () { return !!(SUPABASE_FUNC_URL && SUPABASE_ANON_KEY); }
@@ -3192,7 +3230,18 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     topicBusy = true;
     renderTopics();
     const fpSeed = [c.date, c.time, c.lat.toFixed(4), c.lon.toFixed(4)].join("|");
-    window.Reading.fetchTopic(curResult, tid, fpSeed, c[window.Reading.LK("reading")], c[TK], c).then(function (data) {
+    // 同上:英文以中文版为源本,缺中文时先补齐中文
+    const needSrc = window.I18N.isEN() && !window.Reading.hasChinese(c, "topic", tid);
+    const job = needSrc
+      ? window.Reading.fetchTopic(curResult, tid, fpSeed, c.reading, c.topics, c, "zh").then(function (zhData) {
+          zhData.ver = window.Reading.CONTENT_VER;
+          if (window.Reading.guardWriteZh(c, "topic", tid, zhData)) {
+            window.Cloud.updateChart(c).catch(function () { });
+          }
+          return window.Reading.fetchTopic(curResult, tid, fpSeed, c[window.Reading.LK("reading")], c[TK], c, "en");
+        })
+      : window.Reading.fetchTopic(curResult, tid, fpSeed, c[window.Reading.LK("reading")], c[TK], c);
+    job.then(function (data) {
       topicBusy = false;
       if (curTopic !== tid || !activeChart() || activeChart().id !== c.id) return;
       c[TK] = c[TK] || {};
@@ -3365,7 +3414,17 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     $("mapBody").innerHTML = '<div style="padding:22px 4px;text-align:center;color:var(--muted);font-size:12.5px;line-height:2"><span style="font-size:18px;color:var(--gold)">\u2739</span><br>' + esc0(T("weavingMap")) + '<br><span style="font-size:11px;opacity:.7">' + esc0(T("aboutOneMin")) + '</span></div>';
     renderMap();
     const fpSeed = [c.date, c.time, c.lat.toFixed(4), c.lon.toFixed(4), Object.keys(c[TK2] || {}).sort().join(",")].join("|");
-    window.Reading.fetchMap(curResult, fpSeed, c[window.Reading.LK("reading")], c[TK2], c).then(function (data) {
+    const needSrcM = window.I18N.isEN() && !window.Reading.hasChinese(c, "map");
+    const jobM = needSrcM
+      ? window.Reading.fetchMap(curResult, fpSeed, c.reading, c.topics, c, "zh").then(function (zhData) {
+          zhData.ver = window.Reading.CONTENT_VER;
+          if (window.Reading.guardWriteZh(c, "map", null, zhData)) {
+            window.Cloud.updateChart(c).catch(function () { });
+          }
+          return window.Reading.fetchMap(curResult, fpSeed, c[window.Reading.LK("reading")], c[TK2], c, "en");
+        })
+      : window.Reading.fetchMap(curResult, fpSeed, c[window.Reading.LK("reading")], c[TK2], c);
+    jobM.then(function (data) {
       mapBusy = false; mapOpen = true;
       if (!activeChart() || activeChart().id !== c.id) return;
       data.ver = window.Reading.CONTENT_VER;
@@ -3421,7 +3480,19 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
         '<br><span style="font-size:11.5px;opacity:.75">' + T("firstTimeHint") + '</span></div>';
       $("readState").textContent = "";
       const fpSeed = [c.date, c.time, c.lat.toFixed(4), c.lon.toFixed(4)].join("|");
-      window.Reading.fetchReading(curResult, fpSeed, c)
+      // 中文是 source of truth:要产出英文而中文版尚未存在时,
+      // 先产生中文来源并保存(它本身就是完整的中文解读),再据以改写英文。
+      const needSource = window.I18N.isEN() && !window.Reading.hasChinese(c, "blueprint");
+      const job = needSource
+        ? window.Reading.fetchReading(curResult, fpSeed, c, "zh").then(function (zhParsed) {
+            var zhVal = Object.assign({ ts: new Date().toISOString().slice(0, 10), ver: window.Reading.CONTENT_VER }, zhParsed);
+            if (window.Reading.guardWriteZh(c, "blueprint", null, zhVal)) {
+              window.Cloud.updateChart(c).catch(function () { });
+            }
+            return window.Reading.fetchReading(curResult, fpSeed, c, "en");
+          })
+        : window.Reading.fetchReading(curResult, fpSeed, c);
+      job
         .then(function (parsed) {
           autoGenBusy = false;
           if (!activeChart() || activeChart().id !== c.id) return;
