@@ -63,6 +63,37 @@
     border:1px solid var(--line);border-radius:16px;padding:4px 6px 4px 12px;max-width:100%
   }
   .acct-bar span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:190px}
+  /* ---------- 星空登录页(与 Landing 同一套设计语言) ---------- */
+  .sky-auth{position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;padding:20px;
+    background:radial-gradient(900px 560px at 70% 30%,#17204a 0%,#09122e 60%);overflow:hidden}
+  .sky-auth .starfield{position:absolute;inset:0;pointer-events:none}
+  .sky-auth .starfield i{position:absolute;display:block;border-radius:50%;background:#fff;opacity:var(--o);
+    animation:sky-twinkle var(--d) ease-in-out var(--delay) infinite}
+  @keyframes sky-twinkle{0%,100%{opacity:var(--o)}50%{opacity:calc(var(--o)*.35)}}
+  @media (prefers-reduced-motion:reduce){.sky-auth .starfield i{animation:none}}
+  .sky-auth-card{position:relative;z-index:2;width:100%;max-width:376px;padding:34px 30px 26px;
+    border:1px solid rgba(249,246,242,.14);border-radius:24px;
+    background:rgba(16,26,62,.55);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    box-shadow:0 24px 70px rgba(0,0,0,.35)}
+  .sky-auth-brand{font-family:"Cormorant Garamond",Georgia,serif;font-size:15px;letter-spacing:.42em;
+    color:rgba(249,246,242,.7);text-align:center;margin-bottom:18px}
+  .sky-auth-title{font-size:19px;letter-spacing:.2em;color:var(--gold);text-align:center;margin-bottom:6px}
+  .sky-auth-sub{font-size:12px;color:rgba(249,246,242,.55);text-align:center;margin-bottom:22px;line-height:1.8}
+  .sky-auth-card label{color:rgba(249,246,242,.62)}
+  .sky-auth-card input{background:rgba(249,246,242,.06);border-color:rgba(249,246,242,.16);color:var(--parchment)}
+  .sky-auth-card input:focus{border-color:rgba(232,211,162,.55)}
+  .sky-auth-back{display:block;text-align:center;margin-top:18px;font-size:12px;color:rgba(249,246,242,.45);text-decoration:none}
+  .sky-auth-back:hover{color:rgba(249,246,242,.8)}
+  /* ---------- 收藏 ---------- */
+  .fav-btn{background:none;border:none;cursor:pointer;color:var(--muted);font-size:15px;line-height:1;
+    padding:2px 6px;transition:color .2s,transform .2s}
+  .fav-btn:hover{color:var(--gold)}
+  .fav-btn.on{color:var(--gold);transform:scale(1.12)}
+  .fav-item{border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:10px}
+  .fav-item blockquote{font-size:13.5px;line-height:2;color:var(--parchment)}
+  .fav-item .meta{display:flex;justify-content:space-between;align-items:center;margin-top:8px;font-size:11.5px;color:var(--muted)}
+  .fav-item .rm{background:none;border:none;color:var(--muted);cursor:pointer;font-size:12px}
+  .fav-item .rm:hover{color:var(--fire)}
   /* 语言切换(与账户条同处页面顶部,随页面滚动一起离开画面) */
   .lang-switch{display:inline-flex;margin-left:auto;border:1px solid var(--line);border-radius:16px;overflow:hidden;flex:none}
   .lang-switch + .acct-bar{margin-left:8px}
@@ -369,14 +400,14 @@
           </div>
         </div>
         <div>
-          <div class="panel">
+          <div class="panel" id="wheelPanel">
             <h3 style="cursor:pointer;display:flex;align-items:center;justify-content:space-between" id="posHead"><span data-i18n="positions">行星位置</span><span id="posArrow" style="font-size:14px;color:var(--muted)">∧</span></h3>
             <table class="pos" id="posTable"></table>
           </div>
         </div>
       </div>
 
-      <div class="panel" style="margin-top:18px">
+      <div class="panel" style="margin-top:18px" id="readPanel">
         <h3 style="display:flex;align-items:center;justify-content:space-between" id="nineHead">
           <span data-i18n="secBlueprint">你的生命蓝图</span>
           <span id="readState" style="font-size:11.5px;color:var(--muted);font-weight:400"></span>
@@ -393,7 +424,12 @@
            以下整个 panel 由 SHOW_EXPLORATION_MAP 开关控制,预设隐藏。
            前端资料结构(DOMAINS)、请求函式(fetchQuestion)、渲染逻辑(renderQA / openQ)、
            以及服务端的 30 题配置与 Prompt 全部原样保留,改回 true 即可恢复。 -->
-      <div class="panel" style="margin-top:18px;display:none" id="qaPanel">
+      <div class="panel" id="favPanel" style="margin-top:18px;display:none">
+      <h3><span data-i18n="myFavs">我的收藏</span></h3>
+      <div id="favBody"></div>
+    </div>
+
+    <div class="panel" style="margin-top:18px;display:none" id="qaPanel">
         <h3 style="cursor:pointer;display:flex;align-items:center;justify-content:space-between" id="qaHead">
           <span>人生探索地图</span>
           <span id="qaArrow" style="font-size:14px;color:var(--muted)">∨</span>
@@ -412,15 +448,20 @@
     </div><!-- /chartView -->
   </div><!-- /wrap -->
 
-<div id="authOverlay" style="position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;background:var(--night);padding:20px">
-  <div style="width:100%;max-width:360px;border:1px solid var(--line);border-radius:16px;background:var(--night-2);padding:26px 24px;box-shadow:0 10px 40px rgba(0,0,0,.18)">
-    <div style="font-size:19px;letter-spacing:.22em;color:var(--gold);text-align:center;margin-bottom:4px" data-i18n="authTitle">我的生命蓝图</div>
-    <div style="font-size:12px;color:var(--muted);text-align:center;margin-bottom:20px" data-i18n="authSub">登录后,你的生命蓝图将安全存放在云端</div>
+<div id="authOverlay" class="sky-auth">
+  <div class="starfield" id="authStars" aria-hidden="true"></div>
+  <div class="sky-auth-card">
+    <div class="sky-auth-brand">INNER&nbsp;SKY</div>
+    <div class="sky-auth-title" data-i18n="authTitle">我的生命蓝图</div>
+    <div class="sky-auth-sub" data-i18n="authSub">登录后,你的生命蓝图将安全存放在云端</div>
     <div class="field"><label data-i18n="email">邮箱</label><input id="authEmail" type="email" autocomplete="email" placeholder="you@example.com"></div>
     <div class="field" style="margin-top:10px"><label data-i18n="password">密码</label><input id="authPw" type="password" autocomplete="current-password" data-i18n-ph="pwPh" placeholder="至少 6 位"></div>
-    <div id="authMsg" style="min-height:18px;font-size:12px;color:var(--fire);margin:8px 0 4px"></div>
+    <!-- User ID:仅注册时显示,存进 Supabase user_metadata.display_name,不影响登录逻辑 -->
+    <div class="field" id="authIdField" style="margin-top:10px;display:none"><label data-i18n="userId">用户名</label><input id="authUserId" type="text" autocomplete="nickname" data-i18n-ph="userIdPh" placeholder="别人会看到的名字"></div>
+    <div id="authMsg" style="min-height:18px;font-size:12px;color:var(--fire);margin:10px 0 4px"></div>
     <button class="btn" id="authLogin" data-i18n="login" style="width:100%;padding:11px;font-size:14px">登 录</button>
     <button class="btn ghost" id="authSignup" data-i18n="signup" style="width:100%;padding:10px;font-size:13px;margin-top:9px">没有账号?注 册</button>
+    <a class="sky-auth-back" href="index.html">← 回到首页</a>
   </div>
 </div>
 <div class="scrim" id="scrim"></div>
@@ -1334,8 +1375,11 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       email: d.user ? d.user.email : ""
     };
   }
-  function signup(email, pw) {
-    return authCall("signup", { email: email, password: pw }).then(function (r) {
+  function signup(email, pw, userId) {
+    const body = { email: email, password: pw };
+    // Supabase 支持 data 字段写入 user_metadata;不改变既有 auth 流程
+    if (userId) body.data = { display_name: userId, user_id: userId };
+    return authCall("signup", body).then(function (r) {
       if (!r.ok) throw new Error(r.data.msg || r.data.error_description || r.data.message || "注册失败");
       const s = pickSession(r.data);
       if (s) { saveSession(s); return { loggedIn: true }; }
@@ -1466,6 +1510,11 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     tagline:          ["看见完整的自己", "See yourself, whole"],
     docTitle:         ["Know Yourself Through the Stars · 看见完整的自己", "Know Yourself Through the Stars · See yourself, whole"],
     logout:           ["退出", "Sign out"],
+    myFavs:           ["我的收藏", "Saved"],
+    favEmpty:         ["读到有共鸣的句子时,点一下段落旁的星号,它就会留在这里。",
+                       "When a line lands, tap the star beside it. It stays here."],
+    saveIt:           ["收藏这一段", "Save this"],
+    remove:           ["移除", "Remove"],
 
     /* —— 侧栏 / 表单 —— */
     charts:           ["星盘", "Charts"],
@@ -1579,6 +1628,11 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     authTitle:        ["我的生命蓝图", "The Inner Sky"],
     authSub:          ["登录后,你的生命蓝图将安全存放在云端", "Sign in, and everything you read here stays yours."],
     email:            ["邮箱", "Email"],
+    userId:           ["用户名", "Display name"],
+    userIdPh:         ["别人会看到的名字", "The name you go by"],
+    userIdNeed:       ["请填一个用户名", "Please choose a display name"],
+    signupGo:         ["建立账号", "Create account"],
+    backToLogin:      ["← 返回登录", "← Back to sign in"],
     password:         ["密码", "Password"],
     pwPh:             ["至少 6 位", "At least 6 characters"],
     login:            ["登 录", "Sign in"],
@@ -2610,13 +2664,57 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
 
   // ---------- 盘列表 ----------
   // 写入本地展示档案:落地页用它显示「早安, 名字」。只含昵称与邮箱前缀来源,不含任何令牌。
+  // 从落地页带进来的 hash:#blueprint / #chapters / #lifemap / #chart / #favs / #topic-xxx
+  function applyDeepLink() {
+    const h = (location.hash || "").replace("#", "");
+    if (!h) return;
+    const go = function (id, extra) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      setTimeout(function () {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+        if (extra) extra();
+      }, 260);
+    };
+    if (h === "blueprint") go("readPanel");
+    else if (h === "chapters") go("topicPanel");
+    else if (h === "lifemap") go("mapPanel");
+    else if (h === "chart") go("wheelPanel");
+    else if (h === "favs") go("favPanel");
+    else if (h.indexOf("topic-") === 0) {
+      const tid = h.slice(6);
+      go("topicPanel", function () { if (curTopic !== tid) openTopic(tid); });
+    }
+    history.replaceState(null, "", location.pathname + location.search);
+  }
+
   function saveProfileCache() {
     try {
       var c = activeChart();
+      var uid = "";
+      try { uid = localStorage.getItem("inner_sky_userid_v1") || ""; } catch (e2) { }
       localStorage.setItem("inner_sky_profile_v1", JSON.stringify({
-        nick: c ? (c.nick || "") : "",
+        nick: uid || (c ? (c.nick || "") : ""),
         email: (window.Cloud && window.Cloud.email) ? window.Cloud.email() : ""
       }));
+      // 已读章节:落地页据此优先展示未读
+      if (c) {
+        var read = {};
+        Object.keys(c[window.Reading.LK("topics")] || {}).forEach(function (k) { read[k] = true; });
+        localStorage.setItem("inner_sky_read_v1", JSON.stringify(read));
+        // 收藏(取最近几条给落地页预览)
+        localStorage.setItem("inner_sky_favs_v1", JSON.stringify((c.favs || []).slice(0, 4)));
+      }
+    } catch (e) { }
+  }
+
+  // 把当前用户的真实星盘存成 SVG 快照,落地页「我的星空」直接显示本人的盘
+  function saveWheelSnapshot() {
+    try {
+      var svg = document.querySelector("#wheelPanel svg");
+      if (!svg) return;
+      var out = svg.outerHTML;
+      if (out.length < 400000) localStorage.setItem("inner_sky_wheel_v1", out);
     } catch (e) { }
   }
 
@@ -3057,6 +3155,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   }
 
   function drawActive() {
+    setTimeout(function () { saveWheelSnapshot(); renderFavs(); }, 400);
     const c = activeChart();
     if (!c) {
       $("emptyState").style.display = "";
@@ -3125,13 +3224,81 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       esc0(T(en ? "enGenerate" : "zhGenerate")) + '</button></div>';
   }
 
+  // ── 收藏 ──────────────────────────────────────────────
+  // 保存:文字、来源主题、来源章节、时间。存在 chart.favs,随既有云同步走。
+  function favList() { const c = activeChart(); return (c && c.favs) || []; }
+  function favKey(src, title, text) { return src + "|" + title + "|" + String(text).slice(0, 40); }
+  function isFaved(k) { return favList().some(function (f) { return f.key === k; }); }
+  function toggleFav(k, payload) {
+    const c = activeChart();
+    if (!c) return false;
+    c.favs = c.favs || [];
+    const i = c.favs.findIndex(function (f) { return f.key === k; });
+    if (i >= 0) c.favs.splice(i, 1);
+    else c.favs.unshift(Object.assign({ key: k, ts: new Date().toISOString().slice(0, 10) }, payload));
+    window.Cloud.updateChart(c).catch(function () { });
+    saveProfileCache();
+    renderFavs();
+    return i < 0;
+  }
+  function favButton(k) {
+    return '<button class="fav-btn' + (isFaved(k) ? " on" : "") + '" data-fav="' + esc0(k) + '" title="' + esc0(T("saveIt")) + '">' +
+      (isFaved(k) ? "★" : "☆") + '</button>';
+  }
+  // 事件委派:任何解读区块里的收藏按钮都能用
+  document.addEventListener("click", function (ev) {
+    const b = ev.target.closest && ev.target.closest("[data-fav]");
+    if (!b) return;
+    ev.preventDefault();
+    const payload = {
+      text: b.getAttribute("data-text") || "",
+      source: b.getAttribute("data-source") || "",
+      section: b.getAttribute("data-section") || ""
+    };
+    const on = toggleFav(b.getAttribute("data-fav"), payload);
+    b.textContent = on ? "★" : "☆";
+    b.classList.toggle("on", on);
+  });
+
+  function renderFavs() {
+    const panel = document.getElementById("favPanel");
+    if (!panel) return;
+    const body = document.getElementById("favBody");
+    const list = favList();
+    const c = activeChart();
+    panel.style.display = (c && curResult) ? "" : "none";
+    if (!list.length) {
+      body.innerHTML = '<div style="padding:14px 2px;color:var(--muted);font-size:12.5px;line-height:2">' +
+        esc0(T("favEmpty")) + '</div>';
+      return;
+    }
+    body.innerHTML = list.map(function (f) {
+      return '<div class="fav-item"><blockquote>' + esc0(f.text) + '</blockquote>' +
+        '<div class="meta"><span>' + esc0(f.source || "") + (f.section ? " · " + esc0(f.section) : "") +
+        (f.ts ? " · " + esc0(f.ts) : "") + '</span>' +
+        '<button class="rm" data-unfav="' + esc0(f.key) + '">' + esc0(T("remove")) + '</button></div></div>';
+    }).join("");
+    body.querySelectorAll("[data-unfav]").forEach(function (b) {
+      b.addEventListener("click", function () { toggleFav(b.getAttribute("data-unfav"), {}); });
+    });
+  }
+
   function answerHtml(data) {
     let h = '<div style="padding:2px 2px 4px">';
     if (data.tagline)
       h += '<div style="font-size:15px;line-height:1.85;color:var(--parchment);padding:14px 16px;margin:0 0 16px;border-left:2px solid var(--gold-soft);background:rgba(var(--accent-rgb),.06);border-radius:0 9px 9px 0">' + esc0(data.tagline) + "</div>";
+    // 每一段标题旁挂收藏按钮:保存这一段文字、来源主题、来源章节与时间
+    const favSource = data.__source || "";
     h += (data.sections || []).map(function (sc) {
+      const k = favKey(favSource, sc.title || "", sc.body || "");
+      const btn = '<button class="fav-btn' + (isFaved(k) ? " on" : "") + '" data-fav="' + esc0(k) +
+        '" data-text="' + esc0(String(sc.body || "").slice(0, 300)) + '" data-source="' + esc0(favSource) +
+        '" data-section="' + esc0(sc.title || "") + '" title="' + esc0(T("saveIt")) + '">' +
+        (isFaved(k) ? "\u2605" : "\u2606") + '</button>';
       return '<div style="margin:0 0 18px">' +
-        (sc.title ? '<div style="font-size:13.5px;font-weight:700;color:var(--gold-soft);margin-bottom:8px">' + esc0(sc.title) + "</div>" : "") +
+        '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px">' +
+        (sc.title ? '<div style="font-size:13.5px;font-weight:700;color:var(--gold-soft)">' + esc0(sc.title) + "</div>" : "<span></span>") +
+        btn + "</div>" +
         '<div style="font-size:13.5px;line-height:2.05;color:var(--parchment)">' + para0(sc.body) + "</div></div>";
     }).join("");
     if (data.steps && data.steps.length) {
@@ -3543,6 +3710,24 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
 
   // ---------- 初始化 ----------
   function init() {
+    // —— 星空登录页的星点(细小、大小不一、疏密不均)——
+    (function () {
+      const el = document.getElementById("authStars");
+      if (!el) return;
+      let s = 987654321;
+      const rnd = function () { s = (s * 1103515245 + 12345) % 2147483648; return s / 2147483648; };
+      let h = "";
+      for (let i = 0; i < 110; i++) {
+        const r = rnd();
+        const size = r < .72 ? (.6 + rnd() * .6) : (r < .95 ? (1.3 + rnd() * .9) : (2.2 + rnd() * 1.1));
+        const op = r < .72 ? (.18 + rnd() * .3) : (r < .95 ? (.4 + rnd() * .3) : (.75 + rnd() * .25));
+        h += '<i style="left:' + (rnd() * 100).toFixed(2) + '%;top:' + (rnd() * 100).toFixed(2) +
+          '%;width:' + size.toFixed(2) + 'px;height:' + size.toFixed(2) + 'px;--o:' + op.toFixed(2) +
+          ';--d:' + (3 + rnd() * 5).toFixed(1) + 's;--delay:' + (rnd() * 6).toFixed(1) + 's"></i>';
+      }
+      el.innerHTML = h;
+    })();
+
     // —— 语言切换器 ——
     function paintLangBtns() {
       document.querySelectorAll("#langSwitch button").forEach(function (b) {
@@ -3606,19 +3791,41 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
         if (!store.activeId || !store.charts.some(c => c.id === store.activeId))
           store.activeId = store.charts.length ? store.charts[0].id : null;
         renderChartList(); drawActive();
+        setTimeout(function () { saveWheelSnapshot(); renderFavs(); applyDeepLink(); }, 600);
       });
     }
     $("authLogin").addEventListener("click", function () {
+      if (signupMode) {   // 从注册态退回登录态
+        signupMode = false;
+        $("authIdField").style.display = "none";
+        $("authSignup").textContent = T("signup");
+        $("authLogin").textContent = T("login");
+        setAuthMsg("");
+        return;
+      }
       const em = $("authEmail").value.trim(), pw = $("authPw").value;
       if (!em || pw.length < 6) { setAuthMsg(T("authNeed")); return; }
       setAuthMsg(T("loggingIn"), true);
       window.Cloud.login(em, pw).then(enterApp).catch(function (e) { setAuthMsg(e.message); });
     });
+    // 第一次点「注册」先展开 User ID 栏位,第二次才真的送出
+    let signupMode = false;
     $("authSignup").addEventListener("click", function () {
-      const em = $("authEmail").value.trim(), pw = $("authPw").value;
+      if (!signupMode) {
+        signupMode = true;
+        $("authIdField").style.display = "";
+        $("authSignup").textContent = T("signupGo");
+        $("authLogin").textContent = T("backToLogin");
+        setAuthMsg("");
+        $("authUserId").focus();
+        return;
+      }
+      const em = $("authEmail").value.trim(), pw = $("authPw").value, uid = $("authUserId").value.trim();
       if (!em || pw.length < 6) { setAuthMsg(T("authNeed")); return; }
+      if (!uid) { setAuthMsg(T("userIdNeed")); return; }
       setAuthMsg(T("signingUp"), true);
-      window.Cloud.signup(em, pw).then(function (r) {
+      try { localStorage.setItem("inner_sky_userid_v1", uid); } catch (e) { }
+      window.Cloud.signup(em, pw, uid).then(function (r) {
         if (r.loggedIn) enterApp();
         else setAuthMsg(T("signupOk"), true);
       }).catch(function (e) { setAuthMsg(e.message); });
