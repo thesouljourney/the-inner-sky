@@ -2787,12 +2787,32 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   }
 
   // 把当前用户的真实星盘存成 SVG 快照,落地页「我的星空」直接显示本人的盘
+  /* 落地页快照
+     · 星盘:用新版 compact 渲染器画一份「字面色」的 SVG(不含 var(--dp-*)),
+       这样贴到落地页也能正确显示,且与应用内读的是同一份 curResult
+     · 生命脉络:把已生成的 lifemap 摘要存一份,供落地页呈现 */
   function saveWheelSnapshot() {
     try {
-      var svg = document.querySelector("#wheelPanel svg");
-      if (!svg) return;
+      if (!curResult) return;
+      var svg = document.createElementNS(svgNS, "svg");
+      drawChartWheel(svg, curResult, { variant: "compact", literal: true });
+      svg.setAttribute("class", "wheel-svg");
       var out = svg.outerHTML;
       if (out.length < 400000) localStorage.setItem("inner_sky_wheel_v1", out);
+    } catch (e) { }
+    try {
+      var c = activeChart();
+      var lm = c && window.Reading.reviveTopic(c[window.Reading.LK("lifemap")]);
+      if (lm && lm.sections && lm.sections.length) {
+        localStorage.setItem("inner_sky_lifemap_v1", JSON.stringify({
+          tagline: lm.tagline || "",
+          sections: lm.sections.slice(0, 4).map(function (x) {
+            return { title: x.title || "", body: String(x.body || "").replace(/\s+/g, " ").slice(0, 90) };
+          })
+        }));
+      } else {
+        localStorage.removeItem("inner_sky_lifemap_v1");
+      }
     } catch (e) { }
   }
 
@@ -3814,9 +3834,15 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     return { c: c, edge: V * .48, zi: V * .393, house: V * .25, ring0: V * .333, ring1: V * .295 };
   }
 
+  // 落地页用的字面色(落地页没有 #dpage 作用域,var(--dp-*) 会失效)
+  const DP_LITERAL = {
+    "var(--dp-cloud)": "#fcf9f6", "var(--dp-line)": "#f0e8e3", "var(--dp-lav)": "#8176ad",
+    "var(--dp-ink)": "#22233a", "var(--dp-mut)": "#77778a"
+  };
   function drawChartWheel(svg, res, opts) {
     opts = opts || {};
     const full = opts.variant === "full";
+    const CV = opts.literal ? function (v) { return DP_LITERAL[v] || v; } : function (v) { return v; };
     const V = 600, G = dpChartGeom(V);
     svg.setAttribute("viewBox", "0 0 " + V + " " + V);
     svg.innerHTML = "";
@@ -3835,7 +3861,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     };
 
     // 盘面底
-    E("circle", { cx: G.c, cy: G.c, r: G.edge, fill: "var(--dp-cloud)", stroke: "var(--dp-line)", "stroke-width": 1.2 });
+    E("circle", { cx: G.c, cy: G.c, r: G.edge, fill: CV("var(--dp-cloud)"), stroke: CV("var(--dp-line)"), "stroke-width": 1.2 });
     // 黄道十二宫扇区
     for (let i = 0; i < 12; i++) {
       const a0 = i * 30, a1 = a0 + 30;
@@ -3847,20 +3873,20 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
         fill: DP_ELEM_TINT[C.SIGNS[i].elem], "fill-opacity": .16, stroke: "none"
       });
     }
-    E("circle", { cx: G.c, cy: G.c, r: G.zi, fill: "none", stroke: "var(--dp-line)", "stroke-width": 1 });
-    E("circle", { cx: G.c, cy: G.c, r: G.house, fill: "var(--dp-cloud)", stroke: "var(--dp-line)", "stroke-width": 1 });
+    E("circle", { cx: G.c, cy: G.c, r: G.zi, fill: "none", stroke: CV("var(--dp-line)"), "stroke-width": 1 });
+    E("circle", { cx: G.c, cy: G.c, r: G.house, fill: CV("var(--dp-cloud)"), stroke: CV("var(--dp-line)"), "stroke-width": 1 });
 
     // 星座分隔与符号
     for (let i = 0; i < 12; i++) {
       const lonB = i * 30;
       const [x0, y0] = pt2(G.zi, lonB), [x1, y1] = pt2(G.edge, lonB);
-      E("line", { x1: x0, y1: y0, x2: x1, y2: y1, stroke: "var(--dp-line)", "stroke-width": .9 });
+      E("line", { x1: x0, y1: y0, x2: x1, y2: y1, stroke: CV("var(--dp-line)"), "stroke-width": .9 });
       const [gx, gy] = pt2((G.zi + G.edge) / 2, lonB + 15);
-      svg.appendChild(GL.symbolGroup(svgNS, C.SIGNS[i].glyph, gx, gy, full ? 19 : 17, "var(--dp-lav)"));
+      svg.appendChild(GL.symbolGroup(svgNS, C.SIGNS[i].glyph, gx, gy, full ? 19 : 17, CV("var(--dp-lav)")));
       // 完整盘才画 5° 刻度
       if (full) for (let d = 5; d < 30; d += 5) {
         const [t0x, t0y] = pt2(G.zi, lonB + d), [t1x, t1y] = pt2(G.zi + 5, lonB + d);
-        E("line", { x1: t0x, y1: t0y, x2: t1x, y2: t1y, stroke: "var(--dp-line)", "stroke-width": .6 });
+        E("line", { x1: t0x, y1: t0y, x2: t1x, y2: t1y, stroke: CV("var(--dp-line)"), "stroke-width": .6 });
       }
     }
 
@@ -3871,14 +3897,14 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       const [hx0, hy0] = pt2(G.house, cl), [hx1, hy1] = pt2(G.zi, cl);
       E("line", {
         x1: hx0, y1: hy0, x2: hx1, y2: hy1,
-        stroke: isAxis ? "var(--dp-lav)" : "var(--dp-line)",
+        stroke: isAxis ? CV("var(--dp-lav)") : CV("var(--dp-line)"),
         "stroke-width": isAxis ? 1.6 : .9
       });
       const mid = cl + C.n360(res.cusps[(i + 1) % 12] - cl) / 2;
       const [nx, ny] = pt2(G.house + 15, mid);
       const t = E("text", {
         x: nx, y: ny + 4, "text-anchor": "middle", "font-size": full ? 12 : 11,
-        fill: "var(--dp-mut)", "font-family": "inherit"
+        fill: CV("var(--dp-mut)"), "font-family": "inherit"
       });
       t.textContent = i + 1;
     }
@@ -3890,7 +3916,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       const [lx, ly] = pt2(G.edge - 13, ax[1]);
       const t = E("text", {
         x: lx, y: ly + 3.5, "text-anchor": "middle", "font-size": 10,
-        fill: "var(--dp-lav)", "font-weight": 600, "font-family": "inherit"
+        fill: CV("var(--dp-lav)"), "font-weight": 600, "font-family": "inherit"
       });
       t.textContent = ax[0];
     });
@@ -3912,12 +3938,12 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       const r = ringOf[p.key] === 1 ? G.ring1 : G.ring0;
       // 真实位置刻度线
       const [m0x, m0y] = pt2(G.zi, p.lon), [m1x, m1y] = pt2(G.zi - 6, p.lon);
-      E("line", { x1: m0x, y1: m0y, x2: m1x, y2: m1y, stroke: "var(--dp-ink)", "stroke-width": 1.1, "stroke-opacity": .5 });
+      E("line", { x1: m0x, y1: m0y, x2: m1x, y2: m1y, stroke: CV("var(--dp-ink)"), "stroke-width": 1.1, "stroke-opacity": .5 });
       const [gx, gy] = pt2(r, p.lon);
       if (ringOf[p.key] === 1) {
-        E("line", { x1: m1x, y1: m1y, x2: gx, y2: gy, stroke: "var(--dp-line)", "stroke-width": .8 });
+        E("line", { x1: m1x, y1: m1y, x2: gx, y2: gy, stroke: CV("var(--dp-line)"), "stroke-width": .8 });
       }
-      svg.appendChild(GL.symbolGroup(svgNS, p.glyphKey, gx, gy, full ? 19 : 17, "var(--dp-ink)"));
+      svg.appendChild(GL.symbolGroup(svgNS, p.glyphKey, gx, gy, full ? 19 : 17, CV("var(--dp-ink)")));
       if (p.retro) {
         const rt = E("text", {
           x: gx + 11, y: gy + 10, "text-anchor": "start", "font-size": 8.5,
@@ -3931,7 +3957,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
         const [dx, dy] = pt2(r - 22, p.lon);
         const t = E("text", {
           x: dx, y: dy + 3, "text-anchor": "middle", "font-size": 8.5,
-          fill: "var(--dp-mut)", "font-family": "inherit"
+          fill: CV("var(--dp-mut)"), "font-family": "inherit"
         });
         t.textContent = Math.floor(g2.deg) + "°";
       }
@@ -3948,7 +3974,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
         const [x1, y1] = pt2(G.house - 4, pa.lon), [x2, y2] = pt2(G.house - 4, pb.lon);
         E("line", {
           x1: x1, y1: y1, x2: x2, y2: y2,
-          stroke: ASP_COLOR[a.type] || "var(--dp-mut)",
+          stroke: ASP_COLOR[a.type] || CV("var(--dp-mut)"),
           "stroke-width": .8, "stroke-opacity": .42
         });
       });
@@ -4067,6 +4093,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     else applyRoute();
   }
 
+  let lastRouteId = null;
   function applyRoute() {
     curRoute = parseRoute();
     const dp = $("dpage");
@@ -4079,7 +4106,10 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     if (!routeGuard()) return;
     document.body.classList.add("dp-open");
     dp.style.display = "";
-    window.scrollTo(0, 0);
+    // 只有真正换页时才回到顶部;同一页内切换页签(例如生命蓝图的五章)保留阅读位置
+    const routeId = curRoute.k + ":" + (curRoute.id || "");
+    if (routeId !== lastRouteId) window.scrollTo(0, 0);
+    lastRouteId = routeId;
     renderRoute();
   }
   function routeRefresh() { if (curRoute) renderRoute(); }
@@ -4199,7 +4229,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     }
     // 底部「上一个 / 1 of 9 / 下一个」主题导航已整组移除(含其 wrapper 与留白)
     const foot = dpReturnFoot();
-    dpScaffold({ chip: tSub, title: tName, sub: tTeaser, art: TOPIC_ART[tid] || "", body: body, foot: foot, backLabel: dpT("返回主题列表", "Back to topics"), seed: window.Reading.TOPICS9.indexOf(t) + 3 });
+    dpScaffold({ chip: tSub, title: tName, sub: tTeaser, art: TOPIC_ART[tid] || "", body: body, foot: foot, backLabel: dpT("返回主页", "Back to home"), backHref: LANDING_URL, seed: window.Reading.TOPICS9.indexOf(t) + 3 });
     const g = document.getElementById("dpGenT");
     if (g) g.addEventListener("click", function () { generateTopic(tid); });
     const rt = document.getElementById("dpRetryT");
