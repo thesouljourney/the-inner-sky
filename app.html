@@ -431,6 +431,18 @@
   }
   #dpage .dp-quote .q{color:var(--dp-lav);font-family:var(--dp-display);font-size:34px;line-height:0;vertical-align:-10px;margin-right:8px}
   #dpage .dp-sec-label{font-size:12px;letter-spacing:.22em;color:var(--dp-mut);margin:0 0 14px}
+  /* 长文阅读:舒服的阅读宽度 + 更大的段落与章节间距 */
+  #dpage .dp-read{max-width:720px;margin:0 auto}
+  #dpage .dp-sec{margin:0 0 clamp(38px,4.6vw,60px)}
+  #dpage .dp-sec:last-child{margin-bottom:0}
+  #dpage .dp-sec h3.dp-h{font-size:clamp(17px,1.9vw,21px);line-height:1.7;margin:0 0 2px}
+  /* 章节分隔:左侧小星 + 向右渐隐的细线(克制,只标示进入下一段) */
+  #dpage .dp-div{display:flex;align-items:center;gap:12px;margin:12px 0 22px}
+  #dpage .dp-div .st{color:var(--dp-lav);font-size:11px;flex:none;opacity:.85}
+  #dpage .dp-div .ln{flex:1;height:1px;background:linear-gradient(90deg,rgba(129,118,173,.42),rgba(129,118,173,.06) 62%,transparent)}
+  #dpage .dp-sec .dp-prose{font-size:15px;line-height:2.25}
+  #dpage .dp-sec .dp-prose p{margin:0 0 18px}
+  #dpage .dp-sec .dp-prose p:last-child{margin-bottom:0}
   #dpage h3.dp-h{font-family:var(--dp-serif);font-weight:500;font-size:clamp(16px,1.8vw,20px);margin:0;color:var(--dp-ink)}
   #dpage .dp-h-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
   #dpage .dp-prose{font-size:14.5px;line-height:2.15;color:var(--dp-ink);font-weight:300}
@@ -559,6 +571,20 @@
   }
   #dpage .dp-return .say{font-family:var(--dp-serif);font-size:14.5px;line-height:1.9;color:var(--dp-mut)}
   #dpage .dp-loading{text-align:center;color:var(--dp-mut);font-size:13.5px;line-height:2.2;padding:60px 20px}
+  /* 内容载入:一颗星轻轻呼吸,维持原本页面背景 */
+  #dpage .dp-boot{min-height:52vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px}
+  #dpage .dp-boot .tx,#dpage .dp-dots .tx{font-size:13px;letter-spacing:.16em;color:var(--dp-mut)}
+  #dpage .dp-boot .dot,#dpage .dp-dots .dot{
+    width:5px;height:5px;border-radius:50%;background:var(--dp-lav);display:inline-block;
+    animation:dpBreath 2.8s ease-in-out infinite}
+  #dpage .dp-boot{flex-direction:row;flex-wrap:wrap}
+  #dpage .dp-boot .tx{width:100%;text-align:center;margin-top:4px}
+  #dpage .dp-boot .dot:nth-child(2),#dpage .dp-dots .dot:nth-child(2){animation-delay:.45s}
+  #dpage .dp-boot .dot:nth-child(3),#dpage .dp-dots .dot:nth-child(3){animation-delay:.9s}
+  @keyframes dpBreath{0%,100%{opacity:.22;transform:scale(.86)}50%{opacity:.9;transform:scale(1.12)}}
+  #dpage .dp-dots{display:flex;align-items:center;justify-content:center;gap:9px;padding:64px 20px}
+  #dpage .dp-dots .tx{margin-left:8px}
+  @media (prefers-reduced-motion:reduce){#dpage .dp-boot .dot,#dpage .dp-dots .dot{animation-duration:6s}}
   #dpage .dp-loading .g{font-size:26px;color:var(--dp-lav);display:block;margin-bottom:10px;animation:dpTw 1.6s ease-in-out infinite alternate}
   #dpage .fav-btn{background:none;border:none;cursor:pointer;font-size:17px;color:var(--dp-lav);flex:none;padding:2px 4px}
   #dpage .fav-btn.on{color:#c9a227}
@@ -4085,6 +4111,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     if (h === "#/my-sky") return { k: "mysky" };
     if (h === "#/favorites") return { k: "favorites" };
     if (h === "#/onboarding") return { k: "onboarding" };
+    if (h === "#/login") return { k: "login" };
     return null;
   }
   /* 受保护的路由:全部依赖用户星盘资料
@@ -4110,7 +4137,19 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
 
   /* 登录并载入资料后的统一去向。
      使用者永远不会停留在旧界面:没有资料 → 新版 onboarding;有资料 → 新版阅读页。 */
+  // 冷启动过场:维持同一片背景,一颗星轻轻呼吸
+  function showBootLoading() {
+    const dp = $("dpage");
+    if (!dp) return;
+    document.body.classList.add("dp-open");
+    dp.style.display = "";
+    dp.innerHTML = '<div class="dp-boot"><span class="dot"></span><span class="dot"></span><span class="dot"></span>' +
+      '<span class="tx">' + (window.I18N && window.I18N.isEN() ? "Opening your sky…" : "正在打开你的星空…") + '</span></div>';
+  }
+
   function routeAfterEntry() {
+    // 从 Header 登入 / 注册进来的:回到落地页最顶部(有完整资料才算走完流程)
+    if (returnToLanding && hasCompleteBirthProfile()) { location.href = LANDING_URL; return; }
     if (!hasCompleteBirthProfile()) {
       if (!curRoute || curRoute.k !== "onboarding") location.hash = "#/onboarding";
       else applyRoute();
@@ -4121,6 +4160,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   }
 
   let lastRouteId = null;
+  let returnToLanding = false;   // 从 Header 的登入 / 注册入口进来
   function applyRoute() {
     curRoute = parseRoute();
     const dp = $("dpage");
@@ -4128,6 +4168,14 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     if (!curRoute) {
       dp.style.display = "none";
       document.body.classList.remove("dp-open");
+      return;
+    }
+    // 从 Header 进来的登入 / 注册:完成后回到落地页顶部
+    if (curRoute.k === "login") {
+      returnToLanding = true;
+      dp.style.display = "none";
+      document.body.classList.remove("dp-open");
+      if (!window.Cloud.hasSession()) { $("authOverlay").style.display = ""; return; }
       return;
     }
     if (!routeGuard()) return;
@@ -4190,18 +4238,20 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     let h = "";
     if (data.tagline)
       h += '<div class="dp-card"><div class="dp-quote"><span class="q">“</span>' + esc0(data.tagline) + "</div></div>";
-    h += '<div class="dp-card"><div class="dp-sec-label">' + dpT("主题解读", "READING") + "</div>";
+    h += '<div class="dp-card"><div class="dp-read"><div class="dp-sec-label">' + dpT("主题解读", "READING") + "</div>";
     h += (data.sections || []).map(function (sc) {
       const k = favKey(favSource, sc.title || "", sc.body || "");
       const btn = '<button class="fav-btn' + (isFaved(k) ? " on" : "") + '" data-fav="' + esc0(k) +
         '" data-text="' + esc0(String(sc.body || "").slice(0, 300)) + '" data-source="' + esc0(favSource) +
         '" data-section="' + esc0(sc.title || "") + '" title="' + esc0(T("saveIt")) + '">' + (isFaved(k) ? "★" : "☆") + "</button>";
-      return '<div style="margin:0 0 22px"><div class="dp-h-row">' +
+      // 小标题 → 细分隔线 → 正文,让长文一段一段地读
+      return '<div class="dp-sec"><div class="dp-h-row">' +
         (sc.title ? '<h3 class="dp-h">' + esc0(sc.title) + "</h3>" : "<span></span>") + btn + "</div>" +
+        (sc.title ? '<div class="dp-div"><span class="st">✦</span><span class="ln"></span></div>' : "") +
         '<div class="dp-prose" data-saveable data-source="' + esc0(favSource) +
         '" data-section="' + esc0(sc.title || "") + '">' + dpPara(sc.body) + "</div></div>";
     }).join("");
-    h += "</div>";
+    h += "</div></div>";
     if (data.steps && data.steps.length)
       h += '<div class="dp-card"><div class="dp-sec-label">' + dpT("从这里开始", "WHERE TO START") + '</div><div class="dp-steps">' +
         data.steps.map(function (st, i) {
@@ -4227,7 +4277,12 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       dpT("请先回到主页选择或建立一张星盘", "Please choose or create a chart first") +
       '<br><a class="dp-cta" style="margin-top:16px" href="' + LANDING_URL + '">' + dpT("回到主页", "Back to home") + "</a></div>";
   }
-  function dpLoading(msg) { return '<div class="dp-card dp-loading"><span class="g">✶</span>' + esc0(msg) + "</div>"; }
+  // 柔和的等待:三颗微光星点缓慢呼吸,不是 spinner,也不换背景
+  function dpLoading(msg) {
+    return '<div class="dp-card"><div class="dp-dots">' +
+      '<span class="dot"></span><span class="dot"></span><span class="dot"></span>' +
+      '<span class="tx">' + esc0(msg) + '</span></div></div>';
+  }
   function dpError(err, retryId) {
     return '<div class="dp-card dp-loading">' + dpT("这次没有生成成功。", "Generation didn’t go through.") +
       '<br><span style="font-size:12px;opacity:.8">' + esc0((err && err.hint) || (err && err.msg) || "") + "</span><br>" +
@@ -4824,10 +4879,13 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       $("authOverlay").style.display = "none";
     }
 
-    function enterApp() {
-      // 停在登入页显示 Loading,等资料与目标页面都就绪再收起
-      $("authOverlay").style.display = "";
-      setAuthLoading(true, window.I18N.isEN() ? "Entering your sky…" : "正在进入你的星空…");
+    // silent = 已经登录的回访者:不显示登入页,直接进入内容
+    function enterApp(silent) {
+      if (!silent) {
+        // 只有刚提交帐密的使用者才停在登入页看 Loading
+        $("authOverlay").style.display = "";
+        setAuthLoading(true, window.I18N.isEN() ? "Entering your sky…" : "正在进入你的星空…");
+      }
       // 页面顶部右上角账号条(位于 header 内,随页面滚动一起离开画面)
       const bar = document.getElementById("acctBar");
       if (bar && !bar.dataset.ready) {
@@ -4913,11 +4971,13 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     $("authPw").addEventListener("keydown", function (e) { if (e.key === "Enter") $("authLogin").click(); });
     // 已有会话:静默续期后直接进入
     if (window.Cloud.hasSession()) {
-      // 令牌已在本地:停在登入页的 Loading 状态,资料就绪后直接进入目标页
-      enterApp();
+      // 已登录:完全不出现登入页。直接渲染目标页面,内容未就绪时在页内显示柔和 Loading
+      if (!parseRoute()) showBootLoading();
+      enterApp(true);
       window.Cloud.refresh().catch(function () {
-        // 令牌失效才回到登录页
+        // 只有令牌真的失效才回到登入页
         $("authOverlay").style.display = "";
+        setAuthLoading(false);
       });
     } else {
       $("authOverlay").style.display = "";

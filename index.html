@@ -311,25 +311,71 @@ header.site { position: relative; z-index: 5; background: transparent; }
 /* ---------- 你的生命脉络(复用应用内已生成的内容,不重新生成) ---------- */
 .thread { margin-top: 4px; }
 .thread .lead {
-  font-family: var(--font-serif-sc); font-size: 16px; line-height: 30px;
-  color: var(--text-dark); padding: 16px 20px; border-radius: var(--radius-card-sm);
-  background: linear-gradient(135deg, rgba(170,160,213,.1), rgba(235,196,195,.1));
-  border-left: 2px solid var(--accent-moon-lavender); margin-bottom: 16px;
+  font-family: var(--font-serif-sc); font-size: 15.5px; line-height: 30px;
+  color: var(--text-dark); padding: 0 0 20px; margin-bottom: 6px;
+  border-bottom: 1px solid var(--border-card);
 }
-.thread-list { display: grid; gap: 10px; }
-.thread-item {
-  display: flex; gap: 14px; align-items: flex-start; text-align: left; padding: 16px 18px;
-  border: 1px solid var(--border-card); border-radius: var(--radius-card-sm); background: #fff;
-  transition: border-color var(--duration-hover) var(--ease-soft), transform var(--duration-hover) var(--ease-soft);
+.thread-list { display: grid; gap: 2px; }
+
+/* 一行一段脉络:标题在外,正文收起 */
+.thread-item { border-bottom: 1px solid var(--border-card); }
+.thread-item:last-child { border-bottom: none; }
+.thread-head {
+  display: flex; align-items: center; gap: 14px; width: 100%;
+  padding: 17px 4px; background: none; border: none; cursor: pointer;
+  font-family: var(--font-sans-sc); text-align: left; color: var(--text-dark);
+  transition: color var(--duration-hover) var(--ease-soft);
 }
-.thread-item:hover { border-color: var(--accent-moon-lavender); transform: translateY(-1px); }
-.thread-item .dot { color: var(--accent-moon-lavender); font-size: 12px; line-height: 26px; flex: none; }
-.thread-item .tx { display: flex; flex-direction: column; gap: 3px; }
-.thread-item .t { font-family: var(--font-serif-sc); font-size: 15px; font-weight: 500; color: var(--text-dark); }
-.thread-item .d { font-size: 13.5px; line-height: 25px; color: var(--text-secondary); font-weight: 300; }
-.thread-item .d p { margin: 0 0 8px; }
-.thread-item .d p:last-child { margin-bottom: 0; }
-.thread-aha { display: grid; gap: 8px; margin-top: 12px; }
+.thread-head:hover { color: var(--accent-moon-lavender); }
+.thread-head:focus-visible { outline: 2px solid var(--accent-moon-lavender); outline-offset: 3px; border-radius: 8px; }
+.thread-head .t {
+  flex: 1; font-family: var(--font-serif-sc); font-size: 15.5px; font-weight: 500; line-height: 27px;
+}
+.thread-head .sign {
+  flex: none; font-size: 15px; color: var(--text-secondary); width: 14px; text-align: center;
+  transition: color var(--duration-hover);
+}
+.thread-item.open .thread-head .sign { color: var(--accent-moon-lavender); }
+
+/* 未点亮:描边小星,低透明、无光 */
+.thread-head .star {
+  position: relative; flex: none; width: 15px; height: 15px;
+  background: currentColor; opacity: .3; color: var(--text-secondary);
+  -webkit-mask: var(--star-mask) center / contain no-repeat;
+          mask: var(--star-mask) center / contain no-repeat;
+  transition: opacity var(--duration-hover) var(--ease-soft), color var(--duration-hover);
+}
+:root {
+  --star-mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12 1.6c.5 4.6 1.9 7.9 4.3 9.3-2.4 1.4-3.8 4.7-4.3 9.3-.5-4.6-1.9-7.9-4.3-9.3C10.1 9.5 11.5 6.2 12 1.6z' fill='black'/><path d='M12 3.4c.4 3.6 1.5 6.2 3.4 7.5-1.9 1.3-3 3.9-3.4 7.5-.4-3.6-1.5-6.2-3.4-7.5C10.5 9.6 11.6 7 12 3.4z' fill='black'/></svg>");
+}
+/* 已点亮:星芯发亮 + 柔和外晕 + 极缓慢的呼吸 */
+.thread-item.lit .thread-head .star {
+  opacity: 1; color: var(--accent-starlight-gold);
+  filter: drop-shadow(0 0 3px rgba(232,211,162,.9)) drop-shadow(0 0 9px rgba(232,211,162,.45));
+  animation: starBreath 3.6s var(--ease-soft) infinite;
+}
+.thread-item.lit .thread-head::before {
+  content: ""; position: absolute; left: -6px; width: 28px; height: 28px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(232,211,162,.22), transparent 68%);
+  pointer-events: none;
+}
+.thread-head { position: relative; }
+@keyframes starBreath {
+  0%, 100% { filter: drop-shadow(0 0 3px rgba(232,211,162,.75)) drop-shadow(0 0 8px rgba(232,211,162,.32)); }
+  50%      { filter: drop-shadow(0 0 4px rgba(232,211,162,1))   drop-shadow(0 0 13px rgba(232,211,162,.55)); }
+}
+@media (prefers-reduced-motion: reduce) { .thread-item.lit .thread-head .star { animation: none; } }
+
+/* 展开的正文:沿用原文,只调整阅读节奏 */
+.thread-body { max-height: 0; overflow: hidden; transition: max-height .45s var(--ease-soft); }
+.thread-body .inner {
+  padding: 0 4px 22px 43px; max-width: 720px;
+  font-size: 14.5px; line-height: 30px; color: var(--text-secondary); font-weight: 300;
+}
+.thread-body .inner p { margin: 0 0 16px; }
+.thread-body .inner p:last-child { margin-bottom: 0; }
+
+.thread-aha { display: grid; gap: 8px; margin-top: 22px; }
 .thread-aha .a {
   font-family: var(--font-serif-sc); font-size: 14px; line-height: 26px; color: var(--text-dark);
   padding: 12px 16px; border-radius: var(--radius-card-sm);
@@ -340,20 +386,23 @@ header.site { position: relative; z-index: 5; background: transparent; }
   border: 1px dashed var(--accent-moon-lavender); background: rgba(170,160,213,.06);
   font-size: 13.5px; line-height: 25px; color: var(--text-dark);
 }
-.thread-more { display: inline-block; margin-top: 14px; font-size: 13px; color: var(--accent-moon-lavender); }
 .thread-empty {
   padding: 22px 20px; border: 1px dashed var(--border-card); border-radius: var(--radius-card-sm);
   color: var(--text-secondary); font-size: 13.5px; line-height: 26px; text-align: center;
 }
-.thread-empty .go { display: inline-block; margin-top: 12px; color: var(--accent-moon-lavender); font-size: 13px; }
+@media (max-width: 520px) {
+  .thread-head { gap: 11px; padding: 15px 2px; }
+  .thread-head .t { font-size: 14.5px; line-height: 25px; }
+  .thread-body .inner { padding-left: 26px; font-size: 14px; line-height: 28px; }
+}
 
 /* ---------- 品牌故事:整片星夜 + 左右构图(与前后 section 自然衔接) ---------- */
-.story { padding: 20px 0 110px; background: var(--surface-cloud-white); }
+.story { padding: 10px 0 76px; background: var(--surface-cloud-white); }
 .story-panel {
   position: relative; overflow: hidden; isolation: isolate;
   border-radius: var(--radius-card); color: var(--text-light);
   background: var(--background-story-navy);
-  padding: clamp(44px, 5vw, 76px) clamp(26px, 5vw, 78px) clamp(26px, 3vw, 40px);
+  padding: clamp(56px, 5vw, 84px) clamp(26px, 5vw, 72px) clamp(30px, 3vw, 40px);
 }
 /* 星云:右上角为重心,向左下自然淡出,不压过文字 */
 .story-sky {
@@ -379,20 +428,24 @@ header.site { position: relative; z-index: 5; background: transparent; }
 }
 .story-title {
   font-family: var(--font-serif-sc); font-weight: 500;
-  font-size: clamp(27px, 3.1vw, 46px); line-height: 1.62; letter-spacing: .02em;
+  font-size: clamp(25px, 2.5vw, 38px); line-height: 1.66; letter-spacing: .02em;
   color: var(--text-light); margin: 0; text-wrap: balance;
 }
-.story-title em { font-style: normal; color: var(--accent-starlight-gold); }
+/* 「看见」:斜体衬线 + 极轻微柔光,不过度设计 */
+.story-title em {
+  font-style: italic; color: var(--accent-starlight-gold);
+  text-shadow: 0 0 18px rgba(232,211,162,.32);
+}
 .story-lead {
-  margin: clamp(20px, 2.4vw, 32px) 0 0;
-  font-size: clamp(14px, 1.1vw, 16px); line-height: 2.1; font-weight: 300;
+  margin: clamp(16px, 1.8vw, 24px) 0 0;
+  font-size: clamp(13.5px, 1vw, 15px); line-height: 2; font-weight: 300;
   color: rgba(249,246,242,.72);
 }
 .story-lead em { font-style: normal; color: var(--accent-starlight-gold); }
 /* 描边光晕按钮,呼应星轨 */
 .story-btn {
   position: relative; display: inline-flex; align-items: center; gap: 14px;
-  margin-top: clamp(26px, 3vw, 40px); padding: 15px 38px;
+  margin-top: clamp(20px, 2.2vw, 30px); padding: 13px 34px;
   border: 1px solid rgba(232,211,162,.5); border-radius: var(--radius-button);
   font-size: 14.5px; letter-spacing: .1em; color: var(--text-light);
   box-shadow: 0 0 22px rgba(232,211,162,.16), inset 0 0 18px rgba(232,211,162,.06);
@@ -425,7 +478,7 @@ header.site { position: relative; z-index: 5; background: transparent; }
 /* 底部品牌收束 */
 .story-foot {
   position: relative; z-index: 2; display: flex; align-items: center; gap: 20px;
-  margin-top: clamp(34px, 4vw, 58px);
+  margin-top: clamp(26px, 3vw, 40px);
 }
 .story-foot .ln { flex: 1; height: 1px; background: linear-gradient(90deg, transparent, rgba(249,246,242,.24), transparent); }
 .story-foot .mk { display: flex; flex-direction: column; align-items: center; gap: 7px; flex: none; }
@@ -434,7 +487,7 @@ header.site { position: relative; z-index: 5; background: transparent; }
 
 @media (max-width: 900px) {
   /* Mobile 重新排版,而不是等比缩小 */
-  .story-panel { padding: 40px 24px 26px; }
+  .story-panel { padding: 48px 24px 26px; }
   .story-inner { grid-template-columns: 1fr; gap: 34px; align-items: start; }
   .story-sky { background-position: 68% 10%; opacity: .42;
     -webkit-mask-image: radial-gradient(130% 70% at 78% 6%, #000 6%, rgba(0,0,0,.5) 42%, transparent 72%);
@@ -479,7 +532,7 @@ var APP_URL = "app.html";
         <a href="#sky" data-app-hash="#/my-sky">我的星空</a>
         <a href="#favs" data-app-hash="#/favorites">收藏</a>
         <a href="#story">关于我们</a>
-        <a class="nav-cta" id="navCta" href="app.html" data-app>注册 / 登入</a>
+        <a class="nav-cta" id="navCta" href="app.html#/login" data-app-hash="#/login">注册 / 登入</a>
         <!-- 已登录时由 JS 显示,替代「注册 / 登入」 -->
         <div class="nav-user" id="navUser" hidden>
           <button type="button" class="nav-user-btn" id="navUserBtn" aria-haspopup="true" aria-expanded="false">
@@ -735,31 +788,55 @@ function appHref(hash) { return APP_URL + (hash || ""); }
 })();
 
 /* ---------- 你的生命脉络 ---------- */
-/* 内容来自应用内已生成的「属于你的生命脉络」,落地页完整呈现,不重新生成 */
+/* 内容全部沿用应用内已生成的原文,这里只改变呈现方式与展开交互 */
 (function () {
   var slot = document.getElementById("threadSlot");
   var lm = readCache("inner_sky_lifemap_v1");
   if (!(lm && lm.sections && lm.sections.length)) {
-    slot.innerHTML = '<div class="thread-empty">读完几个主题之后，<br>这里会把你的理解连成一条线。' +
-      '<a class="go" href="' + appHref("#/map") + '" data-app-hash="#/map">去看看 →</a></div>';
+    slot.innerHTML = '<div class="thread-empty">读完几个主题之后，<br>这里会把你的理解连成一条线。</div>';
     return;
+  }
+  var SEEN_KEY = "inner_sky_thread_seen_v1";
+  var seen = readCache(SEEN_KEY) || {};
+  function markSeen(k) {
+    if (seen[k]) return;
+    seen[k] = true;
+    try { localStorage.setItem(SEEN_KEY, JSON.stringify(seen)); } catch (e) { }
   }
   function paras(t) {
     return String(t || "").split(/\n\s*\n|\n/).filter(function (x) { return x.trim(); })
       .map(function (x) { return "<p>" + esc(x.trim()) + "</p>"; }).join("");
   }
   var html = lm.tagline ? '<div class="lead">' + esc(lm.tagline) + "</div>" : "";
-  html += '<div class="thread-list">' + lm.sections.map(function (x) {
-    return '<div class="thread-item"><span class="dot">✦</span><div class="tx">' +
-      '<div class="t">' + esc(x.title) + "</div>" +
-      '<div class="d">' + paras(x.body) + "</div></div></div>";
+  html += '<div class="thread-list">' + lm.sections.map(function (x, i) {
+    var key = "s" + i + "|" + String(x.title || "").slice(0, 24);
+    var lit = !!seen[key];
+    return '<div class="thread-item' + (lit ? " lit" : "") + '" data-key="' + esc(key) + '">' +
+      '<button class="thread-head" type="button" aria-expanded="false">' +
+        '<span class="star" aria-hidden="true"></span>' +
+        '<span class="t">' + esc(x.title) + "</span>" +
+        '<span class="sign" aria-hidden="true">+</span>' +
+      "</button>" +
+      '<div class="thread-body"><div class="inner">' + paras(x.body) + "</div></div></div>";
   }).join("") + "</div>";
   if (lm.aha && lm.aha.length)
     html += '<div class="thread-aha">' + lm.aha.map(function (q) {
       return '<div class="a">' + esc(q) + "</div>"; }).join("") + "</div>";
   if (lm.question) html += '<div class="thread-q">' + esc(lm.question) + "</div>";
-  html += '<a class="thread-more" href="' + appHref("#/map") + '" data-app-hash="#/map">在应用中继续阅读 →</a>';
   slot.innerHTML = html;
+
+  slot.querySelectorAll(".thread-item").forEach(function (item) {
+    var head = item.querySelector(".thread-head");
+    var body = item.querySelector(".thread-body");
+    head.addEventListener("click", function () {
+      var open = item.classList.toggle("open");
+      head.setAttribute("aria-expanded", open ? "true" : "false");
+      item.querySelector(".sign").textContent = open ? "−" : "+";
+      body.style.maxHeight = open ? (body.scrollHeight + "px") : "";
+      // 星星一旦点亮就不再熄灭 —— 它代表「你已经看见过这一段」
+      if (open) { item.classList.add("lit"); markSeen(item.getAttribute("data-key")); }
+    });
+  });
 })();
 
 /* ---------- 回到星空起点:首页内部平滑滚动,不跳页 ---------- */
