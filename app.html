@@ -38,9 +38,12 @@
     --w-retro:#a05840; --w-aspdot:#6b5a3e; --w-sglyph:#8a6420; --w-schar:#6b5424; --w-axis:#a8792a;
   }
   *{box-sizing:border-box}
-  html,body{margin:0;padding:0;background:var(--night)}
+  /* 底色与新版登入页一致,避免任何时刻露出旧版浅色背景 */
+  html,body{margin:0;padding:0;background:#09122e}
   body{
-    background:var(--bg-layers);
+    /* 旧版的浅色分层背景只属于已隐藏的 legacy 界面;
+       使用者可见的一律是深蓝,登入 → 载入 → 新版页面之间不会闪浅色 */
+    background:#09122e;
     transition:background .5s;
     color:var(--parchment);
     font-family:"Iowan Old Style","Palatino Linotype",Palatino,"Songti SC","Source Han Serif SC",Georgia,serif;
@@ -109,6 +112,15 @@
     transition:border-color .3s,background .3s}
   .sky-auth-card .btn-alt:hover{border-color:rgba(249,246,242,.7);background:rgba(249,246,242,.06)}
   .sky-auth-back{display:block;text-align:center;margin-top:20px;font-size:12px;color:rgba(249,246,242,.45);text-decoration:none}
+  /* 登入后的等待状态:停在同一张卡片上,不跳任何页面 */
+  .sky-auth-card.loading .auth-form{opacity:.25;pointer-events:none;transition:opacity .3s}
+  .sky-auth-loading{display:none;flex-direction:column;align-items:center;gap:14px;padding:14px 0 4px}
+  .sky-auth-card.loading .sky-auth-loading{display:flex}
+  .sky-auth-loading .ring{width:30px;height:30px;border-radius:50%;
+    border:1.5px solid rgba(249,246,242,.16);border-top-color:#e8d3a2;animation:authSpin .9s linear infinite}
+  @keyframes authSpin{to{transform:rotate(360deg)}}
+  .sky-auth-loading .tx{font-size:12.5px;letter-spacing:.14em;color:rgba(249,246,242,.6)}
+  @media (prefers-reduced-motion:reduce){.sky-auth-loading .ring{animation-duration:2.4s}}
   .sky-auth-back:hover{color:rgba(249,246,242,.85)}
   /* ---------- 收藏 ---------- */
   .fav-btn{background:none;border:none;cursor:pointer;color:var(--muted);font-size:15px;line-height:1;
@@ -371,6 +383,11 @@
   #dpage .dp-field .hint{font-size:11.5px;color:var(--dp-mut);line-height:1.7}
   #dpage .dp-row2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
   #dpage .dp-form-msg{min-height:20px;font-size:12.5px;color:#b4645a;line-height:1.7}
+  /* 保存前的重要提示:柔和,不使用警告红 */
+  #dpage .dp-note{display:flex;gap:11px;align-items:flex-start;padding:14px 16px;border-radius:16px;
+    background:rgba(232,211,162,.14);border:1px solid rgba(232,211,162,.42);
+    font-size:13px;line-height:1.85;color:var(--dp-ink)}
+  #dpage .dp-note .ic{color:#b08d3f;flex:none;line-height:1.6}
   @media(max-width:520px){#dpage .dp-row2{grid-template-columns:1fr}}
   #dpage .dp-hero{
     position:relative;background:var(--dp-navy);color:var(--dp-light);overflow:hidden;
@@ -698,6 +715,7 @@
     <div class="sky-auth-brand"><span class="s">✶</span> INNER&nbsp;SKY</div>
     <div class="sky-auth-title" data-i18n="authTitle">我的生命蓝图</div>
     <div class="sky-auth-sub" data-i18n="authSub">登录后,你的生命蓝图将安全存放在云端</div>
+    <div class="auth-form">
     <div class="field"><label data-i18n="email">邮箱</label><input id="authEmail" type="email" autocomplete="email" placeholder="you@example.com"></div>
     <div class="field" style="margin-top:10px"><label data-i18n="password">密码</label><input id="authPw" type="password" autocomplete="current-password" data-i18n-ph="pwPh" placeholder="至少 6 位"></div>
     <!-- User ID:仅注册时显示,存进 Supabase user_metadata.display_name,不影响登录逻辑 -->
@@ -705,6 +723,8 @@
     <div id="authMsg" style="min-height:18px;font-size:12px;color:var(--fire);margin:10px 0 4px"></div>
     <button class="btn-main" id="authLogin" data-i18n="login">登 录</button>
     <button class="btn-alt" id="authSignup" data-i18n="signup">没有账号?注 册</button>
+    </div>
+    <div class="sky-auth-loading"><span class="ring"></span><span class="tx">正在进入你的星空…</span></div>
     <a class="sky-auth-back" href="index.html">← 回到首页</a>
   </div>
 </div>
@@ -1903,31 +1923,31 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
 
   /* —— 九个主题的显示文案(仅 UI;服务端主题定义不变)—— */
   const TOPIC_TEXT = {
-    self:    { name:["个人","Being You"], sub:["人格 · 天赋 · 使命","what you're like when nothing's being asked of you"],
+    self:    { name:["个人","Being You"], sub:["你是谁，你如何成为自己","what you're like when nothing's being asked of you"],
                teaser:["别人眼中的你,和你自己知道的你,\n中间那段距离,才是真正的你。",
                        "There's the you other people meet,\nand the you that you know from the inside.\nSome days there's quite a distance between them."] },
-    emotion: { name:["情感模式","Falling For Someone"], sub:["你如何去爱","what shifts in you when you get close"],
+    emotion: { name:["情感模式","Falling For Someone"], sub:["你如何靠近一个人","what shifts in you when you get close"],
                teaser:["喜欢一个人的时候,你会变成另一个版本的自己。\n那个版本,你未必喜欢。",
                        "There are moments in closeness\nwhen you become someone slightly different."] },
-    career:  { name:["事业","Your Working Life"], sub:["怎样工作才发挥得出来","what makes the effort feel worth it"],
+    career:  { name:["事业","Your Working Life"], sub:["什么样的工作让你真正发挥","what makes the effort feel worth it"],
                teaser:["有些累是值得的,有些累是空的。\n差别不在做什么,而在怎么做。",
                        "Some days leave you tired and glad.\nOthers just leave you tired.\nUsually it has less to do with the work itself."] },
-    family:  { name:["家庭","Where You Come From"], sub:["父母 · 兄弟姐妹","parents, siblings, the house you grew up in"],
+    family:  { name:["家庭","Where You Come From"], sub:["你从怎样的关系里长大","parents, siblings, the house you grew up in"],
                teaser:["你以为早就走出来了,\n但有些反应还是会自动发生。",
                        "Some reactions seem to arrive\nbefore you've decided anything."] },
-    love:    { name:["感情","Staying Together"], sub:["长期关系怎么运转","how love works over years, not weeks"],
+    love:    { name:["感情","Staying Together"], sub:["一段关系如何走得长久","how love works over years, not weeks"],
                teaser:["让你心动的,和让你安稳的,\n常常不是同一种人。",
                        "The person who moves you\nand the person you can settle beside\naren't always the same person."] },
-    partner: { name:["正缘特质","The People You Keep Meeting"], sub:["容易吸引什么样的人","who tends to find their way to you"],
+    partner: { name:["心动与吸引","The People You Keep Meeting"], sub:["什么样的人会让你真正心动","who tends to find their way to you"],
                teaser:["你反复遇到的那一类人,\n其实一直在提醒你同一件事。",
                        "Certain people keep turning up in your life,\nin different forms."] },
-    wealth:  { name:["财运","Money"], sub:["你的赚钱模式","how it comes in, how it goes"],
+    wealth:  { name:["金钱","Money"], sub:["你和钱的关系","how it comes in, how it goes"],
                teaser:["钱怎么进来,和钱怎么留下,\n是两件不同的事。",
                        "How money arrives\nand how it stays\nturn out to be two separate questions."] },
-    study:   { name:["求学","How You Learn"], sub:["你怎么学会一件事","what makes something finally click"],
+    study:   { name:["学习方式","How You Learn"], sub:["你是怎么真正学会一件事的","what makes something finally click"],
                teaser:["同样一堂课,有人听懂,有人做懂。\n你是哪一种?",
                        "Some people learn by listening.\nOthers only really learn once they've tried it."] },
-    body:    { name:["身心状态","Rest and Energy"], sub:["压力怎么来,力气怎么回","where the tiredness actually comes from"],
+    body:    { name:["身心状态","Rest and Energy"], sub:["压力怎么来，力气怎么回来","where the tiredness actually comes from"],
                teaser:["什么都没做,却已经很累。\n消耗常常发生在看不见的地方。",
                        "Some days end tired without much to show for it.\nThe tiredness is real.\nIt just came from somewhere quieter."] }
   };
@@ -2044,23 +2064,23 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
 
   // ---------- 九个主题(仅 UI 文案;写作规则与资料调用都在服务端) ----------
   const TOPICS9 = [
-    { id: "self",    icon: "\u2B50",       name: "个人",     sub: "人格 · 天赋 · 使命",
+    { id: "self",    icon: "\u2B50",       name: "个人",     sub: "你是谁，你如何成为自己",
       teaser: "别人眼中的你,和你自己知道的你,\n中间那段距离,才是真正的你。" },
-    { id: "emotion", icon: "\u2764\uFE0F", name: "情感模式", sub: "你如何去爱",
+    { id: "emotion", icon: "\u2764\uFE0F", name: "情感模式", sub: "你如何靠近一个人",
       teaser: "喜欢一个人的时候,你会变成另一个版本的自己。\n那个版本,你未必喜欢。" },
-    { id: "career",  icon: "\uD83D\uDCBC", name: "事业",     sub: "怎样工作才发挥得出来",
+    { id: "career",  icon: "\uD83D\uDCBC", name: "事业",     sub: "什么样的工作让你真正发挥",
       teaser: "有些累是值得的,有些累是空的。\n差别不在做什么,而在怎么做。" },
-    { id: "family",  icon: "\uD83C\uDFE1", name: "家庭",     sub: "父母 · 兄弟姐妹",
+    { id: "family",  icon: "\uD83C\uDFE1", name: "家庭",     sub: "你从怎样的关系里长大",
       teaser: "你以为早就走出来了,\n但有些反应还是会自动发生。" },
-    { id: "love",    icon: "\uD83D\uDC8D", name: "感情",     sub: "长期关系怎么运转",
+    { id: "love",    icon: "\uD83D\uDC8D", name: "感情",     sub: "一段关系如何走得长久",
       teaser: "让你心动的,和让你安稳的,\n常常不是同一种人。" },
-    { id: "partner", icon: "\uD83D\uDC64", name: "正缘特质", sub: "容易吸引什么样的人",
+    { id: "partner", icon: "\uD83D\uDC64", name: "心动与吸引", sub: "什么样的人会让你真正心动",
       teaser: "你反复遇到的那一类人,\n其实一直在提醒你同一件事。" },
-    { id: "wealth",  icon: "\uD83D\uDCB0", name: "财运",     sub: "你的赚钱模式",
+    { id: "wealth",  icon: "\uD83D\uDCB0", name: "金钱",     sub: "你和钱的关系",
       teaser: "钱怎么进来,和钱怎么留下,\n是两件不同的事。" },
-    { id: "study",   icon: "\uD83C\uDF93", name: "求学",     sub: "你怎么学会一件事",
+    { id: "study",   icon: "\uD83C\uDF93", name: "学习方式",     sub: "你是怎么真正学会一件事的",
       teaser: "同样一堂课,有人听懂,有人做懂。\n你是哪一种?" },
-    { id: "body",    icon: "\uD83C\uDF19", name: "身心状态", sub: "压力怎么来,力气怎么回",
+    { id: "body",    icon: "\uD83C\uDF19", name: "身心状态", sub: "压力怎么来，力气怎么回来",
       teaser: "什么都没做,却已经很累。\n消耗常常发生在看不见的地方。" }
   ];
   function findTopic(id) { return TOPICS9.find(x => x.id === id) || null; }
@@ -2578,6 +2598,14 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
      判断,不各自判断。
      ============================================================ */
   let primaryChartId = null;
+  /* 已读主题:跟着账号存在 prefs,logout / 换设备后仍然保留 */
+  let readTopics = {};
+  function markTopicRead(tid) {
+    if (!tid || readTopics[tid]) return;
+    readTopics[tid] = true;
+    window.Cloud.savePrefs({ readTopics: readTopics });
+    saveProfileCache();
+  }
 
   function primaryChart() {
     const byId = store.charts.find(function (c) { return c.id === primaryChartId; });
@@ -2628,6 +2656,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   function applyCloudPrefs(p) {
     p = p || {};
     if (p.primaryChartId) primaryChartId = p.primaryChartId;
+    if (p.readTopics) readTopics = Object.assign({}, p.readTopics);
     if (p.wheelShow) OPT_KEYS.forEach(function (k) { wheelShow[k[0]] = !!p.wheelShow[k[0]]; });
     if (p.glyphMode === "sym" || p.glyphMode === "name") glyphMode = p.glyphMode;
     // p.theme:主题功能已移除,旧偏好值忽略
@@ -2775,14 +2804,9 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
         nick: uid || (c ? (c.nick || "") : ""),
         email: (window.Cloud && window.Cloud.email) ? window.Cloud.email() : ""
       }));
-      // 已读章节:落地页据此优先展示未读
-      if (c) {
-        var read = {};
-        Object.keys(c[window.Reading.LK("topics")] || {}).forEach(function (k) { read[k] = true; });
-        localStorage.setItem("inner_sky_read_v1", JSON.stringify(read));
-        // 收藏(取最近几条给落地页预览)
-        localStorage.setItem("inner_sky_favs_v1", JSON.stringify((c.favs || []).slice(0, 4)));
-      }
+      // 已读章节:以 prefs.readTopics 为准(真正打开阅读过才算)
+      localStorage.setItem("inner_sky_read_v1", JSON.stringify(readTopics));
+      localStorage.setItem("inner_sky_favs_v1", JSON.stringify(((c && c.favs) || []).slice(0, 4)));
     } catch (e) { }
   }
 
@@ -2804,12 +2828,15 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       var c = activeChart();
       var lm = c && window.Reading.reviveTopic(c[window.Reading.LK("lifemap")]);
       if (lm && lm.sections && lm.sections.length) {
-        localStorage.setItem("inner_sky_lifemap_v1", JSON.stringify({
+        // 存完整内容,落地页据此完整呈现(仍是同一份已生成的结果,不重新生成)
+        var payload = JSON.stringify({
           tagline: lm.tagline || "",
-          sections: lm.sections.slice(0, 4).map(function (x) {
-            return { title: x.title || "", body: String(x.body || "").replace(/\s+/g, " ").slice(0, 90) };
-          })
-        }));
+          sections: lm.sections.map(function (x) {
+            return { title: x.title || "", body: String(x.body || "") };
+          }),
+          aha: lm.aha || [], question: lm.question || "", action: lm.action || ""
+        });
+        if (payload.length < 300000) localStorage.setItem("inner_sky_lifemap_v1", payload);
       } else {
         localStorage.removeItem("inner_sky_lifemap_v1");
       }
@@ -4193,6 +4220,9 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     return h;
   }
   function dpNeedChart() {
+    // 已登录但资料还在路上 → 显示等待,而不是「没有星盘」
+    if (!chartsLoaded && window.Cloud.hasSession())
+      return dpLoading(dpT("正在读取你的星盘…", "Loading your chart…"));
     return '<div class="dp-card dp-loading"><span class="g">✹</span>' +
       dpT("请先回到主页选择或建立一张星盘", "Please choose or create a chart first") +
       '<br><a class="dp-cta" style="margin-top:16px" href="' + LANDING_URL + '">' + dpT("回到主页", "Back to home") + "</a></div>";
@@ -4221,7 +4251,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     if (!c || !curResult) body = dpNeedChart();
     else {
       const saved = window.Reading.reviveTopic((c[window.Reading.LK("topics")] || {})[tid]);
-      if (saved) body = dpAnswerHtml(saved, tName);
+      if (saved) { body = dpAnswerHtml(saved, tName); markTopicRead(tid); }
       else if (topicBusy) body = dpLoading(dpT("正在为你整理这一章,大约需要一分钟…", "Preparing this chapter for you — about a minute…"));
       else if (topicErrs[tid]) body = dpError(topicErrs[tid], "dpRetryT");
       else if (window.I18N.isEN()) body = '<div class="dp-card">' + missingLangHtml("dpGenT") + "</div>";
@@ -4344,7 +4374,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       chip: dpT("生命蓝图", "BLUEPRINT"),
       title: dpT("你的星空解读", "Your Sky, In Words"),
       sub: sub, body: body, foot: foot,
-      backLabel: dpT("返回主页", "Back to home"), seed: 99
+      backLabel: dpT("返回主页", "Back to home"), backHref: LANDING_URL, seed: 99
     });
     const bw = document.getElementById("dpBlueprintWheel");
     if (bw && curResult) drawChartWheel(bw, curResult, { variant: "compact" });
@@ -4530,6 +4560,8 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       if (ov) ov.style.display = "";
       return;
     }
+    // 一个邮件只对应一张星盘:已经有完整资料就不再提供输入界面
+    if (chartsLoaded && hasCompleteBirthProfile()) { location.replace(location.pathname + location.search + "#/reading"); return; }
     const opts = [];
     CITY_GROUPS.forEach(function (g) {
       const items = g[1].map(function (ct) {
@@ -4547,6 +4579,10 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
           "These details are used only to calculate your chart. Birth time determines your rising sign and houses.") +
       '</div>' +
       '<div class="dp-form">' +
+      '<div class="dp-note"><span class="ic" aria-hidden="true">✦</span><span>' +
+      dpT("一个邮件仅供一个星盘，请确保输入资料正确，一旦输入无法更改",
+          "One chart per email. Please double-check your details — they cannot be changed once saved.") +
+      '</span></div>' +
       '<div class="dp-field"><label>' + dpT("称呼", "Name") + '</label>' +
       '<input id="obNick" type="text" placeholder="' + esc0(dpT("怎么称呼你", "What should we call you")) + '"></div>' +
       '<div class="dp-row2">' +
@@ -4559,6 +4595,8 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       opts.join("") + '</select>' +
       '<span class="hint">' + dpT("目前支持马来西亚与新加坡(UTC+8)。", "Currently Malaysia and Singapore (UTC+8).") + '</span></div>' +
       '<div class="dp-form-msg" id="obMsg"></div>' +
+      '<div style="font-size:12px;color:var(--dp-mut);line-height:1.8;margin:-4px 0 2px">' +
+      dpT("保存后出生资料将无法修改。", "Birth details cannot be edited after saving.") + '</div>' +
       '<button class="dp-cta" id="obSave" style="justify-self:start">' +
       dpT("保存并绘制我的星盘", "Save and draw my chart") + '</button>' +
       '</div></div>';
@@ -4581,6 +4619,12 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       const ci = document.getElementById("obCity").value;
       if (!date || !time || ci === "") {
         msg.textContent = dpT("请把出生日期、时间与地点都填好。", "Please fill in date, time and place.");
+        return;
+      }
+      // 双保险:保存瞬间再确认一次,避免重复建立或覆盖既有星盘
+      if (hasCompleteBirthProfile()) {
+        msg.textContent = dpT("你已经有一张星盘了。", "You already have a chart.");
+        location.replace(location.pathname + location.search + "#/reading");
         return;
       }
       const ct = CITIES[+ci];
@@ -4702,7 +4746,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       chip: dpT("人生探索地图", "LIFE MAP"),
       title: dpT("我的探索地图", "My Exploration Map"),
       sub: dpT("把走过的问题连成一张属于你的地图", "Connecting what you’ve explored into one map of you"),
-      body: body, foot: foot, backLabel: dpT("返回主页", "Back to home"), seed: 55
+      body: body, foot: foot, backLabel: dpT("返回主页", "Back to home"), backHref: LANDING_URL, seed: 55
     });
     const rm = document.getElementById("dpRetryM");
     if (rm) rm.addEventListener("click", function () { mapErr = null; toggleMap(); });
@@ -4768,8 +4812,22 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       if (signup) card.insertBefore(sign, login); else card.insertBefore(login, sign);
     }
     function setAuthMsg(t, ok) { const m = $("authMsg"); m.textContent = t || ""; m.style.color = ok ? "var(--gold)" : "var(--fire)"; }
-    function enterApp() {
+    // 登入页上的等待状态(不跳页、不换背景)
+    function setAuthLoading(on, msg) {
+      const card = document.querySelector(".sky-auth-card");
+      if (!card) return;
+      card.classList.toggle("loading", !!on);
+      if (msg) { const t = card.querySelector(".sky-auth-loading .tx"); if (t) t.textContent = msg; }
+    }
+    function leaveAuth() {
+      setAuthLoading(false);
       $("authOverlay").style.display = "none";
+    }
+
+    function enterApp() {
+      // 停在登入页显示 Loading,等资料与目标页面都就绪再收起
+      $("authOverlay").style.display = "";
+      setAuthLoading(true, window.I18N.isEN() ? "Entering your sky…" : "正在进入你的星空…");
       // 页面顶部右上角账号条(位于 header 内,随页面滚动一起离开画面)
       const bar = document.getElementById("acctBar");
       if (bar && !bar.dataset.ready) {
@@ -4796,6 +4854,11 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
             if (mig.length) store.charts = mig;
           });
         }
+      }).catch(function (e) {
+        console.warn(e);
+        setAuthLoading(false);
+        setAuthMsg(window.I18N.isEN() ? "Could not load your data. Please try again." : "资料载入失败，请再试一次");
+        throw e;
       }).then(function () {
         if (!store.activeId || !store.charts.some(c => c.id === store.activeId)) {
           const usable = store.charts.filter(isCompleteBirthData);
@@ -4804,6 +4867,8 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
         chartsLoaded = true;
         renderChartList(); drawActive();
         routeAfterEntry();
+        // 目标页面已经渲染,这时才收起登入页,中间不会露出任何其他背景
+        requestAnimationFrame(function () { requestAnimationFrame(leaveAuth); });
         setTimeout(function () { saveWheelSnapshot(); renderFavs(); applyDeepLink(); }, 600);
       });
     }
@@ -4848,7 +4913,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     $("authPw").addEventListener("keydown", function (e) { if (e.key === "Enter") $("authLogin").click(); });
     // 已有会话:静默续期后直接进入
     if (window.Cloud.hasSession()) {
-      // 乐观进入:令牌已在本地,先放行,不闪 Login Page
+      // 令牌已在本地:停在登入页的 Loading 状态,资料就绪后直接进入目标页
       enterApp();
       window.Cloud.refresh().catch(function () {
         // 令牌失效才回到登录页
