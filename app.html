@@ -572,6 +572,12 @@
   #dpage .dp-return .say{font-family:var(--dp-serif);font-size:14.5px;line-height:1.9;color:var(--dp-mut)}
   #dpage .dp-loading{text-align:center;color:var(--dp-mut);font-size:13.5px;line-height:2.2;padding:60px 20px}
   /* 内容载入:一颗星轻轻呼吸,维持原本页面背景 */
+  /* 九个主题的进度:九颗小点,读过的亮起 */
+  #dpage .dp-thread-gate{display:flex;justify-content:center;gap:9px}
+  #dpage .dp-thread-gate .pip{width:6px;height:6px;border-radius:50%;background:var(--dp-line);
+    border:1px solid rgba(129,118,173,.25)}
+  #dpage .dp-thread-gate .pip.on{background:var(--dp-gold);border-color:transparent;
+    box-shadow:0 0 6px rgba(232,211,162,.75)}
   #dpage .dp-boot{min-height:52vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px}
   #dpage .dp-boot .tx,#dpage .dp-dots .tx{font-size:13px;letter-spacing:.16em;color:var(--dp-mut)}
   #dpage .dp-boot .dot,#dpage .dp-dots .dot{
@@ -1870,6 +1876,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     secBlueprint:     ["你的生命蓝图", "Your Inner Landscape"],
     secChapters:      ["你的人生章节", "The Chapters of Your Life"],
     secThread:        ["属于你的生命脉络", "The Pattern of Your Life"],
+    threadNeedMore:   ["还需要读完 %s 个主题", "%s more chapters to go"],
     secChaptersSub:   ["", "Nine places to look, whenever you feel like looking"],
 
     /* —— 解读呈现 —— */
@@ -1895,10 +1902,10 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     diagnosis:        ["诊断:", "Diagnosis: "],
     probe:            [" · 探测 ", " · probe "],
     noService:        ["尚未连接解读服务。", "Not connected yet."],
-    mapNeedMore:      ["读完至少 3 个主题后,这里会把所有理解连成一条线,并给出可以着手的方向(目前 %s/3)",
-                       "Read a few chapters and the threads start to meet here. %s so far — three is usually enough."],
-    mapReady:         ["把前面所有理解,连接到你的人生", "The threads are ready to meet."],
-    mapBtn:           ["生成我的探索地图", "Draw them together"],
+    mapNeedMore:      ["读完九个主题后,这里会把所有理解收束成一条线(目前 %s/9)",
+                       "Once all nine chapters are read, they meet here. %s of 9 so far."],
+    mapReady:         ["九个主题都读完了。把它们连接到你的人生。", "All nine are read. Time to draw them together."],
+    mapBtn:           ["生成属于我的生命脉络", "Draw them together"],
     mapBusy:          ["生成中…", "Working on it."],
 
     /* —— 人生探索地图(Version 1 隐藏中,字典预先备好)—— */
@@ -2866,6 +2873,11 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       } else {
         localStorage.removeItem("inner_sky_lifemap_v1");
       }
+      // 落地页据此显示进度 / 可生成 / 已生成三态
+      localStorage.setItem("inner_sky_thread_state_v1", JSON.stringify({
+        read: threadReadCount(), gate: THREAD_GATE,
+        generated: !!(lm && lm.sections && lm.sections.length)
+      }));
     } catch (e) { }
   }
 
@@ -3709,6 +3721,13 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     });
   }
 
+  // 属于你的生命脉络:读完九个主题才开启
+  const THREAD_GATE = 9;
+  function threadReadCount() {
+    const c = activeChart();
+    return c ? Object.keys(c[window.Reading.LK("topics")] || {}).length : 0;
+  }
+
   function renderMap() {
     const c = activeChart(), panel = $("mapPanel"), body = $("mapBody");
     if (!c || !curResult) { panel.style.display = "none"; return; }
@@ -3725,7 +3744,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       head.textContent = T("failed");
       $("mapBtn").textContent = T("tryAgain");
       $("mapBtn").style.display = "";
-    } else if (readCount < 3) {
+    } else if (readCount < THREAD_GATE) {
       head.textContent = T("mapNeedMore", readCount);
       $("mapBtn").style.display = "none";
     } else {
@@ -4790,23 +4809,222 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     if (!c || !curResult) body = dpNeedChart();
     else {
       const saved = window.Reading.reviveTopic(c[window.Reading.LK("lifemap")]);
-      if (saved) { body = dpAnswerHtml(saved, dpT("人生探索地图", "Life Map")); foot = dpReturnFoot(); }
-      else if (mapBusy) body = dpLoading(dpT("正在汇整你的探索地图…", "Drawing your map…"));
+      const done = threadReadCount();
+      if (saved) { body = dpAnswerHtml(saved, dpT("属于你的生命脉络", "The Pattern of Your Life")); foot = dpReturnFoot(); }
+      else if (mapBusy) body = dpLoading(dpT("正在把九个主题收束成一条线…", "Drawing the nine together…"));
       else if (mapErr) body = dpError(mapErr, "dpRetryM");
-      else body = '<div class="dp-card dp-loading"><span class="g">✹</span>' +
-        dpT("地图还没有生成,请回到主页从「探索地图」开始。", "The map hasn’t been generated yet — start it from the home page.") +
-        '<br><a class="dp-cta" style="margin-top:16px" href="' + LANDING_URL + '">' + dpT("回到主页", "Back to home") + "</a></div>";
+      else if (done < THREAD_GATE) {
+        // 还没读完九个主题:安静地显示进度,不催促
+        body = '<div class="dp-card"><div class="dp-read" style="text-align:center;padding:34px 12px">' +
+          '<div class="dp-thread-gate">' +
+          Array.from({ length: THREAD_GATE }, function (_, i) {
+            return '<span class="pip' + (i < done ? " on" : "") + '"></span>';
+          }).join("") + "</div>" +
+          '<div class="dp-prose" style="margin-top:20px">' +
+          esc0(dpT("九个主题都读完之后，这里会把它们收束成一条线。",
+                   "Once all nine chapters are read, they meet here.")) + "</div>" +
+          '<div style="font-size:12.5px;letter-spacing:.14em;color:var(--dp-mut);margin-top:10px">' +
+          esc0(done + " / " + THREAD_GATE) + "</div>" +
+          '<a class="dp-cta" style="margin-top:22px" href="' + LANDING_TOPICS + '">' +
+          esc0(dpT("继续阅读主题", "Keep reading")) + "</a></div></div>";
+      } else {
+        // 九个都读完了:可以生成
+        body = '<div class="dp-card"><div class="dp-read" style="text-align:center;padding:34px 12px">' +
+          '<div class="dp-thread-gate">' +
+          Array.from({ length: THREAD_GATE }, function () { return '<span class="pip on"></span>'; }).join("") + "</div>" +
+          '<div class="dp-prose" style="margin-top:20px">' + esc0(T("mapReady")) + "</div>" +
+          '<button class="dp-cta" style="margin-top:22px" id="dpGenMap">' + esc0(T("mapBtn")) + "</button></div></div>";
+      }
     }
+
     dpScaffold({
-      chip: dpT("人生探索地图", "LIFE MAP"),
-      title: dpT("我的探索地图", "My Exploration Map"),
-      sub: dpT("把走过的问题连成一张属于你的地图", "Connecting what you’ve explored into one map of you"),
+      chip: dpT("属于你的生命脉络", "THE PATTERN OF YOUR LIFE"),
+      title: dpT("属于你的生命脉络", "The Pattern of Your Life"),
+      sub: dpT("九个主题读完之后，它们会收束成一条线。",
+               "When all nine have been read, they come together into one thread."),
       body: body, foot: foot, backLabel: dpT("返回主页", "Back to home"), backHref: LANDING_URL, seed: 55
     });
     const rm = document.getElementById("dpRetryM");
     if (rm) rm.addEventListener("click", function () { mapErr = null; toggleMap(); });
+    const gm = document.getElementById("dpGenMap");
+    if (gm) gm.addEventListener("click", function () { toggleMap(); });
   }
 
+  // ---------- 页面:出生资料 onboarding(新版)----------
+  // 复用既有城市表与既有保存逻辑,只是换成新版 UI;保存后直接进入新版阅读页
+  function renderOnboardingPage() {
+    if (!window.Cloud.hasSession()) {
+      const ov = $("authOverlay");
+      if (ov) ov.style.display = "";
+      return;
+    }
+    // 一个邮件只对应一张星盘:已经有完整资料就不再提供输入界面
+    if (chartsLoaded && hasCompleteBirthProfile()) { location.replace(location.pathname + location.search + "#/reading"); return; }
+    const opts = [];
+    CITY_GROUPS.forEach(function (g) {
+      const items = g[1].map(function (ct) {
+        const i = CITIES.findIndex(function (x) { return x[0] === ct[0]; });
+        return '<option value="' + i + '">' + esc0(ct[0]) + '</option>';
+      }).join("");
+      opts.push('<optgroup label="' + esc0(window.I18N.TRegion(g[0])) + '">' + items + '</optgroup>');
+    });
+
+    const body =
+      '<div class="dp-card">' +
+      '<div class="dp-sec-label">' + dpT("出生资料", "YOUR BIRTH DATA") + '</div>' +
+      '<div class="dp-prose" style="margin-bottom:22px">' +
+      dpT("这些资料只用来计算你的星盘。出生时间会决定上升与宫位,请尽量填写准确。",
+          "These details are used only to calculate your chart. Birth time determines your rising sign and houses.") +
+      '</div>' +
+      '<div class="dp-form">' +
+      '<div class="dp-note"><span class="ic" aria-hidden="true">✦</span><span>' +
+      dpT("一个邮件仅供一个星盘，请确保输入资料正确，一旦输入无法更改",
+          "One chart per email. Please double-check your details — they cannot be changed once saved.") +
+      '</span></div>' +
+      '<div class="dp-field"><label>' + dpT("称呼", "Name") + '</label>' +
+      '<input id="obNick" type="text" placeholder="' + esc0(dpT("怎么称呼你", "What should we call you")) + '"></div>' +
+      '<div class="dp-row2">' +
+      '<div class="dp-field"><label>' + dpT("出生日期", "Birth date") + '</label>' +
+      '<input id="obDate" type="date" value="1995-01-01"></div>' +
+      '<div class="dp-field"><label>' + dpT("出生时间", "Birth time") + '</label>' +
+      '<input id="obTime" type="time" value="12:00"></div></div>' +
+      '<div class="dp-field"><label>' + dpT("出生地点", "Birth place") + '</label>' +
+      '<select id="obCity"><option value="">' + esc0(dpT("选择地区", "Select a place")) + '</option>' +
+      opts.join("") + '</select>' +
+      '<span class="hint">' + dpT("目前支持马来西亚与新加坡(UTC+8)。", "Currently Malaysia and Singapore (UTC+8).") + '</span></div>' +
+      '<div class="dp-form-msg" id="obMsg"></div>' +
+      '<div style="font-size:12px;color:var(--dp-mut);line-height:1.8;margin:-4px 0 2px">' +
+      dpT("保存后出生资料将无法修改。", "Birth details cannot be edited after saving.") + '</div>' +
+      '<button class="dp-cta" id="obSave" style="justify-self:start">' +
+      dpT("保存并绘制我的星盘", "Save and draw my chart") + '</button>' +
+      '</div></div>';
+
+    dpScaffold({
+      chip: dpT("第一步", "STEP ONE"),
+      title: dpT("先让我认识你", "Let me get to know you"),
+      sub: dpT("填好之后，你的星盘会立刻生成，\n然后我们就可以开始阅读它。",
+               "Once this is done, your chart is drawn\nand we can start reading it together."),
+      body: body, foot: "",
+      backLabel: dpT("返回主页", "Back to home"), backHref: LANDING_URL, seed: 23
+    });
+
+    const save = document.getElementById("obSave");
+    if (save) save.addEventListener("click", function () {
+      const msg = document.getElementById("obMsg");
+      const nick = document.getElementById("obNick").value.trim() || T("unnamed");
+      const date = document.getElementById("obDate").value;
+      const time = document.getElementById("obTime").value;
+      const ci = document.getElementById("obCity").value;
+      if (!date || !time || ci === "") {
+        msg.textContent = dpT("请把出生日期、时间与地点都填好。", "Please fill in date, time and place.");
+        return;
+      }
+      // 双保险:保存瞬间再确认一次,避免重复建立或覆盖既有星盘
+      if (hasCompleteBirthProfile()) {
+        msg.textContent = dpT("你已经有一张星盘了。", "You already have a chart.");
+        location.replace(location.pathname + location.search + "#/reading");
+        return;
+      }
+      const ct = CITIES[+ci];
+      const c = { id: window.Cloud.uuid(), nick: nick, date: date, time: time, lat: ct[1], lon: ct[2], sys: "placidus" };
+      msg.style.color = "var(--dp-mut)";
+      msg.textContent = dpT("正在绘制你的星盘…", "Drawing your chart…");
+      store.charts.push(c);
+      store.activeId = c.id;
+      if (!primaryChartId) setPrimaryChart(c.id);
+      window.Cloud.insertChart(c).catch(function (e) { console.warn(T("syncFail"), e); });
+      saveStore();
+      renderChartList();
+      drawActive();               // 计算 curResult(旧界面不可见,仅供计算)
+      location.hash = "#/reading"; // 直接进入新版阅读体验,不停留在任何旧页面
+    });
+  }
+
+  // ---------- 页面:我的星空(完整星盘)----------
+  // 不重算任何东西:所有读数来自 curResult,与生命蓝图的简化盘同源
+  function renderMySkyPage() {
+    const c = activeChart();
+    let body = "", sub = "";
+    if (!c || !curResult) body = dpNeedChart();
+    else {
+      const res = curResult;
+      sub = c.nick ? esc0(c.nick) + " · " + c.date + " " + c.time : "";
+
+      // 盘面
+      body += '<div class="dp-card"><div class="dp-sec-label">' + dpT("你的星盘", "YOUR CHART") + '</div>' +
+        '<svg class="dp-wheel dp-wheel-full" id="dpFullWheel" role="img" aria-label="' +
+        esc0(dpT("完整星盘", "Full natal chart")) + '"></svg></div>';
+
+      // 四轴
+      const ax = function (label, lon) {
+        const g = C.lonToSign(lon);
+        const nm = window.I18N.isEN() ? window.I18N.TSign(g.sign) : g.sign;
+        return '<div class="ax"><small>' + label + '</small><b>' + esc0(nm) + '</b>' +
+          '<div class="num" style="font-size:12px;margin-top:3px">' + g.deg.toFixed(1) + '°</div></div>';
+      };
+      body += '<div class="dp-card"><div class="dp-sec-label">' + dpT("四轴", "ANGLES") + '</div><div class="dp-axes">' +
+        ax("ASC", res.ang.asc) + ax("MC", res.ang.mc) +
+        ax("DSC", C.n360(res.ang.asc + 180)) + ax("IC", C.n360(res.ang.mc + 180)) +
+        '</div></div>';
+
+      // 行星表:星座 · 度数 · 宫位 · 逆行
+      const rows = DP_MAJOR.map(function (k) {
+        const p = dpPlacement(k);
+        if (!p) return "";
+        return '<tr><td><span class="pn">' + (GL.symbolSVG ? GL.symbolSVG(p.glyph, 16, "currentColor") : "") +
+          esc0(p.name) + '</span></td>' +
+          '<td>' + esc0(p.sign) + '</td>' +
+          '<td class="num">' + p.deg.toFixed(2) + '°</td>' +
+          '<td class="num">' + esc0(window.I18N.houseLabel(p.house)) + '</td>' +
+          '<td class="num">' + (p.retro ? '<span style="color:#b4645a">℞</span>' : "") + '</td></tr>';
+      }).join("");
+      body += '<div class="dp-card"><div class="dp-sec-label">' + dpT("行星位置", "PLANETS") + '</div>' +
+        '<div class="dp-scroll"><table class="dp-tbl"><thead><tr>' +
+        '<th>' + dpT("行星", "Planet") + '</th><th>' + dpT("星座", "Sign") + '</th>' +
+        '<th>' + dpT("度数", "Degree") + '</th><th>' + dpT("宫位", "House") + '</th><th></th>' +
+        '</tr></thead><tbody>' + rows + '</tbody></table></div></div>';
+
+      // 宫头
+      const cuspRows = res.cusps.map(function (cl, i) {
+        const g = C.lonToSign(cl);
+        const nm = window.I18N.isEN() ? window.I18N.TSign(g.sign) : g.sign;
+        return '<tr><td class="num">' + esc0(window.I18N.houseLabel(i + 1)) + '</td>' +
+          '<td>' + esc0(nm) + '</td><td class="num">' + g.deg.toFixed(2) + '°</td></tr>';
+      }).join("");
+      body += '<div class="dp-card"><div class="dp-sec-label">' + dpT("宫位", "HOUSES") + '</div>' +
+        '<div class="dp-scroll"><table class="dp-tbl" style="min-width:320px"><thead><tr>' +
+        '<th>' + dpT("宫", "House") + '</th><th>' + dpT("宫头星座", "Cusp sign") + '</th><th>' + dpT("度数", "Degree") + '</th>' +
+        '</tr></thead><tbody>' + cuspRows + '</tbody></table></div></div>';
+
+      // 相位
+      const asps = (res.aspects || []).filter(function (a) {
+        const pa = res.planets[a.a], pb = res.planets[a.b];
+        return pa && pb && DP_MAJOR.indexOf(pa.key) >= 0 && DP_MAJOR.indexOf(pb.key) >= 0;
+      });
+      if (asps.length)
+        body += '<div class="dp-card"><div class="dp-sec-label">' + dpT("相位", "ASPECTS") + '</div><div class="dp-asp">' +
+          asps.map(function (a) {
+            const pa = res.planets[a.a], pb = res.planets[a.b];
+            const meta = (C.ASPECTS || []).find(function (x) { return x.key === a.type; }) || { name: a.type, glyph: "" };
+            return '<span class="a">' + esc0(pa.name) + ' <span class="t">' + esc0(meta.glyph + " " + meta.name) + '</span> ' +
+              esc0(pb.name) + ' <span class="t num">' + Math.abs(a.orb).toFixed(1) + '°</span></span>';
+          }).join("") + '</div></div>';
+    }
+
+    dpScaffold({
+      chip: dpT("我的星空", "MY SKY"),
+      title: dpT("你的完整星盘", "Your Full Natal Chart"),
+      sub: sub,
+      body: body,
+      foot: (c && curResult) ? '<div class="dp-chart-cta"><a class="dp-link" href="#/reading">← ' +
+        dpT("回到生命蓝图", "Back to your blueprint") + '</a></div>' : "",
+      backLabel: dpT("返回主页", "Back to home"),
+      backHref: LANDING_URL,
+      seed: 77
+    });
+    const fw = document.getElementById("dpFullWheel");
+    if (fw && curResult) drawChartWheel(fw, curResult, { variant: "full" });
+  }
   // ---------- 初始化 ----------
   function init() {
     // 旧版界面从此不参与任何使用者流程(仅保留 DOM 供计算与快照复用)

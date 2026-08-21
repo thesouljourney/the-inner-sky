@@ -386,10 +386,26 @@ header.site { position: relative; z-index: 5; background: transparent; }
   border: 1px dashed var(--accent-moon-lavender); background: rgba(170,160,213,.06);
   font-size: 13.5px; line-height: 25px; color: var(--text-dark);
 }
-.thread-empty {
-  padding: 22px 20px; border: 1px dashed var(--border-card); border-radius: var(--radius-card-sm);
-  color: var(--text-secondary); font-size: 13.5px; line-height: 26px; text-align: center;
+/* 未开启时的安静进度:九颗点,读过的亮起 */
+.thread-gate { padding: 26px 20px 22px; text-align: center; }
+.thread-gate .pips { display: flex; justify-content: center; gap: 9px; }
+.thread-gate .pip {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--border-card); border: 1px solid rgba(170,160,213,.3);
 }
+.thread-gate .pip.on {
+  background: var(--accent-starlight-gold); border-color: transparent;
+  box-shadow: 0 0 6px rgba(232,211,162,.8);
+}
+.thread-gate .tx { margin: 18px 0 0; font-size: 13.5px; line-height: 26px; color: var(--text-secondary); }
+.thread-gate .num { margin: 8px 0 0; font-size: 12.5px; letter-spacing: .14em; color: var(--text-secondary); opacity: .8; }
+.thread-gate .go {
+  display: inline-block; margin-top: 18px; padding: 10px 24px; border-radius: var(--radius-button);
+  border: 1px solid var(--accent-moon-lavender); color: var(--accent-moon-lavender); font-size: 13px;
+  transition: background var(--duration-hover) var(--ease-soft), color var(--duration-hover);
+}
+.thread-gate .go:hover { background: rgba(170,160,213,.1); }
+.thread-gate.ready .tx { color: var(--text-dark); }
 @media (max-width: 520px) {
   .thread-head { gap: 11px; padding: 15px 2px; }
   .thread-head .t { font-size: 14.5px; line-height: 25px; }
@@ -584,7 +600,7 @@ var APP_URL = "app.html";
       <div class="rail" id="chapterRail"></div>
 
       <!-- 「为你推荐」暂时停用(RECOMMENDATIONS 与 .reco 样式均保留,改回只需切换此处) -->
-      <div class="section-label">你的生命脉络</div>
+      <div class="section-label">属于你的生命脉络</div>
       <div class="thread" id="threadSlot"></div>
     </div>
 
@@ -792,10 +808,26 @@ function appHref(hash) { return APP_URL + (hash || ""); }
 (function () {
   var slot = document.getElementById("threadSlot");
   var lm = readCache("inner_sky_lifemap_v1");
+  var st = readCache("inner_sky_thread_state_v1") || {};
+  var GATE = st.gate || 9;
+  var doneCount = typeof st.read === "number" ? st.read : Object.keys(READ || {}).length;
+
+  // 还没生成:显示九个主题的进度,读完九个才开启
   if (!(lm && lm.sections && lm.sections.length)) {
-    slot.innerHTML = '<div class="thread-empty">读完几个主题之后，<br>这里会把你的理解连成一条线。</div>';
+    var pips = "";
+    for (var i = 0; i < GATE; i++) pips += '<span class="pip' + (i < doneCount ? " on" : "") + '"></span>';
+    if (doneCount >= GATE) {
+      slot.innerHTML = '<div class="thread-gate ready"><div class="pips">' + pips + "</div>" +
+        '<p class="tx">九个主题都读完了。<br>把它们连接到你的人生。</p>' +
+        '<a class="go" href="' + appHref("#/map") + '" data-app-hash="#/map">生成属于我的生命脉络 →</a></div>';
+    } else {
+      slot.innerHTML = '<div class="thread-gate"><div class="pips">' + pips + "</div>" +
+        '<p class="tx">九个主题都读完之后，<br>这里会把它们收束成一条线。</p>' +
+        '<p class="num">' + doneCount + " / " + GATE + "</p></div>";
+    }
     return;
   }
+
   var SEEN_KEY = "inner_sky_thread_seen_v1";
   var seen = readCache(SEEN_KEY) || {};
   function markSeen(k) {
