@@ -365,9 +365,19 @@
     --dp-serif:"Noto Serif SC",Georgia,serif;
     --dp-sans:"Noto Sans SC","Helvetica Neue",Arial,sans-serif;
     --dp-display:"Cormorant Garamond",Georgia,serif;
+    /* 阅读宽度:外层容器较宽(空间感),正文栏另外限制(行长仍然好读)。
+       两者分开设定,Desktop 加宽时不会让一行文字变得太长。 */
+    --dp-wide:1180px;   /* Outer content container */
+    --dp-text:820px;    /* Text column */
     font-family:var(--dp-sans);color:var(--dp-ink);background:var(--dp-cream);
     min-height:100vh;
   }
+  /* Large Desktop → Laptop → Tablet → Mobile 各自设定,
+     Laptop 上用 calc(100vw - …) 保证左右 margin 不会因为 max-width 变大而消失 */
+  @media(max-width:1440px){#dpage{--dp-wide:1100px}}
+  @media(max-width:1320px){#dpage{--dp-wide:min(1020px,calc(100vw - 120px))}}
+  @media(max-width:1024px){#dpage{--dp-wide:100%}}
+  @media(max-width:900px){#dpage{--dp-text:100%}}
   body.dp-open header.top,body.dp-open .wrap{display:none!important}
   /* 旧版界面(header.top / 左侧表单 / 旧星盘板块)不再出现在任何使用者流程中。
      保留在 DOM 内是为了继续复用其计算与快照逻辑,但永远不可见。 */
@@ -380,6 +390,7 @@
     font-family:var(--dp-sans);font-size:14.5px;color:var(--dp-ink);
     background:var(--dp-cloud);border:1px solid var(--dp-line);border-radius:14px;padding:12px 14px;width:100%}
   #dpage .dp-field input:focus,#dpage .dp-field select:focus{border-color:var(--dp-lav);outline:none}
+  #dpage .dp-field input:disabled{background:rgba(34,35,58,.04);color:var(--dp-mut);cursor:not-allowed}
   #dpage .dp-field .hint{font-size:11.5px;color:var(--dp-mut);line-height:1.7}
   #dpage .dp-row2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
   #dpage .dp-form-msg{min-height:20px;font-size:12.5px;color:#b4645a;line-height:1.7}
@@ -390,10 +401,11 @@
   #dpage .dp-note .ic{color:#b08d3f;flex:none;line-height:1.6}
   @media(max-width:520px){#dpage .dp-row2{grid-template-columns:1fr}}
   #dpage .dp-hero{
-    position:relative;background:var(--dp-navy);color:var(--dp-light);overflow:hidden;
+    /* overflow 交给星点那一层自己处理:hero 若裁切,右上角的账号 Dropdown 会被切掉 */
+    position:relative;background:var(--dp-navy);color:var(--dp-light);
     padding:26px clamp(20px,6vw,120px) clamp(40px,6vw,72px);
   }
-  #dpage .dp-hero .dp-stars{position:absolute;inset:0;pointer-events:none}
+  #dpage .dp-hero .dp-stars{position:absolute;inset:0;overflow:hidden;pointer-events:none}
   #dpage .dp-hero .dp-stars i{
     position:absolute;border-radius:50%;background:#fff;opacity:var(--o,.5);
     animation:dpTw var(--d,4s) ease-in-out var(--delay,0s) infinite alternate;
@@ -408,19 +420,77 @@
     text-decoration:none;font-size:13.5px;opacity:.85;transition:opacity .3s;margin-left:auto
   }
   #dpage .dp-back:hover{opacity:1}
+  /* ---------- Header 导航 ----------
+     Desktop:横向 nav + 右上角「我的账号」Dropdown(结构维持原样)
+     Mobile :横向 nav 收起,所有入口进到同一个 Dropdown 里,不让导航项目消失 */
+  #dpage .dp-nav{position:relative;display:flex;align-items:center;gap:clamp(16px,2vw,28px);margin-left:auto}
+  #dpage .dp-navlink{
+    color:rgba(249,246,242,.8);text-decoration:none;font-size:13.5px;letter-spacing:.06em;
+    white-space:nowrap;transition:color .3s;padding-bottom:3px;border-bottom:1px solid transparent
+  }
+  #dpage .dp-navlink:hover{color:var(--dp-light)}
+  #dpage .dp-navlink.on{color:var(--dp-light);border-bottom-color:rgba(232,211,162,.7)}
+  #dpage .dp-acct{position:relative;flex:none}
+  #dpage .dp-acct-btn{
+    display:inline-flex;align-items:center;gap:8px;max-width:56vw;cursor:pointer;
+    font-family:var(--dp-sans);font-size:13.5px;letter-spacing:.05em;color:rgba(249,246,242,.9);
+    background:transparent;border:1px solid rgba(249,246,242,.22);border-radius:28px;padding:8px 17px;
+    transition:border-color .3s,color .3s
+  }
+  #dpage .dp-acct-btn:hover{border-color:rgba(232,211,162,.6);color:var(--dp-light)}
+  #dpage .dp-acct-btn .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  #dpage .dp-acct-btn .caret{flex:none;font-size:10px;color:rgba(249,246,242,.5);transition:transform .3s}
+  #dpage .dp-acct.open .dp-acct-btn .caret{transform:rotate(180deg)}
+  #dpage .dp-acct-menu{
+    display:none;position:absolute;right:0;top:calc(100% + 10px);z-index:30;min-width:212px;max-width:min(80vw,280px);
+    flex-direction:column;padding:8px;border-radius:18px;
+    background:rgba(16,26,62,.96);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    border:1px solid rgba(249,246,242,.14);box-shadow:0 18px 46px rgba(9,18,46,.45);
+    animation:dpPop .18s ease-out
+  }
+  #dpage .dp-acct.open .dp-acct-menu{display:flex}
+  #dpage .dp-acct-menu .who{padding:9px 13px 12px;margin-bottom:5px;border-bottom:1px solid rgba(249,246,242,.1)}
+  #dpage .dp-acct-menu .who small{display:block;font-size:10px;letter-spacing:.2em;color:rgba(249,246,242,.42);margin-bottom:5px}
+  #dpage .dp-acct-menu .who b{
+    display:block;font-family:var(--dp-serif);font-weight:500;font-size:14.5px;color:var(--dp-light);
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap
+  }
+  /* Menu item:留足点击区域(≥42px 高) */
+  #dpage .dp-acct-menu a,#dpage .dp-acct-menu button{
+    display:block;width:100%;box-sizing:border-box;text-align:left;text-decoration:none;cursor:pointer;
+    font-family:var(--dp-sans);font-size:13.5px;line-height:1.6;letter-spacing:.04em;
+    color:rgba(249,246,242,.82);background:none;border:none;border-radius:12px;padding:12px 13px;
+    transition:background .2s,color .2s
+  }
+  #dpage .dp-acct-menu a:hover,#dpage .dp-acct-menu button:hover{background:rgba(249,246,242,.08);color:var(--dp-light)}
+  /* 当前页面:非常轻微的 active state */
+  #dpage .dp-acct-menu a.on{background:rgba(170,160,213,.15);color:var(--dp-light)}
+  #dpage .dp-acct-menu .sep{height:1px;margin:6px 5px;background:rgba(249,246,242,.1)}
+  #dpage .dp-acct-menu .out{color:rgba(235,196,195,.9)}
+  #dpage .dp-acct-menu .m-only{display:none}
+  @media(max-width:1024px){
+    /* 横向 nav 收起 → 全部进 Dropdown(不缩小 Desktop Header 硬塞进手机) */
+    #dpage .dp-navlink{display:none}
+    #dpage .dp-acct-menu .m-only{display:block}
+    #dpage .dp-topbar{gap:12px}
+  }
+  @media(max-width:520px){
+    #dpage .dp-brand{font-size:14px;letter-spacing:.24em}
+    #dpage .dp-acct-btn{padding:8px 14px;font-size:13px}
+  }
   #dpage .dp-chip{
     position:relative;display:inline-block;font-size:12px;letter-spacing:.14em;padding:5px 14px;
     border-radius:14px;background:rgba(170,160,213,.22);border:1px solid rgba(170,160,213,.45);
     color:var(--dp-light);margin-bottom:18px
   }
-  #dpage .dp-hero-grid{position:relative;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:24px;align-items:center;max-width:1200px;margin:0 auto}
-  #dpage .dp-hero-art{width:clamp(120px,22vw,260px);height:auto;filter:drop-shadow(0 10px 40px rgba(170,160,213,.35))}
+  #dpage .dp-hero-grid{position:relative;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:24px;align-items:center;max-width:var(--dp-wide);margin:0 auto}
+  #dpage .dp-hero-art{width:clamp(120px,22vw,260px);max-width:100%;height:auto;filter:drop-shadow(0 10px 40px rgba(170,160,213,.35))}
   #dpage h1.dp-title{
     font-family:var(--dp-serif);font-weight:500;font-size:clamp(26px,4vw,44px);
     line-height:1.5;margin:0 0 14px;color:var(--dp-light)
   }
   #dpage .dp-sub{font-size:clamp(13.5px,1.4vw,16px);line-height:2;color:rgba(249,246,242,.82);white-space:pre-line;max-width:34em}
-  #dpage .dp-body{max-width:1000px;margin:0 auto;padding:clamp(26px,4vw,54px) clamp(18px,4vw,40px) 80px}
+  #dpage .dp-body{max-width:var(--dp-wide);margin:0 auto;padding:clamp(26px,4vw,54px) clamp(18px,4vw,48px) 80px}
   #dpage .dp-card{
     background:var(--dp-cloud);border:1px solid var(--dp-line);border-radius:24px;
     box-shadow:0 12px 40px rgba(9,18,46,.08);padding:clamp(20px,3vw,34px);margin-bottom:22px
@@ -432,7 +502,7 @@
   #dpage .dp-quote .q{color:var(--dp-lav);font-family:var(--dp-display);font-size:34px;line-height:0;vertical-align:-10px;margin-right:8px}
   #dpage .dp-sec-label{font-size:12px;letter-spacing:.22em;color:var(--dp-mut);margin:0 0 14px}
   /* 长文阅读:舒服的阅读宽度 + 更大的段落与章节间距 */
-  #dpage .dp-read{max-width:720px;margin:0 auto}
+  #dpage .dp-read{max-width:var(--dp-text);margin:0 auto}
   #dpage .dp-sec{margin:0 0 clamp(38px,4.6vw,60px);border-radius:14px;transition:background 1.2s ease}
   #dpage .dp-sec-focus{background:rgba(170,160,213,.09)}
   #dpage .dp-sec:last-child{margin-bottom:0}
@@ -447,6 +517,9 @@
   #dpage h3.dp-h{font-family:var(--dp-serif);font-weight:500;font-size:clamp(16px,1.8vw,20px);margin:0;color:var(--dp-ink)}
   #dpage .dp-h-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
   #dpage .dp-prose{font-size:14.5px;line-height:2.15;color:var(--dp-ink);font-weight:300}
+  /* 容器加宽之后,正文一行仍然维持好读的长度(标题 / Divider / 图表 / 卡片不受限) */
+  #dpage .dp-card .dp-prose,#dpage .dp-think .dp-prose{max-width:var(--dp-text)}
+  #dpage .dp-card .dp-quote{max-width:var(--dp-text);margin-left:auto;margin-right:auto}
   #dpage .dp-prose p{margin:0 0 13px}
   #dpage .dp-aha{display:grid;gap:10px;margin-top:6px}
   #dpage .dp-aha .a{
@@ -565,6 +638,7 @@
     text-decoration:none;transition:transform .3s cubic-bezier(.22,1,.36,1),box-shadow .3s
   }
   #dpage .dp-cta:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(9,18,46,.22)}
+  #dpage .dp-cta[disabled]{opacity:.6;pointer-events:none;transform:none}
   #dpage .dp-return{
     display:flex;align-items:center;justify-content:space-between;gap:14px;
     background:var(--dp-cloud);border:1px solid var(--dp-line);border-radius:24px;
@@ -1756,6 +1830,27 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       return u;
     });
   }
+  /* 只改 Profile 的显示名称(user_metadata.display_name)。
+     不碰 Email / Password / User ID,也完全不碰 charts 表:
+     出生资料、Natal Chart、已生成的解读与收藏都不会因此改变或重新生成。 */
+  function updateUsername(name, retried) {
+    if (!session) return Promise.reject(new Error("no session"));
+    const nm = String(name || "").trim();
+    if (!nm) return Promise.reject(new Error("empty"));
+    return fetch(SUPABASE_URL + "/auth/v1/user", {
+      method: "PUT",
+      headers: authHeaders(),
+      body: JSON.stringify({ data: { display_name: nm, user_id: nm } })
+    }).then(function (r) {
+      if (r.status === 401 && !retried) return refresh().then(function () { return updateUsername(nm, true); });
+      if (!r.ok) return r.text().then(function (t) { throw new Error("user " + r.status + ": " + t.slice(0, 140)); });
+      return r.json().catch(function () { return null; });
+    }).then(function (u) {
+      // u 为 null 表示已经在上面的重试里处理过
+      if (u && session) { session.nick = pickNick(u) || nm; saveSession(session); }
+      return session ? session.nick : nm;
+    });
+  }
   function logout() {
     saveSession(null);
     // 同一台机器换人登入时,不能留下上一位的名字 / 快照
@@ -1854,6 +1949,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     token: function () { return session ? session.access_token : ""; },
     email: function () { return session ? session.email : ""; },
     signup: signup, login: login, logout: logout, refresh: refresh, fetchUser: fetchUser,
+    updateUsername: updateUsername,
     loadCharts: loadCharts, insertChart: insertChart, updateChart: updateChart, deleteChart: deleteChart,
     loadPrefs: loadPrefs, savePrefs: savePrefs, uuid: uuid,
     migrateLegacy: migrateLegacy
@@ -2919,7 +3015,9 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       }));
       // 已读章节:以 prefs.readTopics 为准(真正打开阅读过才算)
       localStorage.setItem("inner_sky_read_v1", JSON.stringify(readTopics));
-      localStorage.setItem("inner_sky_favs_v1", JSON.stringify(((c && c.favs) || []).slice(0, 4)));
+      // c 之前没有在这个函式里取过,整段会抛 ReferenceError,收藏快照永远写不出去
+      var ac = activeChart();
+      localStorage.setItem("inner_sky_favs_v1", JSON.stringify(((ac && ac.favs) || []).slice(0, 4)));
     } catch (e) { }
   }
 
@@ -3514,6 +3612,8 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   // ── 收藏 ──────────────────────────────────────────────
   // 保存:文字、来源主题、来源章节、时间。存在 chart.favs,随既有云同步走。
   function favList() { const c = activeChart(); return (c && c.favs) || []; }
+  /* favKey 的格式维持不变,否则既有收藏会全部对不上(重复收藏 / 星号不亮)。
+     来源改用另外一个稳定栏位 sourceType 区分,避免主题 Reading 与生命蓝图的资料混在一起。 */
   function favKey(src, title, text) { return src + "|" + title + "|" + String(text).slice(0, 40); }
   function isFaved(k) { return favList().some(function (f) { return f.key === k; }); }
   function toggleFav(k, payload) {
@@ -3522,7 +3622,11 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     c.favs = c.favs || [];
     const i = c.favs.findIndex(function (f) { return f.key === k; });
     if (i >= 0) c.favs.splice(i, 1);
-    else c.favs.unshift(Object.assign({ key: k, ts: new Date().toISOString().slice(0, 10) }, payload));
+    else c.favs.unshift(Object.assign({
+      key: k,
+      ts: new Date().toISOString().slice(0, 10),
+      uid: window.Cloud.userId() || ""      // 收藏永远跟着 User ID,不跟 Username
+    }, payload));
     window.Cloud.updateChart(c).catch(function () { });
     saveProfileCache();
     renderFavs();
@@ -3540,7 +3644,9 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     const payload = {
       text: b.getAttribute("data-text") || "",
       source: b.getAttribute("data-source") || "",
-      section: b.getAttribute("data-section") || ""
+      sourceType: b.getAttribute("data-source-type") || "",
+      section: b.getAttribute("data-section") || "",
+      title: b.getAttribute("data-section") || ""
     };
     const on = toggleFav(b.getAttribute("data-fav"), payload);
     b.textContent = on ? "★" : "☆";
@@ -4212,6 +4318,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     if (h === "#/my-sky") return { k: "mysky" };
     if (h === "#/favorites") return { k: "favorites" };
     if (h === "#/onboarding") return { k: "onboarding" };
+    if (h === "#/settings") return { k: "settings" };
     if (h === "#/login") return { k: "login" };
     return null;
   }
@@ -4262,6 +4369,8 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     if (!chartsSettled) return true;
     // onboarding 自身是公开路由,不能再要求「已有完整资料」,否则会无限跳转
     if (curRoute.k === "onboarding") return true;
+    // 设置只处理 Profile 显示名称,与星盘资料无关,不需要先有星盘
+    if (curRoute.k === "settings") return true;
     // 只有「资料库确认这个帐号从来没有建立过星盘」才允许进入建立页面
     if (!hasCompleteBirthProfile()) {
       location.replace(location.pathname + location.search + "#/onboarding");
@@ -4350,6 +4459,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     else if (r.k === "mysky") renderMySkyPage();
     else if (r.k === "favorites") renderFavoritesPage();
     else if (r.k === "onboarding") renderOnboardingPage();
+    else if (r.k === "settings") renderSettingsPage();
   }
   window.addEventListener("hashchange", applyRoute);
   applyRoute();   // 冷启动带路由 hash 时立即渲染(登录后 applyDeepLink 会再刷新一次)
@@ -4368,11 +4478,80 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     }
     return '<div class="dp-stars" aria-hidden="true">' + h + "</div>";
   }
+  /* ---------- Header:导航 + 「我的账号」Dropdown ----------
+     Desktop 维持原本的横向结构;Mobile 把同一批入口收进右上角的 Dropdown,
+     不让任何导航项目因为空间不足而消失。 */
+  // [显示文案, href, 路由 key(用于 active state), 是否只在 Mobile 的 Dropdown 里出现]
+  function dpNavItems() {
+    return [
+      [dpT("首页", "Home"), LANDING_URL, "", true],
+      [dpT("探索主题", "Explore"), LANDING_TOPICS, "", true],
+      [dpT("我的生命蓝图", "My Blueprint"), "#/reading", "reading", false],
+      [dpT("我的星空", "My Sky"), "#/my-sky", "mysky", false],
+      [dpT("属于你的生命脉络", "The Pattern"), "#/map", "map", false],
+      [dpT("我的收藏", "Saved"), "#/favorites", "favorites", false]
+    ];
+  }
+  function dpAcctName() {
+    return window.Cloud.nick() || window.Cloud.email() || dpT("我的账号", "My account");
+  }
+  function dpTopbarHtml() {
+    const here = (curRoute && curRoute.k) || "";
+    const items = dpNavItems();
+    // Desktop:横向 nav(只放应用内页面,Mobile 专属项目不显示)
+    const inline = items.filter(function (it) { return !it[3]; }).map(function (it) {
+      return '<a class="dp-navlink' + (it[2] && it[2] === here ? " on" : "") + '" href="' + esc0(it[1]) + '">' +
+        esc0(it[0]) + '</a>';
+    }).join("");
+    // Dropdown:Mobile 专属项目标 m-only,Desktop 上不重复出现
+    const menu = items.map(function (it) {
+      return '<a class="' + (it[3] ? "m-only" : "") + (it[2] && it[2] === here ? " on" : "") +
+        '" href="' + esc0(it[1]) + '">' + esc0(it[0]) + '</a>';
+    }).join("");
+    return '<div class="dp-topbar"><span class="dp-brand"><span class="s">✶</span> INNER SKY</span>' +
+      '<nav class="dp-nav">' + inline +
+      '<div class="dp-acct" id="dpAcct">' +
+      '<button type="button" class="dp-acct-btn" id="dpAcctBtn" aria-haspopup="true" aria-expanded="false">' +
+      '<span class="nm">' + esc0(dpAcctName()) + '</span><span class="caret" aria-hidden="true">▾</span></button>' +
+      '<div class="dp-acct-menu" role="menu">' +
+      '<div class="who"><small>' + dpT("账号", "ACCOUNT") + '</small><b>' + esc0(dpAcctName()) + '</b></div>' +
+      menu +
+      '<div class="sep"></div>' +
+      '<a class="' + (here === "settings" ? "on" : "") + '" href="#/settings">' + dpT("设置", "Settings") + '</a>' +
+      '<button type="button" class="out" id="dpLogout">' + dpT("登出", "Sign out") + '</button>' +
+      '</div></div></nav></div>';
+  }
+  /* Dropdown 行为只绑一次(dpScaffold 每次渲染都会换掉 DOM,因此用事件委派) */
+  document.addEventListener("click", function (ev) {
+    const wrap = document.getElementById("dpAcct");
+    if (!wrap) return;
+    const btn = ev.target.closest && ev.target.closest("#dpAcctBtn");
+    if (btn) {
+      ev.preventDefault();
+      const open = wrap.classList.toggle("open");
+      btn.setAttribute("aria-expanded", open ? "true" : "false");
+      return;
+    }
+    if (ev.target.closest && ev.target.closest("#dpLogout")) {
+      window.Cloud.logout();
+      location.href = LANDING_URL;
+      return;
+    }
+    // 点了菜单里的项目 → 正常关闭;点到菜单外面 → 也关闭
+    wrap.classList.remove("open");
+    const b = document.getElementById("dpAcctBtn");
+    if (b) b.setAttribute("aria-expanded", "false");
+  });
+  document.addEventListener("keydown", function (ev) {
+    if (ev.key !== "Escape") return;
+    const wrap = document.getElementById("dpAcct");
+    if (wrap) wrap.classList.remove("open");
+  });
+
   function dpScaffold(o) {
     $("dpage").innerHTML =
       '<div class="dp-hero">' + dpStars(90, o.seed || 7) +
-      '<div class="dp-topbar"><span class="dp-brand"><span class="s">✶</span> INNER SKY</span>' +
-      '<a class="dp-back" href="' + (o.backHref || LANDING_TOPICS) + '">← ' + esc0(o.backLabel || dpT("返回主页", "Back")) + '</a></div>' +
+      dpTopbarHtml() +
       '<div class="dp-hero-grid"><div>' +
       (o.chip ? '<span class="dp-chip">' + esc0(o.chip) + '</span>' : "") +
       '<h1 class="dp-title">' + esc0(o.title || "") + '</h1>' +
@@ -4387,7 +4566,8 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       .map(function (y) { return "<p>" + y.trim() + "</p>"; }).join("");
   }
   // 属于你的生命脉络:章节以分页签呈现,一次只读一段
-  function dpThreadHtml(data, favSource, tab) {
+  function dpThreadHtml(data, favSource, tab, favType) {
+    favType = favType || "";
     // 不过滤:索引必须与落地页的标题列表(#/map/<i>)一一对应
     const secs = (data.sections || []);
     let h = "";
@@ -4401,6 +4581,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       const k = favKey(favSource, sName(sc, i), sc.body || "");
       const btn = '<button class="fav-btn' + (isFaved(k) ? " on" : "") + '" data-fav="' + esc0(k) +
         '" data-text="' + esc0(String(sc.body || "").slice(0, 300)) + '" data-source="' + esc0(favSource) +
+        '" data-source-type="' + esc0(favType) +
         '" data-section="' + esc0(sName(sc, i)) + '" title="' + esc0(T("saveIt")) + '">' + (isFaved(k) ? "★" : "☆") + "</button>";
       h += '<div class="dp-card"><div class="dp-read"><div class="dp-sec-label">' + dpT("主题解读", "READING") + "</div>" +
         '<div class="dp-tabs">' + secs.map(function (x, n) {
@@ -4409,6 +4590,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
         '<div class="dp-sec"><div class="dp-h-row"><h3 class="dp-h">' + esc0(sName(sc, i)) + "</h3>" + btn + "</div>" +
         '<div class="dp-div"><span class="st">✦</span><span class="ln"></span></div>' +
         '<div class="dp-prose" data-saveable data-source="' + esc0(favSource) +
+        '" data-source-type="' + esc0(favType) +
         '" data-section="' + esc0(sName(sc, i)) + '">' + dpPara(sc.body) + "</div></div>" +
         "</div></div>";
     }
@@ -4428,7 +4610,8 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
         '<div class="dp-prose">' + dpPara(data.action) + "</div></div>";
     return h;
   }
-  function dpAnswerHtml(data, favSource) {
+  function dpAnswerHtml(data, favSource, favType) {
+    favType = favType || "";
     let h = "";
     if (data.tagline)
       h += '<div class="dp-card"><div class="dp-quote"><span class="q">“</span>' + esc0(data.tagline) + "</div></div>";
@@ -4437,12 +4620,14 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       const k = favKey(favSource, sc.title || "", sc.body || "");
       const btn = '<button class="fav-btn' + (isFaved(k) ? " on" : "") + '" data-fav="' + esc0(k) +
         '" data-text="' + esc0(String(sc.body || "").slice(0, 300)) + '" data-source="' + esc0(favSource) +
+        '" data-source-type="' + esc0(favType) +
         '" data-section="' + esc0(sc.title || "") + '" title="' + esc0(T("saveIt")) + '">' + (isFaved(k) ? "★" : "☆") + "</button>";
       // 小标题 → 细分隔线 → 正文,让长文一段一段地读
       return '<div class="dp-sec" id="sec-' + si + '"><div class="dp-h-row">' +
         (sc.title ? '<h3 class="dp-h">' + esc0(sc.title) + "</h3>" : "<span></span>") + btn + "</div>" +
         (sc.title ? '<div class="dp-div"><span class="st">✦</span><span class="ln"></span></div>' : "") +
         '<div class="dp-prose" data-saveable data-source="' + esc0(favSource) +
+        '" data-source-type="' + esc0(favType) +
         '" data-section="' + esc0(sc.title || "") + '">' + dpPara(sc.body) + "</div></div>";
     }).join("");
     h += "</div></div>";
@@ -4511,7 +4696,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     if (!c || !curResult) body = dpNeedChart();
     else {
       const saved = window.Reading.reviveTopic((c[window.Reading.LK("topics")] || {})[tid]);
-      if (saved) { body = dpAnswerHtml(saved, tName); markTopicRead(tid); }
+      if (saved) { body = dpAnswerHtml(saved, tName, "theme_reading"); markTopicRead(tid); }
       else if (topicBusy) body = dpLoading(dpT("正在为你整理这一章,大约需要一分钟…", "Preparing this chapter for you — about a minute…"));
       else if (topicErrs[tid]) body = dpError(topicErrs[tid], "dpRetryT");
       else if (window.I18N.isEN()) body = '<div class="dp-card">' + missingLangHtml("dpGenT") + "</div>";
@@ -4542,7 +4727,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     if (!c || !curResult) body = dpNeedChart();
     else {
       const saved = window.Reading.reviveTopic((c[window.Reading.LK("qa")] || {})[qid]);
-      if (saved) body = dpAnswerHtml(saved, q.q);
+      if (saved) body = dpAnswerHtml(saved, q.q, "question");
       else if (qaBusy) body = dpLoading(dpT("正在为你探索这个问题…", "Exploring this question for you…"));
       else if (qaErrs[qid]) body = dpError(qaErrs[qid], "dpRetryQ");
       else body = dpLoading(dpT("正在为你探索这个问题…", "Exploring this question for you…"));
@@ -4574,15 +4759,9 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
         '<br><button class="dp-cta" style="margin-top:16px" id="dpGenB">' + dpT("现在生成", "Generate now") + "</button></div>";
     } else {
       sub = r.spine || "";
-      // 星象概览:太阳 / 月亮 / 上升
-      const sunP = curResult.planets.find(function (p) { return p.key === "Sun"; });
-      const moonP = curResult.planets.find(function (p) { return p.key === "Moon"; });
-      function sName(lon) { const g = C.lonToSign(lon); return window.I18N.isEN() ? window.I18N.TSign(g.sign) : g.sign; }
-      body += '<div class="dp-card"><div class="dp-sec-label">' + dpT("星象概览", "THE BIG THREE") + '</div><div class="dp-big3">' +
-        '<div class="b3"><span class="ic">☉</span><span><small>' + dpT("太阳星座", "Sun sign") + "</small><b>" + esc0(sName(sunP ? sunP.lon : 0)) + "</b></span></div>" +
-        '<div class="b3"><span class="ic">☽</span><span><small>' + dpT("月亮星座", "Moon sign") + "</small><b>" + esc0(sName(moonP ? moonP.lon : 0)) + "</b></span></div>" +
-        '<div class="b3"><span class="ic">↑</span><span><small>' + dpT("上升星座", "Rising sign") + "</small><b>" + esc0(sName(curResult.ang.asc)) + "</b></span></div>" +
-        "</div></div>";
+      /* 「星象概览」(太阳 / 月亮 / 上升 的技术型 summary)不再对使用者显示。
+         资料与逻辑完全保留在 curResult / drawChartWheel 里(「我的星空」仍然完整呈现),
+         这里只是不再渲染这个 Section,让页面直接进入有阅读价值的个人解读。 */
       // ---- 基础个人星象盘(简化预览)----
       // 与「我的星空」完整盘共用同一份 curResult,读数不可能出现分歧
       body += '<div class="dp-card"><div class="dp-sec-label">' + dpT("基础个人星象盘", "YOUR NATAL CHART") + '</div>' +
@@ -4611,23 +4790,65 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
         return x.title || ((window.I18N.isEN() ? "Chapter " : "第" + "一二三四五"[i]) + (window.I18N.isEN() ? String(i + 1) : "章"));
       }
       const favSrc = dpT("生命蓝图", "Blueprint");
+
+      /* ---- 专属建议的位置:预设在「详细解读」之前 ----
+         例外:某一条建议本身就是针对某一个详细解读标题写的 → 放到那一章正文的下面。
+         以下四项(含既有的别名写法)永远留在上方的「专属建议」总区块,不下放:
+           你的核心人格模式 / 你的情绪运作方式 / 你的天赋特质 / 你的理想状态
+         这里只调整 placement,不改写任何一条建议或解读的文字。 */
+      const CARDS_KEEP_TOP = [
+        "你的核心人格模式", "你的核心人格特质", "组成你的核心力量",
+        "你的情绪运作方式", "你如何感受这个世界",
+        "你的天赋特质", "你自带的能力",
+        "你的理想状态", "什么状态最像真正的你"
+      ];
+      const chTitleIdx = {};
+      chs.forEach(function (x, i) { const t = String(x.title || "").trim(); if (t) chTitleIdx[t] = i; });
+      const topCards = [], chapterCards = {};
+      (r.cards || []).forEach(function (cd) {
+        const t = String(cd.title || "").trim();
+        if (CARDS_KEEP_TOP.indexOf(t) >= 0) { topCards.push(cd); return; }
+        const ci = chTitleIdx[t];
+        // 没有明确对应的详细解读标题 → 不强行搬动,留在上方
+        if (ci === undefined) { topCards.push(cd); return; }
+        (chapterCards[ci] = chapterCards[ci] || []).push(cd);
+      });
+      // 建议卡片:正文可以划词收藏(与主题阅读同一套 selection / save 逻辑)
+      function cardsHtml(list) {
+        return '<div class="dp-cards4">' + list.map(function (cd) {
+          return '<div class="c4"><b>' + esc0(cd.title) + "</b>" +
+            '<div data-saveable data-source="' + esc0(favSrc) + '" data-source-type="life_blueprint"' +
+            ' data-section="' + esc0(dpT("专属建议", "For you") + " · " + String(cd.title || "")) + '">' +
+            esc0(cd.line || "") + "</div></div>";
+        }).join("") + "</div>";
+      }
+      if (topCards.length)
+        body += '<div class="dp-card"><div class="dp-sec-label">' + dpT("专属建议", "FOR YOU") + '</div>' +
+          cardsHtml(topCards) + "</div>";
+
       const k = favKey(favSrc, chName(ch, readingTab), ch.body || "");
       const favB = '<button class="fav-btn' + (isFaved(k) ? " on" : "") + '" data-fav="' + esc0(k) +
         '" data-text="' + esc0(String(ch.summary || ch.body || "").slice(0, 300)) + '" data-source="' + esc0(favSrc) +
-        '" data-section="' + esc0(chName(ch, readingTab)) + '" title="' + esc0(T("saveIt")) + '">' + (isFaved(k) ? "★" : "☆") + "</button>";
+        '" data-source-type="life_blueprint" data-section="' + esc0(chName(ch, readingTab)) +
+        '" title="' + esc0(T("saveIt")) + '">' + (isFaved(k) ? "★" : "☆") + "</button>";
+      const ownCards = chapterCards[readingTab] || [];
       body += '<div class="dp-card"><div class="dp-sec-label">' + dpT("详细解读", "IN DETAIL") + '</div>' +
         '<div class="dp-tabs">' + chs.map(function (x, i) {
           return '<button data-rtab="' + i + '"' + (i === readingTab ? ' class="on"' : "") + ">" + esc0(chName(x, i)) + "</button>";
         }).join("") + "</div>" +
         '<div class="dp-h-row"><h3 class="dp-h">' + esc0(chName(ch, readingTab)) + "</h3>" + favB + "</div>" +
-        (ch.summary ? '<div class="dp-quote" style="text-align:left;padding:8px 0 16px;font-size:15.5px">' + esc0(ch.summary) + "</div>" : "") +
+        (ch.summary ? '<div class="dp-quote" style="text-align:left;padding:8px 0 16px;font-size:15.5px"' +
+          ' data-saveable data-source="' + esc0(favSrc) + '" data-source-type="life_blueprint"' +
+          ' data-section="' + esc0(chName(ch, readingTab)) + '">' + esc0(ch.summary) + "</div>" : "") +
         '<div class="dp-prose" data-saveable data-source="' + esc0(favSrc) +
-        '" data-section="' + esc0(chName(ch, readingTab)) + '">' + dpPara(ch.body) + "</div></div>";
-      // 专属建议(cards)
-      if (r.cards && r.cards.length)
-        body += '<div class="dp-card"><div class="dp-sec-label">' + dpT("专属建议", "FOR YOU") + '</div><div class="dp-cards4">' +
-          r.cards.map(function (cd) { return '<div class="c4"><b>' + esc0(cd.title) + "</b><div>" + esc0(cd.line || "") + "</div></div>"; }).join("") +
-          "</div></div>";
+        '" data-source-type="life_blueprint" data-section="' + esc0(chName(ch, readingTab)) + '">' +
+        dpPara(ch.body) + "</div>" +
+        // 这一章自己的专属建议:接在对应正文下面,上下文更自然
+        (ownCards.length
+          ? '<div class="dp-div" style="margin-top:26px"><span class="st">✦</span><span class="ln"></span></div>' +
+            '<div class="dp-sec-label">' + dpT("专属建议", "FOR YOU") + '</div>' + cardsHtml(ownCards)
+          : "") +
+        "</div>";
       foot = dpReturnFoot();
     }
     dpScaffold({
@@ -4683,7 +4904,10 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       if (!c) { dpToast(dpT("请先选择一张星盘", "Choose a chart first")); hideSaveTip(); return; }
       const k = favKey(p.source, p.section, p.text);
       if (isFaved(k)) { dpToast(dpT("已经收藏过了 ✦", "Already saved ✦")); hideSaveTip(); return; }
-      toggleFav(k, { text: p.text, source: p.source, section: p.section, route: p.route });
+      toggleFav(k, {
+        text: p.text, source: p.source, sourceType: p.sourceType,
+        section: p.section, title: p.title, route: p.route
+      });
       dpToast(dpT("✦ 已收藏到你的星空", "✦ Saved to your sky"));
       hideSaveTip();
       const sel = window.getSelection();
@@ -4710,7 +4934,9 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       pendingSel = {
         text: text.slice(0, 600),
         source: box.getAttribute("data-source") || "",
+        sourceType: box.getAttribute("data-source-type") || "",
         section: box.getAttribute("data-section") || "",
+        title: box.getAttribute("data-section") || "",
         route: location.hash || ""
       };
       const tip = ensureSaveTip();
@@ -4812,6 +5038,83 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     });
   }
 
+  /* ============================================================
+     页面:设置(#/settings)
+     目前只管理一件事 —— Username(网站上的显示名称)。
+     · Username = Profile Display Data,可以随时修改
+     · Email / Password = 登入凭证,不在这里、也不会因此改变
+     · Birth Data / Natal Chart = 建立后锁定,Username 修改不触发任何重新计算
+     ============================================================ */
+  function renderSettingsPage() {
+    if (!window.Cloud.hasSession()) { requireLogin("none"); return; }
+    const cur = window.Cloud.nick() || "";
+    const body =
+      '<div class="dp-card">' +
+      '<div class="dp-sec-label">' + dpT("设置", "SETTINGS") + '</div>' +
+      '<div class="dp-form">' +
+      '<div class="dp-field"><label>' + dpT("显示名称", "Display name") + '</label>' +
+      '<input id="stName" type="text" maxlength="40" autocomplete="nickname" value="' + esc0(cur) +
+      '" placeholder="' + esc0(dpT("你希望网站怎么称呼你", "What the site should call you")) + '">' +
+      '<span class="hint">' +
+      dpT("只改变网站上显示的名字（Header、账号菜单、顶部问候）。",
+          "This only changes the name shown on the site (header, account menu, greeting).") +
+      '</span></div>' +
+      '<div class="dp-field"><label>' + dpT("登入邮箱", "Sign-in email") + '</label>' +
+      '<input type="email" value="' + esc0(window.Cloud.email() || "") + '" disabled>' +
+      '<span class="hint">' +
+      dpT("登入方式始终是「邮箱 + 密码」。修改显示名称不会改变登入方式。",
+          "You always sign in with email and password. Changing your display name does not affect that.") +
+      '</span></div>' +
+      '<div class="dp-note"><span class="ic" aria-hidden="true">✦</span><span>' +
+      dpT("出生日期、出生时间、出生地点与已经生成的解读都不会因为修改显示名称而改变或重新生成。",
+          "Your birth date, birth time, birth place and everything already written for you stay exactly as they are.") +
+      '</span></div>' +
+      '<div class="dp-form-msg" id="stMsg"></div>' +
+      '<button class="dp-cta" id="stSave" style="justify-self:start">' + dpT("保存修改", "Save") + '</button>' +
+      '</div></div>';
+
+    dpScaffold({
+      chip: dpT("账号", "ACCOUNT"),
+      title: dpT("设置", "Settings"),
+      sub: dpT("你可以换掉网站里显示的名字，\n但你的出生资料和星盘不会因此改变。",
+               "You can change the name shown here.\nYour birth details and chart stay as they are."),
+      body: body, foot: "",
+      backLabel: dpT("返回", "Back"), backHref: LANDING_URL, seed: 57
+    });
+
+    const input = document.getElementById("stName");
+    const btn = document.getElementById("stSave");
+    const msg = document.getElementById("stMsg");
+    if (!btn || !input) return;
+    const label = btn.textContent;
+
+    function save() {
+      const nm = input.value.trim();
+      msg.style.color = "#b4645a";
+      if (!nm) { msg.textContent = dpT("请填一个显示名称。", "Please enter a display name."); return; }
+      if (nm === cur) { msg.style.color = "var(--dp-mut)"; msg.textContent = dpT("和目前的名称一样。", "That is already your name."); return; }
+      msg.textContent = "";
+      btn.disabled = true;
+      btn.textContent = dpT("保存中…", "Saving…");
+      window.Cloud.updateUsername(nm).then(function () {
+        // 只更新显示名称:不重新载入星盘、不重新生成任何解读、不需要重新登入
+        saveProfileCache();
+        const bar = document.getElementById("acctBar");
+        if (bar && bar.firstChild) bar.firstChild.textContent = window.Cloud.nick() || window.Cloud.email() || "";
+        dpToast(dpT("✦ 已保存", "✦ Saved"));
+        routeRefresh();   // Header / 账号 Dropdown 立即显示新名字
+      }).catch(function (e) {
+        btn.disabled = false;
+        btn.textContent = label;
+        msg.style.color = "#b4645a";
+        msg.textContent = dpT("暂时没保存成功，请再试一次。", "That didn’t save. Please try again.");
+        console.warn(e);
+      });
+    }
+    btn.addEventListener("click", save);
+    input.addEventListener("keydown", function (e) { if (e.key === "Enter") save(); });
+  }
+
   // ---------- 页面:出生资料 onboarding(新版)----------
   // 复用既有城市表与既有保存逻辑,只是换成新版 UI;保存后直接进入新版阅读页
   function renderOnboardingPage() {
@@ -4856,8 +5159,8 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       dpT("一个邮件仅供一个星盘，请确保输入资料正确，一旦输入无法更改",
           "One chart per email. Please double-check your details — they cannot be changed once saved.") +
       '</span></div>' +
-      '<div class="dp-field"><label>' + dpT("称呼", "Name") + '</label>' +
-      '<input id="obNick" type="text" placeholder="' + esc0(dpT("怎么称呼你", "What should we call you")) + '"></div>' +
+      /* Username 属于 Account / Profile 层级(注册时填、之后在「设置」修改),
+         星盘只透过 User ID 关联,因此这里不再重复询问显示名称。 */
       '<div class="dp-row2">' +
       '<div class="dp-field"><label>' + dpT("出生日期", "Birth date") + '</label>' +
       '<input id="obDate" type="date" value="1995-01-01"></div>' +
@@ -4886,7 +5189,9 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     const save = document.getElementById("obSave");
     if (save) save.addEventListener("click", function () {
       const msg = document.getElementById("obMsg");
-      const nick = document.getElementById("obNick").value.trim() || T("unnamed");
+      // 星盘的 nick 只是这张盘的标签,直接沿用当前 Profile 的 Username,
+      // 不作为识别 key(识别一律用 User ID),Username 之后修改也不影响这张盘。
+      const nick = (window.Cloud.nick() || "").trim() || T("unnamed");
       const date = document.getElementById("obDate").value;
       const time = document.getElementById("obTime").value;
       const ci = document.getElementById("obCity").value;
@@ -5009,7 +5314,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     else {
       const saved = window.Reading.reviveTopic(c[window.Reading.LK("lifemap")]);
       const done = threadReadCount();
-      if (saved) { body = dpThreadHtml(saved, dpT("属于你的生命脉络", "The Pattern of Your Life"), mapTab); foot = dpReturnFoot(); }
+      if (saved) { body = dpThreadHtml(saved, dpT("属于你的生命脉络", "The Pattern of Your Life"), mapTab, "life_thread"); foot = dpReturnFoot(); }
       else if (mapBusy) body = dpLoading(dpT("正在把九个主题收束成一条线…", "Drawing the nine together…"));
       else if (mapErr) body = dpError(mapErr, "dpRetryM");
       else if (done < THREAD_GATE) {

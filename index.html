@@ -156,8 +156,43 @@ header.site { position: relative; z-index: 5; background: transparent; }
 }
 .nav-user-menu a:hover, .nav-user-menu button:hover { background: rgba(249,246,242,.08); color: var(--text-light); }
 .nav-user-menu #navLogout { color: rgba(235,196,195,.9); margin-top: 2px; }
-@media (max-width: 860px) { .nav-user { margin-left: 0; } .nav-user-btn { padding: 7px 14px; font-size: 13px; } }
-@media (max-width: 860px) { .nav-links a:not(.nav-cta) { display: none; } .nav-links { margin-left: auto; } .nav-cta { margin-left: 0; } }
+/* Dropdown 里的账号抬头:先让人确认自己是谁,再是入口 */
+.nav-user-menu .who { padding: 9px 12px 12px; margin-bottom: 5px; border-bottom: 1px solid rgba(249,246,242,.1); }
+.nav-user-menu .who small { display: block; font-size: 10px; letter-spacing: .2em; color: rgba(249,246,242,.42); margin-bottom: 5px; }
+.nav-user-menu .who b {
+  display: block; font-family: var(--font-serif-sc); font-weight: 500; font-size: 14.5px; color: var(--text-light);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.nav-user-menu .sep { height: 1px; margin: 6px 5px; background: rgba(249,246,242,.1); }
+/* 当前所在页面:非常轻微的 active state */
+.nav-user-menu a.on { background: rgba(170,160,213,.15); color: var(--text-light); }
+/* Desktop 上这些入口已经在横向 Header 里,Dropdown 不重复;Mobile 才出现 */
+.nav-user-menu .m-only { display: none; }
+/* 未登录时的 Mobile 菜单入口(Desktop 隐藏,横向 Header 已有这些项目) */
+.nav-menu { position: relative; display: none; margin-right: 12px; }
+.nav-menu[hidden] { display: none !important; }
+@media (max-width: 860px) {
+  .nav-user { margin-left: 0; }
+  /* Menu item 之间留足点击区域 */
+  .nav-user-btn { padding: 9px 15px; font-size: 13px; max-width: 52vw; }
+  .nav-user-btn > span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .nav-user-menu { min-width: 208px; max-width: min(78vw, 280px); }
+  .nav-user-menu a, .nav-user-menu button { padding: 12px 13px; }
+  .nav-user-menu .m-only { display: block; }
+  /* 横向导航收起,但项目不会消失 —— 全部搬进右上角的 Dropdown。
+     只作用于 Header 的直接子层,Dropdown 内的项目不受影响。 */
+  .nav-links > a:not(.nav-cta) { display: none; }
+  .nav-links { margin-left: auto; gap: 0; }
+  .nav-cta { margin-left: 0; padding: 9px 16px; white-space: nowrap; }
+  .nav-menu { display: block; }
+}
+/* 窄屏:品牌与两颗按钮同一行放得下,不换行、不挤压 */
+@media (max-width: 520px) {
+  .brand { font-size: 15px; letter-spacing: .26em; }
+  .nav-cta { font-size: 12.5px; padding: 8px 13px; }
+  .nav-menu { margin-right: 8px; }
+  .nav-user-btn { padding: 8px 12px; font-size: 12.5px; }
+}
 
 /* ---------- Hero ---------- */
 .hero { position: relative; overflow: hidden; color: var(--text-light);
@@ -542,15 +577,35 @@ var APP_URL = "app.html";
         <a href="#sky" data-app-hash="#/my-sky">我的星空</a>
         <a href="#favs" data-app-hash="#/favorites">收藏</a>
         <a href="#story">关于我们</a>
+        <!-- 未登录的 Mobile:横向导航收起后,公开入口改由这个菜单提供,不让项目消失 -->
+        <div class="nav-menu nav-user" id="navMenu">
+          <button type="button" class="nav-user-btn" id="navMenuBtn" aria-haspopup="true" aria-expanded="false">
+            <span>菜单</span><span class="caret" aria-hidden="true">▾</span>
+          </button>
+          <div class="nav-user-menu" id="navMenuList" role="menu">
+            <a role="menuitem" href="#top">首页</a>
+            <a role="menuitem" href="#chapters">探索</a>
+            <a role="menuitem" href="#story">关于我们</a>
+          </div>
+        </div>
         <a class="nav-cta" id="navCta" href="app.html#/login" data-app-hash="#/login">注册 / 登入</a>
-        <!-- 已登录时由 JS 显示,替代「注册 / 登入」 -->
+        <!-- 已登录时由 JS 显示,替代「注册 / 登入」。
+             Mobile 上 Header 的导航项目不会消失:它们以 .m-only 的形式收在这个 Dropdown 里。 -->
         <div class="nav-user" id="navUser" hidden>
           <button type="button" class="nav-user-btn" id="navUserBtn" aria-haspopup="true" aria-expanded="false">
             <span id="navUserName"></span><span class="caret" aria-hidden="true">▾</span>
           </button>
           <div class="nav-user-menu" id="navUserMenu" role="menu">
+            <div class="who"><small>账号</small><b id="navUserWho"></b></div>
+            <a class="m-only" role="menuitem" href="#top">首页</a>
+            <a class="m-only" role="menuitem" href="#chapters">探索</a>
+            <a role="menuitem" href="app.html#/reading" data-app-hash="#/reading">我的生命蓝图</a>
             <a role="menuitem" href="app.html#/my-sky" data-app-hash="#/my-sky">我的星空</a>
+            <a role="menuitem" href="app.html#/map" data-app-hash="#/map">属于你的生命脉络</a>
             <a role="menuitem" href="app.html#/favorites" data-app-hash="#/favorites">我的收藏</a>
+            <a class="m-only" role="menuitem" href="#story">关于我们</a>
+            <div class="sep"></div>
+            <a role="menuitem" href="app.html#/settings" data-app-hash="#/settings">设置</a>
             <button role="menuitem" type="button" id="navLogout">登出</button>
           </div>
         </div>
@@ -913,17 +968,20 @@ document.querySelectorAll("a[data-app-hash]").forEach(function (a) {
     // CTA 文案维持「开启我的星空」,并沿用同一套入口逻辑(#/reading),登录前后不变
   }
 
-  // Header:已登录以用户名取代「注册 / 登入」
-  if (loggedIn) {
-    document.getElementById("navCta").hidden = true;
-    var wrap = document.getElementById("navUser");
-    wrap.hidden = false;
-    document.getElementById("navUserName").textContent = name || "我的帐号";
-    var btn = document.getElementById("navUserBtn");
+  /* Dropdown 共用行为:点按钮开合、点项目关闭、点外面关闭、Esc 关闭。
+     Dropdown 只在 Header 内展开(absolute),不会遮住或推挤页面主要内容。 */
+  function wireDropdown(wrap, btn) {
+    if (!wrap || !btn) return;
     btn.addEventListener("click", function (ev) {
       ev.stopPropagation();
       var open = wrap.classList.toggle("open");
       btn.setAttribute("aria-expanded", open ? "true" : "false");
+    });
+    // 点了菜单里的项目 → 正常关闭(同页锚点也会关)
+    wrap.querySelectorAll('[role="menuitem"]').forEach(function (it) {
+      it.addEventListener("click", function () {
+        wrap.classList.remove("open"); btn.setAttribute("aria-expanded", "false");
+      });
     });
     document.addEventListener("click", function (ev) {
       if (!wrap.contains(ev.target)) { wrap.classList.remove("open"); btn.setAttribute("aria-expanded", "false"); }
@@ -931,6 +989,24 @@ document.querySelectorAll("a[data-app-hash]").forEach(function (a) {
     document.addEventListener("keydown", function (ev) {
       if (ev.key === "Escape") { wrap.classList.remove("open"); btn.setAttribute("aria-expanded", "false"); }
     });
+  }
+
+  // 未登录:Mobile 用「菜单」提供公开入口(Desktop 由 CSS 隐藏)
+  if (!loggedIn) wireDropdown(document.getElementById("navMenu"), document.getElementById("navMenuBtn"));
+
+  // Header:已登录以用户名取代「注册 / 登入」
+  if (loggedIn) {
+    document.getElementById("navCta").hidden = true;
+    document.getElementById("navMenu").hidden = true;
+    var wrap = document.getElementById("navUser");
+    wrap.hidden = false;
+    // 显示名称一律来自「当前 User ID 的 Profile Username」,拿不到就用中性文案,
+    // 绝不用 email 前缀 / 星盘上的名字 / 上一位登入者留下的快照
+    var shown = name || "我的账号";
+    document.getElementById("navUserName").textContent = shown;
+    document.getElementById("navUserWho").textContent = shown;
+    var btn = document.getElementById("navUserBtn");
+    wireDropdown(wrap, btn);
     // 登出:清掉会话与本地展示快照,留在落地页(不跳任何旧页面)
     document.getElementById("navLogout").addEventListener("click", function () {
       // 登出必须清干净:留着任何一个键,下一位在同一台机器登入的人就会看到上一位的名字 / 内容
