@@ -320,25 +320,26 @@ header.site { position: relative; z-index: 5; background: transparent; }
 /* 一行一段脉络:标题在外,正文收起 */
 .thread-item { border-bottom: 1px solid var(--border-card); }
 .thread-item:last-child { border-bottom: none; }
-.thread-head {
-  display: flex; align-items: center; gap: 14px; width: 100%;
-  padding: 17px 4px; background: none; border: none; cursor: pointer;
-  font-family: var(--font-sans-sc); text-align: left; color: var(--text-dark);
-  transition: color var(--duration-hover) var(--ease-soft);
+/* 每一段脉络:标题在外,点击进入独立页面阅读 */
+.thread-item {
+  position: relative; display: flex; align-items: center; gap: 14px;
+  padding: 17px 4px; color: var(--text-dark);
+  transition: color var(--duration-hover) var(--ease-soft), padding-left var(--duration-hover) var(--ease-soft);
 }
-.thread-head:hover { color: var(--accent-moon-lavender); }
-.thread-head:focus-visible { outline: 2px solid var(--accent-moon-lavender); outline-offset: 3px; border-radius: 8px; }
-.thread-head .t {
+.thread-item:hover { color: var(--accent-moon-lavender); padding-left: 8px; }
+.thread-item:focus-visible { outline: 2px solid var(--accent-moon-lavender); outline-offset: 3px; border-radius: 8px; }
+.thread-item .t {
   flex: 1; font-family: var(--font-serif-sc); font-size: 15.5px; font-weight: 500; line-height: 27px;
 }
-.thread-head .sign {
-  flex: none; font-size: 15px; color: var(--text-secondary); width: 14px; text-align: center;
-  transition: color var(--duration-hover);
+.thread-item .go {
+  flex: none; font-size: 14px; color: var(--text-secondary); opacity: 0;
+  transform: translateX(-4px);
+  transition: opacity var(--duration-hover) var(--ease-soft), transform var(--duration-hover) var(--ease-soft);
 }
-.thread-item.open .thread-head .sign { color: var(--accent-moon-lavender); }
+.thread-item:hover .go { opacity: .85; transform: none; }
 
 /* 未点亮:描边小星,低透明、无光 */
-.thread-head .star {
+.thread-item .star {
   position: relative; flex: none; width: 15px; height: 15px;
   background: currentColor; opacity: .3; color: var(--text-secondary);
   -webkit-mask: var(--star-mask) center / contain no-repeat;
@@ -349,31 +350,22 @@ header.site { position: relative; z-index: 5; background: transparent; }
   --star-mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12 1.6c.5 4.6 1.9 7.9 4.3 9.3-2.4 1.4-3.8 4.7-4.3 9.3-.5-4.6-1.9-7.9-4.3-9.3C10.1 9.5 11.5 6.2 12 1.6z' fill='black'/><path d='M12 3.4c.4 3.6 1.5 6.2 3.4 7.5-1.9 1.3-3 3.9-3.4 7.5-.4-3.6-1.5-6.2-3.4-7.5C10.5 9.6 11.6 7 12 3.4z' fill='black'/></svg>");
 }
 /* 已点亮:星芯发亮 + 柔和外晕 + 极缓慢的呼吸 */
-.thread-item.lit .thread-head .star {
+.thread-item.lit .star {
   opacity: 1; color: var(--accent-starlight-gold);
   filter: drop-shadow(0 0 3px rgba(232,211,162,.9)) drop-shadow(0 0 9px rgba(232,211,162,.45));
   animation: starBreath 3.6s var(--ease-soft) infinite;
 }
-.thread-item.lit .thread-head::before {
+.thread-item.lit::before {
   content: ""; position: absolute; left: -6px; width: 28px; height: 28px; border-radius: 50%;
   background: radial-gradient(circle, rgba(232,211,162,.22), transparent 68%);
   pointer-events: none;
 }
-.thread-head { position: relative; }
+
 @keyframes starBreath {
   0%, 100% { filter: drop-shadow(0 0 3px rgba(232,211,162,.75)) drop-shadow(0 0 8px rgba(232,211,162,.32)); }
   50%      { filter: drop-shadow(0 0 4px rgba(232,211,162,1))   drop-shadow(0 0 13px rgba(232,211,162,.55)); }
 }
-@media (prefers-reduced-motion: reduce) { .thread-item.lit .thread-head .star { animation: none; } }
-
-/* 展开的正文:沿用原文,只调整阅读节奏 */
-.thread-body { max-height: 0; overflow: hidden; transition: max-height .45s var(--ease-soft); }
-.thread-body .inner {
-  padding: 0 4px 22px 43px; max-width: 720px;
-  font-size: 14.5px; line-height: 30px; color: var(--text-secondary); font-weight: 300;
-}
-.thread-body .inner p { margin: 0 0 16px; }
-.thread-body .inner p:last-child { margin-bottom: 0; }
+@media (prefers-reduced-motion: reduce) { .thread-item.lit .star { animation: none; } }
 
 .thread-aha { display: grid; gap: 8px; margin-top: 22px; }
 .thread-aha .a {
@@ -407,9 +399,9 @@ header.site { position: relative; z-index: 5; background: transparent; }
 .thread-gate .go:hover { background: rgba(170,160,213,.1); }
 .thread-gate.ready .tx { color: var(--text-dark); }
 @media (max-width: 520px) {
-  .thread-head { gap: 11px; padding: 15px 2px; }
-  .thread-head .t { font-size: 14.5px; line-height: 25px; }
-  .thread-body .inner { padding-left: 26px; font-size: 14px; line-height: 28px; }
+  .thread-item { gap: 11px; padding: 15px 2px; }
+  .thread-item .t { font-size: 14.5px; line-height: 25px; }
+  .thread-item .go { opacity: .6; transform: none; }
 }
 
 /* ---------- 品牌故事:整片星夜 + 左右构图(与前后 section 自然衔接) ---------- */
@@ -835,38 +827,25 @@ function appHref(hash) { return APP_URL + (hash || ""); }
     seen[k] = true;
     try { localStorage.setItem(SEEN_KEY, JSON.stringify(seen)); } catch (e) { }
   }
-  function paras(t) {
-    return String(t || "").split(/\n\s*\n|\n/).filter(function (x) { return x.trim(); })
-      .map(function (x) { return "<p>" + esc(x.trim()) + "</p>"; }).join("");
-  }
+
+  // 已生成:落地页只列标题,点击进入独立页面阅读该段内容
   var html = lm.tagline ? '<div class="lead">' + esc(lm.tagline) + "</div>" : "";
   html += '<div class="thread-list">' + lm.sections.map(function (x, i) {
     var key = "s" + i + "|" + String(x.title || "").slice(0, 24);
-    var lit = !!seen[key];
-    return '<div class="thread-item' + (lit ? " lit" : "") + '" data-key="' + esc(key) + '">' +
-      '<button class="thread-head" type="button" aria-expanded="false">' +
-        '<span class="star" aria-hidden="true"></span>' +
-        '<span class="t">' + esc(x.title) + "</span>" +
-        '<span class="sign" aria-hidden="true">+</span>' +
-      "</button>" +
-      '<div class="thread-body"><div class="inner">' + paras(x.body) + "</div></div></div>";
+    return '<a class="thread-item' + (seen[key] ? " lit" : "") + '" data-key="' + esc(key) + '" ' +
+      'href="' + appHref("#/map/" + i) + '" data-app-hash="#/map/' + i + '">' +
+      '<span class="star" aria-hidden="true"></span>' +
+      '<span class="t">' + esc(x.title) + "</span>" +
+      '<span class="go" aria-hidden="true">→</span></a>';
   }).join("") + "</div>";
-  if (lm.aha && lm.aha.length)
-    html += '<div class="thread-aha">' + lm.aha.map(function (q) {
-      return '<div class="a">' + esc(q) + "</div>"; }).join("") + "</div>";
-  if (lm.question) html += '<div class="thread-q">' + esc(lm.question) + "</div>";
+  html += '<a class="thread-more" href="' + appHref("#/map") + '" data-app-hash="#/map">读完整篇 →</a>';
   slot.innerHTML = html;
 
-  slot.querySelectorAll(".thread-item").forEach(function (item) {
-    var head = item.querySelector(".thread-head");
-    var body = item.querySelector(".thread-body");
-    head.addEventListener("click", function () {
-      var open = item.classList.toggle("open");
-      head.setAttribute("aria-expanded", open ? "true" : "false");
-      item.querySelector(".sign").textContent = open ? "−" : "+";
-      body.style.maxHeight = open ? (body.scrollHeight + "px") : "";
-      // 星星一旦点亮就不再熄灭 —— 它代表「你已经看见过这一段」
-      if (open) { item.classList.add("lit"); markSeen(item.getAttribute("data-key")); }
+  // 点开过就点亮,状态留在本地,收起 / 离开 / refresh 都不熄灭
+  slot.querySelectorAll(".thread-item").forEach(function (a) {
+    a.addEventListener("click", function () {
+      a.classList.add("lit");
+      markSeen(a.getAttribute("data-key"));
     });
   });
 })();
