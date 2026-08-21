@@ -1639,6 +1639,17 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   let session = null;
   try { session = JSON.parse(localStorage.getItem(SESSION_KEY) || "null"); } catch (e) { }
 
+  /* 登入有效期 = 登入当天(以使用者所在时区的日期判断,不用 UTC) */
+  function localDay(d) {
+    d = d || new Date();
+    return d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2);
+  }
+  function dayValid() {
+    if (!session) return false;
+    if (!session.login_date) return true;   // 旧会话没有戳记 → 不强制登出
+    return session.login_date === localDay();
+  }
+
   function saveSession(s) {
     session = s;
     try {
@@ -1661,15 +1672,25 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       method: "POST",
       headers: { "apikey": SUPABASE_ANON_KEY, "Content-Type": "application/json" },
       body: JSON.stringify(body)
-    }).then(r => r.json().then(d => ({ ok: r.ok, data: d })));
+    }).then(r => r.json().catch(() => ({})).then(d => ({ ok: r.ok, status: r.status, data: d })));
   }
-  function pickSession(d) {
+  /* Username 的唯一真实来源:该 auth user 自己的 user_metadata。
+     绝不从 email 前缀推导,也绝不沿用其他帐号留下的值。 */
+  function pickNick(u) {
+    const m = (u && u.user_metadata) || {};
+    return String(m.display_name || m.user_id || m.username || m.name || "").trim();
+  }
+  function pickSession(d, keepDate) {
     if (!d || !d.access_token) return null;
+    const u = d.user || null;
     return {
       access_token: d.access_token,
       refresh_token: d.refresh_token,
-      user_id: d.user ? d.user.id : (d.user_id || ""),
-      email: d.user ? d.user.email : ""
+      user_id: u ? u.id : (d.user_id || ""),
+      email: u ? u.email : "",
+      // 续期时保留原本的登入日期:续期不等于重新登入
+      login_date: (keepDate && session && session.login_date) || localDay(),
+      nick: (u ? pickNick(u) : "") || (keepDate && session ? (session.nick || "") : "")
     };
   }
   function signup(email, pw, userId) {
@@ -1679,7 +1700,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     return authCall("signup", body).then(function (r) {
       if (!r.ok) throw new Error(r.data.msg || r.data.error_description || r.data.message || "注册失败");
       const s = pickSession(r.data);
-      if (s) { saveSession(s); return { loggedIn: true }; }
+      if (s) { if (userId && !s.nick) s.nick = userId; saveSession(s); return { loggedIn: true }; }
       return { loggedIn: false, needConfirm: true }; // 项目开了邮箱确认
     });
   }
@@ -1689,16 +1710,59 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       saveSession(pickSession(r.data));
     });
   }
+  /* refresh_token 在 Supabase 会轮换:同一个只能用一次。
+     以前冷启动的 Cloud.refresh() 与 REST 401 自动续期会并发跑,
+     第二个请求拿着已作废的 token → saveSession(null) → 会话被误清空 →
+     使用者被当成新用户,弹出「重新输入星盘」。这里改成单飞:
+     同一时间只发一次续期请求,其他调用共用同一个 Promise。 */
+  let refreshing = null;
   function refresh() {
     if (!session || !session.refresh_token) return Promise.reject(new Error("no session"));
-    return authCall("token?grant_type=refresh_token", { refresh_token: session.refresh_token }).then(function (r) {
-      if (!r.ok) { saveSession(null); throw new Error("会话已过期"); }
-      saveSession(pickSession(r.data));
+    if (refreshing) return refreshing;
+    const rt = session.refresh_token;
+    refreshing = authCall("token?grant_type=refresh_token", { refresh_token: rt }).then(function (r) {
+      if (!r.ok) {
+        // 只有「令牌确实被拒」才算过期。伺服器错误 / 断网不清会话,
+        // 否则一次偶发失败就会把已有星盘的使用者变成新用户。
+        const hard = r.status === 400 || r.status === 401 || r.status === 403;
+        if (hard) saveSession(null);
+        const err = new Error(hard ? "会话已过期" : "续期暂时失败");
+        err.hard = hard;
+        throw err;
+      }
+      saveSession(pickSession(r.data, true));
+    });
+    const done = function () { refreshing = null; };
+    refreshing.then(done, done);
+    return refreshing;
+  }
+  /* 向 Supabase 取当前登入者本人的资料(user_metadata → Username 的权威来源) */
+  function fetchUser() {
+    if (!session) return Promise.reject(new Error("no session"));
+    return fetch(SUPABASE_URL + "/auth/v1/user", { headers: authHeaders() }).then(function (r) {
+      if (r.status === 401) return refresh().then(function () {
+        return fetch(SUPABASE_URL + "/auth/v1/user", { headers: authHeaders() }).then(function (r2) {
+          if (!r2.ok) throw new Error("user " + r2.status); return r2.json();
+        });
+      });
+      if (!r.ok) throw new Error("user " + r.status);
+      return r.json();
+    }).then(function (u) {
+      if (u && u.id && session) {
+        const n = pickNick(u);
+        // 只写自己的名字,并且只在拿到真值时覆盖
+        if (u.id === session.user_id && n) { session.nick = n; saveSession(session); }
+      }
+      return u;
     });
   }
   function logout() {
     saveSession(null);
-    try { localStorage.removeItem("inner_sky_profile_v1"); } catch (e) { }
+    // 同一台机器换人登入时,不能留下上一位的名字 / 快照
+    ["inner_sky_profile_v1", "inner_sky_userid_v1", "inner_sky_wheel_v1", "inner_sky_favs_v1",
+     "inner_sky_lifemap_v1", "inner_sky_read_v1", "inner_sky_thread_state_v1",
+     "inner_sky_thread_seen_v1", "inner_sky_next_v1"]
+      .forEach(function (k) { try { localStorage.removeItem(k); } catch (e) { } });
   }
 
   // ---------- REST(自动续期一次) ----------
@@ -1782,9 +1846,14 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
 
   window.Cloud = {
     hasSession: function () { return !!session; },
+    // 跨日 → 需要重新登入(不是因为闲置多久,而是「登入有效至当天结束」)
+    dayValid: dayValid,
+    localDay: localDay,
+    userId: function () { return session ? (session.user_id || "") : ""; },
+    nick: function () { return session ? (session.nick || "") : ""; },
     token: function () { return session ? session.access_token : ""; },
     email: function () { return session ? session.email : ""; },
-    signup: signup, login: login, logout: logout, refresh: refresh,
+    signup: signup, login: login, logout: logout, refresh: refresh, fetchUser: fetchUser,
     loadCharts: loadCharts, insertChart: insertChart, updateChart: updateChart, deleteChart: deleteChart,
     loadPrefs: loadPrefs, savePrefs: savePrefs, uuid: uuid,
     migrateLegacy: migrateLegacy
@@ -2831,11 +2900,21 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
 
   function saveProfileCache() {
     try {
-      var c = activeChart();
-      var uid = "";
-      try { uid = localStorage.getItem("inner_sky_userid_v1") || ""; } catch (e2) { }
+      // Username 的唯一来源:当前登入者自己的 user_metadata.display_name
+      // (注册时填的 User ID)。绝不用 email 前缀,也绝不用本机上一位使用者留下的值。
+      // 快照带上 uid,落地页会核对是不是同一个人,不是就不显示名字。
+      var myId = window.Cloud.userId();
+      var nick = window.Cloud.nick();
+      if (!nick) {
+        // 还没拿到权威值:只在「本机注册时留下的 User ID 确实属于这个帐号」时才用
+        try {
+          var localUid = JSON.parse(localStorage.getItem("inner_sky_userid_v1") || "null");
+          if (localUid && localUid.uid === myId && localUid.nick) nick = localUid.nick;
+        } catch (e2) { }
+      }
       localStorage.setItem("inner_sky_profile_v1", JSON.stringify({
-        nick: uid || (c ? (c.nick || "") : ""),
+        uid: myId,
+        nick: nick || "",
         email: (window.Cloud && window.Cloud.email) ? window.Cloud.email() : ""
       }));
       // 已读章节:以 prefs.readTopics 为准(真正打开阅读过才算)
@@ -4139,17 +4218,51 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   /* 受保护的路由:全部依赖用户星盘资料
      未登录 → 登录页;已登录但资料不完整 → 出生资料 onboarding(主页表单)
      onboarding 本身不是路由,不会触发二次跳转,因此不存在 redirect loop */
-  let chartsLoaded = false;
+  /* 三个互相独立的状态,任何时候都不可混为一谈:
+       1) 登入状态          —— window.Cloud.hasSession() / dayValid()
+       2) 这个帐号有没有星盘 —— 只有 chartsSettled 为 true 才算「已确认」
+       3) 前端此刻有没有载到 —— chartsLoaded
+     前端暂时没有 chart data ≠ 使用者没有星盘,因此永远不能只凭 (2) 之外的条件
+     把人送去「重新输入星盘」。 */
+  let chartsLoaded = false;     // 已经成功从资料库取回过一次
+  let chartsSettled = false;    // 取回成功且结果可信(可以据此判断「确实没有星盘」)
+  let chartsError = null;       // 最近一次载入失败的原因(失败 ≠ 没有星盘)
+
+  const NEXT_KEY = "inner_sky_next_v1";   // 因跨日 / 未登入而中断时,记住使用者原本要去的地方
+  function rememberNext(hash) {
+    try { localStorage.setItem(NEXT_KEY, hash || location.hash || ""); } catch (e) { }
+  }
+  function takeNext() {
+    let v = "";
+    try { v = localStorage.getItem(NEXT_KEY) || ""; localStorage.removeItem(NEXT_KEY); } catch (e) { }
+    return v;
+  }
+  /* 需要重新登入:记住目的地 → 显示新版登入页 */
+  function requireLogin(reason) {
+    // 先登出再记目的地:logout 会清掉本机快照(含 NEXT_KEY)
+    if (reason === "day") window.Cloud.logout();
+    rememberNext(location.hash);
+    const ov = $("authOverlay");
+    if (ov) ov.style.display = "";
+    setAuthLoadingSafe(false);
+    const dp = $("dpage");
+    if (dp) { dp.style.display = "none"; }
+    document.body.classList.remove("dp-open");
+  }
+  function setAuthLoadingSafe(on, msg) {
+    try { if (window.__setAuthLoading) window.__setAuthLoading(on, msg); } catch (e) { }
+  }
+
   function routeGuard() {
     if (!curRoute) return true;
-    if (!window.Cloud.hasSession()) {
-      const ov = $("authOverlay");
-      if (ov) ov.style.display = "";
-      return false;
-    }
-    if (!chartsLoaded) return true;   // 资料还没拉完,先放行,载入后会再判断一次
+    if (!window.Cloud.hasSession()) { requireLogin("none"); return false; }
+    // 登入有效至当天结束:跨日之后再操作 → 重新登入,登入完成后回到原本想去的页面
+    if (!window.Cloud.dayValid()) { requireLogin("day"); return false; }
+    // 资料还没确认完:先放行(页内会显示柔和 Loading),绝不在这里跳 onboarding
+    if (!chartsSettled) return true;
     // onboarding 自身是公开路由,不能再要求「已有完整资料」,否则会无限跳转
     if (curRoute.k === "onboarding") return true;
+    // 只有「资料库确认这个帐号从来没有建立过星盘」才允许进入建立页面
     if (!hasCompleteBirthProfile()) {
       location.replace(location.pathname + location.search + "#/onboarding");
       return false;
@@ -4170,8 +4283,16 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   }
 
   function routeAfterEntry() {
+    // 被中断前想去的地方(例如点了「事业」才被要求重新登入)→ 登入后直接回到那里
+    const next = takeNext();
+    if (next && next !== "#/login" && hasCompleteBirthProfile()) {
+      returnToLanding = false;
+      if (location.hash === next) { applyRoute(); } else { location.hash = next; }
+      return;
+    }
     // 从 Header 登入 / 注册进来的:回到落地页最顶部(有完整资料才算走完流程)
     if (returnToLanding && hasCompleteBirthProfile()) { location.href = LANDING_URL; return; }
+    if (!chartsSettled) { applyRoute(); return; }   // 资料还没确认 → 不做任何跳转
     if (!hasCompleteBirthProfile()) {
       if (!curRoute || curRoute.k !== "onboarding") location.hash = "#/onboarding";
       else applyRoute();
@@ -4210,6 +4331,15 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     renderRoute();
   }
   function routeRefresh() { if (curRoute) renderRoute(); }
+  // dpNeedChart 里的「再试一次」:重新跟资料库确认,而不是清资料或跳 onboarding
+  document.addEventListener("click", function (ev) {
+    const t = ev.target;
+    if (t && t.id === "dpRetryData") {
+      chartsError = null;
+      routeRefresh();
+      if (window.__reloadUserData) window.__reloadUserData();
+    }
+  });
   function renderRoute() {
     const r = curRoute;
     if (!r) return;
@@ -4335,8 +4465,11 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   }
   function dpNeedChart() {
     // 已登录但资料还在路上 → 显示等待,而不是「没有星盘」
-    if (!chartsLoaded && window.Cloud.hasSession())
+    if (!chartsSettled && window.Cloud.hasSession()) {
+      // 读取失败 ≠ 没有星盘:给一个重试,不把使用者推去重新输入出生资料
+      if (chartsError) return dpDataError("dpRetryData");
       return dpLoading(dpT("正在读取你的星盘…", "Loading your chart…"));
+    }
     return '<div class="dp-card dp-loading"><span class="g">✹</span>' +
       dpT("请先回到主页选择或建立一张星盘", "Please choose or create a chart first") +
       '<br><a class="dp-cta" style="margin-top:16px" href="' + LANDING_URL + '">' + dpT("回到主页", "Back to home") + "</a></div>";
@@ -4350,6 +4483,14 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   function dpError(err, retryId) {
     return '<div class="dp-card dp-loading">' + dpT("这次没有生成成功。", "Generation didn’t go through.") +
       '<br><span style="font-size:12px;opacity:.8">' + esc0((err && err.hint) || (err && err.msg) || "") + "</span><br>" +
+      '<button class="dp-cta" style="margin-top:16px" id="' + retryId + '">' + dpT("再试一次", "Try again") + "</button></div>";
+  }
+  // 「资料没读到」跟「内容没生成成功」是两回事,文案不能共用
+  function dpDataError(retryId) {
+    return '<div class="dp-card dp-loading">' +
+      dpT("暂时读不到你的资料，你的星盘还在。", "We couldn’t reach your data just now — your chart is safe.") +
+      '<br><span style="font-size:12px;opacity:.8">' +
+      dpT("这只是连线问题，不需要重新输入任何资料。", "This is only a connection issue; nothing needs to be re-entered.") + "</span><br>" +
       '<button class="dp-cta" style="margin-top:16px" id="' + retryId + '">' + dpT("再试一次", "Try again") + "</button></div>";
   }
   function dpReturnFoot() {
@@ -4681,6 +4822,19 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     }
     // 一个邮件只对应一张星盘:已经有完整资料就不再提供输入界面
     if (chartsLoaded && hasCompleteBirthProfile()) { location.replace(location.pathname + location.search + "#/reading"); return; }
+    // 还没跟资料库确认过这个帐号有没有星盘 → 只显示等待,绝不先把输入表单摆出来
+    if (!chartsSettled) {
+      dpScaffold({
+        chip: dpT("出生资料", "YOUR BIRTH DATA"),
+        title: dpT("正在确认你的资料", "Checking your details"),
+        sub: "",
+        body: chartsError ? dpDataError("dpRetryBoot") : dpLoading(dpT("正在读取你的星盘…", "Loading your chart…")),
+        foot: "", backLabel: dpT("返回主页", "Back to home"), backHref: LANDING_URL, seed: 12
+      });
+      const rb = $("dpRetryBoot");
+      if (rb) rb.addEventListener("click", function () { chartsError = null; reloadUserData(); });
+      return;
+    }
     const opts = [];
     CITY_GROUPS.forEach(function (g) {
       const items = g[1].map(function (ct) {
@@ -4984,43 +5138,73 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
         bar.dataset.ready = "1";
         bar.style.display = "flex";
         bar.innerHTML = '<span></span><button id="logoutBtn" data-i18n="logout"></button>';
-        bar.firstChild.textContent = window.Cloud.email();
+        bar.firstChild.textContent = window.Cloud.nick() || window.Cloud.email();
         document.getElementById("logoutBtn").textContent = T("logout");
         document.getElementById("logoutBtn").addEventListener("click", function () {
           window.Cloud.logout(); location.reload();
         });
       }
-      // 拉取偏好与星盘
-      Promise.all([
+      // 拉取偏好与星盘。
+      // loadCharts 失败必须当成「不知道」,不能当成「这个帐号没有星盘」——
+      // 后者会把已有星盘的使用者推去重新输入出生资料。
+      chartsError = null;
+      return Promise.all([
         window.Cloud.loadPrefs().catch(function () { return {}; }),
-        window.Cloud.loadCharts().catch(function (e) { console.warn(e); return []; })
+        window.Cloud.loadCharts()
       ]).then(function (r) {
         const prefs = r[0] || {};
         store.charts = r[1] || [];
         applyCloudPrefs(prefs);
+        chartsLoaded = true;
         if (!store.charts.length) {
           // 首次登录:自动迁移旧本地数据
           return window.Cloud.migrateLegacy().then(function (mig) {
             if (mig.length) store.charts = mig;
-          });
+          }).catch(function () { });
         }
-      }).catch(function (e) {
-        console.warn(e);
-        setAuthLoading(false);
-        setAuthMsg(window.I18N.isEN() ? "Could not load your data. Please try again." : "资料载入失败，请再试一次");
-        throw e;
       }).then(function () {
+        chartsSettled = true;   // 到这里才算「资料库已经确认过」
         if (!store.activeId || !store.charts.some(c => c.id === store.activeId)) {
           const usable = store.charts.filter(isCompleteBirthData);
           store.activeId = usable.length ? usable[0].id : (store.charts.length ? store.charts[0].id : null);
         }
-        chartsLoaded = true;
         renderChartList(); drawActive();
+        refreshAcctBar(); saveProfileCache();
         routeAfterEntry();
         // 目标页面已经渲染,这时才收起登入页,中间不会露出任何其他背景
         requestAnimationFrame(function () { requestAnimationFrame(leaveAuth); });
         setTimeout(function () { saveWheelSnapshot(); renderFavs(); applyDeepLink(); }, 600);
+        // Username 以帐号自己的 user_metadata 为准,拿到后静默更新一次
+        window.Cloud.fetchUser().then(function () { refreshAcctBar(); saveProfileCache(); }).catch(function () { });
+      }).catch(function (e) {
+        console.warn(e);
+        chartsError = e;
+        chartsSettled = false;
+        if (/会话已过期|no session/.test(String(e && e.message))) { requireLogin("expired"); return; }
+        // 资料读不到:留在原本的页面显示可重试的提示,不跳 onboarding、不清资料
+        if (!silent) { setAuthLoading(false); setAuthMsg(window.I18N.isEN() ? "Could not load your data. Please try again." : "资料载入失败，请再试一次"); return; }
+        leaveAuth();
+        applyRoute();
       });
+    }
+
+    /* 闲置回来 / refresh / 手动重试:重新跟资料库确认真实状态,而不是相信前端 state */
+    let reloading = null;
+    function reloadUserData() {
+      if (!window.Cloud.hasSession()) { requireLogin("none"); return Promise.resolve(); }
+      if (!window.Cloud.dayValid()) { requireLogin("day"); return Promise.resolve(); }
+      if (reloading) return reloading;
+      reloading = enterApp(true);
+      const done = function () { reloading = null; };
+      Promise.resolve(reloading).then(done, done);
+      return reloading;
+    }
+    window.__reloadUserData = reloadUserData;
+
+    function refreshAcctBar() {
+      const bar = document.getElementById("acctBar");
+      if (!bar || !bar.firstChild) return;
+      bar.firstChild.textContent = window.Cloud.nick() || window.Cloud.email() || "";
     }
     $("authLogin").addEventListener("click", function () {
       if (signupMode) {   // 从注册态退回登录态
@@ -5054,26 +5238,75 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       if (!em || pw.length < 6) { setAuthMsg(T("authNeed")); return; }
       if (!uid) { setAuthMsg(T("userIdNeed")); return; }
       setAuthMsg(T("signingUp"), true);
-      try { localStorage.setItem("inner_sky_userid_v1", uid); } catch (e) { }
       window.Cloud.signup(em, pw, uid).then(function (r) {
+        // 绑定到这个帐号的 user_id,换人登入时不会被误用
+        try { localStorage.setItem("inner_sky_userid_v1", JSON.stringify({ uid: window.Cloud.userId(), nick: uid })); } catch (e) { }
         if (r.loggedIn) enterApp();
         else setAuthMsg(T("signupOk"), true);
       }).catch(function (e) { setAuthMsg(e.message); });
     });
     $("authPw").addEventListener("keydown", function (e) { if (e.key === "Enter") $("authLogin").click(); });
-    // 已有会话:静默续期后直接进入
+    window.__setAuthLoading = setAuthLoading;
+
+    /* 冷启动。
+       以前是「enterApp 与 refresh 并发」,两条路会同时用同一个 refresh_token 续期,
+       第二个必然失败并清空会话 → 已有星盘的人被当成新用户。
+       现在改成串行:先把令牌换新,再用新令牌去读资料。 */
     if (window.Cloud.hasSession()) {
-      // 已登录:完全不出现登入页。直接渲染目标页面,内容未就绪时在页内显示柔和 Loading
-      if (!parseRoute()) showBootLoading();
-      enterApp(true);
-      window.Cloud.refresh().catch(function () {
-        // 只有令牌真的失效才回到登入页
-        $("authOverlay").style.display = "";
-        setAuthLoading(false);
-      });
+      if (!window.Cloud.dayValid()) {
+        // 跨日了:记住原本要去的地方,重新登入后直接回去
+        requireLogin("day");
+      } else {
+        if (!parseRoute()) showBootLoading();
+        window.Cloud.refresh()
+          .catch(function (e) {
+            // 令牌确实被拒 → 回登入页;只是暂时失败(断网 / 5xx)→ 仍用旧令牌继续,由 REST 层自行重试
+            if (e && e.hard) { requireLogin("expired"); throw e; }
+          })
+          .then(function () { if (window.Cloud.hasSession()) enterApp(true); })
+          .catch(function () { });
+      }
     } else {
       $("authOverlay").style.display = "";
     }
+
+    /* 闲置回来(切回分页 / 视窗重新取得焦点 / bfcache 复原)。
+       同一天之内不因为闲置而要求重新登入,只是重新跟资料库确认一次真实状态;
+       已跨日才导向登入页。 */
+    (function () {
+      let lastCheck = Date.now();
+      const IDLE_MS = 5 * 60 * 1000;
+      function wake(force) {
+        if (!window.Cloud.hasSession()) return;
+        if (!window.Cloud.dayValid()) { requireLogin("day"); return; }
+        const idled = Date.now() - lastCheck > IDLE_MS;
+        lastCheck = Date.now();
+        if (!force && !idled) return;
+        // 先续期,再重新取资料;失败也不会把使用者当成新用户
+        window.Cloud.refresh()
+          .catch(function (e) { if (e && e.hard) { requireLogin("expired"); throw e; } })
+          .then(function () { if (window.Cloud.hasSession()) reloadUserData(); })
+          .catch(function () { });
+      }
+      document.addEventListener("visibilitychange", function () {
+        if (document.visibilityState === "visible") wake(false);
+      });
+      /* 网页一直开着、跨到隔天:不主动把人踢出去,而是在「再次操作网站时」要求重新登入,
+         并记住这一下原本想去哪里。 */
+      document.addEventListener("click", function (ev) {
+        if (!window.Cloud.hasSession() || window.Cloud.dayValid()) return;
+        const ov = $("authOverlay");
+        if (ov && ov.style.display !== "none" && ov.contains(ev.target)) return;  // 正在登入页上操作
+        const a = ev.target && ev.target.closest ? ev.target.closest("a[href]") : null;
+        const href = a ? a.getAttribute("href") : "";
+        ev.preventDefault();
+        ev.stopPropagation();
+        requireLogin("day");
+        if (href && href.charAt(0) === "#") rememberNext(href);
+      }, true);
+      window.addEventListener("focus", function () { wake(false); });
+      window.addEventListener("pageshow", function (e) { if (e.persisted) wake(true); });
+    })();
     // —— 解读面板按钮 ——
     function copyText(txt, btn, okLabel) {
       function done() { const t = btn.textContent; btn.textContent = okLabel; setTimeout(function () { btn.textContent = t; }, 1800); }

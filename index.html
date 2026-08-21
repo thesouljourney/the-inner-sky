@@ -222,11 +222,13 @@ header.site { position: relative; z-index: 5; background: transparent; }
 }
 
 /* ---------- 人生章节(星体入口) ---------- */
-.chapters { background: var(--surface-moon-cream); padding: 96px 0 108px; text-align: center; }
-.chapters .lead { margin-top: 14px; color: var(--text-secondary); }
+.chapters { background: var(--surface-moon-cream); padding: 56px 0 58px; text-align: center; }
+.chapters .lead { margin-top: 10px; color: var(--text-secondary); }
 /* 标准 3 × 3 Grid:固定三列,不因 responsive 出现两排 / 不平均分布 */
 .chapter-grid {
-  margin-top: 62px; display: grid; gap: 56px var(--layout-gutter);
+  /* 素材本身在球体外圈留了透明边(为了完整显示光环),视觉上已自带上下留白,
+     所以 row-gap 不需要再给大值,否则整段会被撑得很空 */
+  margin-top: 28px; display: grid; gap: 16px var(--layout-gutter);
   grid-template-columns: repeat(3, 1fr);
   max-width: 900px; margin-left: auto; margin-right: auto;
   justify-items: center;
@@ -234,12 +236,12 @@ header.site { position: relative; z-index: 5; background: transparent; }
 /* 一个星体 = 一个完整单元:星球、标题、描述共用同一列,天然居中对齐 */
 .planet-chapter {
   display: flex; flex-direction: column; align-items: center; text-align: center;
-  gap: 4px; padding: 6px 4px; width: 100%; max-width: 240px;
+  gap: 3px; padding: 0 4px; width: 100%; max-width: 240px;
 }
 /* 九颗星球共用同一尺寸盒;素材已统一球体比例,视觉大小因此一致 */
 .planet-chapter .orb {
   width: clamp(96px, 9vw, 128px); aspect-ratio: 1; display: grid; place-items: center;
-  margin-bottom: 18px;
+  margin-bottom: 4px;
 }
 /* 未读:降饱和 + 略降亮度,保留质感、阴影与光环;已读:恢复完整颜色 */
 .planet-chapter .orb img {
@@ -253,10 +255,10 @@ header.site { position: relative; z-index: 5; background: transparent; }
 .planet-chapter:hover .orb img { transform: translateY(-5px) scale(1.04); }
 .planet-chapter .name { font-family: var(--font-serif-sc); font-size: 18px; font-weight: 500; letter-spacing: .05em; }
 .planet-chapter .cap { color: var(--text-secondary); font-size: 13px; line-height: 23px; font-weight: 300; }
-.planet-chapter .done { margin-top: 5px; font-size: 11px; letter-spacing: .1em; color: var(--accent-moon-lavender); min-height: 14px; }
+.planet-chapter .done { margin-top: 3px; font-size: 11px; letter-spacing: .1em; color: var(--accent-moon-lavender); min-height: 12px; }
 /* 平板:仍保持 3 列,只缩小星球与间距,避免出现「两排 / 不平均」排列 */
-@media (max-width: 860px) { .chapter-grid { gap: 40px 10px; } .planet-chapter .orb { width: clamp(74px, 11vw, 96px); } .planet-chapter .name { font-size: 16px; } }
-@media (max-width: 520px) { .chapter-grid { gap: 32px 8px; } .planet-chapter .orb { width: 64px; margin-bottom: 12px; } .planet-chapter .name { font-size: 14px; letter-spacing: .02em; } .planet-chapter .cap { font-size: 11.5px; line-height: 19px; } }
+@media (max-width: 860px) { .chapters { padding: 68px 0 74px; } .chapter-grid { margin-top: 40px; gap: 26px 10px; } .planet-chapter .orb { margin-bottom: 10px; } .planet-chapter .orb { width: clamp(74px, 11vw, 96px); } .planet-chapter .name { font-size: 16px; } }
+@media (max-width: 520px) { .chapters { padding: 68px 0 74px; } .chapter-grid { margin-top: 38px; gap: 26px 8px; } .planet-chapter .orb { width: 64px; margin-bottom: 12px; } .planet-chapter .name { font-size: 14px; letter-spacing: .02em; } .planet-chapter .cap { font-size: 11.5px; line-height: 19px; } }
 
 /* ---------- Dashboard 预览 ---------- */
 .preview { padding: 40px 0 96px; background: var(--surface-cloud-white); }
@@ -732,6 +734,29 @@ function readCache(key) {
   try { return JSON.parse(localStorage.getItem(key) || "null"); } catch (e) { return null; }
 }
 var PROFILE = readCache("inner_sky_profile_v1") || {};
+var SESSION = readCache("xingli_session_v1");
+/* 登入有效期 = 当天(用浏览器所在时区的日期,不用 UTC,避免本地还是同一天却被登出) */
+function localDay(d) {
+  d = d || new Date();
+  return d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2);
+}
+function sessionUsable() {
+  if (!SESSION || !SESSION.access_token) return false;
+  if (SESSION.login_date && SESSION.login_date !== localDay()) return false;  // 已跨日 → 需重新登入
+  return true;
+}
+/* Username 只能来自「当前这个 user_id 自己的 profile」。
+   不从 email 前缀推导,不沿用上一位登入者留下的快照。 */
+function currentUsername() {
+  if (!sessionUsable()) return "";
+  // 1) 会话本身带的名字:直接来自这个 auth user 的 user_metadata.display_name,最可靠
+  if (SESSION.nick) return String(SESSION.nick);
+  // 2) 应用写的快照:必须标明是同一个 user_id 才采用。
+  //    没有 uid 的旧快照一律不用 —— 它可能是 email 前缀,或是上一位使用者留下的名字。
+  if (PROFILE && PROFILE.nick && PROFILE.uid && SESSION.user_id && PROFILE.uid === SESSION.user_id)
+    return String(PROFILE.nick);
+  return "";
+}
 var READ = readCache("inner_sky_read_v1") || {};      // { topicId: true }
 var WHEEL = null;
 try { WHEEL = localStorage.getItem("inner_sky_wheel_v1"); } catch (e) { }
@@ -871,27 +896,29 @@ document.querySelectorAll("a[data-app-hash]").forEach(function (a) {
   var h = new Date().getHours();
   var word = (h >= 5 && h < 11) ? "早安" : (h >= 11 && h < 18) ? "午安" : (h >= 18 && h < 23) ? "晚安" : "夜深了";
 
-  var sess = readCache("xingli_session_v1");
-  var loggedIn = !!(sess && sess.access_token);
-  var name = PROFILE.nick || "";
-  if (!name && loggedIn && sess.email) name = sess.email.split("@")[0];
+  var sess = SESSION;
+  var loggedIn = sessionUsable();
+  var name = currentUsername();
 
-  // Hero kicker:两行个人问候,整页只在这里出现一次
-  if (loggedIn && name) {
+  // Hero kicker:两行个人问候,整页只在这里出现一次。
+  // 名字还没拿到时只问候、不显示任何猜出来的名字(不会出现 A → B → 正确名 的闪烁)
+  if (loggedIn) {
     var k = document.getElementById("heroKicker");
-    k.innerHTML = '<span class="l1">' + esc(word) + '，<span class="nm">' + esc(name) + '</span> ✨</span>' +
-                  '<span class="l2">欢迎回到你的内在宇宙</span>';
+    k.innerHTML = name
+      ? '<span class="l1">' + esc(word) + '，<span class="nm">' + esc(name) + '</span> ✨</span>' +
+        '<span class="l2">欢迎回到你的内在宇宙</span>'
+      : '<span class="l1">' + esc(word) + ' ✨</span>' +
+        '<span class="l2">欢迎回到你的内在宇宙</span>';
     k.hidden = false;
-    var cta = document.querySelector(".hero-copy .btn-primary");
-    if (cta) cta.innerHTML = '继续阅读 <span aria-hidden="true">→</span>';
+    // CTA 文案维持「开启我的星空」,并沿用同一套入口逻辑(#/reading),登录前后不变
   }
 
   // Header:已登录以用户名取代「注册 / 登入」
-  if (loggedIn && name) {
+  if (loggedIn) {
     document.getElementById("navCta").hidden = true;
     var wrap = document.getElementById("navUser");
     wrap.hidden = false;
-    document.getElementById("navUserName").textContent = name;
+    document.getElementById("navUserName").textContent = name || "我的帐号";
     var btn = document.getElementById("navUserBtn");
     btn.addEventListener("click", function (ev) {
       ev.stopPropagation();
@@ -906,8 +933,11 @@ document.querySelectorAll("a[data-app-hash]").forEach(function (a) {
     });
     // 登出:清掉会话与本地展示快照,留在落地页(不跳任何旧页面)
     document.getElementById("navLogout").addEventListener("click", function () {
+      // 登出必须清干净:留着任何一个键,下一位在同一台机器登入的人就会看到上一位的名字 / 内容
       ["xingli_session_v1", "inner_sky_profile_v1", "inner_sky_wheel_v1",
-       "inner_sky_favs_v1", "inner_sky_lifemap_v1"].forEach(function (k) {
+       "inner_sky_favs_v1", "inner_sky_lifemap_v1", "inner_sky_read_v1",
+       "inner_sky_userid_v1", "inner_sky_thread_state_v1", "inner_sky_thread_seen_v1",
+       "inner_sky_next_v1"].forEach(function (k) {
         try { localStorage.removeItem(k); } catch (e) { }
       });
       location.href = location.pathname;   // 回到落地页顶部,Header 恢复「注册 / 登入」
