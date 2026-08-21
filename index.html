@@ -838,7 +838,7 @@ function appHref(hash) { return APP_URL + (hash || ""); }
       '<span class="t">' + esc(x.title) + "</span>" +
       '<span class="go" aria-hidden="true">→</span></a>';
   }).join("") + "</div>";
-  html += '<a class="thread-more" href="' + appHref("#/map") + '" data-app-hash="#/map">读完整篇 →</a>';
+  html += '<a class="thread-more" href="' + appHref("#/map") + '" data-app-hash="#/map">进入阅读 →</a>';
   slot.innerHTML = html;
 
   // 点开过就点亮,状态留在本地,收起 / 离开 / refresh 都不熄灭
