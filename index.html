@@ -258,7 +258,19 @@ header.site { position: relative; z-index: 5; background: transparent; }
 
 /* ---------- 人生章节(星体入口) ---------- */
 .chapters { background: var(--surface-moon-cream); padding: 56px 0 58px; text-align: center; }
-.chapters .lead { margin-top: 10px; color: var(--text-secondary); }
+/* Section Title:视觉权重明显低于 Hero Headline(Know Yourself Through the Stars),
+   字号、行高、字距与下方留白一起调,避免只缩字号造成上下比例不协调。 */
+.chapters .sec-title {
+  font-family: var(--font-serif-sc); font-weight: 500;
+  font-size: clamp(20px, 1.05vw + 15px, 29px);
+  line-height: 1.62; letter-spacing: .07em;
+  color: var(--text-dark); margin: 0 auto; max-width: 22em;
+}
+.chapters .lead { margin-top: 14px; color: var(--text-secondary); letter-spacing: .04em; }
+@media (max-width: 767px) {
+  .chapters .sec-title { line-height: 1.68; letter-spacing: .04em; }
+  .chapters .lead { margin-top: 11px; }
+}
 /* 标准 3 × 3 Grid:固定三列,不因 responsive 出现两排 / 不平均分布 */
 .chapter-grid {
   /* 素材本身在球体外圈留了透明边(为了完整显示光环),视觉上已自带上下留白,
@@ -635,7 +647,7 @@ var APP_URL = "app.html";
 
 <section class="chapters" id="chapters">
   <div class="wrap">
-    <h2 class="type-h2 animate-fade-up">你今天想靠近哪一部分自己?</h2>
+    <h2 class="sec-title animate-fade-up">你今天想靠近哪一部分自己?</h2>
     <p class="lead type-caption animate-fade-up" style="--animation-delay:.1s">每一颗星,都代表你内在的一个宇宙。</p>
     <!-- 星体由 CHAPTERS 数据渲染,新增主题只需往数组里加一项 -->
     <div class="chapter-grid" id="chapterGrid"></div>
@@ -1016,7 +1028,9 @@ document.querySelectorAll("a[data-app-hash]").forEach(function (a) {
        "inner_sky_next_v1"].forEach(function (k) {
         try { localStorage.removeItem(k); } catch (e) { }
       });
-      location.href = location.pathname;   // 回到落地页顶部,Header 恢复「注册 / 登入」
+      // 使用者是主动退出账号 → 进入新版 Login Page,不再留在落地页。
+      // replace:登出这一步不留在历史里,Back 不会退回登入状态的画面。
+      location.replace(APP_URL + "#/login");
     });
   }
 })();
