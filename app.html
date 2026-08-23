@@ -750,6 +750,18 @@
     #dpage .rm-keep .hd .tx{letter-spacing:.24em}
   }
 
+  /* 生命蓝图的五章页签(只有「我的生命蓝图」用到) */
+  #dpage .dp-tabs{display:flex;gap:6px;flex-wrap:wrap;border-bottom:1px solid var(--dp-line);margin-bottom:22px}
+  #dpage .dp-tabs button{
+    font-family:var(--dp-sans);font-size:13.5px;padding:10px 16px;border:none;background:transparent;
+    color:var(--dp-mut);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:.25s
+  }
+  #dpage .dp-tabs button.on{color:var(--dp-ink);border-bottom-color:var(--dp-lav);font-weight:500}
+  /* 专属建议卡片 */
+  #dpage .dp-cards4{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px}
+  #dpage .dp-cards4 .c4{border:1px solid var(--dp-line);border-radius:18px;background:var(--dp-cloud);padding:18px}
+  #dpage .dp-cards4 .c4 b{display:block;font-family:var(--dp-serif);font-weight:500;font-size:14.5px;margin-bottom:8px}
+  #dpage .dp-cards4 .c4 div{font-size:13px;line-height:1.95;color:var(--dp-mut);font-weight:300}
   #dpage .dp-big3{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
   #dpage .dp-big3 .b3{display:flex;gap:12px;align-items:center;border:1px solid var(--dp-line);border-radius:18px;background:var(--dp-cloud);padding:14px 16px}
   #dpage .dp-big3 .b3 .ic{width:38px;height:38px;border-radius:50%;background:rgba(170,160,213,.18);display:flex;align-items:center;justify-content:center;color:#6a5fa0;flex:none}
@@ -5052,7 +5064,8 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
          这里只是不再渲染这个 Section,让页面直接进入有阅读价值的个人解读。 */
       // ---- 基础个人星象盘(简化预览)----
       // 与「我的星空」完整盘共用同一份 curResult,读数不可能出现分歧
-      body += '<div class="dp-card"><div class="dp-sec-label">' + dpT("基础个人星象盘", "YOUR NATAL CHART") + '</div>' +
+      body += '<div class="dp-card"><div class="dp-read">' +
+        '<div class="dp-sec-label">' + dpT("基础个人星象盘", "YOUR NATAL CHART") + '</div>' +
         '<div class="dp-chart-wrap">' +
         '<svg class="dp-wheel" id="dpBlueprintWheel" role="img" aria-label="' + esc0(dpT("你的简化星盘", "Your natal chart")) + '"></svg>' +
         '<div class="dp-place">' + dpPlaceRows([
@@ -5068,7 +5081,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
         ], true) +
         '</div></div>' +
         '<div class="dp-chart-cta"><a class="dp-link" href="#/my-sky">' + dpT("查看完整星盘", "View full chart") + ' →</a></div>' +
-        '</div>';
+        '</div></div>';
 
       // 五章:分页签呈现
       const chs = r.chapters || [];
@@ -5111,8 +5124,9 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
         }).join("") + "</div>";
       }
       if (topCards.length)
-        body += '<div class="dp-card"><div class="dp-sec-label">' + dpT("专属建议", "FOR YOU") + '</div>' +
-          cardsHtml(topCards) + "</div>";
+        body += '<div class="dp-card"><div class="dp-read">' +
+          '<div class="dp-sec-label">' + dpT("专属建议", "FOR YOU") + '</div>' +
+          cardsHtml(topCards) + "</div></div>";
 
       const k = favKey(favSrc, chName(ch, readingTab), ch.body || "");
       const favB = '<button class="fav-btn' + (isFaved(k) ? " on" : "") + '" data-fav="' + esc0(k) +
@@ -5120,23 +5134,25 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
         '" data-source-type="life_blueprint" data-section="' + esc0(chName(ch, readingTab)) +
         '" title="' + esc0(T("saveIt")) + '">' + (isFaved(k) ? "★" : "☆") + "</button>";
       const ownCards = chapterCards[readingTab] || [];
-      body += '<div class="dp-card"><div class="dp-sec-label">' + dpT("详细解读", "IN DETAIL") + '</div>' +
+      body += '<div class="dp-card"><div class="dp-read">' +
+        '<div class="dp-sec-label">' + dpT("详细解读", "IN DETAIL") + '</div>' +
         '<div class="dp-tabs">' + chs.map(function (x, i) {
           return '<button data-rtab="' + i + '"' + (i === readingTab ? ' class="on"' : "") + ">" + esc0(chName(x, i)) + "</button>";
         }).join("") + "</div>" +
-        '<div class="dp-h-row"><h3 class="dp-h">' + esc0(chName(ch, readingTab)) + "</h3>" + favB + "</div>" +
-        (ch.summary ? '<div class="dp-quote" style="text-align:left;padding:8px 0 16px;font-size:15.5px"' +
+        '<div class="dp-sec"><div class="dp-h-row"><h3 class="dp-h">' + esc0(chName(ch, readingTab)) + "</h3>" + favB + "</div>" +
+        '<div class="dp-div" aria-hidden="true">' + dpSpark() + '<span class="ln"></span></div>' +
+        (ch.summary ? '<div class="dp-quote" style="text-align:left;padding:0 0 18px;font-size:15.5px"' +
           ' data-saveable data-source="' + esc0(favSrc) + '" data-source-type="life_blueprint"' +
           ' data-section="' + esc0(chName(ch, readingTab)) + '">' + esc0(ch.summary) + "</div>" : "") +
         '<div class="dp-prose" data-saveable data-source="' + esc0(favSrc) +
         '" data-source-type="life_blueprint" data-section="' + esc0(chName(ch, readingTab)) + '">' +
-        dpPara(ch.body) + "</div>" +
+        dpPara(ch.body) + "</div></div>" +
         // 这一章自己的专属建议:接在对应正文下面,上下文更自然
         (ownCards.length
           ? '<div class="dp-div" style="margin-top:26px" aria-hidden="true">' + dpSpark() + '<span class="ln"></span></div>' +
             '<div class="dp-sec-label">' + dpT("专属建议", "FOR YOU") + '</div>' + cardsHtml(ownCards)
           : "") +
-        "</div>";
+        "</div></div>";
       foot = dpReturnFoot();
     }
     dpScaffold({
