@@ -413,7 +413,16 @@
   @keyframes dpTw{from{opacity:calc(var(--o,.5)*.35)}to{opacity:var(--o,.5)}}
   @media (prefers-reduced-motion:reduce){#dpage .dp-hero .dp-stars i{animation:none}}
   #dpage .dp-topbar{position:relative;display:flex;align-items:center;gap:18px;margin-bottom:clamp(22px,4vw,46px)}
-  #dpage .dp-brand{font-family:var(--dp-display);font-weight:300;letter-spacing:.34em;font-size:17px;color:var(--dp-light)}
+  /* Logo 本身就是回到 Landing Page 顶部的入口:视觉维持原样,
+     不加按钮外框,只是把可点区域放大一点、游标改成 pointer。 */
+  #dpage .dp-brand{
+    font-family:var(--dp-display);font-weight:300;letter-spacing:.34em;font-size:17px;color:var(--dp-light);
+    text-decoration:none;cursor:pointer;display:inline-flex;align-items:center;gap:6px;
+    padding:8px 10px;margin:-8px -10px;border-radius:12px;
+    transition:opacity .3s
+  }
+  #dpage a.dp-brand:hover{opacity:.82}
+  #dpage a.dp-brand:focus-visible{outline:1px solid rgba(232,211,162,.55);outline-offset:2px}
   #dpage .dp-brand .s{color:var(--dp-gold)}
   #dpage .dp-back{
     position:relative;display:inline-flex;align-items:center;gap:8px;color:var(--dp-light);
@@ -518,23 +527,131 @@
   #dpage .dp-h-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
   #dpage .dp-prose{font-size:14.5px;line-height:2.15;color:var(--dp-ink);font-weight:300}
   /* 容器加宽之后,正文一行仍然维持好读的长度(标题 / Divider / 图表 / 卡片不受限) */
-  #dpage .dp-card .dp-prose,#dpage .dp-think .dp-prose{max-width:var(--dp-text)}
+  #dpage .dp-card .dp-prose{max-width:var(--dp-text)}
   #dpage .dp-card .dp-quote{max-width:var(--dp-text);margin-left:auto;margin-right:auto}
   #dpage .dp-prose p{margin:0 0 13px}
-  #dpage .dp-aha{display:grid;gap:10px;margin-top:6px}
-  #dpage .dp-aha .a{
-    border:1px solid var(--dp-line);border-left:3px solid var(--dp-lav);border-radius:14px;
-    background:var(--dp-cloud);padding:14px 18px;font-size:14.5px;line-height:1.9;font-family:var(--dp-serif)
+  /* ============================================================
+     阅读中的编辑式区块 —— Theme Reading 与「属于你的生命脉络」共用同一套
+       .dp-keep     「值得记住」  摘录感:柔和边框卡片 + 引文层次
+       .dp-reflect  「留给你的思考」/「试试看」 停下来想一想:不做成厚重卡片
+       .dp-start    「从这里开始」 进入正文前的 opening block
+     三者同属一个设计家族,以 icon / label / 边框与底色的细微差别区分,
+     不使用两套互不相干的 UI 系统。
+     ============================================================ */
+  #dpage .dp-sparkdiv{display:flex;align-items:center;gap:14px;margin:clamp(26px,3.4vw,40px) 0}
+  #dpage .dp-sparkdiv .ln{flex:1;height:1px;background:linear-gradient(90deg,transparent,rgba(129,118,173,.26),transparent)}
+  #dpage .dp-sparkdiv .st{flex:none;font-size:10px;color:var(--dp-lav);opacity:.9}
+
+  /* ——「值得记住」:值得留下来的句子 —— */
+  #dpage .dp-keep{
+    position:relative;border:1px solid var(--dp-line);border-radius:24px;
+    background:linear-gradient(180deg,#fdfbf9 0%,var(--dp-cloud) 100%);
+    box-shadow:0 10px 34px rgba(9,18,46,.05);
+    padding:clamp(24px,3vw,38px) clamp(20px,3vw,40px);margin:clamp(26px,3.4vw,40px) 0
   }
-  #dpage .dp-think{
-    border:1px dashed var(--dp-lav);border-radius:16px;background:rgba(170,160,213,.07);
-    padding:18px 20px;font-size:14px;line-height:2;margin-top:20px
+  #dpage .dp-keep .hd{display:flex;align-items:center;gap:11px;margin-bottom:clamp(18px,2.4vw,28px)}
+  #dpage .dp-keep .hd .ic{flex:none;font-size:12px;color:var(--dp-lav)}
+  #dpage .dp-keep .hd .tx{font-family:var(--dp-serif);font-weight:500;font-size:14.5px;letter-spacing:.3em;color:var(--dp-ink)}
+  #dpage .dp-keep .q{display:grid;grid-template-columns:auto minmax(0,1fr);gap:clamp(12px,1.6vw,20px);align-items:start}
+  #dpage .dp-keep .q .mk{
+    font-family:var(--dp-display);font-size:clamp(26px,3vw,38px);line-height:.9;color:var(--dp-lav);opacity:.45;
+    user-select:none;-webkit-user-select:none;flex:none
   }
-  #dpage .dp-think .t{font-weight:500;color:var(--dp-ink);margin-bottom:6px;font-family:var(--dp-serif)}
-  #dpage .dp-steps{display:grid;gap:10px;margin-top:6px}
-  #dpage .dp-steps .st{border:1px solid var(--dp-line);border-radius:16px;background:var(--dp-cloud);padding:15px 18px}
-  #dpage .dp-steps .st b{display:block;font-family:var(--dp-serif);font-weight:500;font-size:14.5px;margin-bottom:5px;color:var(--dp-ink)}
-  #dpage .dp-steps .st div{font-size:13.5px;line-height:2;font-weight:300}
+  #dpage .dp-keep .q .bd{
+    border-left:1px solid rgba(170,160,213,.5);padding-left:clamp(14px,1.8vw,22px);
+    font-family:var(--dp-serif);font-size:15.5px;line-height:2.15;color:var(--dp-ink);
+    white-space:pre-line;max-width:var(--dp-text)
+  }
+  @media(max-width:520px){
+    #dpage .dp-keep .q .mk{font-size:24px}
+    #dpage .dp-keep .q .bd{font-size:14.5px;line-height:2.05}
+    #dpage .dp-keep .hd .tx{letter-spacing:.22em;font-size:13.5px}
+  }
+
+  /* ——「留给你的思考」/「试试看」:不是卡片,是正文里的一次停顿 —— */
+  #dpage .dp-reflect{position:relative;margin:clamp(28px,3.6vw,44px) 0;padding-right:clamp(0px,13vw,190px)}
+  #dpage .dp-reflect .eb{display:flex;align-items:center;gap:10px;margin-bottom:13px}
+  #dpage .dp-reflect .eb .ic{flex:none;font-size:11px;color:var(--dp-lav)}
+  #dpage .dp-reflect .eb .tx{font-family:var(--dp-sans);font-size:10.5px;letter-spacing:.3em;color:#8d86ab}
+  #dpage .dp-reflect h3.rt{
+    font-family:var(--dp-serif);font-weight:500;font-size:clamp(20px,2.3vw,28px);line-height:1.5;
+    margin:0;color:var(--dp-ink)
+  }
+  #dpage .dp-reflect .rule{width:30px;height:1px;background:var(--dp-lav);opacity:.75;margin:14px 0 19px}
+  #dpage .dp-reflect .bd{font-size:14.5px;line-height:2.15;color:var(--dp-ink);font-weight:300;max-width:var(--dp-text)}
+  #dpage .dp-reflect .bd p{margin:0 0 14px}
+  #dpage .dp-reflect .bd p:last-child{margin-bottom:0}
+  /* 「试试看」:同一家族,靠左侧细线与 icon 区分「动手做」而不是「读一句」 */
+  #dpage .dp-reflect.act{border-left:1px solid rgba(170,160,213,.42);padding-left:clamp(16px,2vw,26px)}
+  /* 装饰用柔光,纯装饰、不接收点击 */
+  #dpage .dp-reflect .glow{
+    position:absolute;right:2%;top:6%;width:clamp(120px,15vw,200px);aspect-ratio:1;pointer-events:none;
+    background:radial-gradient(closest-side,rgba(170,160,213,.30),rgba(170,160,213,.07) 60%,transparent 72%);
+    border-radius:50%
+  }
+  #dpage .dp-reflect .glow::after{
+    content:"";position:absolute;inset:14%;border:1px solid rgba(170,160,213,.28);
+    border-radius:50%;transform:rotate(-24deg) scaleY(.42)
+  }
+  @media(max-width:900px){
+    #dpage .dp-reflect{padding-right:0}
+    #dpage .dp-reflect .glow{display:none}
+  }
+
+  /* 前导标签(例如「原因是:」)与整段引文 —— 只是排版,不改动任何一个字 */
+  #dpage .dp-rich .lb{color:#7a6fa8}
+  #dpage .dp-rich p.qt{
+    border-left:1px dashed rgba(170,160,213,.75);padding-left:16px;margin-left:2px;
+    font-family:var(--dp-serif)
+  }
+
+  /* ——「从这里开始」:进入正文前的 opening block —— */
+  #dpage .dp-start{position:relative;margin:clamp(32px,4.2vw,52px) 0 clamp(22px,2.8vw,32px)}
+  #dpage .dp-start-hd{display:flex;align-items:center;gap:14px;margin-bottom:14px}
+  #dpage .dp-start-hd .ic{flex:none;font-size:13px;color:var(--dp-lav)}
+  #dpage .dp-start-hd .tx{
+    flex:none;font-family:var(--dp-serif);font-weight:500;
+    font-size:clamp(16px,1.7vw,19.5px);letter-spacing:.28em;color:var(--dp-ink)
+  }
+  #dpage .dp-start-hd .ln{flex:1;height:1px;background:linear-gradient(90deg,rgba(129,118,173,.32),rgba(129,118,173,.06) 76%,transparent)}
+  #dpage .dp-start-hd .en{flex:none;font-size:9px;color:var(--dp-lav);opacity:.85}
+  #dpage .dp-start-lead{
+    font-size:13.5px;line-height:2.1;color:var(--dp-mut);font-weight:300;
+    max-width:var(--dp-text);margin:0 0 clamp(20px,2.6vw,30px)
+  }
+  #dpage .dp-start-list{display:grid;gap:clamp(15px,1.9vw,22px)}
+  #dpage .dp-step{
+    display:grid;grid-template-columns:clamp(72px,8.5vw,112px) minmax(0,1fr);gap:clamp(14px,2.2vw,28px);
+    border:1px solid var(--dp-line);border-radius:26px;background:var(--dp-cloud);
+    box-shadow:0 10px 32px rgba(9,18,46,.05);
+    padding:clamp(22px,2.8vw,34px) clamp(20px,3vw,36px)
+  }
+  #dpage .dp-step .no{position:relative;display:grid;place-items:center;align-self:start;padding:6px 0}
+  #dpage .dp-step .no b{
+    font-family:var(--dp-display);font-weight:300;font-size:clamp(46px,5.4vw,68px);line-height:1;
+    color:rgba(129,118,173,.14);-webkit-text-stroke:1px rgba(129,118,173,.52)
+  }
+  /* 数字外的一圈轻轨道,呼应星空语言 */
+  #dpage .dp-step .no i{
+    position:absolute;left:50%;top:50%;width:clamp(64px,7.4vw,98px);height:clamp(28px,3.2vw,42px);
+    border:1px solid rgba(170,160,213,.32);border-radius:50%;
+    transform:translate(-50%,-50%) rotate(-24deg);pointer-events:none
+  }
+  #dpage .dp-step .ct{border-left:1px solid var(--dp-line);padding-left:clamp(16px,2.2vw,28px)}
+  #dpage .dp-step .ct b.t{
+    display:block;font-family:var(--dp-serif);font-weight:500;
+    font-size:clamp(16px,1.8vw,19.5px);line-height:1.7;color:var(--dp-ink);margin-bottom:12px
+  }
+  #dpage .dp-step .ct .bd{font-size:14px;line-height:2.1;color:var(--dp-ink);font-weight:300;max-width:var(--dp-text)}
+  #dpage .dp-step .ct .bd p{margin:0 0 12px}
+  #dpage .dp-step .ct .bd p:last-child{margin-bottom:0}
+  @media(max-width:640px){
+    #dpage .dp-step{grid-template-columns:1fr;gap:14px;border-radius:22px}
+    #dpage .dp-step .no{place-items:start;padding:0}
+    #dpage .dp-step .no i{left:clamp(22px,7vw,32px)}
+    #dpage .dp-step .ct{border-left:none;padding-left:0}
+    #dpage .dp-start-hd .tx{letter-spacing:.2em}
+  }
   #dpage .dp-tabs{display:flex;gap:6px;flex-wrap:wrap;border-bottom:1px solid var(--dp-line);margin-bottom:22px}
   #dpage .dp-tabs button{
     font-family:var(--dp-sans);font-size:13.5px;padding:10px 16px;border:none;background:transparent;
@@ -820,8 +937,8 @@
   <div class="starfield" id="authStars" aria-hidden="true"></div>
   <div class="sky-auth-card">
     <div class="sky-auth-brand"><span class="s">✶</span> INNER&nbsp;SKY</div>
-    <div class="sky-auth-title" data-i18n="authTitle">我的生命蓝图</div>
-    <div class="sky-auth-sub" data-i18n="authSub">登录后,你的生命蓝图将安全存放在云端</div>
+    <div class="sky-auth-title" data-i18n="authTitle">回到我的星空</div>
+    <div class="sky-auth-sub" data-i18n="authSub">登录后，继续探索属于你的内在宇宙✨</div>
     <div class="auth-form">
     <div class="field"><label data-i18n="email">邮箱</label><input id="authEmail" type="email" autocomplete="email" placeholder="you@example.com"></div>
     <div class="field" style="margin-top:10px"><label data-i18n="password">密码</label><input id="authPw" type="password" autocomplete="current-password" data-i18n-ph="pwPh" placeholder="至少 6 位"></div>
@@ -2088,8 +2205,8 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     zhGenerate:       ["生成中文版本", "Generate the Chinese version"],
 
     /* —— 登录 —— */
-    authTitle:        ["我的生命蓝图", "The Inner Sky"],
-    authSub:          ["登录后,你的生命蓝图将安全存放在云端", "Sign in, and everything you read here stays yours."],
+    authTitle:        ["回到我的星空", "Back to Your Sky"],
+    authSub:          ["登录后，继续探索属于你的内在宇宙✨", "Sign in and keep exploring your inner universe ✨"],
     email:            ["邮箱", "Email"],
     userId:           ["用户名", "Display name"],
     userIdPh:         ["别人会看到的名字", "The name you go by"],
@@ -4481,15 +4598,19 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   /* ---------- Header:导航 + 「我的账号」Dropdown ----------
      Desktop 维持原本的横向结构;Mobile 把同一批入口收进右上角的 Dropdown,
      不让任何导航项目因为空间不足而消失。 */
-  // [显示文案, href, 路由 key(用于 active state), 是否只在 Mobile 的 Dropdown 里出现]
+  /* [显示文案, href, 路由 key(用于 active state), 出现位置]
+     both   —— Desktop 横向 nav + Dropdown
+     menu   —— 只在 Dropdown(Desktop 与 Mobile 都有,例如「首页」:
+                Desktop 横向列已有左上角 Logo 可回首页,不再重复一个链接)
+     menu-m —— 只在 Mobile 的 Dropdown */
   function dpNavItems() {
     return [
-      [dpT("首页", "Home"), LANDING_URL, "", true],
-      [dpT("探索主题", "Explore"), LANDING_TOPICS, "", true],
-      [dpT("我的生命蓝图", "My Blueprint"), "#/reading", "reading", false],
-      [dpT("我的星空", "My Sky"), "#/my-sky", "mysky", false],
-      [dpT("属于你的生命脉络", "The Pattern"), "#/map", "map", false],
-      [dpT("我的收藏", "Saved"), "#/favorites", "favorites", false]
+      [dpT("首页", "Home"), LANDING_URL, "", "menu"],
+      [dpT("探索主题", "Explore"), LANDING_TOPICS, "", "menu-m"],
+      [dpT("我的生命蓝图", "My Blueprint"), "#/reading", "reading", "both"],
+      [dpT("我的星空", "My Sky"), "#/my-sky", "mysky", "both"],
+      [dpT("属于你的生命脉络", "The Pattern"), "#/map", "map", "both"],
+      [dpT("我的收藏", "Saved"), "#/favorites", "favorites", "both"]
     ];
   }
   function dpAcctName() {
@@ -4498,17 +4619,20 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   function dpTopbarHtml() {
     const here = (curRoute && curRoute.k) || "";
     const items = dpNavItems();
-    // Desktop:横向 nav(只放应用内页面,Mobile 专属项目不显示)
-    const inline = items.filter(function (it) { return !it[3]; }).map(function (it) {
+    // Desktop:横向 nav(只放 both 的项目)
+    const inline = items.filter(function (it) { return it[3] === "both"; }).map(function (it) {
       return '<a class="dp-navlink' + (it[2] && it[2] === here ? " on" : "") + '" href="' + esc0(it[1]) + '">' +
         esc0(it[0]) + '</a>';
     }).join("");
     // Dropdown:Mobile 专属项目标 m-only,Desktop 上不重复出现
     const menu = items.map(function (it) {
-      return '<a class="' + (it[3] ? "m-only" : "") + (it[2] && it[2] === here ? " on" : "") +
+      return '<a class="' + (it[3] === "menu-m" ? "m-only" : "") + (it[2] && it[2] === here ? " on" : "") +
         '" href="' + esc0(it[1]) + '">' + esc0(it[0]) + '</a>';
     }).join("");
-    return '<div class="dp-topbar"><span class="dp-brand"><span class="s">✶</span> INNER SKY</span>' +
+    // 左上角 Logo = 回到 Landing Page 顶部(所有内部页面都一样)
+    return '<div class="dp-topbar">' +
+      '<a class="dp-brand" href="' + esc0(LANDING_URL) + '" aria-label="' +
+      esc0(dpT("回到首页", "Back to home")) + '"><span class="s" aria-hidden="true">✶</span> INNER SKY</a>' +
       '<nav class="dp-nav">' + inline +
       '<div class="dp-acct" id="dpAcct">' +
       '<button type="button" class="dp-acct-btn" id="dpAcctBtn" aria-haspopup="true" aria-expanded="false">' +
@@ -4521,6 +4645,26 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       '<button type="button" class="out" id="dpLogout">' + dpT("登出", "Sign out") + '</button>' +
       '</div></div></nav></div>';
   }
+  /* 登出:清掉会话与本机私有快照(资料库里的星盘 / 解读 / Username / 收藏一律不动),
+     清空已经渲染出来的私人内容,然后进入新版 Login Page —— 不再回 Landing Page。 */
+  function doLogout() {
+    window.Cloud.logout();
+    store.charts = [];
+    store.activeId = null;
+    primaryChartId = null;
+    readTopics = {};
+    curResult = null;
+    chartsLoaded = false;
+    chartsSettled = false;
+    chartsError = null;
+    const dp = $("dpage");
+    if (dp) { dp.innerHTML = ""; dp.style.display = "none"; }
+    document.body.classList.remove("dp-open");
+    // 用 replace:登出这一步不留在历史里,Back 不会退回登入状态的画面
+    location.replace(location.pathname + location.search + "#/login");
+    applyRoute();
+  }
+
   /* Dropdown 行为只绑一次(dpScaffold 每次渲染都会换掉 DOM,因此用事件委派) */
   document.addEventListener("click", function (ev) {
     const wrap = document.getElementById("dpAcct");
@@ -4533,8 +4677,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       return;
     }
     if (ev.target.closest && ev.target.closest("#dpLogout")) {
-      window.Cloud.logout();
-      location.href = LANDING_URL;
+      doLogout();
       return;
     }
     // 点了菜单里的项目 → 正常关闭;点到菜单外面 → 也关闭
@@ -4566,6 +4709,74 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       .map(function (y) { return "<p>" + y.trim() + "</p>"; }).join("");
   }
   // 属于你的生命脉络:章节以分页签呈现,一次只读一段
+  /* 段落排版(纯呈现层,一个字都不改动):
+     · 段首很短的前导标签(例如「原因是:」)以淡紫色标出
+     · 整段以「」包起来的引文缩进并加一条虚线,呼应 Example #1 的层次 */
+  function dpParaRich(x) {
+    return esc0(x).split(/\n\s*\n/).filter(function (y) { return y.trim(); })
+      .map(function (y) {
+        y = y.trim();
+        // 段落内的换行保持紧凑(<br>),只有空行才另起一段
+        const br = function (t) { return t.replace(/\n/g, "<br>"); };
+        if (y.charAt(0) === "「") return '<p class="qt">' + br(y) + "</p>";
+        const m = y.match(/^([^：\s\n][^：\n]{0,9})(：)([\s\S]{8,})$/);
+        if (m) return '<p><span class="lb">' + m[1] + m[2] + "</span>" + br(m[3]) + "</p>";
+        return "<p>" + br(y) + "</p>";
+      }).join("");
+  }
+  /* ============================================================
+     阅读页尾三个共用区块:从这里开始 / 值得记住 / 留给你的思考 · 试试看
+     Theme Reading 与「属于你的生命脉络」共用同一份实作与同一套样式。
+     ============================================================ */
+  function dpKeepHtml(list) {
+    return '<div class="dp-keep"><div class="hd"><span class="ic" aria-hidden="true">✦</span>' +
+      '<span class="tx">' + dpT("值得记住", "Worth Keeping") + '</span></div>' +
+      list.map(function (q) {
+        return '<div class="q"><span class="mk" aria-hidden="true">“</span>' +
+          '<div class="bd">' + esc0(q) + "</div></div>";
+      }).join('<div class="sp dp-sparkdiv"><span class="ln"></span><span class="st" aria-hidden="true">✦</span><span class="ln"></span></div>') +
+      "</div>";
+  }
+  // kind: "q" = 留给你的思考(读一句) / "a" = 试试看(动手做)
+  function dpReflectHtml(kind, text) {
+    const isAct = kind === "a";
+    return '<div class="dp-reflect' + (isAct ? " act" : "") + '">' +
+      (isAct ? "" : '<span class="glow" aria-hidden="true"></span>') +
+      '<div class="eb"><span class="ic" aria-hidden="true">' + (isAct ? "✧" : "✦") + '</span>' +
+      '<span class="tx">' + (isAct ? "TRY THIS · 01" : "REFLECTION · 01") + '</span></div>' +
+      '<h3 class="rt">' + (isAct ? dpT("试试看", "Try This") : dpT("留给你的思考", "A Question For You")) + "</h3>" +
+      '<div class="rule" aria-hidden="true"></div>' +
+      '<div class="bd dp-rich">' + dpParaRich(text) + "</div></div>";
+  }
+  function dpStartHtml(steps) {
+    return '<div class="dp-start"><div class="dp-start-hd">' +
+      '<span class="ic" aria-hidden="true">✦</span>' +
+      '<span class="tx">' + dpT("从这里开始", "Where To Start") + '</span>' +
+      '<span class="ln"></span><span class="en" aria-hidden="true">✦</span></div>' +
+      '<p class="dp-start-lead">' +
+      dpT("不必全部做完。挑一件现在做得到的，从那里开始就好。",
+          "None of this needs doing at once. Pick the one you can start with today.") + "</p>" +
+      '<div class="dp-start-list">' +
+      steps.map(function (st, i) {
+        return '<div class="dp-step"><div class="no"><i aria-hidden="true"></i>' +
+          "<b>" + ("0" + (i + 1)).slice(-2) + "</b></div>" +
+          '<div class="ct"><b class="t">' + esc0(st.title) + "</b>" +
+          '<div class="bd dp-rich">' + dpParaRich(st.body) + "</div></div></div>";
+      }).join("") + "</div></div>";
+  }
+  function dpTailBlocks(data) {
+    let h = "";
+    if (data.steps && data.steps.length) h += dpStartHtml(data.steps);
+    if (data.aha && data.aha.length) h += dpKeepHtml(data.aha);
+    if (data.question || data.action)
+      h += '<div class="dp-sparkdiv"><span class="ln"></span><span class="st" aria-hidden="true">✦</span><span class="ln"></span></div>';
+    if (data.question) h += dpReflectHtml("q", data.question);
+    if (data.question && data.action)
+      h += '<div class="dp-sparkdiv"><span class="ln"></span><span class="st" aria-hidden="true">✦</span><span class="ln"></span></div>';
+    if (data.action) h += dpReflectHtml("a", data.action);
+    return h;
+  }
+
   function dpThreadHtml(data, favSource, tab, favType) {
     favType = favType || "";
     // 不过滤:索引必须与落地页的标题列表(#/map/<i>)一一对应
@@ -4594,20 +4805,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
         '" data-section="' + esc0(sName(sc, i)) + '">' + dpPara(sc.body) + "</div></div>" +
         "</div></div>";
     }
-    if (data.steps && data.steps.length)
-      h += '<div class="dp-card"><div class="dp-sec-label">' + dpT("从这里开始", "WHERE TO START") + '</div><div class="dp-steps">' +
-        data.steps.map(function (st, i) {
-          return '<div class="st"><b>' + (i + 1) + " · " + esc0(st.title) + "</b><div>" + dpPara(st.body) + "</div></div>";
-        }).join("") + "</div></div>";
-    if (data.aha && data.aha.length)
-      h += '<div class="dp-card"><div class="dp-sec-label">' + dpT("值得记住", "WORTH KEEPING") + '</div><div class="dp-aha">' +
-        data.aha.map(function (q) { return '<div class="a">' + esc0(q) + "</div>"; }).join("") + "</div></div>";
-    if (data.question)
-      h += '<div class="dp-think"><div class="t">' + dpT("留给你的思考", "A QUESTION FOR YOU") + '</div>' +
-        '<div class="dp-prose">' + dpPara(data.question) + "</div></div>";
-    if (data.action)
-      h += '<div class="dp-think"><div class="t">' + dpT("试试看", "TRY THIS") + '</div>' +
-        '<div class="dp-prose">' + dpPara(data.action) + "</div></div>";
+    h += dpTailBlocks(data);
     return h;
   }
   function dpAnswerHtml(data, favSource, favType) {
@@ -4631,21 +4829,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
         '" data-section="' + esc0(sc.title || "") + '">' + dpPara(sc.body) + "</div></div>";
     }).join("");
     h += "</div></div>";
-    if (data.steps && data.steps.length)
-      h += '<div class="dp-card"><div class="dp-sec-label">' + dpT("从这里开始", "WHERE TO START") + '</div><div class="dp-steps">' +
-        data.steps.map(function (st, i) {
-          return '<div class="st"><b>' + (i + 1) + " · " + esc0(st.title) + "</b><div>" + dpPara(st.body) + "</div></div>";
-        }).join("") + "</div></div>";
-    if (data.aha && data.aha.length)
-      h += '<div class="dp-card"><div class="dp-sec-label">' + dpT("值得记住", "WORTH KEEPING") + '</div><div class="dp-aha">' +
-        data.aha.map(function (q) { return '<div class="a">' + esc0(q) + "</div>"; }).join("") + "</div></div>";
-    // 两个独立 Card:各自有 border / 背景,不嵌套在同一个外框里
-    if (data.question)
-      h += '<div class="dp-think"><div class="t">' + dpT("留给你的思考", "A QUESTION FOR YOU") + '</div>' +
-        '<div class="dp-prose">' + dpPara(data.question) + "</div></div>";
-    if (data.action)
-      h += '<div class="dp-think"><div class="t">' + dpT("试试看", "TRY THIS") + '</div>' +
-        '<div class="dp-prose">' + dpPara(data.action) + "</div></div>";
+    h += dpTailBlocks(data);
     return h;
   }
   function dpNeedChart() {
@@ -5445,9 +5629,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
         bar.innerHTML = '<span></span><button id="logoutBtn" data-i18n="logout"></button>';
         bar.firstChild.textContent = window.Cloud.nick() || window.Cloud.email();
         document.getElementById("logoutBtn").textContent = T("logout");
-        document.getElementById("logoutBtn").addEventListener("click", function () {
-          window.Cloud.logout(); location.reload();
-        });
+        document.getElementById("logoutBtn").addEventListener("click", doLogout);
       }
       // 拉取偏好与星盘。
       // loadCharts 失败必须当成「不知道」,不能当成「这个帐号没有星盘」——
@@ -5610,7 +5792,18 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
         if (href && href.charAt(0) === "#") rememberNext(href);
       }, true);
       window.addEventListener("focus", function () { wake(false); });
-      window.addEventListener("pageshow", function (e) { if (e.persisted) wake(true); });
+      window.addEventListener("pageshow", function (e) {
+        // 从 bfcache 还原(例如登出后按 Browser Back):没有会话就立刻回到登入页,
+        // 不能让上一刻还处于登入状态的私人页面又出现在画面上。
+        if (!window.Cloud.hasSession()) {
+          const dp = $("dpage");
+          if (dp) { dp.innerHTML = ""; dp.style.display = "none"; }
+          document.body.classList.remove("dp-open");
+          if (parseRoute()) requireLogin("none");
+          return;
+        }
+        if (e.persisted) wake(true);
+      });
     })();
     // —— 解读面板按钮 ——
     function copyText(txt, btn, okLabel) {
