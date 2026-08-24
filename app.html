@@ -831,7 +831,7 @@
       </div>
       <div class="field">
         <label data-i18n="fPlace">出生地点(全球搜索)</label>
-        <input id="f_citysearch" data-i18n-ph="fPlacePh" placeholder="输入城市名,如 Batu Pahat / 吉隆坡 / Prague" style="margin-bottom:6px">
+        <input id="f_citysearch" data-i18n-ph="fPlacePh" placeholder="输入出生地点" style="margin-bottom:6px">
         <select id="f_city" size="1">
           <option value="">— 先输入城市名 —</option>
         </select>
@@ -1689,11 +1689,12 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     fDate:            ["出生日期", "Birth date"],
     fTime:            ["出生时间", "Birth time"],
     fPlace:           ["出生地点(全球搜索)", "Birth place (search worldwide)"],
-    fPlacePh:         ["输入城市名,如 Batu Pahat / 吉隆坡 / Prague", "Type a city, e.g. Batu Pahat / Prague / Tokyo"],
-    fPlaceTypeFirst:  ["先输入城市名", "Type a city first"],
+    fPlacePh:         ["输入出生地点", "Type your birthplace"],
+    fPlaceTypeFirst:  ["先输入出生地点", "Type your birthplace first"],
     fPlaceLoading:    ["正在载入全球地点资料…", "Loading worldwide place data…"],
     fPlaceLoadFail:   ["地点资料载入失败,请重试", "Could not load place data — please retry"],
-    fPlaceNone:       ["找不到这个城市,换个写法试试", "No match — try another spelling"],
+    fPlaceNone:       ["找不到这个地点,换个写法试试(城市 / 州属都可以)",
+                       "No match — try another spelling (city or state both work)"],
     alertPlace:       ["我们需要更准确的出生地点才能生成你的星盘 —— 请从搜索结果里选一个城市。",
                        "We need a more precise birthplace to draw your chart — please pick a city from the search results."],
     recalcNote:       ["已按出生地当时的实际时区重算", "recalculated with the time zone actually in force"],
@@ -2445,7 +2446,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       found.push(r);
       const o = document.createElement("option");
       o.value = String(i);
-      o.textContent = r.label;
+      o.textContent = r.display || r.label;
       sel.appendChild(o);
     });
     if (rows.length === 1) sel.value = "0";   // 只命中一个就直接选起来
@@ -5072,12 +5073,12 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       '<input id="obTime" type="time"></div></div>' +
       '<div class="dp-field"><label>' + dpT("出生地点", "Birth place") + '</label>' +
       '<input id="obSearch" placeholder="' +
-      esc0(dpT("输入城市名,如 Batu Pahat / 吉隆坡 / Prague", "Type a city, e.g. Batu Pahat / Prague / Tokyo")) +
+      esc0(dpT("输入出生地点", "Type your birthplace")) +
       '" style="margin-bottom:8px">' +
-      '<select id="obCity"><option value="">' + esc0(dpT("先输入城市名", "Type a city first")) + '</option></select>' +
+      '<select id="obCity"><option value="">' + esc0(dpT("先输入出生地点", "Type your birthplace first")) + '</option></select>' +
       '<span class="hint" id="obPlaceInfo">' +
-      dpT("支持全球城市。选好之后我们会自动取得经纬度与当时的时区。",
-          "Worldwide. Once you pick a place we resolve its coordinates and the time zone in force that day.") +
+      dpT("城市或州属都可以搜,中英文皆可(柔佛 / Johor)。选好之后我们会自动取得经纬度与当时的时区。",
+          "Search by city or state, in English or Chinese (Johor / 柔佛). Once you pick a place we resolve its coordinates and the time zone in force that day.") +
       '</span></div>' +
       '<div class="dp-form-msg" id="obMsg"></div>' +
       '<div style="font-size:12px;color:var(--dp-mut);line-height:1.8;margin:-4px 0 2px">' +
@@ -5104,7 +5105,8 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     function obShow(pl) {
       obPicked = pl;
       if (!pl) return;
-      obInfo.textContent = pl.label + " · " + pl.lat.toFixed(3) + "°, " + pl.lon.toFixed(3) + "° · " + pl.tzId;
+      obInfo.textContent = (pl.display || pl.label) + " · " + pl.lat.toFixed(3) + "°, " +
+        pl.lon.toFixed(3) + "° · " + pl.tzId;
     }
     function obRefresh(q) {
       obMatches = fillPlaceSelect(obCity, q, null);

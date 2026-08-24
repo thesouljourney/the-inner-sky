@@ -11,6 +11,9 @@
        只有当同一个 admin1 码底下 ≥75% 的样本给出同一个地区名时才采用,
        避免像英国 ENG 被写成某个郡这种错误;推不出来就不显示地区。
    · i18n-iso-countries:国家名(英文 / 中文)。
+   · tools/states-source.json(dr5hn/countries-states-cities-database,CC BY 4.0):
+       只取 translations["zh-CN"],用「国家码 + 英文地区名」对上去,
+       给地区名配中文。配不上的就只留英文,不猜。
    · tools/local-places.json:站方自订的马来西亚 / 新加坡地点表
        (从旧版 app.html 的 CITY_GROUPS 原样搬过来,含中文名)。
        GeoNames 的 cities1000 对这两个国家收得很薄(马来西亚 175、
@@ -32,6 +35,10 @@ const OUT = path.join(__dirname, "..", "assets", "astro", "places-data.js");
 const SRC = require.resolve("cities-with-1000/cities1000.txt");
 const cityTz = require("city-timezones").cityMapping;
 const tzLookup = require("tz-lookup");
+const STATES = (function () {
+  const f = path.join(__dirname, "states-source.json");
+  return fs.existsSync(f) ? JSON.parse(fs.readFileSync(f, "utf8")) : [];
+})();
 const iso = require("i18n-iso-countries");
 iso.registerLocale(require("i18n-iso-countries/langs/en.json"));
 iso.registerLocale(require("i18n-iso-countries/langs/zh.json"));
@@ -96,6 +103,65 @@ function readCities() {
     });
   }
   return rows;
+}
+
+/* ---------- 1a. 地区名的中文 ---------- */
+/* 用「国家码 + 英文地区名」去 dr5hn 的资料里找 translations["zh-CN"]。
+   之前试过用 FIPS / ISO 代码对,东京会被对成福冈、布拉格会被对成
+   赫拉德茨克拉洛韦 —— 代码体系不一致。改用名字对就准了,
+   因为英文地区名本身已经是从 GeoNames 那侧投票出来的。 */
+const zhStateIndex = (function () {
+  const m = new Map();
+  for (const s of STATES) {
+    const zh = s.translations && (s.translations["zh-CN"] || s.translations.zh);
+    if (!zh) continue;
+    for (const n of [s.name, s.native]) {
+      if (!n) continue;
+      const k = s.country_code + "|" + norm(n);
+      if (!m.has(k)) m.set(k, zh);
+    }
+  }
+  return m;
+})();
+
+/* dr5hn 缺的、但对这个站的使用者有意义的地区,手动补上 */
+const REGION_ZH_OVERRIDE = {
+  "MY|Trengganu": "登嘉楼",
+  "TW|Kaohsiung City": "高雄市",
+  "CN|Xinjiang Uygur": "新疆",
+  "CN|Ningxia Hui": "宁夏",
+  "KR|Gangwon-do": "江原道",
+  "KR|Gyeonggi-do": "京畿道",
+  "TH|Bangkok Metropolis": "曼谷",
+  "ID|Jakarta Raya": "雅加达",
+  "ID|Yogyakarta": "日惹",
+  "ID|Bangka-Belitung": "邦加-勿里洞",
+  "PH|Metropolitan Manila": "马尼拉大都会",
+  "CZ|Prague": "布拉格",
+  "CZ|Liberecký": "利贝雷茨",
+  "PT|Lisboa": "里斯本",
+  "AR|Ciudad de Buenos Aires": "布宜诺斯艾利斯",
+  "MX|Distrito Federal": "墨西哥城",
+  "MX|México": "墨西哥州",
+  "DK|Hovedstaden": "首都大区"
+};
+
+function regionZh(cc, enName) {
+  const ov = REGION_ZH_OVERRIDE[cc + "|" + enName];
+  if (ov) return ov;
+  if (!enName) return null;
+  const exact = zhStateIndex.get(cc + "|" + norm(enName));
+  if (exact) return exact;
+  // 名字带前后缀时(Bangkok Metropolis vs Bangkok)放宽成包含关系,
+  // 但必须在同一个国家里唯一命中,否则宁可不给。
+  const want = norm(enName);
+  let hit = null, count = 0;
+  for (const [k, zh] of zhStateIndex) {
+    if (k.slice(0, 3) !== cc + "|") continue;
+    const other = k.slice(3);
+    if (other.indexOf(want) === 0 || want.indexOf(other) === 0) { hit = zh; count++; }
+  }
+  return count === 1 ? hit : null;
 }
 
 /* ---------- 1b. 补充来源 ---------- */
@@ -206,6 +272,17 @@ function build() {
         Math.cos(loc.lat * Math.PI / 180)) < 25;
     });
     if (near.length) { near[0].zhAlias = loc.alt; continue; }
+    /* 自订表独有的地点(兀兰、淡滨尼这些)本来只有中文分组名。
+       借用同国最近一个 GeoNames 城市的 admin1 码,地区名就能中英都有;
+       借不到才退回用中文分组名自建一个 ~ 码。 */
+    let best = null, bd = Infinity;
+    for (const g of geo) {
+      if (g.cc !== loc.cc || !g.a1) continue;
+      const d = Math.hypot((g.lat - loc.lat) * 111,
+        (g.lon - loc.lon) * 111 * Math.cos(loc.lat * Math.PI / 180));
+      if (d < bd) { bd = d; best = g; }
+    }
+    if (best && bd < 120) loc.a1 = best.a1, loc.regionName = null;
     localOnly.push(loc);
   }
   const rows = localOnly.concat(geo);
@@ -238,7 +315,7 @@ function build() {
     if (!r.a1 && r.regionName) {
       const code = "~" + r.regionName;
       r.a1 = code;
-      localRegions[r.cc + "|" + code] = r.regionName;
+      localRegions[r.cc + "|" + code] = [r.regionName, /[\u4e00-\u9fff]/.test(r.regionName) ? r.regionName : null];
     }
     // 中日韩别名:让中文使用者可以直接打「吉隆坡」「东京」
     let cjk = "";
@@ -270,6 +347,12 @@ function build() {
     ].join("|"));
   }
 
+  // 地区名改成 [英文, 中文],中文配不到就留 null
+  const bilingualRegions = {};
+  for (const [k, en] of Object.entries(regions)) {
+    bilingualRegions[k] = [en, regionZh(k.split("|")[0], en)];
+  }
+
   const header = `/* ============================================================
    assets/astro/places-data.js —— 自动生成,请勿手改
    由 tools/gen-places.js 产生。
@@ -285,6 +368,7 @@ function build() {
    · 国家名:i18n-iso-countries(MIT,底层为 Unicode CLDR)。
 
    栏位:name|ascii|cjk|countryCode|admin1|lat*1e4|lon*1e4|population|zoneIndex
+   regions 的值是 [英文名, 中文名],中文配不到时为 null。
    ascii 与 name 相同时留空;cjk 为中日韩别名(最多两个,逗号分隔)。
    生成时间:${new Date().toISOString()}
    ============================================================ */
@@ -295,7 +379,7 @@ function build() {
     minPopulation: ${MIN_POP},
     attribution: "City data \\u00a9 GeoNames, CC BY 4.0 (geonames.org)",
     countries: ${JSON.stringify(countries)},
-    regions: ${JSON.stringify(Object.assign({}, regions, localRegions))},
+    regions: ${JSON.stringify(Object.assign({}, bilingualRegions, localRegions))},
     zones: ${JSON.stringify(zones)},
     rows: `;
 

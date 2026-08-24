@@ -22,6 +22,10 @@ date: 2026-08-24T18:40:00Z
   dst / engineVersion;旧纪录由座标反查时区后补齐
 - 新增 tests/(26 案例对照 Swiss Ephemeris)、docs/AUDIT.md、docs/PROPOSED-FIX.md、
   assets/astro/CALCULATION.md
+- 出生地点输入框文案简化成「输入出生地点」;下拉选项改成中英并列
+  (Batu Pahat, Johor, Malaysia · 峇株巴辖,柔佛,马来西亚)
+- 地区名补中文(2,894 个地区里 1,893 个有中文),州属与国名中英文都能搜:
+  打「柔佛」或「Johor」、「马来西亚」或「Malaysia」都会带出该地区的城市
 
 ### Updated in V.11 and earlier
 - 「我的星空」星盘接入落地页 index.html，位于「你的空间」右栏，与「我的收藏」同宽、与「继续你的探索」对齐
@@ -45,6 +49,7 @@ V.12 之前的旧计算引擎，没有任何页面引用。**暂时保留不删*
 要拿它们做参考时请注意：里面的星盘算法是旧版，不要拿来对照结果。
 
 ## Sync history
+- 2026-08-24T19:05:00Z V.12 出生地点搜索:中英双语标签、州属 / 国名可搜
 - 2026-08-24T18:40:00Z V.12 本命盘计算系统修正:全球地点 + 历史时区 + 统一计算核心 + Astro-Seek 校准测试
 - 2026-08-24T08:40:35Z 星盘 section 首次接入落地页
 - 2026-08-23T04:25:00Z 新增「我的星空」星盘 section（Design Component），浅色晨曦风格

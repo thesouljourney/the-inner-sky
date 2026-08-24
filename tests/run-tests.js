@@ -205,6 +205,28 @@ function testPlaces() {
     checkEq("[place] 旧资料补时区", mig.status, "resolved");
     checkEq("[place] 旧资料时区正确", mig.place.tzId, "Asia/Kuala_Lumpur");
 
+    // 中英双语标签
+    checkEq("[place] 双语标签", r[0].display, "Batu Pahat, Johor, Malaysia · 峇株巴辖，柔佛，马来西亚");
+    checkEq("[place] 英文标签", r[0].labelEn, "Batu Pahat, Johor, Malaysia");
+    checkEq("[place] 中文标签", r[0].labelZh, "峇株巴辖，柔佛，马来西亚");
+    checkEq("[place] 地区中文名", r[0].regionZh, "柔佛");
+
+    // 打州属名(中英都要能搜),而且该州最大的城市要排前面
+    const byRegionZh = Places.search("柔佛", { lang: "zh", limit: 5 });
+    const byRegionEn = Places.search("Johor", { lang: "en", limit: 5 });
+    checkEq("[place] 中文州属可搜", byRegionZh.length > 0 && byRegionZh[0].regionEn, "Johor");
+    checkEq("[place] 英文州属可搜", byRegionEn.length > 0 && byRegionEn[0].regionEn, "Johor");
+    checkEq("[place] 州属搜索含峇株巴辖",
+      Places.search("柔佛", { lang: "zh", limit: 20 }).some(function (x) { return x.city === "Batu Pahat"; }), true);
+    // 打国名也要能搜
+    checkEq("[place] 中文国名可搜",
+      (Places.search("马来西亚", { lang: "zh", limit: 1 })[0] || {}).countryCode, "MY");
+    checkEq("[place] 英文国名可搜",
+      (Places.search("Malaysia", { lang: "en", limit: 1 })[0] || {}).countryCode, "MY");
+    // 打州名时,同名小镇不应压过该州的大城市
+    checkEq("[place] California 先给加州的城市",
+      (Places.search("California", { lang: "en", limit: 1 })[0] || {}).regionEn, "California");
+
     checkEq("[place] 无资料回报 unresolved", Places.resolveLegacy({}).status, "unresolved");
     checkEq("[place] 校验缺时区", Places.validate({ lat: 1, lon: 2, city: "x" }).missing.join(), "timezone");
   });
