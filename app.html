@@ -518,7 +518,7 @@
   #dpage .dp-sec h3.dp-h{font-size:clamp(17px,1.9vw,21px);line-height:1.7;margin:0 0 2px}
   /* 章节分隔:左侧小星 + 向右渐隐的细线(克制,只标示进入下一段) */
   #dpage .dp-div{display:flex;align-items:center;gap:12px;margin:12px 0 22px}
-  #dpage .dp-div .st{color:var(--dp-lav);font-size:11px;flex:none;opacity:.85}
+  #dpage .dp-div .rm-s{width:10px;height:10px;color:var(--dp-lav);flex:none;opacity:.85}
   #dpage .dp-div .ln{flex:1;height:1px;background:linear-gradient(90deg,rgba(129,118,173,.42),rgba(129,118,173,.06) 62%,transparent)}
   #dpage .dp-sec .dp-prose{font-size:15px;line-height:2.25}
   #dpage .dp-sec .dp-prose p{margin:0 0 18px}
@@ -531,133 +531,233 @@
   #dpage .dp-card .dp-quote{max-width:var(--dp-text);margin-left:auto;margin-right:auto}
   #dpage .dp-prose p{margin:0 0 13px}
   /* ============================================================
-     阅读中的编辑式区块 —— Theme Reading 与「属于你的生命脉络」共用同一套
-       .dp-keep     「值得记住」  摘录感:柔和边框卡片 + 引文层次
-       .dp-reflect  「留给你的思考」/「试试看」 停下来想一想:不做成厚重卡片
-       .dp-start    「从这里开始」 进入正文前的 opening block
-     三者同属一个设计家族,以 icon / label / 边框与底色的细微差别区分,
-     不使用两套互不相干的 UI 系统。
+     Reading Marks —— 阅读中的编辑式标记(同一套 component system)
+     Theme Reading 与「属于你的生命脉络」共用,不是两套页面。
+
+       .rm-keep   「值得记住」  摘录:被特别收出来、值得留下的一段话
+       .rm-pause  「留给你的思考」/「试试看」  停顿:不给答案,请你停一下
+       .rm-open   「从这里开始」 序章:长篇内容真正展开之前的入口
+
+     三者共用同一组材质语言:近白纸感底、几乎看不见的边框、极散的投影、
+     淡紫细线、四角星点。区别只在容器强弱、label 气质与留白节奏。
+     全部以 CSS + inline SVG 实作,不使用任何 PNG 背景图。
      ============================================================ */
-  #dpage .dp-sparkdiv{display:flex;align-items:center;gap:14px;margin:clamp(26px,3.4vw,40px) 0}
-  #dpage .dp-sparkdiv .ln{flex:1;height:1px;background:linear-gradient(90deg,transparent,rgba(129,118,173,.26),transparent)}
-  #dpage .dp-sparkdiv .st{flex:none;font-size:10px;color:var(--dp-lav);opacity:.9}
+  #dpage{
+    --rm-hair:rgba(129,118,173,.22);      /* 细线 */
+    --rm-rule:rgba(129,118,173,.5);       /* 引文竖线 / 短横线 */
+    --rm-tint:rgba(170,160,213,.055);     /* 纸面上的一点紫调 */
+    --rm-label:#8f88ad;                   /* eyebrow */
+    --rm-ink-lav:#6f66a0;                 /* 段首标签 */
+    --rm-edge:rgba(240,232,227,.95);      /* 容器描边 */
+    --rm-paper:linear-gradient(180deg,#fdfcfb 0%,#fbf8f5 100%);
+    --rm-shadow:0 1px 0 rgba(255,255,255,.85) inset,0 18px 52px rgba(9,18,46,.045);
+    /* 全站阅读只有两条度量:文字栏与放宽栏。所有区块共用,页面才像同一本书。 */
+    --rm-w-text:var(--dp-text);
+    --rm-w-wide:min(100%,calc(var(--dp-text) + 180px));
+  }
+  /* 文字栏:与「详细解读」的 .dp-read 同宽同中轴 */
+  #dpage .rm-in{width:100%;max-width:var(--rm-w-text);margin:0 auto}
+  /* 四角星点:整套系统唯一的装饰符号 */
+  #dpage .rm-s{display:block;fill:currentColor;flex:none}
 
-  /* ——「值得记住」:值得留下来的句子 —— */
-  #dpage .dp-keep{
-    position:relative;border:1px solid var(--dp-line);border-radius:24px;
-    background:linear-gradient(180deg,#fdfbf9 0%,var(--dp-cloud) 100%);
-    box-shadow:0 10px 34px rgba(9,18,46,.05);
-    padding:clamp(24px,3vw,38px) clamp(20px,3vw,40px);margin:clamp(26px,3.4vw,40px) 0
+  /* 两端淡出的细线 + 居中星点:段落之间的呼吸 */
+  #dpage .rm-rule{display:flex;align-items:center;gap:16px;margin:clamp(30px,3.8vw,48px) 0}
+  #dpage .rm-rule .ln{flex:1;height:1px;
+    background:linear-gradient(90deg,transparent,var(--rm-hair) 24%,var(--rm-hair) 76%,transparent)}
+  #dpage .rm-rule .rm-s{width:10px;height:10px;color:var(--dp-lav);opacity:.9}
+
+  /* —— 星云柔光:留给你的思考 / 从这里开始 的装饰 —— */
+  #dpage .rm-glow{position:absolute;pointer-events:none;user-select:none;-webkit-user-select:none}
+  /* 星云本体:一颗被光照亮的软球,不是一个圆形色块 */
+  #dpage .rm-glow .core{
+    position:absolute;inset:8%;border-radius:50%;filter:blur(7px);
+    background:
+      radial-gradient(closest-side at 40% 34%,rgba(255,255,255,.8),transparent 46%),
+      radial-gradient(closest-side at 62% 62%,rgba(228,196,214,.42),transparent 58%),
+      radial-gradient(closest-side,rgba(166,146,214,.52),rgba(204,186,228,.2) 52%,transparent 74%)
   }
-  #dpage .dp-keep .hd{display:flex;align-items:center;gap:11px;margin-bottom:clamp(18px,2.4vw,28px)}
-  #dpage .dp-keep .hd .ic{flex:none;font-size:12px;color:var(--dp-lav)}
-  #dpage .dp-keep .hd .tx{font-family:var(--dp-serif);font-weight:500;font-size:14.5px;letter-spacing:.3em;color:var(--dp-ink)}
-  #dpage .dp-keep .q{display:grid;grid-template-columns:auto minmax(0,1fr);gap:clamp(12px,1.6vw,20px);align-items:start}
-  #dpage .dp-keep .q .mk{
-    font-family:var(--dp-display);font-size:clamp(26px,3vw,38px);line-height:.9;color:var(--dp-lav);opacity:.45;
-    user-select:none;-webkit-user-select:none;flex:none
+  /* 轨道:只在掠过星云的那一段才亮,两端淡出,不会在米色纸上留下一圈灰边 */
+  #dpage .rm-glow .ring{
+    position:absolute;left:50%;top:57%;width:132%;height:50%;
+    transform:translate(-50%,-50%) rotate(-19deg);
+    border:1.5px solid rgba(255,255,255,1);border-radius:50%;
+    box-shadow:0 0 10px rgba(214,198,238,.95),0 0 22px rgba(178,160,222,.55);
+    /* 沿长轴淡出:轨道在掠过星云的中段最亮,两端化开。
+       不能用 radial mask —— 环的描边正好落在 box 边缘,会被整圈抹掉。 */
+    -webkit-mask-image:linear-gradient(90deg,transparent 2%,rgba(0,0,0,.55) 18%,#000 40%,#000 60%,rgba(0,0,0,.55) 82%,transparent 98%);
+    mask-image:linear-gradient(90deg,transparent 2%,rgba(0,0,0,.55) 18%,#000 40%,#000 60%,rgba(0,0,0,.55) 82%,transparent 98%)
   }
-  #dpage .dp-keep .q .bd{
-    border-left:1px solid rgba(170,160,213,.5);padding-left:clamp(14px,1.8vw,22px);
-    font-family:var(--dp-serif);font-size:15.5px;line-height:2.15;color:var(--dp-ink);
-    white-space:pre-line;max-width:var(--dp-text)
+  #dpage .rm-glow .rm-s{position:absolute;color:#fffef9;
+    filter:drop-shadow(0 0 3px rgba(240,222,180,1)) drop-shadow(0 0 9px rgba(186,168,226,.9))}
+  #dpage .rm-glow .p1{width:17px;height:17px;left:2%;top:26%;opacity:1}
+  #dpage .rm-glow .p2{width:11px;height:11px;left:80%;top:10%;opacity:.9}
+  #dpage .rm-glow .p3{width:21px;height:21px;left:57%;top:70%;opacity:1}
+  #dpage .rm-glow .p4{width:7px;height:7px;left:26%;top:86%;opacity:.7}
+  #dpage .rm-glow .p5{width:6px;height:6px;left:90%;top:48%;opacity:.65}
+  @media (prefers-reduced-motion:no-preference){
+    #dpage .rm-glow .rm-s{animation:rmTw 5.5s ease-in-out infinite alternate}
+    #dpage .rm-glow .p2{animation-delay:1.4s}
+    #dpage .rm-glow .p3{animation-delay:.7s}
+    #dpage .rm-glow .p4{animation-delay:2.1s}
+    #dpage .rm-glow .p5{animation-delay:2.8s}
   }
-  @media(max-width:520px){
-    #dpage .dp-keep .q .mk{font-size:24px}
-    #dpage .dp-keep .q .bd{font-size:14.5px;line-height:2.05}
-    #dpage .dp-keep .hd .tx{letter-spacing:.22em;font-size:13.5px}
+  @keyframes rmTw{from{opacity:.35;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
+
+  /* ============ 「值得记住」摘录块 ============ */
+  #dpage .rm-keep{
+    position:relative;border:1px solid var(--rm-edge);border-radius:28px;
+    background:radial-gradient(115% 85% at 6% 0%,var(--rm-tint),transparent 56%),var(--rm-paper);
+    box-shadow:var(--rm-shadow);
+    padding:clamp(30px,3.9vw,54px) clamp(24px,3.9vw,56px);
+    margin:clamp(34px,4.4vw,58px) 0
+  }
+  #dpage .rm-keep .hd{display:flex;align-items:center;gap:13px;margin-bottom:clamp(24px,3vw,38px)}
+  #dpage .rm-keep .q .bd,#dpage .rm-keep .rm-rule{max-width:none}
+  #dpage .rm-keep .hd .rm-s{width:13px;height:13px;color:var(--dp-lav)}
+  #dpage .rm-keep .hd .tx{
+    font-family:var(--dp-serif);font-weight:500;font-size:clamp(14px,1.2vw,15.5px);
+    letter-spacing:.34em;color:var(--dp-ink)
+  }
+  #dpage .rm-keep .q{display:grid;grid-template-columns:auto minmax(0,1fr);gap:clamp(13px,1.9vw,24px);align-items:start}
+  /* 引号是氛围,不是主角:低透明度、不抢正文 */
+  #dpage .rm-keep .q .mk{
+    font-family:var(--dp-display);font-size:clamp(34px,3.9vw,50px);line-height:.7;
+    color:var(--dp-lav);opacity:.45;padding-top:.16em;user-select:none;-webkit-user-select:none
+  }
+  #dpage .rm-keep .q .bd{
+    border-left:1px solid var(--rm-rule);padding-left:clamp(16px,2.2vw,28px);
+    font-family:var(--dp-serif);font-size:clamp(15.5px,1.32vw,17.5px);line-height:2.1;
+    color:var(--dp-ink);white-space:pre-line;max-width:var(--dp-text)
+  }
+  #dpage .rm-keep .rm-rule{margin:clamp(26px,3.2vw,38px) 0}
+
+  /* ============ 「留给你的思考」/「试试看」停顿块 ============ */
+  /* 刻意不做容器:让它落在页面本身的纸上,四周只有留白 */
+  #dpage .rm-pause{
+    position:relative;margin:clamp(36px,4.6vw,60px) auto;
+    width:100%;max-width:var(--rm-w-text)
+  }
+  #dpage .rm-pause .eb{display:flex;align-items:center;gap:11px;margin-bottom:15px}
+  #dpage .rm-pause .eb .rm-s{width:11px;height:11px;color:var(--dp-lav)}
+  #dpage .rm-pause .eb .tx{font-family:var(--dp-sans);font-size:10.5px;letter-spacing:.34em;color:var(--rm-label)}
+  #dpage .rm-pause h3.tt{
+    font-family:var(--dp-serif);font-weight:500;font-size:clamp(21px,2.5vw,30px);
+    line-height:1.5;margin:0;color:var(--dp-ink)
+  }
+  #dpage .rm-pause .tick{width:26px;height:1px;background:var(--rm-rule);margin:15px 0 21px}
+  /* 停顿块的文字刻意比正文更窄:留白本身就是「停一下」的语气 */
+  #dpage .rm-pause .bd{
+    font-size:clamp(14.5px,1.15vw,15.5px);line-height:1.95;color:var(--dp-ink);
+    font-weight:300;max-width:min(100%,640px)
+  }
+  #dpage .rm-pause .bd p{margin:0 0 17px}
+  #dpage .rm-pause .bd p:last-child{margin-bottom:0}
+  /* 「试试看」:同一家族,但左侧多一条细线与一颗星,气质从「想一想」转向「做一件事」 */
+  #dpage .rm-pause.act{border-left:1px solid var(--rm-hair);padding-left:clamp(19px,2.5vw,32px)}
+  #dpage .rm-pause.act .pin{
+    position:absolute;left:0;top:44px;transform:translateX(-50%);
+    width:11px;height:11px;color:var(--dp-lav);background:var(--dp-cream);padding:5px 0
+  }
+  /* 柔光落在文字栏右侧的天地里(只在够宽的桌面出现,永远不会挤压阅读) */
+  #dpage .rm-pause .rm-glow{
+    right:calc(-1 * clamp(40px,7vw,150px));top:-14px;
+    width:clamp(160px,16vw,230px);aspect-ratio:1;z-index:0
+  }
+  #dpage .rm-pause .eb,#dpage .rm-pause h3.tt,#dpage .rm-pause .tick,#dpage .rm-pause .bd{position:relative;z-index:1}
+  @media(max-width:1200px){#dpage .rm-pause .rm-glow{display:none}}
+
+  /* 段首短标签与整段引文 —— 只是排版,不改动任何一个字 */
+  #dpage .rm-rich .lb{color:var(--rm-ink-lav)}
+  #dpage .rm-rich p.qt{
+    border-left:1px dotted rgba(170,160,213,.85);padding-left:18px;margin-left:2px;
+    font-family:var(--dp-serif);color:var(--dp-ink)
   }
 
-  /* ——「留给你的思考」/「试试看」:不是卡片,是正文里的一次停顿 —— */
-  #dpage .dp-reflect{position:relative;margin:clamp(28px,3.6vw,44px) 0;padding-right:clamp(0px,13vw,190px)}
-  #dpage .dp-reflect .eb{display:flex;align-items:center;gap:10px;margin-bottom:13px}
-  #dpage .dp-reflect .eb .ic{flex:none;font-size:11px;color:var(--dp-lav)}
-  #dpage .dp-reflect .eb .tx{font-family:var(--dp-sans);font-size:10.5px;letter-spacing:.3em;color:#8d86ab}
-  #dpage .dp-reflect h3.rt{
-    font-family:var(--dp-serif);font-weight:500;font-size:clamp(20px,2.3vw,28px);line-height:1.5;
-    margin:0;color:var(--dp-ink)
+  /* ============ 「从这里开始」序章块 ============ */
+  #dpage .rm-open{
+    position:relative;margin:clamp(42px,5.2vw,70px) auto clamp(26px,3vw,38px);
+    width:100%;max-width:var(--rm-w-wide)
   }
-  #dpage .dp-reflect .rule{width:30px;height:1px;background:var(--dp-lav);opacity:.75;margin:14px 0 19px}
-  #dpage .dp-reflect .bd{font-size:14.5px;line-height:2.15;color:var(--dp-ink);font-weight:300;max-width:var(--dp-text)}
-  #dpage .dp-reflect .bd p{margin:0 0 14px}
-  #dpage .dp-reflect .bd p:last-child{margin-bottom:0}
-  /* 「试试看」:同一家族,靠左侧细线与 icon 区分「动手做」而不是「读一句」 */
-  #dpage .dp-reflect.act{border-left:1px solid rgba(170,160,213,.42);padding-left:clamp(16px,2vw,26px)}
-  /* 装饰用柔光,纯装饰、不接收点击 */
-  #dpage .dp-reflect .glow{
-    position:absolute;right:2%;top:6%;width:clamp(120px,15vw,200px);aspect-ratio:1;pointer-events:none;
-    background:radial-gradient(closest-side,rgba(170,160,213,.30),rgba(170,160,213,.07) 60%,transparent 72%);
-    border-radius:50%
+  #dpage .rm-open .rm-glow{
+    right:calc(-1 * clamp(10px,3vw,60px));top:calc(-1 * clamp(46px,6vw,96px));
+    width:clamp(150px,15vw,215px);aspect-ratio:1;opacity:.85;z-index:0
   }
-  #dpage .dp-reflect .glow::after{
-    content:"";position:absolute;inset:14%;border:1px solid rgba(170,160,213,.28);
-    border-radius:50%;transform:rotate(-24deg) scaleY(.42)
-  }
-  @media(max-width:900px){
-    #dpage .dp-reflect{padding-right:0}
-    #dpage .dp-reflect .glow{display:none}
-  }
-
-  /* 前导标签(例如「原因是:」)与整段引文 —— 只是排版,不改动任何一个字 */
-  #dpage .dp-rich .lb{color:#7a6fa8}
-  #dpage .dp-rich p.qt{
-    border-left:1px dashed rgba(170,160,213,.75);padding-left:16px;margin-left:2px;
-    font-family:var(--dp-serif)
-  }
-
-  /* ——「从这里开始」:进入正文前的 opening block —— */
-  #dpage .dp-start{position:relative;margin:clamp(32px,4.2vw,52px) 0 clamp(22px,2.8vw,32px)}
-  #dpage .dp-start-hd{display:flex;align-items:center;gap:14px;margin-bottom:14px}
-  #dpage .dp-start-hd .ic{flex:none;font-size:13px;color:var(--dp-lav)}
-  #dpage .dp-start-hd .tx{
+  #dpage .rm-open .hd,#dpage .rm-open .lead,#dpage .rm-open .list{position:relative;z-index:1}
+  @media(max-width:1200px){#dpage .rm-open .rm-glow{display:none}}
+  #dpage .rm-open .hd{position:relative;display:flex;align-items:center;gap:17px;margin-bottom:17px}
+  #dpage .rm-open .hd .rm-s{width:14px;height:14px;color:var(--dp-lav)}
+  #dpage .rm-open .hd .tx{
     flex:none;font-family:var(--dp-serif);font-weight:500;
-    font-size:clamp(16px,1.7vw,19.5px);letter-spacing:.28em;color:var(--dp-ink)
+    font-size:clamp(17px,1.85vw,21px);letter-spacing:.3em;color:var(--dp-ink)
   }
-  #dpage .dp-start-hd .ln{flex:1;height:1px;background:linear-gradient(90deg,rgba(129,118,173,.32),rgba(129,118,173,.06) 76%,transparent)}
-  #dpage .dp-start-hd .en{flex:none;font-size:9px;color:var(--dp-lav);opacity:.85}
-  #dpage .dp-start-lead{
-    font-size:13.5px;line-height:2.1;color:var(--dp-mut);font-weight:300;
-    max-width:var(--dp-text);margin:0 0 clamp(20px,2.6vw,30px)
+  #dpage .rm-open .hd .ln{flex:1;height:1px;
+    background:linear-gradient(90deg,var(--rm-hair),rgba(129,118,173,.05) 84%,transparent)}
+  #dpage .rm-open .hd .end{width:9px;height:9px;color:var(--dp-lav);opacity:.7}
+  #dpage .rm-open .lead{
+    position:relative;font-size:clamp(13.5px,1.1vw,14.5px);line-height:2.1;color:var(--dp-mut);
+    font-weight:300;max-width:var(--dp-text);margin:0 0 clamp(26px,3.2vw,38px)
   }
-  #dpage .dp-start-list{display:grid;gap:clamp(15px,1.9vw,22px)}
-  #dpage .dp-step{
-    display:grid;grid-template-columns:clamp(72px,8.5vw,112px) minmax(0,1fr);gap:clamp(14px,2.2vw,28px);
-    border:1px solid var(--dp-line);border-radius:26px;background:var(--dp-cloud);
-    box-shadow:0 10px 32px rgba(9,18,46,.05);
-    padding:clamp(22px,2.8vw,34px) clamp(20px,3vw,36px)
+  #dpage .rm-open .list{display:grid;gap:clamp(16px,2.1vw,24px)}
+  #dpage .rm-step{
+    position:relative;display:grid;grid-template-columns:clamp(84px,9.6vw,130px) minmax(0,1fr);
+    gap:clamp(16px,2.6vw,34px);
+    border:1px solid var(--rm-edge);border-radius:30px;
+    background:radial-gradient(90% 130% at 3% 0%,var(--rm-tint),transparent 54%),var(--rm-paper);
+    box-shadow:var(--rm-shadow);
+    padding:clamp(26px,3.2vw,42px) clamp(22px,3.2vw,44px);overflow:hidden
   }
-  #dpage .dp-step .no{position:relative;display:grid;place-items:center;align-self:start;padding:6px 0}
-  #dpage .dp-step .no b{
-    font-family:var(--dp-display);font-weight:300;font-size:clamp(46px,5.4vw,68px);line-height:1;
-    color:rgba(129,118,173,.14);-webkit-text-stroke:1px rgba(129,118,173,.52)
+  /* 空心序号 + 一圈轻轨道:呼应星空,但不喧宾夺主 */
+  #dpage .rm-step .no{position:relative;display:grid;place-items:center;align-self:start;padding:2px 0}
+  #dpage .rm-step .no b{
+    font-family:var(--dp-display);font-weight:300;font-style:italic;
+    font-size:clamp(50px,6vw,80px);line-height:1;letter-spacing:.02em;
+    color:transparent;-webkit-text-stroke:1px rgba(129,118,173,.5)
   }
-  /* 数字外的一圈轻轨道,呼应星空语言 */
-  #dpage .dp-step .no i{
-    position:absolute;left:50%;top:50%;width:clamp(64px,7.4vw,98px);height:clamp(28px,3.2vw,42px);
-    border:1px solid rgba(170,160,213,.32);border-radius:50%;
-    transform:translate(-50%,-50%) rotate(-24deg);pointer-events:none
+  @supports not (-webkit-text-stroke:1px #000){
+    #dpage .rm-step .no b{color:rgba(129,118,173,.42)}
   }
-  #dpage .dp-step .ct{border-left:1px solid var(--dp-line);padding-left:clamp(16px,2.2vw,28px)}
-  #dpage .dp-step .ct b.t{
+  /* 序号外的轻轨道:两端淡出,才不会在米色纸上变成一圈灰铁丝 */
+  #dpage .rm-step .no .orb{
+    position:absolute;left:50%;top:54%;width:112%;height:52%;
+    transform:translate(-50%,-50%) rotate(-24deg);
+    border:1px solid rgba(150,138,200,.55);border-radius:50%;
+    -webkit-mask-image:linear-gradient(90deg,transparent 1%,#000 16%,#000 84%,transparent 99%);
+    mask-image:linear-gradient(90deg,transparent 1%,#000 16%,#000 84%,transparent 99%)
+  }
+  #dpage .rm-step .ct{border-left:1px solid rgba(150,138,200,.22);padding-left:clamp(18px,2.6vw,34px)}
+  #dpage .rm-step .ct b.t{
     display:block;font-family:var(--dp-serif);font-weight:500;
-    font-size:clamp(16px,1.8vw,19.5px);line-height:1.7;color:var(--dp-ink);margin-bottom:12px
+    font-size:clamp(16.5px,1.85vw,21px);line-height:1.68;color:var(--dp-ink);margin-bottom:14px
   }
-  #dpage .dp-step .ct .bd{font-size:14px;line-height:2.1;color:var(--dp-ink);font-weight:300;max-width:var(--dp-text)}
-  #dpage .dp-step .ct .bd p{margin:0 0 12px}
-  #dpage .dp-step .ct .bd p:last-child{margin-bottom:0}
+  #dpage .rm-step .ct .bd{
+    font-size:clamp(13.5px,1.12vw,14.5px);line-height:2.1;color:var(--dp-ink);
+    font-weight:300;max-width:min(100%,880px)
+  }
+  #dpage .rm-step .ct .bd p{margin:0 0 13px}
+  #dpage .rm-step .ct .bd p:last-child{margin-bottom:0}
+  /* 卡片四角的两颗微星:纸面上的细节,不是图示 */
+  #dpage .rm-step .dot{position:absolute;color:var(--dp-lav);opacity:.3}
+  #dpage .rm-step .dot.a{width:9px;height:9px;right:26px;top:24px}
+  #dpage .rm-step .dot.b{width:7px;height:7px;left:clamp(26px,3vw,46px);bottom:22px}
   @media(max-width:640px){
-    #dpage .dp-step{grid-template-columns:1fr;gap:14px;border-radius:22px}
-    #dpage .dp-step .no{place-items:start;padding:0}
-    #dpage .dp-step .no i{left:clamp(22px,7vw,32px)}
-    #dpage .dp-step .ct{border-left:none;padding-left:0}
-    #dpage .dp-start-hd .tx{letter-spacing:.2em}
+    #dpage .rm-step{grid-template-columns:1fr;gap:15px;border-radius:24px}
+    #dpage .rm-step .no{place-items:start;padding:0}
+    #dpage .rm-step .no .orb{left:clamp(24px,7.5vw,36px);width:clamp(76px,22vw,104px)}
+    #dpage .rm-step .ct{border-left:none;padding-left:0}
+    #dpage .rm-step .dot.b{display:none}
+    #dpage .rm-open .hd{gap:12px}
+    #dpage .rm-open .hd .tx{letter-spacing:.2em}
+    #dpage .rm-keep .hd .tx{letter-spacing:.24em}
   }
+
+  /* 生命蓝图的五章页签(只有「我的生命蓝图」用到) */
   #dpage .dp-tabs{display:flex;gap:6px;flex-wrap:wrap;border-bottom:1px solid var(--dp-line);margin-bottom:22px}
   #dpage .dp-tabs button{
     font-family:var(--dp-sans);font-size:13.5px;padding:10px 16px;border:none;background:transparent;
     color:var(--dp-mut);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:.25s
   }
   #dpage .dp-tabs button.on{color:var(--dp-ink);border-bottom-color:var(--dp-lav);font-weight:500}
+  /* 专属建议卡片 */
   #dpage .dp-cards4{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px}
   #dpage .dp-cards4 .c4{border:1px solid var(--dp-line);border-radius:18px;background:var(--dp-cloud);padding:18px}
   #dpage .dp-cards4 .c4 b{display:block;font-family:var(--dp-serif);font-weight:500;font-size:14.5px;margin-bottom:8px}
@@ -4743,53 +4843,101 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
      阅读页尾三个共用区块:从这里开始 / 值得记住 / 留给你的思考 · 试试看
      Theme Reading 与「属于你的生命脉络」共用同一份实作与同一套样式。
      ============================================================ */
+  /* 四角星点:整套 Reading Marks 唯一的装饰符号(inline SVG,不用图片) */
+  function dpSpark(cls) {
+    return '<svg class="rm-s ' + (cls || "") + '" viewBox="0 0 24 24" aria-hidden="true" focusable="false">' +
+      '<path d="M12 0c.62 6.7 4.68 10.76 12 12-7.32 1.24-11.38 5.3-12 12-.62-6.7-4.68-10.76-12-12' +
+      'C7.32 10.76 11.38 6.7 12 0z"/></svg>';
+  }
+  // 两端淡出的细线 + 居中星点
+  function dpRule() {
+    return '<div class="rm-rule" aria-hidden="true"><span class="ln"></span>' + dpSpark() + '<span class="ln"></span></div>';
+  }
+  // 星云柔光(纯 CSS 渐层 + 轨道 + 几颗星点)
+  function dpGlow() {
+    return '<span class="rm-glow" aria-hidden="true"><span class="core"></span><span class="ring"></span>' +
+      dpSpark("p1") + dpSpark("p2") + dpSpark("p3") + dpSpark("p4") + dpSpark("p5") + '</span>';
+  }
+
+  /* 「值得记住」:像书里被特别标记出来的一段句子 */
   function dpKeepHtml(list) {
-    return '<div class="dp-keep"><div class="hd"><span class="ic" aria-hidden="true">✦</span>' +
+    return '<section class="rm-keep"><div class="rm-in">' +
+      '<div class="hd">' + dpSpark() +
       '<span class="tx">' + dpT("值得记住", "Worth Keeping") + '</span></div>' +
       list.map(function (q) {
         return '<div class="q"><span class="mk" aria-hidden="true">“</span>' +
           '<div class="bd">' + esc0(q) + "</div></div>";
-      }).join('<div class="sp dp-sparkdiv"><span class="ln"></span><span class="st" aria-hidden="true">✦</span><span class="ln"></span></div>') +
-      "</div>";
+      }).join(dpRule()) +
+      "</div></section>";
   }
-  // kind: "q" = 留给你的思考(读一句) / "a" = 试试看(动手做)
-  function dpReflectHtml(kind, text) {
+  /* 「留给你的思考」/「试试看」:书页中间的一次停顿
+     kind: "q" = 想一想(安静、留白、右侧星云) / "a" = 做一件事(左侧细线 + 一颗星) */
+  function dpPauseHtml(kind, text) {
     const isAct = kind === "a";
-    return '<div class="dp-reflect' + (isAct ? " act" : "") + '">' +
-      (isAct ? "" : '<span class="glow" aria-hidden="true"></span>') +
-      '<div class="eb"><span class="ic" aria-hidden="true">' + (isAct ? "✧" : "✦") + '</span>' +
+    return '<section class="rm-pause' + (isAct ? " act" : "") + '">' +
+      (isAct ? dpSpark("pin") : dpGlow()) +
+      '<div class="eb">' + dpSpark() +
       '<span class="tx">' + (isAct ? "TRY THIS · 01" : "REFLECTION · 01") + '</span></div>' +
-      '<h3 class="rt">' + (isAct ? dpT("试试看", "Try This") : dpT("留给你的思考", "A Question For You")) + "</h3>" +
-      '<div class="rule" aria-hidden="true"></div>' +
-      '<div class="bd dp-rich">' + dpParaRich(text) + "</div></div>";
+      '<h3 class="tt">' + (isAct ? dpT("试试看", "Try This") : dpT("留给你的思考", "A Question For You")) + "</h3>" +
+      '<div class="tick" aria-hidden="true"></div>' +
+      '<div class="bd rm-rich">' + dpParaRich(text) + "</div></section>";
   }
-  function dpStartHtml(steps) {
-    return '<div class="dp-start"><div class="dp-start-hd">' +
-      '<span class="ic" aria-hidden="true">✦</span>' +
+  /* 「从这里开始」:长篇内容真正展开之前的序章入口 */
+  function dpOpenHtml(steps) {
+    return '<section class="rm-open">' + dpGlow() +
+      '<div class="hd">' + dpSpark() +
       '<span class="tx">' + dpT("从这里开始", "Where To Start") + '</span>' +
-      '<span class="ln"></span><span class="en" aria-hidden="true">✦</span></div>' +
-      '<p class="dp-start-lead">' +
+      '<span class="ln"></span>' + dpSpark("end") + '</div>' +
+      '<p class="lead">' +
       dpT("不必全部做完。挑一件现在做得到的，从那里开始就好。",
           "None of this needs doing at once. Pick the one you can start with today.") + "</p>" +
-      '<div class="dp-start-list">' +
+      '<div class="list">' +
       steps.map(function (st, i) {
-        return '<div class="dp-step"><div class="no"><i aria-hidden="true"></i>' +
+        return '<article class="rm-step">' + dpSpark("dot a") + dpSpark("dot b") +
+          '<div class="no"><span class="orb" aria-hidden="true"></span>' +
           "<b>" + ("0" + (i + 1)).slice(-2) + "</b></div>" +
           '<div class="ct"><b class="t">' + esc0(st.title) + "</b>" +
-          '<div class="bd dp-rich">' + dpParaRich(st.body) + "</div></div></div>";
-      }).join("") + "</div></div>";
+          '<div class="bd rm-rich">' + dpParaRich(st.body) + "</div></div></article>";
+      }).join("") + "</div></section>";
   }
   function dpTailBlocks(data) {
     let h = "";
-    if (data.steps && data.steps.length) h += dpStartHtml(data.steps);
+    if (data.steps && data.steps.length) h += dpOpenHtml(data.steps);
     if (data.aha && data.aha.length) h += dpKeepHtml(data.aha);
-    if (data.question || data.action)
-      h += '<div class="dp-sparkdiv"><span class="ln"></span><span class="st" aria-hidden="true">✦</span><span class="ln"></span></div>';
-    if (data.question) h += dpReflectHtml("q", data.question);
-    if (data.question && data.action)
-      h += '<div class="dp-sparkdiv"><span class="ln"></span><span class="st" aria-hidden="true">✦</span><span class="ln"></span></div>';
-    if (data.action) h += dpReflectHtml("a", data.action);
+    if (data.question || data.action) h += dpRule();
+    if (data.question) h += dpPauseHtml("q", data.question);
+    if (data.question && data.action) h += dpRule();
+    if (data.action) h += dpPauseHtml("a", data.action);
     return h;
+  }
+
+  /* ============================================================
+     详细解读的正文排版 —— Theme Reading 与「属于你的生命脉络」同一份实作。
+     标题层级 / 小标题 / divider / 段距 / 行距 / 阅读宽度 / 收藏交互全部一致,
+     两者读起来像同一本书的不同章节,而不是两套页面系统。
+     ============================================================ */
+  function dpSectionsHtml(secs, favSource, favType, nameFn) {
+    return secs.map(function (sc, si) {
+      const title = nameFn ? nameFn(sc, si) : (sc.title || "");
+      const k = favKey(favSource, title, sc.body || "");
+      const btn = '<button class="fav-btn' + (isFaved(k) ? " on" : "") + '" data-fav="' + esc0(k) +
+        '" data-text="' + esc0(String(sc.body || "").slice(0, 300)) + '" data-source="' + esc0(favSource) +
+        '" data-source-type="' + esc0(favType) +
+        '" data-section="' + esc0(title) + '" title="' + esc0(T("saveIt")) + '">' + (isFaved(k) ? "★" : "☆") + "</button>";
+      // 小标题 → 细分隔线 → 正文,让长文一段一段地读
+      return '<div class="dp-sec" id="sec-' + si + '"><div class="dp-h-row">' +
+        (title ? '<h3 class="dp-h">' + esc0(title) + "</h3>" : "<span></span>") + btn + "</div>" +
+        (title ? '<div class="dp-div" aria-hidden="true">' + dpSpark() + '<span class="ln"></span></div>' : "") +
+        '<div class="dp-prose" data-saveable data-source="' + esc0(favSource) +
+        '" data-source-type="' + esc0(favType) +
+        '" data-section="' + esc0(title) + '">' + dpPara(sc.body) + "</div></div>";
+    }).join("");
+  }
+  function dpReadingCard(secs, favSource, favType, nameFn) {
+    if (!secs.length) return "";
+    return '<div class="dp-card"><div class="dp-read">' +
+      '<div class="dp-sec-label">' + dpT("主题解读", "READING") + "</div>" +
+      dpSectionsHtml(secs, favSource, favType, nameFn) + "</div></div>";
   }
 
   function dpThreadHtml(data, favSource, tab, favType) {
@@ -4799,27 +4947,10 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     let h = "";
     if (data.tagline)
       h += '<div class="dp-card"><div class="dp-quote"><span class="q">“</span>' + esc0(data.tagline) + "</div></div>";
-    if (secs.length) {
-      let i = tab | 0;
-      if (!(i >= 0 && i < secs.length)) i = 0;
-      const sc = secs[i];
-      function sName(x, n) { return x.title || (dpT("第", "Part ") + (window.I18N.isEN() ? String(n + 1) : "一二三四五六七八九"[n] + "段")); }
-      const k = favKey(favSource, sName(sc, i), sc.body || "");
-      const btn = '<button class="fav-btn' + (isFaved(k) ? " on" : "") + '" data-fav="' + esc0(k) +
-        '" data-text="' + esc0(String(sc.body || "").slice(0, 300)) + '" data-source="' + esc0(favSource) +
-        '" data-source-type="' + esc0(favType) +
-        '" data-section="' + esc0(sName(sc, i)) + '" title="' + esc0(T("saveIt")) + '">' + (isFaved(k) ? "★" : "☆") + "</button>";
-      h += '<div class="dp-card"><div class="dp-read"><div class="dp-sec-label">' + dpT("主题解读", "READING") + "</div>" +
-        '<div class="dp-tabs">' + secs.map(function (x, n) {
-          return '<button data-mtab="' + n + '"' + (n === i ? ' class="on"' : "") + ">" + esc0(sName(x, n)) + "</button>";
-        }).join("") + "</div>" +
-        '<div class="dp-sec"><div class="dp-h-row"><h3 class="dp-h">' + esc0(sName(sc, i)) + "</h3>" + btn + "</div>" +
-        '<div class="dp-div"><span class="st">✦</span><span class="ln"></span></div>' +
-        '<div class="dp-prose" data-saveable data-source="' + esc0(favSource) +
-        '" data-source-type="' + esc0(favType) +
-        '" data-section="' + esc0(sName(sc, i)) + '">' + dpPara(sc.body) + "</div></div>" +
-        "</div></div>";
-    }
+    // 章节不再分页签,与主题解读一样整篇顺读;#/map/<i> 改为进来后定位到那一段
+    h += dpReadingCard(secs, favSource, favType, function (x, n) {
+      return x.title || (dpT("第", "Part ") + (window.I18N.isEN() ? String(n + 1) : "一二三四五六七八九"[n] + "段"));
+    });
     h += dpTailBlocks(data);
     return h;
   }
@@ -4828,22 +4959,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     let h = "";
     if (data.tagline)
       h += '<div class="dp-card"><div class="dp-quote"><span class="q">“</span>' + esc0(data.tagline) + "</div></div>";
-    h += '<div class="dp-card"><div class="dp-read"><div class="dp-sec-label">' + dpT("主题解读", "READING") + "</div>";
-    h += (data.sections || []).map(function (sc, si) {
-      const k = favKey(favSource, sc.title || "", sc.body || "");
-      const btn = '<button class="fav-btn' + (isFaved(k) ? " on" : "") + '" data-fav="' + esc0(k) +
-        '" data-text="' + esc0(String(sc.body || "").slice(0, 300)) + '" data-source="' + esc0(favSource) +
-        '" data-source-type="' + esc0(favType) +
-        '" data-section="' + esc0(sc.title || "") + '" title="' + esc0(T("saveIt")) + '">' + (isFaved(k) ? "★" : "☆") + "</button>";
-      // 小标题 → 细分隔线 → 正文,让长文一段一段地读
-      return '<div class="dp-sec" id="sec-' + si + '"><div class="dp-h-row">' +
-        (sc.title ? '<h3 class="dp-h">' + esc0(sc.title) + "</h3>" : "<span></span>") + btn + "</div>" +
-        (sc.title ? '<div class="dp-div"><span class="st">✦</span><span class="ln"></span></div>' : "") +
-        '<div class="dp-prose" data-saveable data-source="' + esc0(favSource) +
-        '" data-source-type="' + esc0(favType) +
-        '" data-section="' + esc0(sc.title || "") + '">' + dpPara(sc.body) + "</div></div>";
-    }).join("");
-    h += "</div></div>";
+    h += dpReadingCard(data.sections || [], favSource, favType, null);
     h += dpTailBlocks(data);
     return h;
   }
@@ -4963,7 +5079,8 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
          这里只是不再渲染这个 Section,让页面直接进入有阅读价值的个人解读。 */
       // ---- 基础个人星象盘(简化预览)----
       // 与「我的星空」完整盘共用同一份 curResult,读数不可能出现分歧
-      body += '<div class="dp-card"><div class="dp-sec-label">' + dpT("基础个人星象盘", "YOUR NATAL CHART") + '</div>' +
+      body += '<div class="dp-card"><div class="dp-read">' +
+        '<div class="dp-sec-label">' + dpT("基础个人星象盘", "YOUR NATAL CHART") + '</div>' +
         '<div class="dp-chart-wrap">' +
         '<svg class="dp-wheel" id="dpBlueprintWheel" role="img" aria-label="' + esc0(dpT("你的简化星盘", "Your natal chart")) + '"></svg>' +
         '<div class="dp-place">' + dpPlaceRows([
@@ -4979,7 +5096,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
         ], true) +
         '</div></div>' +
         '<div class="dp-chart-cta"><a class="dp-link" href="#/my-sky">' + dpT("查看完整星盘", "View full chart") + ' →</a></div>' +
-        '</div>';
+        '</div></div>';
 
       // 五章:分页签呈现
       const chs = r.chapters || [];
@@ -5022,8 +5139,9 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
         }).join("") + "</div>";
       }
       if (topCards.length)
-        body += '<div class="dp-card"><div class="dp-sec-label">' + dpT("专属建议", "FOR YOU") + '</div>' +
-          cardsHtml(topCards) + "</div>";
+        body += '<div class="dp-card"><div class="dp-read">' +
+          '<div class="dp-sec-label">' + dpT("专属建议", "FOR YOU") + '</div>' +
+          cardsHtml(topCards) + "</div></div>";
 
       const k = favKey(favSrc, chName(ch, readingTab), ch.body || "");
       const favB = '<button class="fav-btn' + (isFaved(k) ? " on" : "") + '" data-fav="' + esc0(k) +
@@ -5031,23 +5149,25 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
         '" data-source-type="life_blueprint" data-section="' + esc0(chName(ch, readingTab)) +
         '" title="' + esc0(T("saveIt")) + '">' + (isFaved(k) ? "★" : "☆") + "</button>";
       const ownCards = chapterCards[readingTab] || [];
-      body += '<div class="dp-card"><div class="dp-sec-label">' + dpT("详细解读", "IN DETAIL") + '</div>' +
+      body += '<div class="dp-card"><div class="dp-read">' +
+        '<div class="dp-sec-label">' + dpT("详细解读", "IN DETAIL") + '</div>' +
         '<div class="dp-tabs">' + chs.map(function (x, i) {
           return '<button data-rtab="' + i + '"' + (i === readingTab ? ' class="on"' : "") + ">" + esc0(chName(x, i)) + "</button>";
         }).join("") + "</div>" +
-        '<div class="dp-h-row"><h3 class="dp-h">' + esc0(chName(ch, readingTab)) + "</h3>" + favB + "</div>" +
-        (ch.summary ? '<div class="dp-quote" style="text-align:left;padding:8px 0 16px;font-size:15.5px"' +
+        '<div class="dp-sec"><div class="dp-h-row"><h3 class="dp-h">' + esc0(chName(ch, readingTab)) + "</h3>" + favB + "</div>" +
+        '<div class="dp-div" aria-hidden="true">' + dpSpark() + '<span class="ln"></span></div>' +
+        (ch.summary ? '<div class="dp-quote" style="text-align:left;padding:0 0 18px;font-size:15.5px"' +
           ' data-saveable data-source="' + esc0(favSrc) + '" data-source-type="life_blueprint"' +
           ' data-section="' + esc0(chName(ch, readingTab)) + '">' + esc0(ch.summary) + "</div>" : "") +
         '<div class="dp-prose" data-saveable data-source="' + esc0(favSrc) +
         '" data-source-type="life_blueprint" data-section="' + esc0(chName(ch, readingTab)) + '">' +
-        dpPara(ch.body) + "</div>" +
+        dpPara(ch.body) + "</div></div>" +
         // 这一章自己的专属建议:接在对应正文下面,上下文更自然
         (ownCards.length
-          ? '<div class="dp-div" style="margin-top:26px"><span class="st">✦</span><span class="ln"></span></div>' +
+          ? '<div class="dp-div" style="margin-top:26px" aria-hidden="true">' + dpSpark() + '<span class="ln"></span></div>' +
             '<div class="dp-sec-label">' + dpT("专属建议", "FOR YOU") + '</div>' + cardsHtml(ownCards)
           : "") +
-        "</div>";
+        "</div></div>";
       foot = dpReturnFoot();
     }
     dpScaffold({
@@ -5551,10 +5671,17 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     if (rm) rm.addEventListener("click", function () { mapErr = null; toggleMap(); });
     const gm = document.getElementById("dpGenMap");
     if (gm) gm.addEventListener("click", function () { toggleMap(); });
-    // 分页签:从落地页点某个标题进来 → 直接停在那一段
-    $("dpage").querySelectorAll("[data-mtab]").forEach(function (b) {
-      b.addEventListener("click", function () { location.hash = "#/map/" + b.getAttribute("data-mtab"); });
-    });
+    /* 从落地页点某个标题进来(#/map/<i>)→ 整篇照常顺读,只是先滚到那一段,
+       并让它很轻地亮一下,读者知道自己停在哪里。 */
+    if (mapTab > 0) {
+      const target = document.getElementById("sec-" + mapTab);
+      if (target) requestAnimationFrame(function () {
+        const y = target.getBoundingClientRect().top + window.scrollY - 90;
+        window.scrollTo({ top: y > 0 ? y : 0, behavior: "auto" });
+        target.classList.add("dp-sec-focus");
+        setTimeout(function () { target.classList.remove("dp-sec-focus"); }, 1600);
+      });
+    }
   }
 
   // ---------- 初始化 ----------
