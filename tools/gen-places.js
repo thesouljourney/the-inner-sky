@@ -11,6 +11,14 @@
        只有当同一个 admin1 码底下 ≥75% 的样本给出同一个地区名时才采用,
        避免像英国 ENG 被写成某个郡这种错误;推不出来就不显示地区。
    · i18n-iso-countries:国家名(英文 / 中文)。
+   · tools/local-places.json:站方自订的马来西亚 / 新加坡地点表
+       (从旧版 app.html 的 CITY_GROUPS 原样搬过来,含中文名)。
+       GeoNames 的 cities1000 对这两个国家收得很薄(马来西亚 175、
+       新加坡 2),旧使用者熟悉的「兀兰」「峇株巴辖」找不到,
+       所以把原表并进来;时区一律由座标反查(tz-lookup),
+       东马会正确落到 Asia/Kuching,不是手写死。
+   · city-timezones 的城市本体也一并并入,补 GeoNames 漏掉的
+       (例如花莲 Hualien)。
 
    产物是纯资料,执行期由 assets/astro/places.js 载入并做搜索。
 
@@ -23,6 +31,7 @@ const path = require("path");
 const OUT = path.join(__dirname, "..", "assets", "astro", "places-data.js");
 const SRC = require.resolve("cities-with-1000/cities1000.txt");
 const cityTz = require("city-timezones").cityMapping;
+const tzLookup = require("tz-lookup");
 const iso = require("i18n-iso-countries");
 iso.registerLocale(require("i18n-iso-countries/langs/en.json"));
 iso.registerLocale(require("i18n-iso-countries/langs/zh.json"));
@@ -89,6 +98,64 @@ function readCities() {
   return rows;
 }
 
+/* ---------- 1b. 补充来源 ---------- */
+
+/* 站方自订的马来西亚 / 新加坡地点(旧版 CITY_GROUPS)。
+   名字形如「峇株巴辖(Batu Pahat)」,拆成中文名 + 英文名两个搜索键。 */
+function readLocalPlaces() {
+  const file = path.join(__dirname, "local-places.json");
+  if (!fs.existsSync(file)) return [];
+  const groups = JSON.parse(fs.readFileSync(file, "utf8"));
+  const out = [];
+  for (const [region, cities] of groups) {
+    for (const [label, lat, lon] of cities) {
+      const m = /^(.*?)\s*[(（](.+?)[)）]\s*$/.exec(label);
+      const zh = m ? m[1].trim() : label.trim();
+      const en = m ? m[2].trim() : label.trim();
+      const tz = tzLookup(lat, lon);
+      out.push({
+        name: en, ascii: en, alt: zh, lat: lat, lon: lon,
+        feature: "PPL", cc: tz === "Asia/Singapore" ? "SG" : "MY",
+        a1: "", pop: 0, tz: tz,
+        regionName: region.replace(/\s*·.*$/, "").trim(),
+        curated: true
+      });
+    }
+  }
+  return out;
+}
+
+/* city-timezones 里 GeoNames 没有的城市(例如花莲)。 */
+function readCityTz(existing) {
+  const out = [];
+  for (const c of cityTz) {
+    if (!c.iso2 || !c.city || typeof c.lat !== "number" || typeof c.lng !== "number") continue;
+    const key = c.iso2 + "|" + norm(c.city_ascii || c.city);
+    const near = existing.get(key);
+    if (near && near.some(function (g) { return Math.hypot(g.lat - c.lat, g.lon - c.lng) < 0.35; })) continue;
+    let tz = c.timezone;
+    try { tz = tzLookup(c.lat, c.lng) || c.timezone; } catch (e) { /* 用资料自带的 */ }
+    if (!tz) continue;
+    out.push({
+      name: c.city, ascii: c.city_ascii || c.city, alt: "",
+      lat: c.lat, lon: c.lng, feature: "PPL", cc: c.iso2, a1: "",
+      pop: Math.round(c.pop || 0), tz: tz,
+      regionName: c.province || null
+    });
+  }
+  return out;
+}
+
+function indexByName(rows) {
+  const m = new Map();
+  for (const r of rows) {
+    const k = r.cc + "|" + norm(r.ascii);
+    if (!m.has(k)) m.set(k, []);
+    m.get(k).push(r);
+  }
+  return m;
+}
+
 /* ---------- 2. admin1 码 → 地区名(投票) ---------- */
 function buildRegionNames(rows) {
   const byKey = new Map();
@@ -124,8 +191,28 @@ function buildRegionNames(rows) {
 
 /* ---------- 3. 打包 ---------- */
 function build() {
-  const rows = readCities();
-  const regions = buildRegionNames(rows);
+  const geo = readCities();
+  const regions = buildRegionNames(geo);
+
+  /* 自订表与 GeoNames 会重叠(峇株巴辖两边都有)。同一个城市只能出现一次,
+     否则搜索结果会看到两笔一模一样的地点。做法:自订那笔如果在 GeoNames
+     里找得到同名且相距 <25 km 的城市,就只把中文名挂到 GeoNames 那笔上,
+     自订笔本身丢掉 —— GeoNames 有人口(排序要用)也有 admin1 地区名。 */
+  const geoIndex = indexByName(geo);
+  const localOnly = [];
+  for (const loc of readLocalPlaces()) {
+    const near = (geoIndex.get(loc.cc + "|" + norm(loc.ascii)) || []).filter(function (g) {
+      return Math.hypot((g.lat - loc.lat) * 111, (g.lon - loc.lon) * 111 *
+        Math.cos(loc.lat * Math.PI / 180)) < 25;
+    });
+    if (near.length) { near[0].zhAlias = loc.alt; continue; }
+    localOnly.push(loc);
+  }
+  const rows = localOnly.concat(geo);
+  const extra = readCityTz(indexByName(rows));
+  rows.push.apply(rows, extra);
+  process.stderr.write("geonames " + geo.length + " + 自订新增 " + localOnly.length +
+    " + city-timezones 补 " + extra.length + "\n");
 
   const zones = [];
   const zoneIdx = new Map();
@@ -136,6 +223,7 @@ function build() {
 
   const countries = {};
   const packed = [];
+  const localRegions = {};      // 自订 / 补充来源直接带地区名,不靠 admin1 码
   rows.sort((a, b) => (a.cc < b.cc ? -1 : a.cc > b.cc ? 1 : b.pop - a.pop));
 
   for (const r of rows) {
@@ -146,9 +234,19 @@ function build() {
         (ov && ov.zh) || iso.getName(r.cc, "zh") || iso.getName(r.cc, "en") || r.cc
       ];
     }
+    // 自订 / 补充来源自己带地区名:塞一个专属 admin1 码进 regions 表
+    if (!r.a1 && r.regionName) {
+      const code = "~" + r.regionName;
+      r.a1 = code;
+      localRegions[r.cc + "|" + code] = r.regionName;
+    }
     // 中日韩别名:让中文使用者可以直接打「吉隆坡」「东京」
     let cjk = "";
-    if (r.alt) {
+    if (r.curated && r.alt) {
+      cjk = r.alt;                       // 自订表的中文名直接用
+    } else if (r.zhAlias) {
+      cjk = r.zhAlias;                   // 自订表并进来的中文名优先于 GeoNames 别名
+    } else if (r.alt) {
       const hits = [];
       for (const a of r.alt.split(",")) {
         if (HAN_ONLY.test(a) && hits.indexOf(a) === -1) hits.push(a);
@@ -197,7 +295,7 @@ function build() {
     minPopulation: ${MIN_POP},
     attribution: "City data \\u00a9 GeoNames, CC BY 4.0 (geonames.org)",
     countries: ${JSON.stringify(countries)},
-    regions: ${JSON.stringify(regions)},
+    regions: ${JSON.stringify(Object.assign({}, regions, localRegions))},
     zones: ${JSON.stringify(zones)},
     rows: `;
 

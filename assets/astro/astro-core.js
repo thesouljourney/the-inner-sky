@@ -700,6 +700,7 @@
 
   // 旧命名空间:app.html 里既有的调用点不用改写
   api.legacyCore = {
+    SETTINGS: SETTINGS, VERSION: ENGINE_VERSION,
     SIGNS: SIGNS, BODIES: BODIES, ASPECTS: ASPECTS,
     n360: n360, diff180: diff180, fmtDeg: fmtDeg,
     lonToSign: lonToSign, lonToHouse: lonToHouse,

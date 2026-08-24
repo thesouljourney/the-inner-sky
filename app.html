@@ -2392,6 +2392,15 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
    ============================================================ */
 (function () {
   "use strict";
+  /* 站点版本。之前版本只记在 github.md 的同步纪录里,翻代码看不出来;
+     这里放一个明确的常数,方便对照 issue 与部署。计算口径另有
+     AstroCore.SETTINGS.engineVersion,两者各自独立递增。 */
+  const SITE_VERSION = "V.12";
+  window.InnerSkyVersion = {
+    site: SITE_VERSION,
+    engine: (window.AstroCore && window.AstroCore.SETTINGS) ? window.AstroCore.SETTINGS.engineVersion : null
+  };
+
   const A = window.Astronomy, C = window.AstroCore, X = window.AstroExtra, GL = window.AstroGlyphs;
   const $ = id => document.getElementById(id);
   const svgNS = "http://www.w3.org/2000/svg";

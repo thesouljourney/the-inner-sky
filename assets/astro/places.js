@@ -126,7 +126,8 @@
     var region = regionName(it.cc, it.a1);
     var country = countryName(it.cc, lang);
     var parts = [it.name];
-    if (region && norm(region) !== norm(it.name)) parts.push(region);
+    // 地区名和城市名或国家名重复时不重复列(例:Tampines, 新加坡, 新加坡)
+    if (region && norm(region) !== norm(it.name) && norm(region) !== norm(country)) parts.push(region);
     parts.push(country);
     return {
       city: it.name,
