@@ -49,6 +49,7 @@ const KEEP_FEATURES = new Set(["PPLC", "PPLA", "PPLA2"]);   // 首都 / 一级 /
 /* 国家名覆盖:ISO 官方长名太啰嗦或不适合当出生地点标签的,改成通用名 */
 const COUNTRY_OVERRIDE = {
   TW: { en: "Taiwan", zh: "台湾" },
+  CN: { en: "China", zh: "中国" },
   US: { en: "United States", zh: "美国" },
   GB: { en: "United Kingdom", zh: "英国" },
   KR: { en: "South Korea", zh: "韩国" },
@@ -181,7 +182,9 @@ function readLocalPlaces() {
       const tz = tzLookup(lat, lon);
       out.push({
         name: en, ascii: en, alt: zh, lat: lat, lon: lon,
-        feature: "PPL", cc: tz === "Asia/Singapore" ? "SG" : "MY",
+        // 国家码稍后由座标最近的 GeoNames 城市决定,不能照时区猜 ——
+        // 旧表最后一组是「中国 · 湖州」,按时区猜会被标成马来西亚。
+        feature: "PPL", cc: null,
         a1: "", pop: 0, tz: tz,
         regionName: region.replace(/\s*·.*$/, "").trim(),
         curated: true
@@ -266,7 +269,21 @@ function build() {
      自订笔本身丢掉 —— GeoNames 有人口(排序要用)也有 admin1 地区名。 */
   const geoIndex = indexByName(geo);
   const localOnly = [];
+
+  /* 自订地点的国家码:取座标最近的 GeoNames 城市。
+     这样吉隆坡→MY、兀兰→SG、湖州→CN 都会对。 */
+  function countryAt(lat, lon) {
+    let best = null, bd = Infinity;
+    for (const g of geo) {
+      const d = Math.hypot((g.lat - lat) * 111, (g.lon - lon) * 111 * Math.cos(lat * Math.PI / 180));
+      if (d < bd) { bd = d; best = g; }
+    }
+    return best && bd < 300 ? best.cc : null;
+  }
+
   for (const loc of readLocalPlaces()) {
+    loc.cc = countryAt(loc.lat, loc.lon);
+    if (!loc.cc) continue;               // 定不出国家就不收,不猜
     const near = (geoIndex.get(loc.cc + "|" + norm(loc.ascii)) || []).filter(function (g) {
       return Math.hypot((g.lat - loc.lat) * 111, (g.lon - loc.lon) * 111 *
         Math.cos(loc.lat * Math.PI / 180)) < 25;
