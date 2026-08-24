@@ -1,0 +1,52 @@
+/* 我的星空 · 落地页星盘 section */
+.isky-card{
+  position:relative;
+  padding:0;
+  border:none;
+  overflow:hidden;
+  background:#0b1231;
+  border-radius:var(--radius-card);
+  box-shadow:var(--shadow-card);
+  color:#e6dcf4;
+}
+.isky-bg{position:absolute;inset:0;pointer-events:none;background:url('section-bg.png') center/cover no-repeat;opacity:.85}
+.isky-scrim{position:absolute;inset:0;pointer-events:none;background:linear-gradient(to bottom,rgba(9,14,42,.18) 0%,rgba(9,14,42,.12) 45%,rgba(9,14,42,.55) 100%)}
+/* wheel overflows its box slightly for axis labels */
+.isky-inner{position:relative;padding:clamp(20px,2vw,28px) clamp(18px,1.8vw,26px) clamp(18px,1.8vw,24px)}
+.isky-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.isky-head h4{margin:0;font-family:var(--font-display);font-size:22px;font-weight:500;letter-spacing:.02em;color:#f7f1ff;float:none}
+.isky-head h4 .st{color:#e8c877;font-size:.55em;vertical-align:.4em}
+.isky-head p{display:none}
+.isky-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.isky-btn{cursor:pointer;font-family:var(--font-serif-sc);font-size:12px;letter-spacing:.04em;color:#cdc0e4;background:rgba(255,255,255,.06);border:1px solid rgba(226,196,133,.28);border-radius:999px;padding:7px 13px;transition:.2s}
+.isky-btn:hover{background:rgba(255,255,255,.12);color:#f0dcae}
+.isky-more{display:inline-flex;align-items:center;gap:6px;font-family:var(--font-serif-sc);font-size:12.5px;letter-spacing:.04em;color:#eed9a8;background:none;border:none;padding:0;transition:.2s;float:none}
+.isky-more:hover{color:#fff3d6}
+.isky-wheel{position:relative;margin:0 auto}
+.isky-wheel svg{position:relative;z-index:1;display:block;width:100%;height:auto;overflow:visible}
+.isky-tip,.isky-sign{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);animation:iskyFade .25s ease both}
+.isky-tip{min-width:180px;max-width:280px;text-align:center;background:rgba(28,19,56,.82);backdrop-filter:blur(10px);border:1px solid rgba(226,196,133,.24);border-radius:16px;padding:16px 20px;box-shadow:0 14px 40px rgba(8,4,24,.4);pointer-events:none}
+.isky-tip .t{font-family:var(--font-serif-sc);font-size:16px;color:#f4eeff;letter-spacing:.03em;margin-bottom:6px}
+.isky-tip .b{font-size:13px;color:#bdaedb;line-height:1.7}
+.isky-sign{width:min(300px,88%);background:rgba(28,19,56,.86);backdrop-filter:blur(12px);border:1px solid rgba(226,196,133,.26);border-radius:20px;padding:22px 24px;box-shadow:0 18px 50px rgba(8,4,24,.45)}
+.isky-sign .row{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:4px}
+.isky-sign .ttl{display:flex;align-items:center;gap:10px;font-family:var(--font-serif-sc);font-size:20px;color:#f4eeff;letter-spacing:.04em}
+.isky-sign .thumb{width:74px;height:34px;border-radius:6px;flex:none;background-size:cover;background-position:center}
+.isky-sign .x{cursor:pointer;border:none;background:none;font-size:16px;color:#8d7fae;padding:2px 4px}
+.isky-sign .meta{font-size:12.5px;letter-spacing:.08em;color:#e2c485;margin:0 0 14px}
+.isky-sign .body{font-family:var(--font-serif-sc);font-size:13.5px;line-height:1.9;color:#c3b5df;text-wrap:pretty}
+.isky-legend{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px 6px;margin:18px auto 0;padding-top:16px;opacity:.92}
+.isky-legend .it{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center}
+.isky-legend .ic{width:30px;height:30px;background-size:contain;background-repeat:no-repeat;background-position:center}
+.isky-legend .nm{font-family:var(--font-serif-sc);font-size:11px;color:rgba(233,225,250,.95);letter-spacing:.02em;white-space:nowrap}
+.isky-legend .kw{display:none;font-size:10px;color:rgba(190,178,222,.88);letter-spacing:.01em;line-height:1.4}
+.isky-foot{margin:16px 0 0;text-align:center;font-family:var(--font-serif-sc);font-size:11.5px;line-height:1.8;letter-spacing:.04em;color:rgba(214,204,238,.85)}
+.isky-empty{padding:44px 14px;text-align:center;color:#c0b2dd;font-family:var(--font-serif-sc);font-size:14px;line-height:28px}
+.isky-empty a{display:inline-block;margin-top:12px;color:#eed9a8;border:1px solid rgba(226,196,133,.34);border-radius:999px;padding:10px 22px;font-size:13.5px}
+@keyframes iskyFade{from{opacity:0;transform:translate(-50%,-46%)}to{opacity:1;transform:translate(-50%,-50%)}}
+@keyframes iskyTwinkle{0%,100%{opacity:.25}50%{opacity:.9}}
+@media (max-width:900px){
+  .isky-head h4{font-size:20px}
+}
+.isky-layer{position:absolute;inset:0;pointer-events:none}
+.isky-layer .isky-sign{pointer-events:auto}

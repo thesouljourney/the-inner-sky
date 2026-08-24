@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes twinkle{0%,100%{opacity:.25}50%{opacity:.9}}
+body{margin:0;background:#150e2c;-webkit-font-smoothing:antialiased}
+a{color:#e2c485;text-decoration:none}
+a:hover{color:#f4dfae}
+</style>
+</helmet>
+<section style="font-family:'Iowan Old Style','Palatino Linotype',Palatino,'Songti SC','Source Han Serif SC',Georgia,serif;color:#e6dcf4;position:relative;overflow:hidden;background:#150e2c url('assets/section-bg.png') center/cover no-repeat;padding:clamp(28px,5vw,64px) clamp(18px,4vw,56px) clamp(24px,4vw,48px)">
+  <div style="position:absolute;inset:0;pointer-events:none;background:linear-gradient(to bottom,rgba(21,14,44,.15) 0%,rgba(21,14,44,.1) 45%,rgba(21,14,44,.72) 100%)"></div>
+  <div style="max-width:1180px;margin:0 auto;position:relative">
+
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:24px;flex-wrap:wrap;margin-bottom:clamp(8px,2vw,20px)">
+      <div>
+        <h2 style="margin:0 0 12px;font-size:clamp(28px,4vw,42px);font-weight:600;letter-spacing:.02em;color:#f7f1ff">我的星空 <span style="color:#e8c877;font-size:.6em;vertical-align:.35em">✦</span></h2>
+        <p style="margin:0;font-size:clamp(14px,1.2vw,16px);line-height:1.9;color:#c0b2dd;text-wrap:pretty">你的星盘，是宇宙写给你的独特故事。<br>每一颗星，都在提醒你真实的自己。</p>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <button onClick="{{ toggleAspects }}" style="cursor:pointer;font-family:inherit;font-size:13.5px;letter-spacing:.04em;color:#cdc0e4;background:rgba(255,255,255,.06);border:1px solid rgba(226,196,133,.28);border-radius:999px;padding:11px 20px;transition:.2s" style-hover="background:rgba(255,255,255,.12);color:#f0dcae">{{ aspectToggleLabel }}</button>
+        <a href="#" style="display:inline-flex;align-items:center;gap:12px;font-size:14.5px;letter-spacing:.04em;color:#eed9a8;background:rgba(226,196,133,.1);border:1px solid rgba(226,196,133,.34);border-radius:999px;padding:12px 24px;transition:.2s" style-hover="background:rgba(226,196,133,.2);color:#fff3d6">查看全部 <span style="font-size:1.1em">→</span></a>
+      </div>
+    </div>
+
+    <div style="position:relative;max-width:860px;margin:0 auto">
+      <svg viewBox="0 0 1000 1000" style="position:relative;z-index:1;display:block;width:100%;height:auto;overflow:visible">
+        <defs>
+          <radialGradient id="coreGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#fffdfa" stop-opacity="1"></stop>
+            <stop offset="55%" stop-color="#fdf3f0" stop-opacity=".96"></stop>
+            <stop offset="100%" stop-color="#f3e6ec" stop-opacity=".82"></stop>
+          </radialGradient>
+          <radialGradient id="rimGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="86%" stop-color="#d9c7f2" stop-opacity="0"></stop>
+            <stop offset="93%" stop-color="#ecdcb6" stop-opacity=".55"></stop>
+            <stop offset="100%" stop-color="#c9b6ea" stop-opacity="0"></stop>
+          </radialGradient>
+          <radialGradient id="bandVeil" cx="50%" cy="50%" r="50%">
+            <stop offset="70%" stop-color="#efe3c9" stop-opacity=".5"></stop>
+            <stop offset="100%" stop-color="#b9a3dd" stop-opacity=".85"></stop>
+          </radialGradient>
+          <radialGradient id="coreVeil" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#2b1e55" stop-opacity=".95"></stop>
+            <stop offset="100%" stop-color="#1b1338" stop-opacity=".45"></stop>
+          </radialGradient>
+          <filter id="soft" x="-40%" y="-40%" width="180%" height="180%">
+            <feGaussianBlur stdDeviation="14"></feGaussianBlur>
+          </filter>
+        </defs>
+
+        <g style="{{ wheelStyle }}" transform-origin="500 500">
+          <circle cx="500" cy="500" r="470" fill="url(#rimGlow)" opacity=".6"></circle>
+          <circle cx="500" cy="500" r="440" fill="url(#bandVeil)" opacity=".28"></circle>
+          <sc-for list="{{ signs }}" as="s" hint-placeholder-count="12">
+            <path d="{{ s.wedge }}" fill="{{ s.fill }}" stroke="rgba(232,222,252,.34)" strokeWidth="1.1" onClick="{{ s.onClick }}" style="cursor:pointer;transition:opacity .25s" opacity="{{ s.opacity }}"></path>
+          </sc-for>
+          <sc-for list="{{ stars }}" as="st" hint-placeholder-count="60">
+            <circle cx="{{ st.cx }}" cy="{{ st.cy }}" r="{{ st.r }}" fill="#fff8e6" opacity="{{ st.o }}"></circle>
+          </sc-for>
+          <circle cx="500" cy="500" r="320" fill="url(#coreVeil)" opacity=".2"></circle>
+          <circle cx="500" cy="500" r="348" fill="none" stroke="rgba(240,232,255,.42)" strokeWidth="1.4"></circle>
+          <circle cx="500" cy="500" r="320" fill="none" stroke="rgba(242,217,150,.4)" strokeWidth="1.4"></circle>
+          <circle cx="500" cy="500" r="440" fill="none" stroke="rgba(240,232,255,.3)" strokeWidth="1.2"></circle>
+          <circle cx="500" cy="500" r="192" fill="none" stroke="rgba(232,222,252,.3)" strokeWidth="1.1"></circle>
+
+          {{ signLabels }}
+
+          <sc-for list="{{ houseLines }}" as="h" hint-placeholder-count="12">
+            <line x1="{{ h.x1 }}" y1="{{ h.y1 }}" x2="{{ h.x2 }}" y2="{{ h.y2 }}" stroke="{{ h.stroke }}" strokeWidth="{{ h.w }}" strokeDasharray="{{ h.dash }}"></line>
+          </sc-for>
+          {{ houseNumLabels }}
+          <sc-for list="{{ axes }}" as="a" hint-placeholder-count="4">
+            <line x1="{{ a.x1 }}" y1="{{ a.y1 }}" x2="{{ a.x2 }}" y2="{{ a.y2 }}" stroke="rgba(248,228,168,.95)" strokeWidth="1.7" strokeDasharray="7 7"></line>
+          </sc-for>
+          {{ axisLabels }}
+        </g>
+
+        <g opacity="{{ aspectOpacity }}" style="transition:opacity .35s">
+          <sc-for list="{{ aspectLines }}" as="l" hint-placeholder-count="10">
+            <line x1="{{ l.x1 }}" y1="{{ l.y1 }}" x2="{{ l.x2 }}" y2="{{ l.y2 }}" stroke="{{ l.stroke }}" strokeWidth="{{ l.w }}" opacity="{{ l.o }}" strokeDasharray="{{ l.dash }}" onMouseEnter="{{ l.onEnter }}" onMouseLeave="{{ l.onLeave }}" style="cursor:crosshair;transition:opacity .2s,stroke-width .2s"></line>
+          </sc-for>
+        </g>
+
+        <g style="{{ moonStyle }}">
+          <circle cx="500" cy="500" r="46" fill="#efe0c4" opacity=".35" filter="url(#soft)"></circle>
+          <path d="{{ crescent }}" fill="#f2e7d0" opacity=".45"></path>
+        </g>
+
+        <sc-for list="{{ planets }}" as="p" hint-placeholder-count="10">
+          <g onMouseEnter="{{ p.onEnter }}" onMouseLeave="{{ p.onLeave }}" style="cursor:pointer">
+            <image href="{{ p.art }}" x="{{ p.ax }}" y="{{ p.ay }}" width="{{ p.size }}" height="{{ p.size }}" preserveAspectRatio="xMidYMid meet"></image>
+          </g>
+        </sc-for>
+        {{ planetLabels }}
+      </svg>
+
+      <sc-if value="{{ hasTip }}">
+        <div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);min-width:180px;max-width:280px;text-align:center;background:rgba(28,19,56,.82);backdrop-filter:blur(10px);border:1px solid rgba(226,196,133,.24);border-radius:16px;padding:16px 20px;box-shadow:0 14px 40px rgba(8,4,24,.4);animation:fadeUp .25s ease both;pointer-events:none">
+          <div style="font-size:16px;color:#f4eeff;letter-spacing:.03em;margin-bottom:6px">{{ tipTitle }}</div>
+          <div style="font-size:13px;color:#bdaedb;line-height:1.7">{{ tipBody }}</div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ hasSignCard }}">
+        <div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(300px,72%);background:rgba(28,19,56,.86);backdrop-filter:blur(12px);border:1px solid rgba(226,196,133,.26);border-radius:20px;padding:22px 24px;box-shadow:0 18px 50px rgba(8,4,24,.45);animation:fadeUp .28s ease both">
+          <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:4px">
+            <div style="display:flex;align-items:center;gap:10px;font-size:20px;color:#f4eeff;letter-spacing:.04em"><sc-if value="{{ signCardArt }}" hint-placeholder-val="{{ false }}"><div style="width:74px;height:34px;border-radius:6px;flex:none;background-image:{{ signCardArtBg }};background-size:cover;background-position:center"></div></sc-if>{{ signCardTitle }}</div>
+            <button onClick="{{ closeSignCard }}" style="cursor:pointer;border:none;background:none;font-family:inherit;font-size:16px;color:#8d7fae;padding:2px 4px">✕</button>
+          </div>
+          <div style="font-size:12.5px;letter-spacing:.08em;color:#e2c485;margin-bottom:14px">{{ signCardMeta }}</div>
+          <div style="font-size:13.5px;line-height:1.9;color:#c3b5df;text-wrap:pretty">{{ signCardBody }}</div>
+        </div>
+      </sc-if>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:clamp(6px,1.2vw,18px);max-width:1000px;margin:clamp(20px,3vw,40px) auto 0;padding-top:clamp(18px,2.4vw,30px);opacity:.92">
+      <sc-for list="{{ legend }}" as="g" hint-placeholder-count="0">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center">
+          <div style="width:clamp(30px,3.4vw,44px);height:clamp(30px,3.4vw,44px);background-image:{{ g.bg }};background-size:contain;background-repeat:no-repeat;background-position:center;transform:{{ g.scale }}"></div>
+          <div style="font-size:clamp(10px,1.1vw,13px);color:rgba(233,225,250,.95);letter-spacing:.02em;white-space:nowrap">{{ g.name }}</div>
+          <div style="font-size:clamp(9px,.95vw,11.5px);color:rgba(190,178,222,.88);letter-spacing:.01em;line-height:1.4">{{ g.kw }}</div>
+        </div>
+      </sc-for>
+    </div>
+
+    <p style="margin:clamp(20px,3vw,36px) 0 0;text-align:center;font-size:13.5px;letter-spacing:.05em;color:rgba(214,204,238,.92)">✦ 星盘是能量与可能性的地图，真正的答案，始终在你心中。</p>
+  </div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:1500},&quot;chart&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;{ang:{asc:number,mc:number},cusps:number[],planets:{key:string,lon:number,retro?:boolean}[],aspects:{a:number,b:number,type:string,orb?:number}[]}&quot;},&quot;planetArt&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;Record&lt;string,string&gt;&quot;},&quot;showAspects&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;显示&quot;},&quot;rotateEntrance&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;显示&quot;},&quot;starDensity&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:70,&quot;min&quot;:0,&quot;max&quot;:160,&quot;step&quot;:10,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;显示&quot;}}">
+const SIGNS = [
+  { name: "白羊座", glyph: "\u2648", elem: "火", mode: "开创", ruler: "火星",   art: "assets/signs/aries.png" },
+  { name: "金牛座", glyph: "\u2649", elem: "土", mode: "固定", ruler: "金星",   art: "assets/signs/taurus.png" },
+  { name: "双子座", glyph: "\u264A", elem: "风", mode: "变动", ruler: "水星",   art: "assets/signs/gemini.png" },
+  { name: "巨蟹座", glyph: "\u264B", elem: "水", mode: "开创", ruler: "月亮",   art: "assets/signs/cancer.png" },
+  { name: "狮子座", glyph: "\u264C", elem: "火", mode: "固定", ruler: "太阳",   art: "assets/signs/leo.png" },
+  { name: "处女座", glyph: "\u264D", elem: "土", mode: "变动", ruler: "水星",   art: "assets/signs/virgo.png" },
+  { name: "天秤座", glyph: "\u264E", elem: "风", mode: "开创", ruler: "金星",   art: "assets/signs/libra.png" },
+  { name: "天蝎座", glyph: "\u264F", elem: "水", mode: "固定", ruler: "冥王星", art: "assets/signs/scorpio.png" },
+  { name: "射手座", glyph: "\u2650", elem: "火", mode: "变动", ruler: "木星",   art: "assets/signs/sagittarius.png" },
+  { name: "摩羯座", glyph: "\u2651", elem: "土", mode: "开创", ruler: "土星",   art: "assets/signs/capricorn.png" },
+  { name: "水瓶座", glyph: "\u2652", elem: "风", mode: "固定", ruler: "天王星", art: "assets/signs/aquarius.png" },
+  { name: "双鱼座", glyph: "\u2653", elem: "水", mode: "变动", ruler: "海王星", art: "assets/signs/pisces.png" }
+];
+const BODIES = {
+  Sun:     { name: "太阳",   glyph: "\u2609", kw: "核心自我",   color: "#e8bf6a", ink: "#6b4a12" },
+  Moon:    { name: "月亮",   glyph: "\u263D", kw: "情感内核",   color: "#e8e2ea", ink: "#5c4a5e" },
+  Mercury: { name: "水星",   glyph: "\u263F", kw: "思维与表达", color: "#c9b3a6", ink: "#5a4438" },
+  Venus:   { name: "金星",   glyph: "\u2640", kw: "爱与关系",   color: "#d99aa8", ink: "#5e2b38" },
+  Mars:    { name: "火星",   glyph: "\u2642", kw: "行动与动力", color: "#d98a6a", ink: "#5e2a15" },
+  Jupiter: { name: "木星",   glyph: "\u2643", kw: "扩张与机遇", color: "#d9b48a", ink: "#5e3f1e" },
+  Saturn:  { name: "土星",   glyph: "\u2644", kw: "责任与课题", color: "#c9a888", ink: "#54381c" },
+  Uranus:  { name: "天王星", glyph: "\u2645", kw: "改变与突破", color: "#9fcfc8", ink: "#1e4a45" },
+  Neptune: { name: "海王星", glyph: "\u2646", kw: "灵感与想象", color: "#a3b6dd", ink: "#26385e" },
+  Pluto:   { name: "冥王星", glyph: "\u2647", kw: "蜕变与重生", color: "#a894b8", ink: "#3b2a4a" }
+};
+const ART = {
+  Sun: "assets/planets/sun.png", Moon: "assets/planets/moon.png", Mercury: "assets/planets/mercury.png",
+  Venus: "assets/planets/venus.png", Mars: "assets/planets/mars.png", Jupiter: "assets/planets/jupiter.png",
+  Saturn: "assets/planets/saturn.png", Uranus: "assets/planets/uranus.png",
+  Neptune: "assets/planets/neptune.png", Pluto: "assets/planets/pluto.png"
+};
+// f = 球体直径占素材画布的比例（实测中心列高度，环/箭头/角等附件不计）；cx/cy = 球心位置
+const FRAC = {
+  Sun:     { f: 0.500, cx: 0.500, cy: 0.473 },
+  Moon:    { f: 0.530, cx: 0.519, cy: 0.500 },
+  Mercury: { f: 0.427, cx: 0.500, cy: 0.508 },
+  Venus:   { f: 0.651, cx: 0.500, cy: 0.493 },
+  Mars:    { f: 0.580, cx: 0.500, cy: 0.538 },
+  Jupiter: { f: 0.653, cx: 0.500, cy: 0.486 },
+  Saturn:  { f: 0.462, cx: 0.500, cy: 0.487 },
+  Uranus:  { f: 0.516, cx: 0.500, cy: 0.520 },
+  Neptune: { f: 0.700, cx: 0.500, cy: 0.502 },
+  Pluto:   { f: 0.447, cx: 0.500, cy: 0.489 }
+};
+const ORDER = ["Sun","Moon","Mercury","Venus","Mars","Jupiter","Saturn","Uranus","Neptune","Pluto"];
+const ASPECT_STYLE = {
+  con: { stroke: "#c9a34e", dash: "", w: 1.4, name: "合相" },
+  sex: { stroke: "#8fa3c9", dash: "5 6",  w: 1.1, name: "六合" },
+  squ: { stroke: "#c98a92", dash: "",     w: 1.2, name: "四分" },
+  tri: { stroke: "#8fa3c9", dash: "",     w: 1.2, name: "三分" },
+  opp: { stroke: "#c98a92", dash: "8 6",  w: 1.3, name: "对分" }
+};
+// 后端星盘接口的数据结构（与站内 compute() 返回一致）：
+// { ang:{asc,mc}, cusps:[12], planets:[{key,name,lon,sign,deg,house,retro}], aspects:[{a,b,type,name,orb}] }
+const DEMO = {
+  ang: { asc: 186.4, mc: 98.2 },
+  cusps: [186.4, 214.6, 245.1, 278.2, 308.4, 336.9, 6.4, 34.6, 65.1, 98.2, 128.4, 156.9],
+  planets: [
+    { key: "Sun", lon: 47.8 }, { key: "Moon", lon: 183.1 }, { key: "Mercury", lon: 31.4 },
+    { key: "Venus", lon: 22.6 }, { key: "Mars", lon: 41.2 }, { key: "Jupiter", lon: 330.5 },
+    { key: "Saturn", lon: 8.9 }, { key: "Uranus", lon: 356.7 }, { key: "Neptune", lon: 296.1, retro: true },
+    { key: "Pluto", lon: 262.4, retro: true }
+  ],
+  aspects: [
+    { a: 0, b: 3, type: "con", orb: 2.1 }, { a: 0, b: 5, type: "tri", orb: 3.4 },
+    { a: 1, b: 4, type: "opp", orb: 1.8 }, { a: 1, b: 6, type: "squ", orb: 2.6 },
+    { a: 2, b: 8, type: "squ", orb: 4.1 }, { a: 3, b: 7, type: "sex", orb: 3.2 },
+    { a: 4, b: 9, type: "squ", orb: 2.2 }, { a: 5, b: 9, type: "tri", orb: 3.9 },
+    { a: 0, b: 1, type: "opp", orb: 5.1 }, { a: 6, b: 8, type: "tri", orb: 4.4 }
+  ]
+};
+const CX = 500, CY = 500, R_OUT = 440, R_IN = 320, R_PLANET = 282, R_HOUSE_NUM = 230, R_ASP = 192;
+const n360 = (d) => ((d % 360) + 360) % 360;
+
+class Component extends DCLogic {
+  state = { hoverAsp: null, hoverPlanet: null, openSign: null, aspectsOn: null, mounted: false };
+
+  componentDidMount() { requestAnimationFrame(() => this.setState({ mounted: true })); }
+
+  pt(r, theta) {
+    const t = theta * Math.PI / 180;
+    return [CX + r * Math.cos(t), CY - r * Math.sin(t)];
+  }
+  ang(lon, asc) { return 180 + (n360(lon) - asc); }
+
+  renderVals() {
+    const chart = this.props.chart || DEMO;
+    const asc = (chart.ang && chart.ang.asc) || 0;
+    const mc = (chart.ang && chart.ang.mc) || n360(asc + 270);
+    const cusps = chart.cusps && chart.cusps.length === 12
+      ? chart.cusps
+      : Array.from({ length: 12 }, (_, i) => n360(Math.floor(asc / 30) * 30 + i * 30));
+    const art = this.props.planetArt || {};
+    const aspectsOn = this.state.aspectsOn === null ? (this.props.showAspects !== false) : this.state.aspectsOn;
+    const density = this.props.starDensity == null ? 70 : this.props.starDensity;
+
+    const signs = SIGNS.map((s, i) => {
+      const a1 = this.ang(i * 30, asc), a2 = a1 + 30;
+      const [ox1, oy1] = this.pt(R_OUT, a1), [ox2, oy2] = this.pt(R_OUT, a2);
+      const [ix1, iy1] = this.pt(R_IN, a1), [ix2, iy2] = this.pt(R_IN, a2);
+      const [lx, ly] = this.pt((R_OUT + R_IN) / 2, (a1 + a2) / 2);
+      const hue = 300 + i * 9;
+      const open = this.state.openSign === i;
+      const mid = (a1 + a2) / 2;
+      // 素材本身已是扇形环带（750×300）：贴合扇形外接框，外弧顶点对齐 R_OUT
+      const half = 15 * Math.PI / 180, rMid = (R_OUT + R_IN) / 2;
+      const iw = 2 * R_OUT * Math.sin(half), ih = R_OUT - R_IN * Math.cos(half);
+      let tr = 90 - mid; tr = ((tr + 180) % 360 + 360) % 360 - 180;
+      const tRot = Math.abs(tr) > 90 ? tr + 180 : tr;
+      return {
+        name: s.name, lx, ly,
+        textRot: "rotate(" + tRot.toFixed(2) + " " + lx.toFixed(2) + " " + ly.toFixed(2) + ")",
+        art: s.art, ax: lx - iw / 2, ay: ly - (R_OUT - rMid), aw: iw, ah: ih,
+        rot: "rotate(" + (90 - mid).toFixed(2) + " " + lx.toFixed(2) + " " + ly.toFixed(2) + ")",
+        wedge: "M" + ox1 + " " + oy1 + "A" + R_OUT + " " + R_OUT + " 0 0 0 " + ox2 + " " + oy2 +
+               "L" + ix2 + " " + iy2 + "A" + R_IN + " " + R_IN + " 0 0 1 " + ix1 + " " + iy1 + "Z",
+        fill: "transparent",
+        opacity: this.state.openSign === null ? 1 : (open ? 1 : 0.45),
+        artOpacity: this.state.openSign === null ? 0.3 : (open ? 0.42 : 0.16),
+        onClick: () => this.setState({ openSign: open ? null : i, hoverAsp: null, hoverPlanet: null })
+      };
+    });
+
+    const stars = [];
+    let seed = 20260823;
+    const rnd = () => { seed = (seed * 1103515245 + 12345) % 2147483648; return seed / 2147483648; };
+    for (let i = 0; i < density; i++) {
+      const a = rnd() * 360, r = R_IN + 8 + rnd() * (R_OUT - R_IN - 16);
+      const [cx, cy] = this.pt(r, a);
+      stars.push({ cx, cy, r: (0.9 + rnd() * 1.8).toFixed(2), o: (0.35 + rnd() * 0.5).toFixed(2) });
+    }
+
+    const houseLines = cusps.map((c, i) => {
+      const a = this.ang(c, asc);
+      const [x1, y1] = this.pt(R_ASP, a), [x2, y2] = this.pt(R_IN, a);
+      const cardinal = i === 0 || i === 3 || i === 6 || i === 9;
+      return { x1, y1, x2, y2, stroke: cardinal ? "rgba(248,228,168,.62)" : "rgba(224,214,248,.36)", w: cardinal ? 1.5 : 1.15, dash: cardinal ? "" : "" };
+    });
+    const houseNums = cusps.map((c, i) => {
+      const next = cusps[(i + 1) % 12];
+      const span = n360(next - c) || 30;
+      const [x, y] = this.pt(R_HOUSE_NUM, this.ang(c + span / 2, asc));
+      return { n: String(i + 1), x, y };
+    });
+
+    const axes = [
+      { label: "ASC", lon: asc }, { label: "DSC", lon: n360(asc + 180) },
+      { label: "MC", lon: mc }, { label: "IC", lon: n360(mc + 180) }
+    ].map(a => {
+      const th = this.ang(a.lon, asc);
+      const [x1, y1] = this.pt(R_ASP, th), [x2, y2] = this.pt(R_OUT + 4, th);
+      const [tx, ty] = this.pt(R_OUT + 32, th);
+      return { label: a.label, x1, y1, x2, y2, tx, ty, anchor: "middle" };
+    });
+
+    const raw = (chart.planets || []).filter(p => BODIES[p.key]);
+    const withAng = raw.map((p, i) => ({ i, key: p.key, lon: n360(p.lon), retro: !!p.retro, theta: this.ang(p.lon, asc) }));
+    const sorted = withAng.slice().sort((a, b) => a.theta - b.theta);
+    for (let k = 1; k < sorted.length; k++) {
+      const gap = sorted[k].theta - sorted[k - 1].theta;
+      if (gap < 9) sorted[k].theta = sorted[k - 1].theta + 9;
+    }
+    const angByIdx = {};
+    sorted.forEach(s => { angByIdx[s.i] = s.theta; });
+
+    const planets = withAng.map(p => {
+      const b = BODIES[p.key];
+      const [x, y] = this.pt(R_PLANET, angByIdx[p.i]);
+      const signIdx = Math.floor(p.lon / 30);
+      const house = this.houseOf(p.lon, cusps);
+      // 素材实测不透明区域占画布的比例 + 中心偏移，用来把可见直径拉到同一尺寸
+      const f = FRAC[p.key] || { f: 0.7, cx: 0.5, cy: 0.5 };
+      const size = 36 / f.f;
+      return {
+        x, y, glyph: b.glyph, color: b.color, ink: b.ink, halo: b.color,
+        art: art[p.key] || ART[p.key], size,
+        ax: x - size / 2 + (0.5 - f.cx) * size, ay: y - size / 2 + (0.5 - f.cy) * size,
+        ry: y + 30, retroMark: p.retro ? "R" : "",
+        onEnter: () => this.setState({
+          hoverPlanet: b.name + " · " + SIGNS[signIdx].name + " " + Math.floor(p.lon % 30) + "°",
+          hoverPlanetSub: "第 " + house + " 宫 · " + b.kw + (p.retro ? " · 逆行" : ""), openSign: null
+        }),
+        onLeave: () => this.setState({ hoverPlanet: null })
+      };
+    });
+
+    const aspectLines = (chart.aspects || []).map((a, i) => {
+      const pa = withAng[a.a], pb = withAng[a.b];
+      if (!pa || !pb) return null;
+      const st = ASPECT_STYLE[a.type] || ASPECT_STYLE.con;
+      const [x1, y1] = this.pt(R_ASP - 4, angByIdx[pa.i]);
+      const [x2, y2] = this.pt(R_ASP - 4, angByIdx[pb.i]);
+      const hot = this.state.hoverAsp === i;
+      const dim = this.state.hoverAsp !== null && !hot;
+      return {
+        x1, y1, x2, y2, stroke: st.stroke, dash: st.dash,
+        w: hot ? st.w + 1.4 : st.w + 0.4, o: hot ? 1 : (dim ? 0.22 : 0.8),
+        onEnter: () => this.setState({
+          hoverAsp: i, openSign: null,
+          hoverAspText: BODIES[pa.key].name + " " + (a.name || st.name) + " " + BODIES[pb.key].name,
+          hoverAspSub: "误差 " + (a.orb == null ? "—" : Number(a.orb).toFixed(1) + "°")
+        }),
+        onLeave: () => this.setState({ hoverAsp: null })
+      };
+    }).filter(Boolean);
+
+    const openSign = this.state.openSign;
+    let signCardTitle = "", signCardMeta = "", signCardBody = "", signCardArt = "";
+    if (openSign !== null) {
+      const s = SIGNS[openSign];
+      const houseIdx = cusps.findIndex((c, i) => {
+        const next = cusps[(i + 1) % 12];
+        const mid = n360(openSign * 30 + 15);
+        return n360(mid - c) < (n360(next - c) || 30);
+      });
+      const inside = withAng.filter(p => Math.floor(p.lon / 30) === openSign)
+        .map(p => BODIES[p.key].name + " " + Math.floor(p.lon % 30) + "°");
+      signCardArt = s.art;
+      signCardTitle = s.name;
+      signCardMeta = s.elem + "象 · " + s.mode + " · 守护星 " + s.ruler + (houseIdx >= 0 ? " · 落第 " + (houseIdx + 1) + " 宫" : "");
+      signCardBody = inside.length ? "这个星座里的星体：" + inside.join("、") + "。" : "这个星座里没有星体，它的能量通过守护星 " + s.ruler + " 表达。";
+    }
+
+    const el = React.createElement;
+    const txt = (props, str) => el("text", props, str);
+    const signLabels = el("g", { style: { pointerEvents: "none" } }, [
+      el("defs", { key: "d" }, signs.map((s, i) =>
+        el("clipPath", { key: i, id: "sgclip" + i }, el("path", { d: s.wedge })))),
+      ...signs.map((s, i) => el("g", { key: i, clipPath: "url(#sgclip" + i + ")" },
+        el("image", {
+          href: s.art, x: s.ax, y: s.ay, width: s.aw, height: s.ah, transform: s.rot,
+          opacity: s.artOpacity, preserveAspectRatio: "xMidYMid slice",
+          style: { transition: "opacity .25s" }
+        }))),
+      ...signs.map((s, i) => el("g", { key: "t" + i, transform: s.textRot, opacity: s.opacity,
+          style: { transition: "opacity .25s" } }, [
+        txt({ key: "n", x: s.lx, y: s.ly, textAnchor: "middle", dominantBaseline: "middle",
+          fill: "#f0e0bd", style: { fontSize: "19px", letterSpacing: ".24em", fontWeight: 500, paintOrder: "stroke", stroke: "rgba(22,14,44,.5)", strokeWidth: "4px", strokeLinejoin: "round" } }, s.name)
+      ]))
+    ]);
+    const houseNumLabels = el("g", { style: { pointerEvents: "none" } }, houseNums.map((n, i) =>
+      txt({ key: i, x: n.x, y: n.y, textAnchor: "middle", dominantBaseline: "middle", fill: "rgba(206,193,232,.68)", style: { fontSize: "19px" } }, n.n)));
+    const axisLabels = el("g", { style: { pointerEvents: "none" } }, axes.map((a, i) =>
+      txt({ key: i, x: a.tx, y: a.ty, textAnchor: a.anchor, dominantBaseline: "middle", fill: "#f7e2ac", style: { fontSize: "21px", letterSpacing: ".14em", fontWeight: 600 } }, a.label)));
+    const planetLabels = el("g", { style: { pointerEvents: "none" } }, planets.reduce((acc, p, i) => {
+      if (p.retroMark) acc.push(txt({ key: "r" + i, x: p.x, y: p.ry, textAnchor: "middle", fill: "#a05840", style: { fontSize: "14px", letterSpacing: ".05em" } }, p.retroMark));
+      return acc;
+    }, []));
+
+    return {
+      signs, stars, houseLines, houseNums, axes, planets, aspectLines,
+      signLabels, houseNumLabels, axisLabels, planetLabels,
+      aspectOpacity: aspectsOn ? 1 : 0,
+      aspectToggleLabel: aspectsOn ? "隐藏相位线" : "显示相位线",
+      toggleAspects: () => this.setState({ aspectsOn: !aspectsOn, hoverAsp: null }),
+      wheelStyle: this.props.rotateEntrance === false
+        ? {}
+        : { transform: this.state.mounted ? "rotate(0deg)" : "rotate(-12deg)",
+            transition: "transform 1.6s cubic-bezier(.22,.7,.2,1)" },
+      moonStyle: { animation: "twinkle 7s ease-in-out infinite" },
+      crescent: "M500 456a44 44 0 1 0 0 88 34 34 0 1 1 0-88z",
+      hasTip: !!(this.state.hoverAsp !== null || this.state.hoverPlanet) && openSign === null,
+      tipTitle: this.state.hoverAsp !== null ? this.state.hoverAspText : this.state.hoverPlanet,
+      tipBody: this.state.hoverAsp !== null ? this.state.hoverAspSub : this.state.hoverPlanetSub,
+      hasSignCard: openSign !== null,
+      signCardTitle, signCardMeta, signCardBody, signCardArt,
+      signCardArtBg: signCardArt ? 'url("' + signCardArt + '")' : "none",
+      closeSignCard: () => this.setState({ openSign: null }),
+      legend: ORDER.map(k => ({
+        bg: 'url("' + (art[k] || ART[k]) + '")', name: BODIES[k].name, kw: BODIES[k].kw,
+        scale: "scale(" + (0.6 / (FRAC[k] ? FRAC[k].f : 0.7)).toFixed(3) + ")"
+      }))
+    };
+  }
+
+  houseOf(lon, cusps) {
+    for (let i = 0; i < 12; i++) {
+      const a = cusps[i], b = cusps[(i + 1) % 12];
+      const span = n360(b - a) || 30;
+      if (n360(lon - a) < span) return i + 1;
+    }
+    return 1;
+  }
+}
+</script>
+</body>
+</html>

@@ -1971,7 +1971,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   function logout() {
     saveSession(null);
     // 同一台机器换人登入时,不能留下上一位的名字 / 快照
-    ["inner_sky_profile_v1", "inner_sky_userid_v1", "inner_sky_wheel_v1", "inner_sky_favs_v1",
+    ["inner_sky_profile_v1", "inner_sky_userid_v1", "inner_sky_wheel_v1", "inner_sky_chart_v1", "inner_sky_favs_v1",
      "inner_sky_lifemap_v1", "inner_sky_read_v1", "inner_sky_thread_state_v1",
      "inner_sky_thread_seen_v1", "inner_sky_next_v1"]
       .forEach(function (k) { try { localStorage.removeItem(k); } catch (e) { } });
@@ -3151,6 +3151,21 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       svg.setAttribute("class", "wheel-svg");
       var out = svg.outerHTML;
       if (out.length < 400000) localStorage.setItem("inner_sky_wheel_v1", out);
+    } catch (e) { }
+    // 落地页「我的星空」用的精简资料(同一份 curResult,不重新计算)
+    try {
+      if (curResult) {
+        localStorage.setItem("inner_sky_chart_v1", JSON.stringify({
+          ang: { asc: curResult.ang.asc, mc: curResult.ang.mc },
+          cusps: curResult.cusps,
+          planets: curResult.planets.map(function (p) {
+            return { key: p.key, lon: p.lon, retro: !!p.retro };
+          }),
+          aspects: (curResult.aspects || []).map(function (a) {
+            return { a: a.a, b: a.b, type: a.type, name: a.name, orb: a.orb };
+          })
+        }));
+      }
     } catch (e) { }
     try {
       var c = activeChart();
