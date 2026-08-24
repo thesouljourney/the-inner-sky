@@ -108,7 +108,37 @@
       if (it.nName !== it.n) put(it.nName, it);
       for (var c = 0; c < it.cjk.length; c++) put(norm(it.cjk[c]), it);
     }
-    return { data: d, items: items, buckets: buckets };
+
+    /* 地区 / 国家索引:让使用者打「柔佛」或「Johor」、「马来西亚」或
+       「Malaysia」都能带出该地区的城市,而不只是打城市名才找得到。
+       每一组按人口排序,搜索时取前几名。 */
+    var areas = new Map();          // 正规化名 → { label, cities: [] }
+    function area(key, label) {
+      if (!key) return null;
+      if (!areas.has(key)) areas.set(key, { label: label, cities: [] });
+      return areas.get(key);
+    }
+    for (var k = 0; k < items.length; k++) {
+      var t = items[k];
+      var names = [];
+      if (t.a1) {
+        var r = d.regions[t.cc + "|" + t.a1];
+        if (r) { var rr = Array.isArray(r) ? r : [r, null]; names.push(rr[0], rr[1]); }
+      }
+      var co = d.countries[t.cc];
+      if (co) names.push(co[0], co[1]);
+      names.push(t.cc);
+      for (var q = 0; q < names.length; q++) {
+        if (!names[q]) continue;
+        var a = area(norm(names[q]), names[q]);
+        if (a) a.cities.push(t);
+      }
+    }
+    areas.forEach(function (a) {
+      a.cities.sort(function (x, y) { return y.pop - x.pop; });
+      if (a.cities.length > 400) a.cities.length = 400;
+    });
+    return { data: d, items: items, buckets: buckets, areas: areas };
   }
 
   /* ---------- 显示名 ---------- */
@@ -117,25 +147,54 @@
     if (!c) return cc;
     return (lang === "zh" ? c[1] : c[0]) || c[0];
   }
-  function regionName(cc, a1) {
-    if (!a1) return null;
-    return DATA.regions[cc + "|" + a1] || null;
+  /* 地区名存成 [英文, 中文],中文可能是 null */
+  function regionPair(cc, a1) {
+    if (!a1) return [null, null];
+    var r = DATA.regions[cc + "|" + a1];
+    if (!r) return [null, null];
+    return Array.isArray(r) ? [r[0] || null, r[1] || null] : [r, null];
+  }
+  function regionName(cc, a1, lang) {
+    var p = regionPair(cc, a1);
+    return (lang === "zh" ? (p[1] || p[0]) : p[0]) || null;
+  }
+
+  /* 组一行地点名:城市, 地区, 国家。
+     地区名与城市名或国家名重复时不重复列(例:Tampines, 新加坡, 新加坡)。 */
+  function joinLabel(city, region, country, sep) {
+    var parts = [city];
+    if (region && norm(region) !== norm(city) && norm(region) !== norm(country)) parts.push(region);
+    if (country && norm(country) !== norm(city)) parts.push(country);
+    return parts.join(sep);
   }
 
   function toPlace(it, lang) {
-    var region = regionName(it.cc, it.a1);
-    var country = countryName(it.cc, lang);
-    var parts = [it.name];
-    // 地区名和城市名或国家名重复时不重复列(例:Tampines, 新加坡, 新加坡)
-    if (region && norm(region) !== norm(it.name) && norm(region) !== norm(country)) parts.push(region);
-    parts.push(country);
+    var pair = regionPair(it.cc, it.a1);
+    var countryEn = countryName(it.cc, "en");
+    var countryZh = countryName(it.cc, "zh");
+    var cityZh = it.cjk.length ? it.cjk[0] : null;
+
+    var labelEn = joinLabel(it.name, pair[0], countryEn, ", ");
+    // 中文那一行:有中文就用中文,没有就沿用原名,让两行对得起来
+    var labelZh = joinLabel(cityZh || it.name, pair[1] || pair[0], countryZh, "，");
+    // 下拉选单一行只能放一段文字,所以中英并列成一行
+    var display = (norm(labelZh) === norm(labelEn)) ? labelEn : (labelEn + " · " + labelZh);
+
     return {
       city: it.name,
-      region: region,
-      country: country,
+      cityZh: cityZh,
+      region: regionName(it.cc, it.a1, lang),
+      regionEn: pair[0],
+      regionZh: pair[1],
+      country: countryName(it.cc, lang),
+      countryEn: countryEn,
+      countryZh: countryZh,
       countryCode: it.cc,
       admin1: it.a1 || null,
-      label: parts.join(", "),
+      label: lang === "zh" ? labelZh : labelEn,
+      labelEn: labelEn,
+      labelZh: labelZh,
+      display: display,
       lat: it.lat,
       lon: it.lon,
       tzId: it.tz,
@@ -166,6 +225,22 @@
       INDEX.buckets.forEach(function (arr, k) { if (k.charAt(0) === head) pool = pool.concat(arr); });
     }
 
+    /* 整串查询若本身就是地区名或国家名(柔佛 / Johor / 马来西亚 / Malaysia),
+       该地区的城市一并带出来。名字命中与地区命中取较高分,免得
+       打「Johor」时新山反而排在同州小镇后面。 */
+    var whole = norm(raw);
+    var areaHit = INDEX.areas.get(whole);
+    var areaScore = areaHit ? 3 : 1.5;
+    if (!areaHit) {
+      var cand = null, nCand = 0;      // 前缀唯一命中也算(打「柔」带出柔佛)
+      INDEX.areas.forEach(function (a, key) {
+        if (key.indexOf(whole) === 0) { cand = a; nCand++; }
+      });
+      if (nCand === 1) areaHit = cand;
+    }
+    var areaSet = new Set();
+    if (areaHit) for (var ai = 0; ai < areaHit.cities.length; ai++) areaSet.add(areaHit.cities[ai].i);
+
     var seen = new Set();
     var hits = [];
     for (var i = 0; i < pool.length; i++) {
@@ -180,6 +255,8 @@
         else if (key.indexOf(head) === 0) { score = Math.max(score, 2); }
         else if (key.indexOf(head) > 0) { score = Math.max(score, 1); }
       }
+      // 地区命中只用来「抬高」已经靠名字命中的城市,不会让不相干的城市混进来
+      if (score >= 0 && areaSet.has(it.i)) score = Math.max(score, areaScore);
       if (score < 0) continue;
 
       // 第二段(国家 / 地区)必须也对得上
@@ -192,6 +269,18 @@
       }
       seen.add(it.i);
       hits.push({ it: it, score: score });
+    }
+
+    // 该地区人口最多的城市补进来(照人口序,取 limit 的两倍当候选)
+    if (areaHit) {
+      var quota = limit * 2;
+      for (var m = 0; m < areaHit.cities.length && quota > 0; m++) {
+        var ci = areaHit.cities[m];
+        if (seen.has(ci.i)) continue;
+        seen.add(ci.i);
+        hits.push({ it: ci, score: areaScore });
+        quota--;
+      }
     }
 
     hits.sort(function (a, b) {
