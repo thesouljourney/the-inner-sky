@@ -4,6 +4,7 @@
    { ang:{asc,mc}, cusps:[12], planets:[{key,lon,retro}], aspects:[{a,b,type,name,orb}] }
    没有数据时显示引导，不用示例盘冒充使用者资料。 */
 (function () {
+  window.INNER_SKY_CHART_VERSION = "v3-house-clamp";
   var SIGNS = [
     { name: "白羊座", elem: "火", mode: "开创", ruler: "火星", art: "assets/signs/sm/aries.webp" },
     { name: "金牛座", elem: "土", mode: "固定", ruler: "金星", art: "assets/signs/sm/taurus.webp" },
@@ -92,6 +93,10 @@
     return 12;
   }
 
+  if (window.console && (chart.planets || []).some(function (p) { return p.house == null; })) {
+    console.warn("[inner-sky] 快照缺少 house 字段(旧数据),已按 cusps 现算宫位;重新生成星盘可写入新格式");
+  }
+
   var state = { hoverAsp: null, aspectsOn: true, openSign: null };
 
   /* ---- 星座扇形 ---- */
@@ -141,38 +146,52 @@
   /* ---- 行星（防重叠展开） ---- */
   var raw = (chart.planets || []).filter(function (p) { return BODIES[p.key]; });
   var withAng = raw.map(function (p, i) {
-    return { i: i, key: p.key, lon: n360(p.lon), retro: !!p.retro, theta: n360(ang(p.lon)) };
+    var h = (p.house >= 1 && p.house <= 12) ? p.house : houseOf(p.lon);   // 以应用算出的宫位为准
+    return { i: i, key: p.key, lon: n360(p.lon), retro: !!p.retro, house: h, theta: n360(ang(p.lon)) };
   });
-  var SEP = 25;
-  var sorted = withAng.slice().sort(function (a, b) { return a.theta - b.theta; });
-  for (var pass = 0; pass < 3; pass++) {
-    for (var k = 1; k < sorted.length; k++) {
-      if (sorted[k].theta - sorted[k - 1].theta < SEP) sorted[k].theta = sorted[k - 1].theta + SEP;
+  /* 展开只在「本宫」内进行：行星落第几宫，就必须画在第几宫的扇形里 */
+  var SEP = 8, angByIdx = {};
+  var byHouse = {};
+  withAng.forEach(function (p) {
+    var h = p.house - 1;
+    (byHouse[h] || (byHouse[h] = [])).push(p);
+  });
+  Object.keys(byHouse).forEach(function (hk) {
+    var h = +hk, grp = byHouse[h];
+    var span = n360(cusps[(h + 1) % 12] - cusps[h]) || 30;
+    var a0 = ang(cusps[h]), m = Math.min(4, span / 6);
+    var lo = a0 + m, hi = a0 + span - m, room = hi - lo;
+    grp.sort(function (x, y) { return n360(x.lon - cusps[h]) - n360(y.lon - cusps[h]); });
+    var n = grp.length;
+    if (n === 1) { angByIdx[grp[0].i] = a0 + n360(grp[0].lon - cusps[h]); return; }
+    if ((n - 1) * SEP >= room) {
+      grp.forEach(function (p, k) { angByIdx[p.i] = lo + room * (k / (n - 1)); });
+      return;
     }
-    if (sorted.length > 1) {
-      var wrap = (sorted[0].theta + 360) - sorted[sorted.length - 1].theta;
-      if (wrap < SEP) {
-        var push = (SEP - wrap) / 2;
-        sorted[0].theta += push;
-        sorted[sorted.length - 1].theta -= push;
-      }
+    var t = grp.map(function (p) {
+      return Math.min(hi, Math.max(lo, a0 + n360(p.lon - cusps[h])));
+    });
+    for (var pass = 0; pass < 4; pass++) {
+      for (var k = 1; k < n; k++) if (t[k] - t[k - 1] < SEP) t[k] = t[k - 1] + SEP;
+      var over = t[n - 1] - hi;
+      if (over > 0) for (var k2 = 0; k2 < n; k2++) t[k2] = Math.max(lo, t[k2] - over);
     }
-  }
-  var over = sorted.length ? (sorted[sorted.length - 1].theta - sorted[0].theta) - 360 : 0;
-  if (over > 0) { var sh = over / (sorted.length - 1); sorted.forEach(function (s, i) { s.theta -= sh * i; }); }
-  var angByIdx = {};
-  sorted.forEach(function (s) { angByIdx[s.i] = s.theta; });
+    grp.forEach(function (p, k) { angByIdx[p.i] = t[k]; });
+  });
 
   var planets = withAng.map(function (p) {
     var b = BODIES[p.key], q = pt(R_PLANET, angByIdx[p.i]);
     var fr = FRAC[p.key] || { f: .7, cx: .5, cy: .5 }, size = 40 / fr.f;
     var signIdx = Math.floor(p.lon / 30);
     return {
-      i: p.i, art: ART[p.key], size: size,
+      i: p.i, art: ART[p.key], size: size, house: p.house,
+      tx1: pt(R_IN - 4, ang(p.lon))[0], ty1: pt(R_IN - 4, ang(p.lon))[1],
+      tx2: pt(R_PLANET + 26, ang(p.lon))[0], ty2: pt(R_PLANET + 26, ang(p.lon))[1],
+      tx3: pt(R_PLANET + 26, angByIdx[p.i])[0], ty3: pt(R_PLANET + 26, angByIdx[p.i])[1],
       ax: q[0] - size / 2 + (0.5 - fr.cx) * size, ay: q[1] - size / 2 + (0.5 - fr.cy) * size,
       x: q[0], y: q[1], retro: p.retro,
       tipT: b.name + " · " + SIGNS[signIdx].name + " " + Math.floor(p.lon % 30) + "°",
-      tipB: "第 " + houseOf(p.lon) + " 宫 · " + b.kw + (p.retro ? " · 逆行" : "")
+      tipB: "第 " + p.house + " 宫 · " + b.kw + (p.retro ? " · 逆行" : "")
     };
   });
 
@@ -253,6 +272,7 @@
     o.push('<path d="M500 456a44 44 0 1 0 0 88 34 34 0 1 1 0-88z" fill="#f2e7d0" opacity=".45"></path></g>');
 
     planets.forEach(function (p) {
+      o.push('<path d="M' + f2(p.tx1) + ' ' + f2(p.ty1) + 'L' + f2(p.tx2) + ' ' + f2(p.ty2) + 'L' + f2(p.tx3) + ' ' + f2(p.ty3) + '" fill="none" stroke="rgba(232,203,142,.5)" stroke-width="1.2" style="pointer-events:none"></path>');
       o.push('<image class="isky-planet" data-planet="' + p.i + '" href="' + p.art + '" x="' + f2(p.ax) + '" y="' + f2(p.ay) + '" width="' + f2(p.size) + '" height="' + f2(p.size) + '" preserveAspectRatio="xMidYMid meet" style="cursor:pointer"></image>');
       if (p.retro) o.push('<text x="' + f2(p.x) + '" y="' + f2(p.y + 44) + '" text-anchor="middle" fill="#f7e2ac" style="font-size:26px;pointer-events:none">R</text>');
     });
