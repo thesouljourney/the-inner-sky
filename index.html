@@ -563,6 +563,7 @@ footer .fine { font-size: 12.5px; display: flex; align-items: center; gap: 20px;
 .seal-img { width: 74px; height: auto; opacity: .9; }
 @media (max-width: 640px) { footer .wrap { flex-direction: column; gap: 18px; text-align: center; } }
 </style>
+<link rel="stylesheet" href="assets/inner-sky-chart.css">
 </head>
 <body>
 
@@ -656,6 +657,7 @@ var APP_URL = "app.html";
 
 <section class="preview" id="sky" aria-label="你的空间">
   <div class="wrap preview-grid">
+
     <div class="card">
       <div class="section-label" id="railLabel">继续你的探索</div>
       <div class="rail" id="chapterRail"></div>
@@ -666,9 +668,24 @@ var APP_URL = "app.html";
     </div>
 
     <div class="side">
-      <div class="card sky-card">
-        <h4>我的星空 <a class="link" href="app.html#/my-sky" data-app-hash="#/my-sky">查看全部 →</a></h4>
-        <div class="wheel" id="wheelSlot"></div>
+      <div class="card isky-card">
+        <div class="isky-bg" aria-hidden="true"></div>
+      <div class="isky-scrim" aria-hidden="true"></div>
+        <div class="isky-inner">
+          <div class="isky-head">
+            <div>
+              <h4>我的星空 <span class="st" aria-hidden="true">✦</span></h4>
+              <p>你的星盘，是宇宙写给你的独特故事。<br>每一颗星，都在提醒你真实的自己。</p>
+            </div>
+            <div class="isky-actions">
+              <button class="isky-btn" type="button" id="iskyToggle">隐藏相位线</button>
+              <a class="isky-more" href="app.html#/my-sky" data-app-hash="#/my-sky">查看全部 <span aria-hidden="true">→</span></a>
+            </div>
+          </div>
+          <div class="isky-wheel" id="iskyWheel" data-app="app.html"></div>
+          <div class="isky-legend" id="iskyLegend"></div>
+          <p class="isky-foot" id="iskyFoot">✦ 星盘是能量与可能性的地图，真正的答案，始终在你心中。</p>
+        </div>
       </div>
       <div class="card" id="favs">
         <h4>我的收藏 <a class="link" href="app.html#/favorites" data-app-hash="#/favorites">查看全部 →</a></h4>
@@ -864,7 +881,9 @@ function appHref(hash) { return APP_URL + (hash || ""); }
 /* ---------- 我的星空:显示使用者本人的星盘 ---------- */
 /* SVG 由应用写入(与应用内同一份 curResult),落地页只读展示,不重新计算 */
 (function () {
+  /* 小卡片沿用应用写入的星盘快照;整宽 section 由 assets/inner-sky-chart.js 渲染 */
   var slot = document.getElementById("wheelSlot");
+  if (!slot) return;
   if (WHEEL && WHEEL.indexOf("<svg") === 0) {
     slot.innerHTML = WHEEL;
   } else {
@@ -1035,5 +1054,6 @@ document.querySelectorAll("a[data-app-hash]").forEach(function (a) {
   }
 })();
 </script>
+<script src="assets/inner-sky-chart.js"></script>
 </body>
 </html>
