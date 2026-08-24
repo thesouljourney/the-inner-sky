@@ -1,0 +1,20 @@
+{
+  "name": "the-inner-sky",
+  "private": true,
+  "version": "1.0.0",
+  "description": "The Inner Sky — 出生星盘计算与解读",
+  "scripts": {
+    "test": "node tests/run-tests.js",
+    "gen:ephem": "node tools/gen-ephem-minor.js",
+    "gen:places": "node tools/gen-places.js",
+    "gen:reference": "python3 tools/gen-reference.py"
+  },
+  "devDependencies": {
+    "all-the-cities": "^3.1.0",
+    "astronomy-engine": "^2.1.19",
+    "cities-with-1000": "^1.0.4",
+    "city-timezones": "^1.3.4",
+    "i18n-iso-countries": "^7.14.0",
+    "tz-lookup": "^6.1.25"
+  }
+}
