@@ -227,6 +227,14 @@ function testPlaces() {
     checkEq("[place] California 先给加州的城市",
       (Places.search("California", { lang: "en", limit: 1 })[0] || {}).regionEn, "California");
 
+    // 国家名用通用写法,不用 ISO 官方长名
+    checkEq("[place] 中国不用官方长名",
+      (Places.search("beijing", { lang: "en", limit: 1 })[0] || {}).countryEn, "China");
+    // 自订表里的湖州属于中国,不能被时区猜成马来西亚
+    const hz = Places.search("湖州", { lang: "zh", limit: 1 })[0] || {};
+    checkEq("[place] 湖州国家正确", hz.countryCode, "CN");
+    checkEq("[place] 湖州时区正确", hz.tzId, "Asia/Shanghai");
+
     checkEq("[place] 无资料回报 unresolved", Places.resolveLegacy({}).status, "unresolved");
     checkEq("[place] 校验缺时区", Places.validate({ lat: 1, lon: 2, city: "x" }).missing.join(), "timezone");
   });
