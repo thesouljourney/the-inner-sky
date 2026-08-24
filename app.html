@@ -822,35 +822,37 @@
       <div class="row2">
         <div class="field">
           <label data-i18n="fDate">出生日期</label>
-          <input id="f_date" type="date" value="1990-01-01">
+          <input id="f_date" type="date">
         </div>
         <div class="field">
           <label data-i18n="fTime">出生时间</label>
-          <input id="f_time" type="time" value="12:00">
+          <input id="f_time" type="time">
         </div>
       </div>
       <div class="field">
-        <label data-i18n="fPlace">出生地区(可搜索)</label>
-        <input id="f_citysearch" data-i18n-ph="fPlacePh" placeholder="输入中文或英文搜索,如 巴生 / Klang" style="margin-bottom:6px">
-        <select id="f_city">
-          <option value="">— 选择地区 —</option>
+        <label data-i18n="fPlace">出生地点(全球搜索)</label>
+        <input id="f_citysearch" data-i18n-ph="fPlacePh" placeholder="输入城市名,如 Batu Pahat / 吉隆坡 / Prague" style="margin-bottom:6px">
+        <select id="f_city" size="1">
+          <option value="">— 先输入城市名 —</option>
         </select>
+        <span class="hint" id="f_placeinfo"></span>
       </div>
+      <!-- 经纬度与时区由选到的地点带出来,不让使用者手填,也不预设任何座标 -->
       <div class="row2" style="display:none">
         <div class="field">
           <label data-i18n="fLat">纬度 °(北+南−)</label>
-          <input id="f_lat" type="number" step="0.0001" value="31.2304" class="mono">
+          <input id="f_lat" type="number" step="0.0001" class="mono">
         </div>
         <div class="field">
           <label data-i18n="fLon">经度 °(东+西−)</label>
-          <input id="f_lon" type="number" step="0.0001" value="121.4737" class="mono">
+          <input id="f_lon" type="number" step="0.0001" class="mono">
         </div>
       </div>
       <div style="display:flex;gap:8px;margin-top:4px">
         <button class="btn" id="saveBtn" data-i18n="save" style="width:auto;padding:9px 20px;font-size:13.5px">保存并绘制</button>
         <button class="btn ghost" id="clearBtn" data-i18n="clear" style="width:auto;padding:9px 16px;font-size:13.5px">清空</button>
       </div>
-      <p class="hint" data-i18n="formHint">资料安全存放在你的云端账号,只有你能看到。时区固定为马来西亚/新加坡时间(UTC+8)。</p>
+      <p class="hint" data-i18n="formHint">资料安全存放在你的云端账号,只有你能看到。时区依出生地点与出生当天的历史规则自动判定。</p>
       </div>
     </div>
   </aside>
@@ -1380,437 +1382,19 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
 })();
 
 </script>
-<script>
-/* ============================================================
-   AstroCore 计算核心
-   依赖:内联 Astronomy Engine (window.Astronomy)
-   输出:window.AstroCore
-   约定:所有黄经均为「当日真春分点」回归黄道度数(0~360)
-   ============================================================ */
-(function () {
-  "use strict";
-  const A = window.Astronomy;
-  const D2R = Math.PI / 180, R2D = 180 / Math.PI;
-
-  // ---------- 基础工具 ----------
-  function n360(x) { x = x % 360; return x < 0 ? x + 360 : x; }
-  function diff180(x) { x = n360(x); return x > 180 ? x - 360 : x; } // -180..180
-  function fmtDeg(degInSign) {
-    const d = Math.floor(degInSign);
-    const m = Math.round((degInSign - d) * 60);
-    return (m === 60) ? (d + 1) + "°00′" : d + "°" + String(m).padStart(2, "0") + "′";
-  }
-
-  // ---------- 十二星座 ----------
-  const SIGNS = [
-    { name: "白羊座", glyph: "Aries",       elem: "火", mode: "开创", ruler: "火星",   kw: "冲劲 · 直接 · 开拓" },
-    { name: "金牛座", glyph: "Taurus",      elem: "土", mode: "固定", ruler: "金星",   kw: "稳定 · 感官 · 累积" },
-    { name: "双子座", glyph: "Gemini",      elem: "风", mode: "变动", ruler: "水星",   kw: "好奇 · 沟通 · 多线" },
-    { name: "巨蟹座", glyph: "Cancer",      elem: "水", mode: "开创", ruler: "月亮",   kw: "滋养 · 保护 · 念旧" },
-    { name: "狮子座", glyph: "Leo",         elem: "火", mode: "固定", ruler: "太阳",   kw: "自信 · 表现 · 慷慨" },
-    { name: "处女座", glyph: "Virgo",       elem: "土", mode: "变动", ruler: "水星",   kw: "细致 · 分析 · 服务" },
-    { name: "天秤座", glyph: "Libra",       elem: "风", mode: "开创", ruler: "金星",   kw: "平衡 · 关系 · 审美" },
-    { name: "天蝎座", glyph: "Scorpio",     elem: "水", mode: "固定", ruler: "冥王星", kw: "深度 · 洞察 · 转化" },
-    { name: "射手座", glyph: "Sagittarius", elem: "火", mode: "变动", ruler: "木星",   kw: "远方 · 信念 · 自由" },
-    { name: "摩羯座", glyph: "Capricorn",   elem: "土", mode: "开创", ruler: "土星",   kw: "责任 · 目标 · 攀登" },
-    { name: "水瓶座", glyph: "Aquarius",    elem: "风", mode: "固定", ruler: "天王星", kw: "独立 · 革新 · 群体" },
-    { name: "双鱼座", glyph: "Pisces",      elem: "水", mode: "变动", ruler: "海王星", kw: "共感 · 想象 · 消融" }
-  ];
-
-  // ---------- 十大主星 ----------
-  const BODIES = [
-    { key: "Sun",     name: "太阳",   glyphKey: "Sun",     body: A.Body.Sun,     kind: "光体", kw: "自我 · 生命力 · 目标" },
-    { key: "Moon",    name: "月亮",   glyphKey: "Moon",    body: A.Body.Moon,    kind: "光体", kw: "情绪 · 需求 · 安全感" },
-    { key: "Mercury", name: "水星",   glyphKey: "Mercury", body: A.Body.Mercury, kind: "个人", kw: "思维 · 沟通 · 学习" },
-    { key: "Venus",   name: "金星",   glyphKey: "Venus",   body: A.Body.Venus,   kind: "个人", kw: "爱 · 价值 · 审美" },
-    { key: "Mars",    name: "火星",   glyphKey: "Mars",    body: A.Body.Mars,    kind: "个人", kw: "行动 · 欲望 · 竞争" },
-    { key: "Jupiter", name: "木星",   glyphKey: "Jupiter", body: A.Body.Jupiter, kind: "社会", kw: "扩张 · 机遇 · 信念" },
-    { key: "Saturn",  name: "土星",   glyphKey: "Saturn",  body: A.Body.Saturn,  kind: "社会", kw: "限制 · 责任 · 结构" },
-    { key: "Uranus",  name: "天王星", glyphKey: "Uranus",  body: A.Body.Uranus,  kind: "世代", kw: "突变 · 觉醒 · 独立" },
-    { key: "Neptune", name: "海王星", glyphKey: "Neptune", body: A.Body.Neptune, kind: "世代", kw: "梦境 · 消融 · 灵性" },
-    { key: "Pluto",   name: "冥王星", glyphKey: "Pluto",   body: A.Body.Pluto,   kind: "世代", kw: "深层 · 权力 · 重生" }
-  ];
-
-  // ---------- 相位 ----------
-  const ASPECTS = [
-    { key: "con", name: "合相", angle: 0,   orb: 8, glyph: "☌", tone: "中性偏强", color: "#8a6420" },
-    { key: "sex", name: "六合", angle: 60,  orb: 4, glyph: "⚹", tone: "和谐",     color: "#5f7d3c" },
-    { key: "squ", name: "刑相", angle: 90,  orb: 6, glyph: "□", tone: "张力",     color: "#c0532a" },
-    { key: "tri", name: "拱相", angle: 120, orb: 6, glyph: "△", tone: "和谐",     color: "#3f7fa0" },
-    { key: "opp", name: "冲相", angle: 180, orb: 8, glyph: "☍", tone: "张力",     color: "#c0532a" }
-  ];
-
-  // ---------- 黄经 → 星座 / 宫位 ----------
-  function lonToSign(lon) {
-    lon = n360(lon);
-    const idx = Math.floor(lon / 30);
-    return { idx, sign: SIGNS[idx].name, deg: lon - idx * 30 };
-  }
-  function lonToHouse(lon, cusps) {
-    lon = n360(lon);
-    for (let i = 0; i < 12; i++) {
-      const a = cusps[i], b = cusps[(i + 1) % 12];
-      const span = n360(b - a);
-      if (n360(lon - a) < (span === 0 ? 360 : span)) return i + 1;
-    }
-    return 12;
-  }
-
-  // ---------- 行星黄经(当日回归黄道) ----------
-  function bodyLon(body, date) {
-    const v = A.GeoVector(body, date, true);
-    return n360(A.Ecliptic(v).elon);
-  }
-  function bodySpeed(body, date) {
-    const dt = 0.25; // ±6 小时
-    const t = A.MakeTime(date);
-    const l1 = bodyLon(body, t.AddDays(-dt));
-    const l2 = bodyLon(body, t.AddDays(+dt));
-    return diff180(l2 - l1) / (2 * dt); // 度/日
-  }
-
-  // ---------- 上升 / 天顶 ----------
-  function computeAngles(date, lat, lonEast) {
-    const t = A.MakeTime(date);
-    const gastH = A.SiderealTime(t);              // 格林尼治视恒星时(小时)
-    const armc = n360(gastH * 15 + lonEast);      // 当地恒星时 = RAMC(度)
-    const epsDeg = A.e_tilt(t).tobl;              // 真黄赤交角(度)
-    const eps = epsDeg * D2R, ramc = armc * D2R, phi = lat * D2R;
-    // MC:与 RAMC 同象限
-    const mc = n360(Math.atan2(Math.sin(ramc), Math.cos(ramc) * Math.cos(eps)) * R2D);
-    // ASC
-    const asc = n360(Math.atan2(
-      Math.cos(ramc),
-      -(Math.sin(ramc) * Math.cos(eps) + Math.tan(phi) * Math.sin(eps))
-    ) * R2D);
-    return { asc, mc, armc, eps, epsDeg };
-  }
-
-  // ---------- Placidus 宫位 ----------
-  // 黄道上一点(黄纬0)的赤经/赤纬
-  function raDecOfEcl(lonDeg, eps) {
-    const L = lonDeg * D2R;
-    const ra = n360(Math.atan2(Math.sin(L) * Math.cos(eps), Math.cos(L)) * R2D);
-    const dec = Math.asin(Math.sin(eps) * Math.sin(L));
-    return { ra, dec };
-  }
-  function placidusCusps(ang, lat) {
-    const { asc, mc, armc, eps } = ang;
-    const phi = lat * D2R;
-    // x(λ) = n360(RA(λ) − RAMC);目标:x = 目标弧
-    function xOf(lam) { return n360(raDecOfEcl(lam, eps).ra - armc); }
-    function target(lam, which) {
-      const dec = raDecOfEcl(lam, eps).dec;
-      let c = -Math.tan(phi) * Math.tan(dec);
-      c = Math.max(-1, Math.min(1, c));
-      const sad = Math.acos(c) * R2D;   // 昼半弧
-      const san = 180 - sad;            // 夜半弧
-      switch (which) {
-        case 11: return sad / 3;
-        case 12: return 2 * sad / 3;
-        case 2:  return sad + san / 3;
-        case 3:  return sad + 2 * san / 3;
-      }
-    }
-    // 在 (lo,hi) 黄经区间内求 g(λ)=x−target 的零点(扫描+二分)
-    function solve(which, lo, hi) {
-      const span = n360(hi - lo);
-      const N = 96;
-      let prevLam = lo, prevG = g(lo);
-      for (let i = 1; i <= N; i++) {
-        const lam = lo + span * i / N;
-        const gi = g(lam);
-        if (prevG === 0) return n360(prevLam);
-        if (prevG < 0 !== gi < 0 && Math.abs(prevG - gi) < 180) {
-          let a = prevLam, b = lam, ga = prevG;
-          for (let k = 0; k < 60; k++) {
-            const m = (a + b) / 2, gm = g(m);
-            if (ga < 0 !== gm < 0) { b = m; } else { a = m; ga = gm; }
-          }
-          return n360((a + b) / 2);
-        }
-        prevLam = lam; prevG = gi;
-      }
-      // 兜底:等宫近似
-      return n360(mc + (which === 11 ? 30 : which === 12 ? 60 : which === 2 ? 120 : 150));
-      function g(lam) { return diff180(xOf(lam) - target(lam, which)); }
-    }
-    const c11 = solve(11, mc + 1e-4, asc + (n360(asc - mc) > 1 ? 0 : 360) - 1e-4);
-    const c12 = solve(12, mc + 1e-4, asc - 1e-4 + (n360(asc - mc) > 1 ? 0 : 360));
-    const c2 = solve(2, asc + 1e-4, mc + 180 - 1e-4 + (n360(mc + 180 - asc) > 1 ? 0 : 360));
-    const c3 = solve(3, asc + 1e-4, mc + 180 - 1e-4 + (n360(mc + 180 - asc) > 1 ? 0 : 360));
-    const cusps = new Array(12);
-    cusps[0] = asc; cusps[9] = mc;
-    cusps[10] = c11; cusps[11] = c12;
-    cusps[1] = c2; cusps[2] = c3;
-    cusps[3] = n360(mc + 180); cusps[4] = n360(c11 + 180); cusps[5] = n360(c12 + 180);
-    cusps[6] = n360(asc + 180); cusps[7] = n360(c2 + 180); cusps[8] = n360(c3 + 180);
-    return cusps;
-  }
-  function wholeSignCusps(asc) {
-    const start = Math.floor(n360(asc) / 30) * 30;
-    const cusps = [];
-    for (let i = 0; i < 12; i++) cusps.push(n360(start + i * 30));
-    return cusps;
-  }
-
-  // ---------- 相位计算(仅十大主星) ----------
-  function computeAspects(planets) {
-    const out = [];
-    for (let i = 0; i < planets.length; i++) {
-      for (let j = i + 1; j < planets.length; j++) {
-        const sep = Math.abs(diff180(planets[i].lon - planets[j].lon));
-        let best = null;
-        for (const asp of ASPECTS) {
-          let orbMax = asp.orb;
-          // 光体加宽 1°
-          if (planets[i].key === "Sun" || planets[i].key === "Moon" ||
-              planets[j].key === "Sun" || planets[j].key === "Moon") orbMax += 1;
-          const orb = Math.abs(sep - asp.angle);
-          if (orb <= orbMax && (!best || orb < best.orb)) {
-            best = { a: i, b: j, type: asp.key, name: asp.name, glyph: asp.glyph, angle: asp.angle, orb, tone: asp.tone, color: asp.color };
-          }
-        }
-        if (best) out.push(best);
-      }
-    }
-    return out;
-  }
-
-  // ---------- 元素/模式统计 ----------
-  function chartStats(planets) {
-    const elems = { 火: 0, 土: 0, 风: 0, 水: 0 };
-    const modes = { 开创: 0, 固定: 0, 变动: 0 };
-    for (const p of planets) {
-      elems[SIGNS[p.signIdx].elem]++;
-      modes[SIGNS[p.signIdx].mode]++;
-    }
-    return { elems, modes };
-  }
-
-  // ---------- 主计算 ----------
-  // input: { date: Date(UTC时刻), lat, lon, system: 'placidus'|'whole' }
-  function computeChart(input) {
-    const { date, lat, lon, system } = input;
-    const ang = computeAngles(date, lat, lon);
-    const cusps = (system === "whole") ? wholeSignCusps(ang.asc) : placidusCusps(ang, lat);
-    const planets = BODIES.map(function (b) {
-      const L = bodyLon(b.body, date);
-      const sp = (b.key === "Sun" || b.key === "Moon") ? Math.abs(bodySpeed(b.body, date)) : bodySpeed(b.body, date);
-      const sg = lonToSign(L);
-      return {
-        key: b.key, name: b.name, glyphKey: b.glyphKey, kind: b.kind, kw: b.kw,
-        lon: L, sign: sg.sign, signIdx: sg.idx, degInSign: sg.deg,
-        house: lonToHouse(L, cusps),
-        speed: sp, retro: sp < 0
-      };
-    });
-    const aspects = computeAspects(planets);
-    const stats = chartStats(planets);
-    return { date, lat, lon, system, ang, cusps, planets, aspects, stats };
-  }
-
-  window.AstroCore = {
-    SIGNS, BODIES, ASPECTS,
-    n360, diff180, fmtDeg, lonToSign, lonToHouse,
-    computeChart, chartStats, computeAngles, bodyLon
-  };
-})();
-
-</script>
-<script>
-/* ============================================================
-   AstroExtra 扩展点计算 + 释义
-   覆盖:四轴 / 南北交点 / 东升点 / 凯龙 / 谷神·智神·婚神·灶神 /
-        莉莉丝(平均黑月) / 爱神星433 / 赛姬星16 /
-        福点·精神点·爱情点·婚姻点·宿命点·日月中点 / 阋神星
-   小天体:JPL 密切轨道根数 + 开普勒二体传播(精度约 ±0.5°,
-   凯龙远离历元年代误差更大)
-   ============================================================ */
-(function () {
-  "use strict";
-  const A = window.Astronomy;
-  const C = window.AstroCore;
-  const D2R = Math.PI / 180, R2D = 180 / Math.PI;
-  const n360 = C.n360, diff180 = C.diff180;
-
-  // ---------- JPL 密切轨道根数(黄道 J2000, 度 / AU) ----------
-  const EPH = {
-    Chiron:  { jd: 2461200.5, a: 13.68426761, e: 0.37976563, i: 6.93057447,  om: 209.29612586, w: 339.28783266, M: 216.71989660 },
-    Ceres:   { jd: 2460000.5, a: 2.76718174,  e: 0.07881745, i: 10.58634327, om: 80.26014869,  w: 73.47046154,  M: 17.21565150 },
-    Pallas:  { jd: 2460000.5, a: 2.76963168,  e: 0.23008437, i: 34.92703056, om: 172.91813271, w: 310.86479847, M: 357.84943176 },
-    Juno:    { jd: 2460000.5, a: 2.67013682,  e: 0.25646772, i: 12.99066193, om: 169.84300686, w: 247.73653371, M: 351.82411888 },
-    Vesta:   { jd: 2460000.5, a: 2.36303821,  e: 0.08875750, i: 7.13925798,  om: 103.75730015, w: 151.59916399, M: 115.13298960 },
-    Eros433: { jd: 2460000.5, a: 1.45812914,  e: 0.22278189, i: 10.82782330, om: 304.28704012, w: 178.92699518, M: 110.77765267 },
-    Psyche16:{ jd: 2460000.5, a: 2.92414501,  e: 0.13411742, i: 3.09684542,  om: 150.03080705, w: 229.32824982, M: 203.81918295 },
-    Eris:    { jd: 2461000.5, a: 67.99638658, e: 0.43696497, i: 43.86893126, om: 36.02717322,  w: 150.73228552, M: 211.44938911 }
-  };
-  // 黄道J2000 → 赤道J2000 旋转常数
-  const CE = 0.9174821430670688, SE = 0.3977769691083922;
-
-  // 小天体地心黄经(当日回归黄道)
-  function astGeoLon(key, dateOrTime) {
-    const el = EPH[key];
-    const t = A.MakeTime(dateOrTime);
-    const jd = t.tt + 2451545.0;
-    const n = 0.9856076686 / Math.pow(el.a, 1.5);            // 平均运动 度/日
-    const Mv = n360(el.M + n * (jd - el.jd)) * D2R;
-    // 开普勒方程
-    let E = Mv + el.e * Math.sin(Mv) * (1 + el.e * Math.cos(Mv));
-    for (let k = 0; k < 30; k++) {
-      const dE = (E - el.e * Math.sin(E) - Mv) / (1 - el.e * Math.cos(E));
-      E -= dE;
-      if (Math.abs(dE) < 1e-12) break;
-    }
-    const xv = el.a * (Math.cos(E) - el.e);
-    const yv = el.a * Math.sqrt(1 - el.e * el.e) * Math.sin(E);
-    const v = Math.atan2(yv, xv), r = Math.hypot(xv, yv);
-    const u = v + el.w * D2R, N = el.om * D2R, inc = el.i * D2R;
-    // 日心黄道 J2000
-    const xh = r * (Math.cos(N) * Math.cos(u) - Math.sin(N) * Math.sin(u) * Math.cos(inc));
-    const yh = r * (Math.sin(N) * Math.cos(u) + Math.cos(N) * Math.sin(u) * Math.cos(inc));
-    const zh = r * Math.sin(u) * Math.sin(inc);
-    // → 赤道 J2000,减地球日心向量 → 地心
-    const ea = A.HelioVector(A.Body.Earth, t);
-    const gx = xh - ea.x;
-    const gy = (yh * CE - zh * SE) - ea.y;
-    const gz = (yh * SE + zh * CE) - ea.z;
-    return n360(A.Ecliptic(new A.Vector(gx, gy, gz, t)).elon);
-  }
-  function astSpeed(key, dateOrTime) {
-    const t = A.MakeTime(dateOrTime);
-    const l1 = astGeoLon(key, t.AddDays(-0.5));
-    const l2 = astGeoLon(key, t.AddDays(+0.5));
-    return diff180(l2 - l1);
-  }
-
-  // ---------- 平交点 / 平莉莉丝(Meeus) ----------
-  function tCent(dateOrTime) { return A.MakeTime(dateOrTime).tt / 36525; }
-  function meanNodeLon(dateOrTime) {
-    const T = tCent(dateOrTime);
-    return n360(125.0445479 - 1934.1362891 * T + 0.0020754 * T * T + T * T * T / 467441 - T * T * T * T / 60616000);
-  }
-  function meanLilithLon(dateOrTime) {
-    const T = tCent(dateOrTime);
-    // 月球平远地点 = 平近地点 + 180
-    return n360(83.3532465 + 4069.0137287 * T - 0.0103200 * T * T - T * T * T / 80053 + T * T * T * T / 18999000 + 180);
-  }
-
-  // ---------- 点位元信息 ----------
-  const META = {
-    ASC:     { name: "上升点",   glyphTxt: "ASC", tier: 2, group: "axes" },
-    DSC:     { name: "下降点",   glyphTxt: "DSC", tier: 2, group: "axes" },
-    MC:      { name: "天顶",     glyphTxt: "MC",  tier: 2, group: "axes" },
-    IC:      { name: "天底",     glyphTxt: "IC",  tier: 2, group: "axes" },
-    NNode:   { name: "北交点",   glyphKey: "NorthNode", tier: 2, group: "nodes" },
-    SNode:   { name: "南交点",   glyphKey: "SouthNode", tier: 2, group: "nodes" },
-    EP:      { name: "东升点",   glyphTxt: "EP",  tier: 2, group: "table-only", note: "收而不用:仅列出,不参与解读" },
-    Chiron:  { name: "凯龙星",   glyphKey: "Chiron", tier: 3, group: "asteroids" },
-    Ceres:   { name: "谷神星",   glyphKey: "Ceres",  tier: 3, group: "asteroids" },
-    Pallas:  { name: "智神星",   glyphKey: "Pallas", tier: 3, group: "asteroids" },
-    Juno:    { name: "婚神星",   glyphKey: "Juno",   tier: 3, group: "asteroids" },
-    Vesta:   { name: "灶神星",   glyphKey: "Vesta",  tier: 3, group: "asteroids" },
-    Lilith:  { name: "莉莉丝",   glyphKey: "Lilith", tier: 4, group: "nodes", note: "平均黑月" },
-    Eros433: { name: "爱神星",   glyphTxt: "Er",  tier: 4, group: "asteroids", note: "小行星 433" },
-    Psyche16:{ name: "赛姬星",   glyphTxt: "Ps",  tier: 4, group: "asteroids", note: "小行星 16" },
-    PoF:     { name: "福点",     glyphKey: "Fortune", tier: 5, group: "parts" },
-    PoSpirit:{ name: "精神点",   glyphTxt: "SP",  tier: 5, group: "parts" },
-    PoE:     { name: "爱情点",   glyphTxt: "PoE", tier: 5, group: "parts" },
-    PoM:     { name: "婚姻点",   glyphTxt: "PoM", tier: 5, group: "parts" },
-    Vertex:  { name: "宿命点",   glyphTxt: "Vx",  tier: 5, group: "parts" },
-    SMmid:   { name: "日月中点", glyphTxt: "☉☽", tier: 5, group: "parts" },
-    Eris:    { name: "阋神星",   glyphKey: "Eris", tier: 6, group: "eris", note: "默认关闭;仅当与个人行星相位 <2° 时才解读" }
-  };
-
-  // ---------- 汇总计算 ----------
-  // res 来自 AstroCore.computeChart;lat 为出生纬度
-  function computeExtras(res, lat) {
-    const date = res.date, ang = res.ang, cusps = res.cusps;
-    const t = A.MakeTime(date);
-    const get = k => res.planets.find(p => p.key === k);
-    const sun = get("Sun").lon, moon = get("Moon").lon, venus = get("Venus").lon;
-    const asc = ang.asc, mc = ang.mc;
-    const dsc = n360(asc + 180), ic = n360(mc + 180);
-
-    function mk(key, lon, opt) {
-      lon = n360(lon);
-      const sg = C.lonToSign(lon);
-      const m = META[key];
-      return Object.assign({
-        key, name: m.name, glyphKey: m.glyphKey || null, glyphTxt: m.glyphTxt || null,
-        tier: m.tier, group: m.group, note: m.note || null,
-        lon, sign: sg.sign, signIdx: sg.idx, degInSign: sg.deg,
-        house: C.lonToHouse(lon, cusps), retro: false, speed: null
-      }, opt || {});
-    }
-
-    const out = [];
-    // 四轴(不标宫位)
-    out.push(mk("ASC", asc, { house: null }));
-    out.push(mk("DSC", dsc, { house: null }));
-    out.push(mk("MC", mc, { house: null }));
-    out.push(mk("IC", ic, { house: null }));
-    // 南北交点(平交点,恒逆行)
-    const nn = meanNodeLon(t);
-    out.push(mk("NNode", nn, { retro: true, speed: -0.053 }));
-    out.push(mk("SNode", nn + 180, { retro: true, speed: -0.053 }));
-    // 东升点
-    const eps = ang.eps, ramc = ang.armc * D2R;
-    const ep = n360(Math.atan2(Math.cos(ramc), -(Math.sin(ramc) * Math.cos(eps))) * R2D);
-    out.push(mk("EP", ep));
-    // 凯龙 + 四小行星
-    for (const k of ["Chiron", "Ceres", "Pallas", "Juno", "Vesta"]) {
-      const sp = astSpeed(k, t);
-      out.push(mk(k, astGeoLon(k, t), { speed: sp, retro: sp < 0 }));
-    }
-    // 莉莉丝(平均黑月,顺行)
-    out.push(mk("Lilith", meanLilithLon(t), { speed: 0.111, retro: false }));
-    // 爱神星 / 赛姬星
-    for (const k of ["Eros433", "Psyche16"]) {
-      const sp = astSpeed(k, t);
-      out.push(mk(k, astGeoLon(k, t), { speed: sp, retro: sp < 0 }));
-    }
-    // 昼夜盘判定:太阳位于地平线上(7-12宫一侧)为昼
-    const isDay = n360(sun - asc) >= 180;
-    // 福点 / 精神点
-    const pof = isDay ? asc + moon - sun : asc + sun - moon;
-    const spirit = isDay ? asc + sun - moon : asc + moon - sun;
-    out.push(mk("PoF", pof, { isDay }));
-    out.push(mk("PoSpirit", spirit, { isDay }));
-    // 爱情点 = ASC + 金星 − 精神点;婚姻点 = ASC + 第7宫头 − 金星
-    out.push(mk("PoE", asc + venus - spirit));
-    out.push(mk("PoM", asc + n360(asc + 180) - venus));
-    // 宿命点(用 RAIC 与余纬)
-    const raic = n360(ang.armc + 180) * D2R;
-    const colat = (90 - lat) * D2R;
-    const vx = n360(Math.atan2(Math.cos(raic), -(Math.sin(raic) * Math.cos(eps) + Math.tan(colat) * Math.sin(eps))) * R2D);
-    out.push(mk("Vertex", vx, { note: Math.abs(lat) < 10 ? "低纬地区宿命点数值不稳定,仅供参考" : META.Vertex.note }));
-    // 日月中点(取近弧)
-    let sm = n360((sun + moon) / 2);
-    if (Math.abs(diff180(sm - sun)) > 90) sm = n360(sm + 180);
-    out.push(mk("SMmid", sm, { isDay }));
-    // 阋神星
-    const esp = astSpeed("Eris", t);
-    const eris = mk("Eris", astGeoLon("Eris", t), { speed: esp, retro: esp < 0 });
-    // 阋神星触发判定:与日月水金火的 0/90/120/180 相位 <2°
-    eris.trigger = [];
-    for (const pk of ["Sun", "Moon", "Mercury", "Venus", "Mars"]) {
-      const p = get(pk);
-      const sep = Math.abs(diff180(eris.lon - p.lon));
-      for (const angDeg of [0, 90, 120, 180]) {
-        const orb = Math.abs(sep - angDeg);
-        if (orb < 2) eris.trigger.push({ planet: p.name, angle: angDeg, orb });
-      }
-    }
-    out.push(eris);
-    out.isDay = isDay;
-    return out;
-  }
-
-  window.AstroExtra = { EPH, astGeoLon, astSpeed, meanNodeLon, meanLilithLon, computeExtras, META };
-})();
-
-</script>
+<!-- ============================================================
+     本命盘计算核心(唯一计算入口 / Single Source of Truth)
+     原本内联在这里的 AstroCore / AstroExtra 已经抽成外部档案,
+     让落地页、测试脚本、未来的服务端都能载入同一份实作,
+     避免各页面各自算出不同的星盘。
+     计算口径见 assets/astro/CALCULATION.md。
+     载入顺序有依赖:ephem-minor → timezone → tz-lookup → astro-core → places
+     ============================================================ -->
+<script src="assets/astro/ephem-minor.js"></script>
+<script src="assets/astro/timezone.js"></script>
+<script src="assets/astro/tz-lookup.js"></script>
+<script src="assets/astro/astro-core.js"></script>
+<script src="assets/astro/places.js"></script>
 <script>
 /* ============================================================
    云端存储层(Supabase)
@@ -2104,15 +1688,22 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     fName:            ["名字", "Name"],
     fDate:            ["出生日期", "Birth date"],
     fTime:            ["出生时间", "Birth time"],
-    fPlace:           ["出生地区(可搜索)", "Birth place (searchable)"],
-    fPlacePh:         ["输入中文或英文搜索,如 巴生 / Klang", "Search in English or Chinese, e.g. Klang"],
-    fPlacePick:       ["— 选择地区 —", "— Select a place —"],
+    fPlace:           ["出生地点(全球搜索)", "Birth place (search worldwide)"],
+    fPlacePh:         ["输入城市名,如 Batu Pahat / 吉隆坡 / Prague", "Type a city, e.g. Batu Pahat / Prague / Tokyo"],
+    fPlaceTypeFirst:  ["先输入城市名", "Type a city first"],
+    fPlaceLoading:    ["正在载入全球地点资料…", "Loading worldwide place data…"],
+    fPlaceLoadFail:   ["地点资料载入失败,请重试", "Could not load place data — please retry"],
+    fPlaceNone:       ["找不到这个城市,换个写法试试", "No match — try another spelling"],
+    alertPlace:       ["我们需要更准确的出生地点才能生成你的星盘 —— 请从搜索结果里选一个城市。",
+                       "We need a more precise birthplace to draw your chart — please pick a city from the search results."],
+    recalcNote:       ["已按出生地当时的实际时区重算", "recalculated with the time zone actually in force"],
+    fPlacePick:       ["— 选择出生地点 —", "— Select your birthplace —"],
     fLat:             ["纬度 °(北+南−)", "Latitude ° (N+ / S−)"],
     fLon:             ["经度 °(东+西−)", "Longitude ° (E+ / W−)"],
     save:             ["保存并绘制", "Save & draw"],
     clear:            ["清空", "Clear"],
-    formHint:         ["资料安全存放在你的云端账号,只有你能看到。时区固定为马来西亚/新加坡时间(UTC+8)。",
-                       "This stays in your own account, visible only to you. Times are read as Malaysia / Singapore time (UTC+8)."],
+    formHint:         ["资料安全存放在你的云端账号,只有你能看到。时区依出生地点与出生当天的历史规则自动判定。",
+                       "This stays in your own account, visible only to you. The time zone is resolved from your birthplace and the rules in force on that date."],
     noCharts:         ["还没有星盘,在下方新建一张。", "Nothing here yet. Start one below."],
     edit:             ["编辑", "Edit"],
     del:              ["删除", "Delete"],
@@ -2801,108 +2392,91 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
    ============================================================ */
 (function () {
   "use strict";
+  /* 站点版本。之前版本只记在 github.md 的同步纪录里,翻代码看不出来;
+     这里放一个明确的常数,方便对照 issue 与部署。计算口径另有
+     AstroCore.SETTINGS.engineVersion,两者各自独立递增。 */
+  const SITE_VERSION = "V.12";
+  window.InnerSkyVersion = {
+    site: SITE_VERSION,
+    engine: (window.AstroCore && window.AstroCore.SETTINGS) ? window.AstroCore.SETTINGS.engineVersion : null
+  };
+
   const A = window.Astronomy, C = window.AstroCore, X = window.AstroExtra, GL = window.AstroGlyphs;
   const $ = id => document.getElementById(id);
   const svgNS = "http://www.w3.org/2000/svg";
   const STORE_KEY = "xingli_charts_v1";
 
-  // ---------- 城市表(均为 UTC+8) ----------
-  // 城市分组:马来西亚(按州)+ 新加坡(按区),均为 UTC+8
-  const CITY_GROUPS = [
-    ["吉隆坡 · 布城 · 纳闽", [
-      ["吉隆坡(Kuala Lumpur)", 3.139, 101.687], ["布城(Putrajaya)", 2.926, 101.696], ["纳闽(Labuan)", 5.283, 115.241]
-    ]],
-    ["雪兰莪", [
-      ["莎阿南(Shah Alam)", 3.073, 101.518], ["八打灵再也(Petaling Jaya)", 3.107, 101.607], ["梳邦再也(Subang Jaya)", 3.049, 101.585],
-      ["巴生(Klang)", 3.044, 101.446], ["加影(Kajang)", 2.993, 101.788], ["士拉央(Selayang)", 3.257, 101.652],
-      ["万挠(Rawang)", 3.319, 101.577], ["安邦(Ampang)", 3.150, 101.762], ["蒲种(Puchong)", 3.017, 101.618],
-      ["雪邦(Sepang)", 2.690, 101.750], ["万津(Banting)", 2.812, 101.503], ["瓜拉雪兰莪(Kuala Selangor)", 3.340, 101.251],
-      ["沙白安南(Sabak Bernam)", 3.770, 100.988], ["士毛月(Semenyih)", 2.951, 101.843], ["新古毛(Kuala Kubu Bharu)", 3.560, 101.657],
-      ["赛城(Cyberjaya)", 2.923, 101.652], ["双溪毛糯(Sungai Buloh)", 3.208, 101.577], ["龙溪(Dengkil)", 2.850, 101.680]
-    ]],
-    ["柔佛", [
-      ["新山(Johor Bahru)", 1.493, 103.741], ["依斯干达公主城(Iskandar Puteri)", 1.425, 103.632], ["巴西古当(Pasir Gudang)", 1.472, 103.902],
-      ["古来(Kulai)", 1.663, 103.603], ["士古来(Skudai)", 1.537, 103.658], ["峇株巴辖(Batu Pahat)", 1.855, 102.933],
-      ["麻坡(Muar)", 2.044, 102.568], ["居銮(Kluang)", 2.030, 103.316], ["昔加末(Segamat)", 2.514, 102.816],
-      ["笨珍(Pontian)", 1.487, 103.389], ["哥打丁宜(Kota Tinggi)", 1.727, 103.900], ["丰盛港(Mersing)", 2.431, 103.836],
-      ["东甲(Tangkak)", 2.267, 102.545], ["永平(Yong Peng)", 2.008, 103.063], ["拉美士(Labis)", 2.385, 103.021],
-      ["加亨(Kahang)", 2.240, 103.610], ["丰盛港兴楼(Endau)", 2.421, 103.828]
-    ]],
-    ["槟城", [
-      ["乔治市(George Town)", 5.414, 100.329], ["北海(Butterworth)", 5.399, 100.364], ["大山脚(Bukit Mertajam)", 5.363, 100.467],
-      ["高渊(Nibong Tebal)", 5.166, 100.480], ["浮罗山背(Balik Pulau)", 5.350, 100.234], ["峇六拜(Bayan Lepas)", 5.297, 100.277],
-      ["诗布朗再也(Seberang Jaya)", 5.398, 100.398], ["武吉淡汶(Bukit Tambun)", 5.281, 100.470]
-    ]],
-    ["霹雳", [
-      ["怡保(Ipoh)", 4.598, 101.090], ["太平(Taiping)", 4.851, 100.741], ["安顺(Teluk Intan)", 4.025, 101.021],
-      ["实兆远(Sitiawan)", 4.216, 100.697], ["红土坎(Lumut)", 4.233, 100.630], ["江沙(Kuala Kangsar)", 4.771, 100.941],
-      ["华都牙也(Batu Gajah)", 4.469, 101.040], ["金宝(Kampar)", 4.311, 101.153], ["打巴(Tapah)", 4.199, 101.261],
-      ["巴力文打(Parit Buntar)", 5.125, 100.489], ["宜力(Gerik)", 5.422, 101.128], ["丹绒马林(Tanjung Malim)", 3.685, 101.519],
-      ["斯里依斯干达(Seri Iskandar)", 4.357, 100.969], ["玲珑(Lenggong)", 5.117, 100.974], ["曼绒(Manjung)", 4.209, 100.660]
-    ]],
-    ["吉打 · 玻璃市", [
-      ["亚罗士打(Alor Setar)", 6.126, 100.367], ["双溪大年(Sungai Petani)", 5.647, 100.488], ["居林(Kulim)", 5.365, 100.561],
-      ["浮罗交怡(Langkawi (Kuah))", 6.327, 99.848], ["日得拉(Jitra)", 6.268, 100.422], ["华玲(Baling)", 5.677, 100.919],
-      ["万拉峇鲁(Bandar Baharu)", 5.170, 100.550], ["锡(Sik)", 5.817, 100.732], ["瓜拉尼浪(Kuala Nerang)", 6.253, 100.610],
-      ["加央(Kangar)", 6.441, 100.199], ["亚娄(Arau)", 6.428, 100.270], ["巴东勿刹(Padang Besar)", 6.661, 100.320]
-    ]],
-    ["吉兰丹", [
-      ["哥打峇鲁(Kota Bharu)", 6.125, 102.238], ["巴西马(Pasir Mas)", 6.049, 102.140], ["道北(Tumpat)", 6.198, 102.171],
-      ["丹那美拉(Tanah Merah)", 5.808, 102.150], ["马樟(Machang)", 5.765, 102.217], ["瓜拉吉赖(Kuala Krai)", 5.532, 102.199],
-      ["话望生(Gua Musang)", 4.882, 101.967], ["万捷(Bachok)", 6.067, 102.399], ["巴西富地(Pasir Puteh)", 5.833, 102.406],
-      ["日里(Jeli)", 5.700, 101.841]
-    ]],
-    ["登嘉楼", [
-      ["瓜拉登嘉楼(Kuala Terengganu)", 5.330, 103.141], ["甘马挽(Kemaman (Chukai))", 4.234, 103.424], ["龙运(Dungun)", 4.757, 103.421],
-      ["马江(Marang)", 5.206, 103.206], ["日底(Jerteh (Besut))", 5.741, 102.489], ["士兆(Setiu)", 5.530, 102.720],
-      ["瓜拉勿浪(Kuala Berang)", 5.073, 103.014], ["瓜拉尼鲁斯(Kuala Nerus)", 5.372, 103.100]
-    ]],
-    ["彭亨", [
-      ["关丹(Kuantan)", 3.808, 103.326], ["淡马鲁(Temerloh)", 3.448, 102.421], ["文冬(Bentong)", 3.522, 101.909],
-      ["劳勿(Raub)", 3.793, 101.857], ["而连突(Jerantut)", 3.936, 102.362], ["北根(Pekan)", 3.489, 103.390],
-      ["立卑(Kuala Lipis)", 4.184, 102.055], ["金马仑(Cameron Highlands)", 4.470, 101.377], ["云顶高原(Genting Highlands)", 3.424, 101.793],
-      ["百乐(Bera)", 3.234, 102.410], ["马兰(Maran)", 3.584, 102.772], ["云冰(Kuala Rompin)", 2.716, 103.480]
-    ]],
-    ["森美兰 · 马六甲", [
-      ["芙蓉(Seremban)", 2.726, 101.942], ["波德申(Port Dickson)", 2.522, 101.796], ["汝来(Nilai)", 2.806, 101.799],
-      ["马口(Bahau)", 2.807, 102.404], ["瓜拉庇劳(Kuala Pilah)", 2.739, 102.248], ["淡边(Tampin)", 2.470, 102.234],
-      ["林茂(Rembau)", 2.590, 102.093], ["瓜拉格拉旺(Kuala Klawang)", 2.942, 102.070],
-      ["马六甲市(Melaka)", 2.190, 102.250], ["亚罗牙也(Alor Gajah)", 2.381, 102.209], ["野新(Jasin)", 2.309, 102.428],
-      ["爱极乐(Ayer Keroh)", 2.273, 102.283], ["马接翁武(Masjid Tanah)", 2.351, 102.113]
-    ]],
-    ["沙巴", [
-      ["亚庇(Kota Kinabalu)", 5.980, 116.074], ["山打根(Sandakan)", 5.840, 118.118], ["斗湖(Tawau)", 4.245, 117.891],
-      ["拿笃(Lahad Datu)", 5.030, 118.340], ["根地咬(Keningau)", 5.338, 116.161], ["仙本那(Semporna)", 4.481, 118.611],
-      ["古达(Kudat)", 6.882, 116.847], ["兰瑙(Ranau)", 5.954, 116.664], ["保佛(Beaufort)", 5.347, 115.746],
-      ["吧巴(Papar)", 5.733, 115.932], ["斗亚兰(Tuaran)", 6.180, 116.235], ["哥打毛律(Kota Belud)", 6.351, 116.432],
-      ["实必丹(Sipitang)", 5.083, 115.550], ["古纳(Kunak)", 4.680, 118.250], ["比鲁兰(Beluran)", 5.900, 117.080],
-      ["兵南邦(Penampang)", 5.919, 116.108], ["丹南(Tenom)", 5.130, 115.950], ["普打丹(Putatan)", 5.900, 116.050]
-    ]],
-    ["砂拉越", [
-      ["古晋(Kuching)", 1.553, 110.359], ["美里(Miri)", 4.400, 113.991], ["诗巫(Sibu)", 2.287, 111.831],
-      ["民都鲁(Bintulu)", 3.171, 113.042], ["林梦(Limbang)", 4.750, 115.010], ["泗里街(Sarikei)", 2.127, 111.518],
-      ["斯里阿曼(Sri Aman)", 1.237, 111.462], ["加帛(Kapit)", 2.017, 112.933], ["木胶(Mukah)", 2.898, 112.089],
-      ["木中(Betong)", 1.401, 111.531], ["西连(Serian)", 1.168, 110.566], ["哥打三马拉汉(Kota Samarahan)", 1.459, 110.430],
-      ["老越(Lawas)", 4.858, 115.407], ["马鲁帝(Marudi)", 4.183, 114.319], ["石隆门(Bau)", 1.418, 110.150],
-      ["伦乐(Lundu)", 1.667, 109.853]
-    ]],
-    ["新加坡", [
-      ["新加坡市中心(Singapore City)", 1.290, 103.852], ["裕廊(Jurong)", 1.333, 103.720], ["兀兰(Woodlands)", 1.437, 103.786],
-      ["淡滨尼(Tampines)", 1.353, 103.945], ["榜鹅(Punggol)", 1.398, 103.907], ["盛港(Sengkang)", 1.391, 103.895],
-      ["义顺(Yishun)", 1.429, 103.835], ["宏茂桥(Ang Mo Kio)", 1.370, 103.850], ["碧山(Bishan)", 1.351, 103.848],
-      ["白沙(Pasir Ris)", 1.372, 103.949], ["勿洛(Bedok)", 1.324, 103.930], ["后港(Hougang)", 1.371, 103.892],
-      ["三巴旺(Sembawang)", 1.449, 103.820], ["武吉巴督(Bukit Batok)", 1.349, 103.750], ["武吉班让(Bukit Panjang)", 1.378, 103.772],
-      ["蔡厝港(Choa Chu Kang)", 1.384, 103.744], ["金文泰(Clementi)", 1.315, 103.765], ["女皇镇(Queenstown)", 1.294, 103.786],
-      ["红山(Bukit Merah)", 1.281, 103.823], ["加冷(Kallang)", 1.311, 103.866], ["马林百列(Marine Parade)", 1.303, 103.905],
-      ["芽笼(Geylang)", 1.318, 103.887], ["大巴窑(Toa Payoh)", 1.334, 103.850], ["实龙岗(Serangoon)", 1.350, 103.873],
-      ["诺维娜(Novena)", 1.320, 103.844], ["樟宜(Changi)", 1.345, 103.983]
-    ]],
-    ["中国", [
-      ["湖州(Huzhou)", 30.894, 120.088]
-    ]]
-  ];
-  const CITIES = [];
-  CITY_GROUPS.forEach(g => g[1].forEach(ct => CITIES.push(ct)));
+  /* ============================================================
+     出生地点(全球)
+     ------------------------------------------------------------
+     原本这里写死了一张马来西亚 + 新加坡的城市表(外加湖州一个),
+     而且整张表被当成 UTC+8。现在改成:
+       · 城市搜索走 assets/astro/places.js(GeoNames 全球资料,
+         含国家 / 地区 / 经纬度 / IANA 时区 ID),用到才载入;
+       · 时区一律由地点带出来,再由 timezone.js 按出生当天的
+         历史规则(含夏令时)换算 UTC。
+     ============================================================ */
+  const Places = window.InnerSkyPlaces;
+  const TZ = window.InnerSkyTZ;
+  let placesReady = false, placesError = null;
+
+  function ensurePlaces() {
+    if (placesReady) return Promise.resolve();
+    return Places.load().then(function () { placesReady = true; placesError = null; })
+      .catch(function (e) { placesError = e; throw e; });
+  }
+
+  /* 把搜索结果绑到一个 <select> 上;回传 index → place 的对照表 */
+  function fillPlaceSelect(sel, query, hintEl) {
+    const found = [];
+    sel.innerHTML = "";
+    const lang = (window.I18N && window.I18N.isEN && window.I18N.isEN()) ? "en" : "zh";
+    const q = (query || "").trim();
+    const ph = document.createElement("option");
+    ph.value = "";
+    sel.appendChild(ph);
+    if (hintEl) hintEl.textContent = "";
+    if (!q) { ph.textContent = T("fPlaceTypeFirst"); return found; }
+    if (!placesReady) { ph.textContent = placesError ? T("fPlaceLoadFail") : T("fPlaceLoading"); return found; }
+    const rows = Places.search(q, { lang: lang, limit: 20 });
+    if (!rows.length) { ph.textContent = T("fPlaceNone"); return found; }
+    ph.textContent = T("fPlacePick");
+    rows.forEach(function (r, i) {
+      found.push(r);
+      const o = document.createElement("option");
+      o.value = String(i);
+      o.textContent = r.label;
+      sel.appendChild(o);
+    });
+    if (rows.length === 1) sel.value = "0";   // 只命中一个就直接选起来
+    return found;
+  }
+
+  /* 地点 → 写进星盘纪录的栏位。绝不留下「只有城市名」的资料。 */
+  function placeFields(place) {
+    return {
+      city: place.city || null,
+      region: place.region || null,
+      country: place.country || null,
+      countryCode: place.countryCode || null,
+      placeLabel: place.label || null,
+      lat: place.lat,
+      lon: place.lon,
+      tzId: place.tzId
+    };
+  }
+
+  /* 出生地点摘要:给使用者看的一行(含当时实际使用的 UTC 偏移) */
+  function placeSummary(c) {
+    try {
+      const info = birthUtcInfo(c);
+      return [c.placeLabel || c.city || "", c.tzId + " " + info.offsetText + (info.dst ? " · DST" : "")]
+        .filter(Boolean).join(" · ");
+    } catch (e) {
+      return c.placeLabel || c.city || "";
+    }
+  }
+
 
   // ---------- 本地存储 ----------
   // 云端存储:内存态 + Supabase 持久化(charts 表逐条同步,activeId 走偏好)
@@ -2929,10 +2503,14 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     return byId || store.charts[0] || null;
   }
   // 出生资料是否完整:日期 + 时间 + 地点(经纬度)缺一不可
+  /* 「资料完整」= 足以算出正确星盘:日期、时间、经纬度,而且时区可解。
+     只有城市名而没有座标 / 时区的资料一律不算完整,会被引导去重新确认。 */
   function isCompleteBirthData(c) {
-    return !!(c && c.date && c.time &&
-      typeof c.lat === "number" && isFinite(c.lat) &&
-      typeof c.lon === "number" && isFinite(c.lon));
+    if (!(c && c.date && (c.time || c.unknownTime))) return false;
+    if (!(typeof c.lat === "number" && isFinite(c.lat))) return false;
+    if (!(typeof c.lon === "number" && isFinite(c.lon))) return false;
+    if (c.needsPlace) return false;
+    return !!(c.tzId || Places.timezoneAt(c.lat, c.lon));
   }
   function hasCompleteBirthProfile() { return isCompleteBirthData(primaryChart()); }
   function setPrimaryChart(id) {
@@ -2985,64 +2563,168 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   }
 
 
-  // ---------- 时间:固定 UTC+8 ----------
-  function chartDate(c) {
-    const [y, mo, d] = c.date.split("-").map(Number);
-    const [h, mi] = c.time.split(":").map(Number);
-    return new Date(Date.UTC(y, mo - 1, d, h - 8, mi, 0));
+  /* ============================================================
+     出生时间 → UTC
+     ------------------------------------------------------------
+     旧版这里写死 `h - 8`,等于假设全世界都在 UTC+8;连马来西亚
+     1982 年之前的 UTC+7:30 都会算错半小时。现在一律:
+        当地时间 + 出生地时区 ID + 出生当天的历史规则(含夏令时)
+     由 assets/astro/timezone.js 反解成 UTC。
+     ============================================================ */
+
+  /* 旧纪录只有经纬度、没有时区 ID:用座标反查 IANA 时区补上。
+     补出来的值会写回纪录(见 migrateChartRecord),只补这一次。 */
+  function resolveTzId(c) {
+    if (c.tzId) return c.tzId;
+    if (typeof c.lat === "number" && typeof c.lon === "number") {
+      const tz = Places.timezoneAt(c.lat, c.lon);
+      if (tz) return tz;
+    }
+    return null;
+  }
+
+  function birthUtcInfo(c) {
+    const tzId = resolveTzId(c);
+    if (!tzId) {
+      const err = new Error("这张星盘缺少出生地点的时区资料");
+      err.code = "MISSING_TIMEZONE";
+      throw err;
+    }
+    return TZ.localToUtc(c.date, c.unknownTime ? "12:00" : (c.time || "12:00"), tzId);
+  }
+
+  function chartDate(c) { return birthUtcInfo(c).utc; }
+
+  /* 把「这张盘实际用了哪个 UTC 瞬间」钉进纪录里。
+     以后就算时区资料库更新、或我们改了演算法,也能看出当初算的是什么。 */
+  function stampBirthUtc(c) {
+    const info = birthUtcInfo(c);
+    c.tzId = info.tzId;
+    c.utc = info.utc.toISOString();
+    c.utcOffsetMinutes = info.offsetMinutes;
+    c.dst = info.dst;
+    if (info.ambiguous) c.ambiguousLocalTime = true; else delete c.ambiguousLocalTime;
+    if (info.nonexistent) c.nonexistentLocalTime = true; else delete c.nonexistentLocalTime;
+    c.engineVersion = C.SETTINGS ? C.SETTINGS.engineVersion : null;
+    return info;
+  }
+
+  /* ============================================================
+     旧资料迁移
+     ------------------------------------------------------------
+     旧纪录只有 { date, time, lat, lon },而且当初一律按 UTC+8 计算。
+     这里补上时区 ID 与 UTC 瞬间,并重新计算:
+       · 有经纬度 → 由座标反查 IANA 时区,可以完全自动
+       · 没有经纬度 → 标记 needsPlace,请使用者重新确认出生地点
+     绝不猜测:同名城市、缺座标一律不自动补。
+     旧盘不会被删除,只会补栏位;补完写回云端。
+     ============================================================ */
+  let migrationNotice = null;      // { changed: n, needsPlace: n }
+
+  function migrateChartRecord(c) {
+    if (!c || !c.date) return { status: "needsPlace", chart: c };
+    const hadTz = !!c.tzId;
+    const tzId = resolveTzId(c);
+    if (!tzId) { c.needsPlace = true; return { status: "needsPlace", chart: c }; }
+
+    const prevUtc = c.utc || null;
+    let info;
+    try { info = stampBirthUtc(c); }
+    catch (e) { c.needsPlace = true; return { status: "needsPlace", chart: c }; }
+    delete c.needsPlace;
+
+    // 旧盘的隐含假设是 UTC+8;偏移不同就代表这张盘会变
+    const legacyOffset = 480;
+    const changed = !hadTz && info.offsetMinutes !== legacyOffset;
+    if (prevUtc && prevUtc !== c.utc) c.recalculated = true;
+    return { status: changed ? "changed" : "ok", chart: c };
+  }
+
+  function migrateAllCharts() {
+    if (!store.charts.length) return Promise.resolve();
+    let changed = 0, needsPlace = 0;
+    const dirty = [];
+    store.charts.forEach(function (c) {
+      const before = JSON.stringify([c.tzId, c.utc, c.needsPlace]);
+      const r = migrateChartRecord(c);
+      if (r.status === "changed") changed++;
+      if (r.status === "needsPlace") needsPlace++;
+      if (JSON.stringify([c.tzId, c.utc, c.needsPlace]) !== before) dirty.push(c);
+    });
+    migrationNotice = (changed || needsPlace) ? { changed: changed, needsPlace: needsPlace } : null;
+    // 补好的栏位写回云端,下次就不用再算
+    return Promise.all(dirty.map(function (c) {
+      return window.Cloud.updateChart(c).catch(function (e) { console.warn("迁移写回失败", e); });
+    })).then(function () { });
   }
 
   // ---------- 计算并缓存 ----------
+  // 全站唯一的计算入口:所有页面读的都是这里算出来的同一份结果。
   function computeFor(c) {
-    const res = C.computeChart({ date: chartDate(c), lat: c.lat, lon: c.lon, system: c.sys || "placidus" });
-    res.extras = X.computeExtras(res, c.lat);
+    const info = birthUtcInfo(c);
+    const res = C.computeChart({
+      date: info.utc, lat: c.lat, lon: c.lon,
+      system: c.sys || "placidus",
+      hasTime: !c.unknownTime
+    });
+    res.birthUtc = info;                 // 供界面显示「当时实际用的 UTC 偏移」
     return res;
   }
 
   // ---------- 表单 ----------
+  /* 使用者在表单里选定的地点。放在模块作用域,编辑既有星盘时可以直接带回来,
+     否则「编辑」会因为没重新选地点而存不了。 */
+  let formPlace = null;
+  let setFormPlace = function () { };
+
   function initForm() {
     const sel = $("f_city");
-    function fillCity(q) {
-      q = (q || "").trim().toLowerCase();
-      sel.innerHTML = '<option value=""></option>';
-      sel.firstChild.textContent = T("fPlacePick");
-      let idx = 0, shown = 0, firstMatch = null;
-      CITY_GROUPS.forEach(function (g) {
-        const matched = [];
-        g[1].forEach(function (ct) {
-          const myIdx = idx++;
-          if (!q || ct[0].toLowerCase().indexOf(q) !== -1 || g[0].toLowerCase().indexOf(q) !== -1
-              || window.I18N.TRegion(g[0]).toLowerCase().indexOf(q) !== -1) {
-            matched.push([myIdx, ct[0]]);
-          }
-        });
-        if (matched.length) {
-          const og = document.createElement("optgroup");
-          og.label = window.I18N.TRegion(g[0]);
-          matched.forEach(function (m) {
-            const o = document.createElement("option");
-            o.value = m[0]; o.textContent = m[1];
-            og.appendChild(o);
-            if (firstMatch === null) firstMatch = m[0];
-            shown++;
-          });
-          sel.appendChild(og);
-        }
-      });
-      // 搜索唯一命中时直接选中并填坐标
-      if (q && shown === 1 && firstMatch !== null) {
-        sel.value = firstMatch;
-        const ct = CITIES[firstMatch];
-        $("f_lat").value = ct[1]; $("f_lon").value = ct[2];
-      }
+    const info = $("f_placeinfo");
+    let matches = [];          // 目前搜索结果:index → place
+
+    function showPicked(pl) {
+      formPlace = pl;
+      if (!pl) { info.textContent = ""; $("f_lat").value = ""; $("f_lon").value = ""; return; }
+      $("f_lat").value = pl.lat; $("f_lon").value = pl.lon;
+      // 技术资料只做提示,不要求使用者理解
+      info.textContent = pl.lat.toFixed(4) + "°, " + pl.lon.toFixed(4) + "° · " + pl.tzId;
     }
-    fillCity("");
-    $("f_citysearch").addEventListener("input", function () { fillCity(this.value); });
-    sel.addEventListener("change", function () {
-      if (sel.value === "") return;
-      const ct = CITIES[+sel.value];
-      $("f_lat").value = ct[1]; $("f_lon").value = ct[2];
+    function refresh(q) {
+      matches = fillPlaceSelect(sel, q, info);
+      showPicked(sel.value === "" ? null : matches[+sel.value]);
+    }
+    refresh("");
+    $("f_citysearch").addEventListener("input", function () {
+      const q = this.value;
+      // 资料档约 2.8 MB,第一次输入才载入,载好再重跑一次搜索
+      if (!placesReady) {
+        refresh(q);
+        ensurePlaces().then(function () { refresh($("f_citysearch").value); })
+          .catch(function () { refresh($("f_citysearch").value); });
+        return;
+      }
+      refresh(q);
     });
+    sel.addEventListener("change", function () {
+      showPicked(sel.value === "" ? null : matches[+sel.value]);
+    });
+    // 编辑既有星盘时,把纪录里已经存好的地点带回表单
+    setFormPlace = function (c) {
+      if (!c || typeof c.lat !== "number" || !c.tzId) { showPicked(null); return; }
+      matches = [];
+      sel.innerHTML = "";
+      const o = document.createElement("option");
+      o.value = "0";
+      o.textContent = c.placeLabel || c.city || (c.lat.toFixed(3) + ", " + c.lon.toFixed(3));
+      sel.appendChild(o);
+      sel.value = "0";
+      const pl = {
+        city: c.city, region: c.region, country: c.country, countryCode: c.countryCode,
+        label: c.placeLabel || c.city, lat: c.lat, lon: c.lon, tzId: c.tzId
+      };
+      matches = [pl];
+      showPicked(pl);
+    };
     $("formTitle").addEventListener("click", function () {
       const b = $("newChartBody");
       const closed = b.style.display === "none";
@@ -3054,20 +2736,23 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       editingId = null;
       $("formTitleText").textContent = T("newChart");
       $("formTitleText").setAttribute("data-i18n", "newChart");
-      $("f_nick").value = ""; $("f_city").value = "";
-      $("f_date").value = "1990-01-01"; $("f_time").value = "12:00";
-      $("f_lat").value = 31.2304; $("f_lon").value = 121.4737;
+      $("f_nick").value = "";
+      $("f_citysearch").value = "";
+      refresh("");
+      // 不预设任何出生日期 / 时间 / 座标:宁可空着让使用者填,也不猜
+      $("f_date").value = ""; $("f_time").value = "";
     });
     $("saveBtn").addEventListener("click", function () {
       const nick = $("f_nick").value.trim() || T("unnamed");
       const date = $("f_date").value, time = $("f_time").value;
-      const lat = parseFloat($("f_lat").value), lon = parseFloat($("f_lon").value);
-      if (!date || !time || !isFinite(lat) || !isFinite(lon)) { alert(T("alertFields")); return; }
-      if (lat < -89.9 || lat > 89.9) { alert(T("alertLat")); return; }
+      if (!date || !time) { alert(T("alertFields")); return; }
+      if (!formPlace || !Places.validate(formPlace).ok) { alert(T("alertPlace")); return; }
+      const fields = Object.assign({ nick: nick, date: date, time: time }, placeFields(formPlace));
       if (editingId) {
         const c = store.charts.find(x => x.id === editingId);
         if (c) {
-          Object.assign(c, { nick, date, time, lat, lon });
+          Object.assign(c, fields);
+          stampBirthUtc(c);
           store.activeId = c.id;
           window.Cloud.updateChart(c).catch(e => console.warn(T("syncFail"), e));
         }
@@ -3075,7 +2760,8 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
         $("formTitleText").textContent = T("newChart");
         $("formTitleText").setAttribute("data-i18n", "newChart");
       } else {
-        const c = { id: window.Cloud.uuid(), nick, date, time, lat, lon, sys: "placidus" };
+        const c = Object.assign({ id: window.Cloud.uuid(), sys: "placidus" }, fields);
+        stampBirthUtc(c);
         store.charts.push(c);
         store.activeId = c.id;
         window.Cloud.insertChart(c).catch(e => console.warn(T("syncFail"), e));
@@ -3221,7 +2907,9 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
         $("newChartBody").style.display = ""; $("formToggleArrow").textContent = T("collapse");
         $("formToggleArrow").setAttribute("data-i18n", "collapse");
         $("f_nick").value = c.nick; $("f_date").value = c.date; $("f_time").value = c.time;
-        $("f_lat").value = c.lat; $("f_lon").value = c.lon; $("f_city").value = "";
+        $("f_lat").value = c.lat; $("f_lon").value = c.lon;
+        $("f_citysearch").value = "";
+        setFormPlace(c);        // 带回已存好的地点,不必重新搜一次
       });
       const del = btn.querySelector(".del");
       del.addEventListener("click", function (e) {
@@ -3681,10 +3369,34 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     }
     $("emptyState").style.display = "none";
     $("chartView").style.display = "";
-    curResult = computeFor(c);
+    try {
+      curResult = computeFor(c);
+    } catch (e) {
+      // 算不出来(例如时区解析不了)就当成资料不完整,引导去补,而不是白屏
+      console.warn("星盘计算失败", e);
+      c.needsPlace = true;
+      curResult = null;
+      $("emptyState").style.display = "";
+      $("chartView").style.display = "none";
+      drawEmptyWheel();
+      return;
+    }
     saveWheelSnapshot();   // 一算出来就写快照:注册填完出生资料即可在落地页看到盘
     $("ctNick").textContent = c.nick;
-    $("ctMeta").textContent = c.date + " " + c.time + "(UTC+8) · " + c.lat.toFixed(2) + "°, " + c.lon.toFixed(2) + "° · " + (c.sys === "whole" ? "Whole Sign" : "Placidus");
+    // 显示实际使用的时区与 UTC 偏移,而不是写死的 UTC+8
+    var meta = c.date + " " + (c.unknownTime ? "—" : c.time);
+    try {
+      var bi = birthUtcInfo(c);
+      meta += "(" + bi.offsetText + (bi.dst ? " DST" : "") + ")";
+    } catch (e) { meta += "(时区未定)"; }
+    meta += " · " + (c.placeLabel || c.city || "") +
+            " · " + c.lat.toFixed(2) + "°, " + c.lon.toFixed(2) + "°" +
+            " · " + (curResult && curResult.system === "porphyry" ? "Porphyry(极区)"
+                     : c.sys === "whole" ? "Whole Sign" : "Placidus");
+    if (c.recalculated) {
+      meta += " · " + T("recalcNote");
+    }
+    $("ctMeta").textContent = meta;
     document.querySelectorAll("#sysSeg button").forEach(function (b) {
       b.classList.toggle("on", (c.sys || "placidus") === b.dataset.sys);
     });
@@ -5316,7 +5028,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   }
 
   // ---------- 页面:出生资料 onboarding(新版)----------
-  // 复用既有城市表与既有保存逻辑,只是换成新版 UI;保存后直接进入新版阅读页
+  // 出生地点改成全球搜索式自动完成;保存后直接进入新版阅读页
   function renderOnboardingPage() {
     if (!window.Cloud.hasSession()) {
       const ov = $("authOverlay");
@@ -5338,15 +5050,6 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       if (rb) rb.addEventListener("click", function () { chartsError = null; reloadUserData(); });
       return;
     }
-    const opts = [];
-    CITY_GROUPS.forEach(function (g) {
-      const items = g[1].map(function (ct) {
-        const i = CITIES.findIndex(function (x) { return x[0] === ct[0]; });
-        return '<option value="' + i + '">' + esc0(ct[0]) + '</option>';
-      }).join("");
-      opts.push('<optgroup label="' + esc0(window.I18N.TRegion(g[0])) + '">' + items + '</optgroup>');
-    });
-
     const body =
       '<div class="dp-card">' +
       '<div class="dp-sec-label">' + dpT("出生资料", "YOUR BIRTH DATA") + '</div>' +
@@ -5361,15 +5064,21 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       '</span></div>' +
       /* Username 属于 Account / Profile 层级(注册时填、之后在「设置」修改),
          星盘只透过 User ID 关联,因此这里不再重复询问显示名称。 */
+      /* 不预填出生日期与时间:预设值会被当成真的填了,宁可空着 */
       '<div class="dp-row2">' +
       '<div class="dp-field"><label>' + dpT("出生日期", "Birth date") + '</label>' +
-      '<input id="obDate" type="date" value="1995-01-01"></div>' +
+      '<input id="obDate" type="date"></div>' +
       '<div class="dp-field"><label>' + dpT("出生时间", "Birth time") + '</label>' +
-      '<input id="obTime" type="time" value="12:00"></div></div>' +
+      '<input id="obTime" type="time"></div></div>' +
       '<div class="dp-field"><label>' + dpT("出生地点", "Birth place") + '</label>' +
-      '<select id="obCity"><option value="">' + esc0(dpT("选择地区", "Select a place")) + '</option>' +
-      opts.join("") + '</select>' +
-      '<span class="hint">' + dpT("目前支持马来西亚与新加坡(UTC+8)。", "Currently Malaysia and Singapore (UTC+8).") + '</span></div>' +
+      '<input id="obSearch" placeholder="' +
+      esc0(dpT("输入城市名,如 Batu Pahat / 吉隆坡 / Prague", "Type a city, e.g. Batu Pahat / Prague / Tokyo")) +
+      '" style="margin-bottom:8px">' +
+      '<select id="obCity"><option value="">' + esc0(dpT("先输入城市名", "Type a city first")) + '</option></select>' +
+      '<span class="hint" id="obPlaceInfo">' +
+      dpT("支持全球城市。选好之后我们会自动取得经纬度与当时的时区。",
+          "Worldwide. Once you pick a place we resolve its coordinates and the time zone in force that day.") +
+      '</span></div>' +
       '<div class="dp-form-msg" id="obMsg"></div>' +
       '<div style="font-size:12px;color:var(--dp-mut);line-height:1.8;margin:-4px 0 2px">' +
       dpT("保存后出生资料将无法修改。", "Birth details cannot be edited after saving.") + '</div>' +
@@ -5386,6 +5095,43 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       backLabel: dpT("返回主页", "Back to home"), backHref: LANDING_URL, seed: 23
     });
 
+    // ---- 出生地点:全球搜索 ----
+    const obSearch = document.getElementById("obSearch");
+    const obCity = document.getElementById("obCity");
+    const obInfo = document.getElementById("obPlaceInfo");
+    let obMatches = [], obPicked = null;
+
+    function obShow(pl) {
+      obPicked = pl;
+      if (!pl) return;
+      obInfo.textContent = pl.label + " · " + pl.lat.toFixed(3) + "°, " + pl.lon.toFixed(3) + "° · " + pl.tzId;
+    }
+    function obRefresh(q) {
+      obMatches = fillPlaceSelect(obCity, q, null);
+      obShow(obCity.value === "" ? null : obMatches[+obCity.value]);
+    }
+    if (obSearch) {
+      obRefresh("");
+      obSearch.addEventListener("input", function () {
+        const q = this.value;
+        if (!placesReady) {
+          obInfo.textContent = dpT("正在载入全球地点资料…", "Loading worldwide place data…");
+          obRefresh(q);
+          ensurePlaces()
+            .then(function () { obRefresh(obSearch.value); if (!obPicked) obInfo.textContent = ""; })
+            .catch(function () {
+              obInfo.textContent = dpT("地点资料载入失败,请检查网络后重试。",
+                                       "Could not load place data. Check your connection and try again.");
+            });
+          return;
+        }
+        obRefresh(q);
+      });
+      obCity.addEventListener("change", function () {
+        obShow(obCity.value === "" ? null : obMatches[+obCity.value]);
+      });
+    }
+
     const save = document.getElementById("obSave");
     if (save) save.addEventListener("click", function () {
       const msg = document.getElementById("obMsg");
@@ -5394,9 +5140,15 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       const nick = (window.Cloud.nick() || "").trim() || T("unnamed");
       const date = document.getElementById("obDate").value;
       const time = document.getElementById("obTime").value;
-      const ci = document.getElementById("obCity").value;
-      if (!date || !time || ci === "") {
-        msg.textContent = dpT("请把出生日期、时间与地点都填好。", "Please fill in date, time and place.");
+      msg.style.color = "#b4645a";
+      if (!date || !time) {
+        msg.textContent = dpT("请把出生日期与出生时间都填好。", "Please fill in your birth date and time.");
+        return;
+      }
+      // 地点不完整就明说,绝不用预设座标或预设时区顶替
+      if (!obPicked || !Places.validate(obPicked).ok) {
+        msg.textContent = dpT("我们需要更准确的出生地点才能生成你的星盘 —— 请从搜索结果里选一个城市。",
+                              "We need a more precise birthplace to draw your chart — please pick a city from the search results.");
         return;
       }
       // 双保险:保存瞬间再确认一次,避免重复建立或覆盖既有星盘
@@ -5405,8 +5157,17 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
         location.replace(location.pathname + location.search + "#/reading");
         return;
       }
-      const ct = CITIES[+ci];
-      const c = { id: window.Cloud.uuid(), nick: nick, date: date, time: time, lat: ct[1], lon: ct[2], sys: "placidus" };
+      const c = Object.assign(
+        { id: window.Cloud.uuid(), nick: nick, date: date, time: time, sys: "placidus" },
+        placeFields(obPicked)
+      );
+      try {
+        stampBirthUtc(c);
+      } catch (e) {
+        msg.textContent = dpT("这个出生时间在当地的时区规则下无法解析,请再确认一次。",
+                              "That local time can’t be resolved in this place’s time zone. Please double-check it.");
+        return;
+      }
       msg.style.color = "var(--dp-mut)";
       msg.textContent = dpT("正在绘制你的星盘…", "Drawing your chart…");
       store.charts.push(c);
@@ -5665,6 +5426,9 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
             if (mig.length) store.charts = mig;
           }).catch(function () { });
         }
+      }).then(function () {
+        // 旧纪录补时区 / UTC(见 migrateAllCharts):补完才算确认过
+        return migrateAllCharts().catch(function (e) { console.warn("迁移失败", e); });
       }).then(function () {
         chartsSettled = true;   // 到这里才算「资料库已经确认过」
         if (!store.activeId || !store.charts.some(c => c.id === store.activeId)) {

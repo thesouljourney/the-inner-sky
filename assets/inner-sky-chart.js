@@ -45,6 +45,7 @@
     sex: { stroke: "rgba(226,196,133,.62)", dash: "5 6", w: 1.1, name: "六合" },
     squ: { stroke: "rgba(240,222,166,.8)", dash: "9 7", w: 1.3, name: "四分" },
     tri: { stroke: "rgba(226,196,133,.72)", dash: "", w: 1.2, name: "三分" },
+    qcx: { stroke: "rgba(200,186,214,.62)", dash: "3 6", w: 1.0, name: "梅花" },
     opp: { stroke: "rgba(240,222,166,.88)", dash: "14 8", w: 1.4, name: "对分" }
   };
   var CX = 500, CY = 500, R_OUT = 440, R_IN = 320, R_PLANET = 282, R_HOUSE_NUM = 238, R_ASP = 192;
