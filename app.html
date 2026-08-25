@@ -500,6 +500,42 @@
   }
   #dpage .dp-sub{font-size:clamp(13.5px,1.4vw,16px);line-height:2;color:rgba(249,246,242,.82);white-space:pre-line;max-width:34em}
   #dpage .dp-body{max-width:var(--dp-wide);margin:0 auto;padding:clamp(26px,4vw,54px) clamp(18px,4vw,48px) 80px}
+
+  /* ---------- 内页页脚 ----------
+     与落地页同一套深蓝底,但内页不放隐私政策 / 使用条款,只留「关于我们」
+     与两个社群入口。所有经过 dpScaffold 的页面都会带上它。 */
+  #dpage .dp-foot{background:var(--dp-navy);color:rgba(249,246,242,.72);position:relative;overflow:hidden}
+  #dpage .dp-foot .in{
+    position:relative;z-index:2;max-width:var(--dp-wide);margin:0 auto;
+    padding:38px clamp(18px,4vw,48px);
+    display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap;
+  }
+  #dpage .dp-foot .bd{display:flex;flex-direction:column;gap:7px}
+  #dpage .dp-foot .wm{
+    font-family:var(--dp-display);font-size:19px;letter-spacing:.42em;
+    color:var(--dp-light);line-height:1;
+  }
+  #dpage .dp-foot .tag{font-size:12.5px;color:rgba(232,211,162,.8);letter-spacing:.04em}
+  #dpage .dp-foot .cp{font-size:12px;color:rgba(249,246,242,.62);margin-top:5px}
+  #dpage .dp-foot .rt{display:flex;align-items:center;gap:22px;flex-wrap:wrap}
+  #dpage .dp-foot .rt a.lk{
+    color:rgba(249,246,242,.86);font-size:13.5px;letter-spacing:.06em;text-decoration:none;
+    transition:color .2s;
+  }
+  #dpage .dp-foot .rt a.lk:hover{color:var(--dp-light)}
+  #dpage .dp-foot .ic{
+    width:38px;height:38px;border-radius:50%;border:1px solid rgba(249,246,242,.28);
+    display:inline-flex;align-items:center;justify-content:center;
+    color:rgba(249,246,242,.86);text-decoration:none;
+    transition:border-color .2s,color .2s,background .2s;
+  }
+  #dpage .dp-foot .ic:hover{border-color:rgba(232,211,162,.75);color:var(--dp-gold);background:rgba(249,246,242,.06)}
+  /* 小红书:圆圈里放白色三个字(与落地页 social-chip 同一种处理),不用品牌红 */
+  #dpage .dp-foot .ic.xhs{font-size:9px;letter-spacing:0;line-height:1;color:rgba(249,246,242,.9);font-weight:500}
+  #dpage .dp-foot .ics{display:flex;align-items:center;gap:10px}
+  @media (max-width:640px){
+    #dpage .dp-foot .in{flex-direction:column;align-items:flex-start;gap:20px;padding:30px 20px}
+  }
   #dpage .dp-card{
     background:var(--dp-cloud);border:1px solid var(--dp-line);border-radius:24px;
     box-shadow:0 12px 40px rgba(9,18,46,.08);padding:clamp(20px,3vw,34px);margin-bottom:22px
@@ -4345,6 +4381,40 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   function dpAcctName() {
     return window.Cloud.nick() || window.Cloud.email() || dpT("我的账号", "My account");
   }
+  /* 内页页脚。落地页有自己的页脚(还带隐私政策 / 使用条款),这里是内页版:
+     只留「关于我们」与两个社群入口。 */
+  const FOOT_YEAR = "2026";
+  const SOCIAL_IG = "https://www.instagram.com/the_inner.sky?igsh=dDc4YmUwZTllc2h0&utm_source=qr";
+  const SOCIAL_XHS = "https://xhslink.cn/m/6XbeCmG8RPc";
+
+  function dpFooterHtml() {
+    return '<footer class="dp-foot">' + dpStars(60, 42) +
+      '<div class="in">' +
+        '<div class="bd">' +
+          '<span class="wm">INNER&nbsp;SKY</span>' +
+          '<span class="tag">' + dpT("心有苍穹，星映本真", "A whole sky within you") + '</span>' +
+          '<span class="cp">© ' + FOOT_YEAR + ' The Inner Sky. All rights reserved.</span>' +
+        '</div>' +
+        '<div class="rt">' +
+          '<a class="lk" href="' + esc0(LANDING_URL) + '#story">' + dpT("关于我们", "About us") + '</a>' +
+          '<span class="ics">' +
+            '<a class="ic" href="' + esc0(SOCIAL_IG) + '" target="_blank" rel="noopener noreferrer" ' +
+              'aria-label="Instagram" title="Instagram">' +
+              '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.6">' +
+              '<rect x="3" y="3" width="18" height="18" rx="5"></rect>' +
+              '<circle cx="12" cy="12" r="4"></circle>' +
+              '<circle cx="17.2" cy="6.8" r="1.1" fill="currentColor" stroke="none"></circle>' +
+              '</svg></a>' +
+            /* 小红书没有可用的单色线稿标志,沿用落地页 social-chip 的做法:
+               圆圈里放白色「小红书」三个字,不用品牌红。 */
+            '<a class="ic xhs" href="' + esc0(SOCIAL_XHS) + '" target="_blank" rel="noopener noreferrer" ' +
+              'aria-label="' + esc0(dpT("小红书", "REDnote")) + '" title="' + esc0(dpT("小红书", "REDnote")) + '">' +
+              '<span aria-hidden="true">小红书</span></a>' +
+          '</span>' +
+        '</div>' +
+      '</div></footer>';
+  }
+
   function dpTopbarHtml() {
     const here = (curRoute && curRoute.k) || "";
     const items = dpNavItems();
@@ -4431,7 +4501,8 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       '</div>' +
       (o.art ? '<img class="dp-hero-art" src="' + o.art + '" alt="">' : "") +
       '</div></div>' +
-      '<div class="dp-body">' + (o.body || "") + (o.foot || "") + '</div>';
+      '<div class="dp-body">' + (o.body || "") + (o.foot || "") + '</div>' +
+      dpFooterHtml();
   }
   function dpPara(x) {
     return esc0(x).split(/\n\s*\n|\n/).filter(function (y) { return y.trim(); })
