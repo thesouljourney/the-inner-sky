@@ -4121,26 +4121,9 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     }
   }
 
-  // 一行行星读数:星座 · 第 N 宫
-  function dpPlaceRows(list, small) {
-    return list.map(function (it) {
-      const p = dpPlacement(it[0]);
-      if (!p) return "";
-      const glyph = GL.symbolSVG ? GL.symbolSVG(p.glyph, 17, "currentColor") : "";
-      return '<div class="row' + (small ? " sm" : "") + '">' +
-        '<span class="gl">' + glyph + '</span>' +
-        '<span><span class="nm">' + esc0(it[1]) + '</span>' +
-        '<span class="vl">' + esc0(p.sign) + ' · ' + esc0(window.I18N.houseLabel ? window.I18N.houseLabel(p.house) : ("第" + p.house + "宫")) + '</span></span>' +
-        (p.retro ? '<span class="rx">℞</span>' : "") + '</div>';
-    }).join("");
-  }
-  function dpAscRow() {
-    const a = dpAscSign();
-    if (!a) return "";
-    return '<div class="row"><span class="gl">↑</span>' +
-      '<span><span class="nm">' + esc0(dpT("上升", "Rising")) + '</span>' +
-      '<span class="vl">' + esc0(a.sign) + '</span></span></div>';
-  }
+  /* dpPlaceRows / dpAscRow 原本只服务「生命蓝图」页上的基础个人星象盘,
+     该区块已移除,两个函数一并拿掉。dpPlacement 保留 ——「我的星空」
+     的行星列表仍在用它。 */
 
   // 行星资料:供两个页面共用的读数(星座 · 宫位 · 度数 · 逆行)
   function dpPlacement(key) {
@@ -4154,12 +4137,6 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       deg: g.deg, house: p.house, retro: !!p.retro
     };
   }
-  function dpAscSign() {
-    if (!curResult) return null;
-    const g = C.lonToSign(curResult.ang.asc);
-    return { sign: window.I18N.isEN() ? window.I18N.TSign(g.sign) : g.sign, deg: g.deg };
-  }
-
   /* ============================================================
      独立页面路由
      #/topic/<id>  九大主题    #/q/<qid>  三十问
@@ -4759,25 +4736,9 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       /* 「星象概览」(太阳 / 月亮 / 上升 的技术型 summary)不再对使用者显示。
          资料与逻辑完全保留在 curResult / drawChartWheel 里(「我的星空」仍然完整呈现),
          这里只是不再渲染这个 Section,让页面直接进入有阅读价值的个人解读。 */
-      // ---- 基础个人星象盘(简化预览)----
-      // 与「我的星空」完整盘共用同一份 curResult,读数不可能出现分歧
-      body += '<div class="dp-card"><div class="dp-sec-label">' + dpT("基础个人星象盘", "YOUR NATAL CHART") + '</div>' +
-        '<div class="dp-chart-wrap">' +
-        '<svg class="dp-wheel" id="dpBlueprintWheel" role="img" aria-label="' + esc0(dpT("你的简化星盘", "Your natal chart")) + '"></svg>' +
-        '<div class="dp-place">' + dpPlaceRows([
-          ["Sun", dpT("太阳", "Sun")], ["Moon", dpT("月亮", "Moon")]
-        ], false) +
-        dpAscRow() +
-        '<div class="dp-tier">' + dpT("个人行星", "PERSONAL PLANETS") + '</div>' +
-        dpPlaceRows([
-          ["Mercury", dpT("水星", "Mercury")], ["Venus", dpT("金星", "Venus")], ["Mars", dpT("火星", "Mars")]
-        ], true) +
-        dpPlaceRows([
-          ["Jupiter", dpT("木星", "Jupiter")], ["Saturn", dpT("土星", "Saturn")]
-        ], true) +
-        '</div></div>' +
-        '<div class="dp-chart-cta"><a class="dp-link" href="#/my-sky">' + dpT("查看完整星盘", "View full chart") + ' →</a></div>' +
-        '</div>';
+      /* 「基础个人星象盘」(简化盘 + 行星落点列表)已从这一页移除。
+         完整盘仍然在「我的星空」(#/my-sky),两边本来就共用同一份
+         curResult,移除这个区块不影响任何计算或其他页面。 */
 
       // 五章:分页签呈现
       const chs = r.chapters || [];
@@ -4854,8 +4815,6 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       sub: sub, body: body, foot: foot,
       backLabel: dpT("返回主页", "Back to home"), backHref: LANDING_URL, seed: 99
     });
-    const bw = document.getElementById("dpBlueprintWheel");
-    if (bw && curResult) drawChartWheel(bw, curResult, { variant: "compact" });
     $("dpage").querySelectorAll("[data-rtab]").forEach(function (b) {
       b.addEventListener("click", function () { location.hash = "#/reading/" + b.getAttribute("data-rtab"); });
     });
