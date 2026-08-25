@@ -240,7 +240,31 @@ function testPlaces() {
   });
 }
 
-/* ---------- 8. 同一份资料,重复计算必须完全一致 ---------- */
+/* ---------- 8. app.html:模块级宣告不得晚于首次渲染 ----------
+   从落地页点进来是「带着 hash 整页载入 app.html」,冷启动那一刻
+   applyRoute() 就会渲染页面。如果 render*Page / dpScaffold 用到的
+   const / let 写在那行之后,就会踩进暂时性死区(TDZ),抛
+   「Cannot access 'X' before initialization」,整个 IIFE 中断 ——
+   症状是落地页正常、内页点进去一片空白。
+   这一条守住那个顺序,免得再犯。 */
+function testAppBootOrder() {
+  const fs = require("fs");
+  const html = fs.readFileSync(path.join(__dirname, "..", "app.html"), "utf8");
+  const bootIdx = html.indexOf("\n  applyRoute();");
+  checkEq("[boot] 找得到首次渲染的 applyRoute()", bootIdx > 0, true);
+  if (bootIdx < 0) return;
+
+  const after = html.slice(bootIdx + 1);
+  // 模块级宣告 = 两格缩排的 const / let(函数内部至少四格)
+  const late = [];
+  const re = /^ {2}(const|let) ([A-Za-z_$][\w$]*)/gm;
+  let m;
+  while ((m = re.exec(after))) late.push(m[2]);
+  checkEq("[boot] 首次渲染之后没有模块级 const / let 宣告" +
+    (late.length ? ":" + late.slice(0, 6).join(", ") : ""), late.length, 0);
+}
+
+/* ---------- 9. 同一份资料,重复计算必须完全一致 ---------- */
 function testDeterminism() {
   const birth = {
     date: "1994-11-21", time: "01:44",
@@ -259,6 +283,7 @@ function main() {
   testAspects();
   testNoSilentDefaults();
   testUnknownTime();
+  testAppBootOrder();
   testDeterminism();
   return testPlaces().then(function () {
     console.log("\n对照来源:" + REF.reference);

@@ -4343,6 +4343,23 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     else if (r.k === "onboarding") renderOnboardingPage();
     else if (r.k === "settings") renderSettingsPage();
   }
+  /* ============================================================
+     页面渲染会用到的模块级常数与状态
+     ------------------------------------------------------------
+     必须宣告在下面那次 applyRoute() 之前。
+     原因:从落地页点进来是「带着 hash 整页载入 app.html」,冷启动那一刻
+     applyRoute() 就会渲染页面;如果 render*Page / dpScaffold 用到的
+     const / let 还写在后面,就会踩进暂时性死区(TDZ),抛
+     「Cannot access 'X' before initialization」,整个 IIFE 中断,
+     结果是内页一片空白 —— 落地页正常、点进去没内容就是这个症状。
+     tests/run-tests.js 有一条静态检查会盯住这件事。
+     ============================================================ */
+  const FOOT_YEAR = "2026";
+  const SOCIAL_IG = "https://www.instagram.com/the_inner.sky?igsh=dDc4YmUwZTllc2h0&utm_source=qr";
+  const SOCIAL_XHS = "https://xhslink.cn/m/6XbeCmG8RPc";
+  let favFilter = "all", favSortNew = true, favConfirmKey = null;
+  let saveTipEl = null, toastEl = null, pendingSel = null;
+
   window.addEventListener("hashchange", applyRoute);
   applyRoute();   // 冷启动带路由 hash 时立即渲染(登录后 applyDeepLink 会再刷新一次)
 
@@ -4383,10 +4400,6 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   }
   /* 内页页脚。落地页有自己的页脚(还带隐私政策 / 使用条款),这里是内页版:
      只留「关于我们」与两个社群入口。 */
-  const FOOT_YEAR = "2026";
-  const SOCIAL_IG = "https://www.instagram.com/the_inner.sky?igsh=dDc4YmUwZTllc2h0&utm_source=qr";
-  const SOCIAL_XHS = "https://xhslink.cn/m/6XbeCmG8RPc";
-
   function dpFooterHtml() {
     return '<footer class="dp-foot">' + dpStars(60, 42) +
       '<div class="in">' +
@@ -4856,7 +4869,6 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
      · 不拦截 copy、不改变浏览器原生 selection 行为
      · Mobile 走原生长按选字,选完同样浮出动作
      ============================================================ */
-  let saveTipEl = null, toastEl = null, pendingSel = null;
 
   function dpToast(msg) {
     if (!toastEl) {
@@ -4935,7 +4947,6 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   window.addEventListener("scroll", hideSaveTip, { passive: true });
 
   // ---------- 页面:我的收藏(句子星空)----------
-  let favFilter = "all", favSortNew = true, favConfirmKey = null;
 
   function renderFavoritesPage() {
     const c = activeChart();
