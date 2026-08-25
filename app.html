@@ -524,11 +524,14 @@
   }
   #dpage .dp-foot .rt a.lk:hover{color:var(--dp-light)}
   #dpage .dp-foot .ic{
-    width:34px;height:34px;border-radius:50%;border:1px solid rgba(249,246,242,.28);
+    width:38px;height:38px;border-radius:50%;border:1px solid rgba(249,246,242,.28);
     display:inline-flex;align-items:center;justify-content:center;
-    color:rgba(249,246,242,.86);transition:border-color .2s,color .2s,background .2s;
+    color:rgba(249,246,242,.86);text-decoration:none;
+    transition:border-color .2s,color .2s,background .2s;
   }
   #dpage .dp-foot .ic:hover{border-color:rgba(232,211,162,.75);color:var(--dp-gold);background:rgba(249,246,242,.06)}
+  /* 小红书:圆圈里放白色三个字(与落地页 social-chip 同一种处理),不用品牌红 */
+  #dpage .dp-foot .ic.xhs{font-size:9px;letter-spacing:0;line-height:1;color:rgba(249,246,242,.9);font-weight:500}
   #dpage .dp-foot .ics{display:flex;align-items:center;gap:10px}
   @media (max-width:640px){
     #dpage .dp-foot .in{flex-direction:column;align-items:flex-start;gap:20px;padding:30px 20px}
@@ -4380,7 +4383,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   }
   /* 内页页脚。落地页有自己的页脚(还带隐私政策 / 使用条款),这里是内页版:
      只留「关于我们」与两个社群入口。 */
-  const FOOT_YEAR = "2025";
+  const FOOT_YEAR = "2026";
   const SOCIAL_IG = "https://www.instagram.com/the_inner.sky?igsh=dDc4YmUwZTllc2h0&utm_source=qr";
   const SOCIAL_XHS = "https://xhslink.cn/m/6XbeCmG8RPc";
 
@@ -4397,18 +4400,16 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
           '<span class="ics">' +
             '<a class="ic" href="' + esc0(SOCIAL_IG) + '" target="_blank" rel="noopener noreferrer" ' +
               'aria-label="Instagram" title="Instagram">' +
-              '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6">' +
+              '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.6">' +
               '<rect x="3" y="3" width="18" height="18" rx="5"></rect>' +
               '<circle cx="12" cy="12" r="4"></circle>' +
               '<circle cx="17.2" cy="6.8" r="1.1" fill="currentColor" stroke="none"></circle>' +
               '</svg></a>' +
-            '<a class="ic" href="' + esc0(SOCIAL_XHS) + '" target="_blank" rel="noopener noreferrer" ' +
+            /* 小红书没有可用的单色线稿标志,沿用落地页 social-chip 的做法:
+               圆圈里放白色「小红书」三个字,不用品牌红。 */
+            '<a class="ic xhs" href="' + esc0(SOCIAL_XHS) + '" target="_blank" rel="noopener noreferrer" ' +
               'aria-label="' + esc0(dpT("小红书", "REDnote")) + '" title="' + esc0(dpT("小红书", "REDnote")) + '">' +
-              '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6">' +
-              '<circle cx="12" cy="12" r="8.5"></circle>' +
-              '<circle cx="12" cy="12" r="3.4" fill="currentColor" stroke="none"></circle>' +
-              '<circle cx="7.6" cy="7.6" r="1" fill="currentColor" stroke="none"></circle>' +
-              '</svg></a>' +
+              '<span aria-hidden="true">小红书</span></a>' +
           '</span>' +
         '</div>' +
       '</div></footer>';
