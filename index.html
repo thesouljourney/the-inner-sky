@@ -604,9 +604,22 @@ header.site > .wrap.nav {
 }
 .thread-gate .go:hover { background: rgba(232,211,162,.16); }
 .thread-gate.ready .tx { color: var(--text-dark); }
-/* 完成态:显示这份解读自己的标题,字级比催促文案大一些 */
-.thread-gate .tx.title { font-size: 18px; line-height: 32px; color: var(--text-dark); letter-spacing: .02em; }
-@media (max-width: 520px) { .thread-gate .tx.title { font-size: 16.5px; line-height: 29px; } }
+/* 完成态:星球连接之下的主标题。
+   它是星球之后的第二视觉重点,但不抢 section title,所以不额外套卡片。 */
+.thread-crown { margin-top: 30px; display: flex; flex-direction: column; align-items: center; }
+.thread-crown .mark {
+  display: block; font-size: 11px; line-height: 1; color: rgba(196,164,108,.75); margin-bottom: 14px;
+}
+.thread-crown .lead-title {
+  margin: 0; max-width: 30ch; text-align: center;
+  font-family: var(--font-serif-sc); font-size: 19px; line-height: 34px;
+  color: var(--text-dark); letter-spacing: .01em;
+}
+.thread-gate.done .go { margin-top: 26px; }
+@media (max-width: 520px) {
+  .thread-crown { margin-top: 24px; }
+  .thread-crown .lead-title { font-size: 16.5px; line-height: 30px; max-width: 22ch; }
+}
 
 /* ---------- Mobile:脉络星球改成换行排列 ----------
    手机上九颗星球挤在同一行,flex 会把每颗压到只剩几个 px,既看不清也没有质感。
@@ -1116,19 +1129,18 @@ function appHref(hash) { return APP_URL + (hash || ""); }
     }).join("") + '</div>';
   }
 
-  /* 最终状态:九个主题读完,而且生命脉络的详细解读也全部读过。
-     这时不再显示催促文案,改成显示这份解读自己的标题。 */
-  if (allRead) {
+  /* 详细解读已经生成 → 星球连接留在上面,底下接这份解读自己的主标题。
+     标题是新增在星球下面,不是拿来取代星球连接:
+       九颗星球 = 走过的九个主题
+       主标题   = 这九个主题最后收束出来的那一条线
+     两者同时存在。手机版顺序一样,不隐藏星球。 */
+  if (st.generated || allRead) {
     slot.innerHTML = '<div class="thread-gate ready done">' + fullTrack() +
-      (lmTitle ? '<p class="tx title">' + esc(lmTitle) + '</p>' : '') +
-      '<a class="go" href="' + appHref("#/map") + '" data-app-hash="#/map">继续探索 →</a></div>';
-    return;
-  }
-
-  // 已生成但本地没有内容快取:直接给标题与入口,不要退回催促文案
-  if (st.generated && !(lm && lm.sections && lm.sections.length)) {
-    slot.innerHTML = '<div class="thread-gate ready">' + fullTrack() +
-      (lmTitle ? '<p class="tx title">' + esc(lmTitle) + '</p>' : '<p class="tx">你的生命脉络已经写好了。</p>') +
+      '<div class="thread-crown">' +
+      '<span class="mark" aria-hidden="true">✦</span>' +
+      (lmTitle ? '<p class="lead-title">' + esc(lmTitle) + '</p>'
+               : '<p class="lead-title">你的生命脉络已经写好了。</p>') +
+      '</div>' +
       '<a class="go" href="' + appHref("#/map") + '" data-app-hash="#/map">继续探索 →</a></div>';
     return;
   }

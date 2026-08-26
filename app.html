@@ -4995,43 +4995,21 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     return h;
   }
 
+  /* 「属于我的生命脉络」的详细解读 —— 直接复用主题页那一套。
+     以前这里自己长了一套:分页签、一次只读一段,和主题详细解读看起来
+     像两个系统。现在整段交给 dpAnswerHtml,所有段落像主题页一样往下
+     排,内容宽度 / 标题字级 / 分隔线 / 段距 / 值得记住 / 留给你的思考
+     全部是同一份 component 与同一套 CSS,手机版自然也跟着一致。
+     tab 只用来决定进页后卷到哪一段(#/map/<i> 的深链仍然有效)。 */
   function dpThreadHtml(data, favSource, tab, favType) {
-    favType = favType || "";
-    // 不过滤:索引必须与落地页的标题列表(#/map/<i>)一一对应
-    const secs = (data.sections || []);
-    let h = "";
-    if (data.tagline)
-      h += '<div class="dp-card"><div class="dp-quote"><span class="q">“</span>' + esc0(data.tagline) + "</div></div>";
-    if (secs.length) {
-      let i = tab | 0;
-      if (!(i >= 0 && i < secs.length)) i = 0;
-      const sc = secs[i];
-      function sName(x, n) { return x.title || (dpT("第", "Part ") + (window.I18N.isEN() ? String(n + 1) : "一二三四五六七八九"[n] + "段")); }
-      const k = favKey(favSource, sName(sc, i), sc.body || "");
-      const btn = '<button class="fav-btn' + (isFaved(k) ? " on" : "") + '" data-fav="' + esc0(k) +
-        '" data-text="' + esc0(String(sc.body || "").slice(0, 300)) + '" data-source="' + esc0(favSource) +
-        '" data-source-type="' + esc0(favType) +
-        '" data-section="' + esc0(sName(sc, i)) + '" title="' + esc0(T("saveIt")) + '">' + (isFaved(k) ? "★" : "☆") + "</button>";
-      h += '<div class="dp-card"><div class="dp-read"><div class="dp-sec-label">' + dpT("主题解读", "READING") + "</div>" +
-        '<div class="dp-tabs">' + secs.map(function (x, n) {
-          return '<button data-mtab="' + n + '"' + (n === i ? ' class="on"' : "") + ">" + esc0(sName(x, n)) + "</button>";
-        }).join("") + "</div>" +
-        '<div class="dp-sec"><div class="dp-h-row"><h3 class="dp-h">' + esc0(sName(sc, i)) + "</h3>" + btn + "</div>" +
-        '<div class="dp-div"><span class="st">✦</span><span class="ln"></span></div>' +
-        '<div class="dp-prose" data-saveable data-source="' + esc0(favSource) +
-        '" data-source-type="' + esc0(favType) +
-        '" data-section="' + esc0(sName(sc, i)) + '">' + dpPara(sc.body) + "</div></div>" +
-        "</div></div>";
-    }
-    h += dpTailBlocks(data);
-    return h;
+    return dpAnswerHtml(data, favSource, favType);
   }
   function dpAnswerHtml(data, favSource, favType) {
     favType = favType || "";
     let h = "";
     if (data.tagline)
       h += '<div class="dp-card"><div class="dp-quote"><span class="q">“</span>' + esc0(data.tagline) + "</div></div>";
-    h += '<div class="dp-card"><div class="dp-read"><div class="dp-sec-label">' + dpT("主题解读", "READING") + "</div>";
+    h += '<div class="dp-card"><div class="dp-read"><div class="dp-sec-label">' + dpT("详细解读", "READING") + "</div>";
     h += (data.sections || []).map(function (sc, si) {
       const k = favKey(favSource, sc.title || "", sc.body || "");
       const btn = '<button class="fav-btn' + (isFaved(k) ? " on" : "") + '" data-fav="' + esc0(k) +
@@ -5803,10 +5781,12 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     if (rm) rm.addEventListener("click", function () { mapErr = null; toggleMap(); });
     const gm = document.getElementById("dpGenMap");
     if (gm) gm.addEventListener("click", function () { toggleMap(); });
-    // 分页签:从落地页点某个标题进来 → 直接停在那一段
-    $("dpage").querySelectorAll("[data-mtab]").forEach(function (b) {
-      b.addEventListener("click", function () { location.hash = "#/map/" + b.getAttribute("data-mtab"); });
-    });
+    /* 详细解读现在跟主题页一样整篇往下排,不再有分页签。
+       #/map/<i> 这种深链仍然有效 —— 进页后卷到那一段就好。 */
+    if (mapTab) {
+      const target = document.getElementById("sec-" + (mapTab | 0));
+      if (target) setTimeout(function () { target.scrollIntoView({ behavior: "smooth", block: "start" }); }, 240);
+    }
   }
 
   // ---------- 初始化 ----------
