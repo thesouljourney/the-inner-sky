@@ -4,7 +4,7 @@
    { ang:{asc,mc}, cusps:[12], planets:[{key,lon,retro}], aspects:[{a,b,type,name,orb}] }
    没有数据时显示引导，不用示例盘冒充使用者资料。 */
 (function () {
-  window.INNER_SKY_CHART_VERSION = "v3-house-clamp";
+  window.INNER_SKY_CHART_VERSION = "v4-empty-aries";
   var SIGNS = [
     { name: "白羊座", elem: "火", mode: "开创", ruler: "火星", art: "assets/signs/sm/aries.webp" },
     { name: "金牛座", elem: "土", mode: "固定", ruler: "金星", art: "assets/signs/sm/taurus.webp" },
@@ -73,13 +73,13 @@
   var appHash = root.getAttribute("data-app") || "app.html";
   var chart = readChart();
 
-  if (!chart) {
-    root.innerHTML = '<div class="isky-empty">还没有你的星盘。<br>建立之后，这里会显示属于你的那一张。' +
-      '<br><a href="' + esc(appHash) + '#/onboarding" data-app-hash="#/onboarding">建立我的星盘 →</a></div>';
-    var lg = document.getElementById("iskyLegend"); if (lg) lg.style.display = "none";
-    var ft = document.getElementById("iskyFoot"); if (ft) ft.style.display = "none";
-    var tg = document.getElementById("iskyToggle"); if (tg) tg.style.display = "none";
-    return;
+  /* 还没有出生资料时:画一张「从白羊座开始」的空盘。
+     只有十二星座的圈,没有任何行星、相位、行星图例、ASC/MC 与宫位号
+     —— 这些都要靠出生资料才算得出来,没有就不显示,不用假资料冒充。 */
+  var isEmpty = !chart;
+  if (isEmpty) {
+    var eq = []; for (var ei = 0; ei < 12; ei++) eq.push(ei * 30);
+    chart = { ang: { asc: 0, mc: 270 }, cusps: eq, planets: [], aspects: [] };
   }
 
   var asc = (chart.ang && chart.ang.asc) || 0;
@@ -133,11 +133,11 @@
     var a = ang(c), p1 = pt(R_ASP, a), p2 = pt(R_IN, a), card = (i % 3 === 0);
     return { x1: p1[0], y1: p1[1], x2: p2[0], y2: p2[1], stroke: card ? "rgba(240,222,166,.72)" : "rgba(226,196,133,.44)", w: card ? 1.7 : 1.3 };
   });
-  var houseNums = cusps.map(function (c, i) {
+  var houseNums = isEmpty ? [] : cusps.map(function (c, i) {
     var span = n360(cusps[(i + 1) % 12] - c) || 30, p = pt(R_HOUSE_NUM, ang(c + span / 2));
     return { n: String(i + 1), x: p[0], y: p[1] };
   });
-  var axes = [
+  var axes = isEmpty ? [] : [
     { label: "ASC", lon: asc }, { label: "DSC", lon: n360(asc + 180) },
     { label: "MC", lon: mc }, { label: "IC", lon: n360(mc + 180) }
   ].map(function (a) {
@@ -282,7 +282,14 @@
     return o.join("");
   }
 
-  root.innerHTML = svgMarkup() + '<div class="isky-layer" id="iskyLayer"></div>';
+  root.innerHTML = svgMarkup() + '<div class="isky-layer" id="iskyLayer"></div>' +
+    (isEmpty ? '<div class="isky-empty">还没有你的星盘。<br>建立之后，这里会显示属于你的那一张。' +
+      '<br><a href="' + esc(appHash) + '#/onboarding" data-app-hash="#/onboarding">建立我的星盘 →</a></div>' : "");
+  if (isEmpty) {
+    var lg0 = document.getElementById("iskyLegend"); if (lg0) lg0.style.display = "none";
+    var ft0 = document.getElementById("iskyFoot"); if (ft0) ft0.style.display = "none";
+    var tg0 = document.getElementById("iskyToggle"); if (tg0) tg0.style.display = "none";
+  }
   var layer = document.getElementById("iskyLayer");
   var svg = root.querySelector("svg");
 
@@ -306,7 +313,7 @@
     setSignDim(i);
     var s = SIGNS[i];
     var houseIdx = -1;
-    for (var h = 0; h < 12; h++) {
+    for (var h = 0; h < 12 && !isEmpty; h++) {
       var c = cusps[h], nx = cusps[(h + 1) % 12], mid = n360(i * 30 + 15);
       if (n360(mid - c) < (n360(nx - c) || 30)) { houseIdx = h; break; }
     }
@@ -316,8 +323,9 @@
       '<span class="thumb" style="background-image:url(\'' + s.art + '\')"></span>' + esc(s.name) +
       '</div><button class="x" type="button" aria-label="关闭">✕</button></div>' +
       '<p class="meta">' + esc(s.elem + "象 · " + s.mode + " · 守护星 " + s.ruler + (houseIdx >= 0 ? " · 落第 " + (houseIdx + 1) + " 宫" : "")) + '</p>' +
-      '<div class="body">' + esc(inside.length ? "这个星座里的星体：" + inside.join("、") + "。"
-        : "这个星座里没有星体，它的能量通过守护星 " + s.ruler + " 表达。") + '</div></div>';
+      '<div class="body">' + esc(isEmpty ? "建立星盘之后，这里会显示你落在这个星座里的星体。"
+        : (inside.length ? "这个星座里的星体：" + inside.join("、") + "。"
+          : "这个星座里没有星体，它的能量通过守护星 " + s.ruler + " 表达。")) + '</div></div>';
     layer.querySelector(".x").addEventListener("click", function () {
       state.openSign = null; setSignDim(null); clearLayer();
     });
@@ -372,7 +380,7 @@
   }
 
   var legend = document.getElementById("iskyLegend");
-  if (legend) {
+  if (legend && !isEmpty) {
     legend.innerHTML = ORDER.map(function (k) {
       var fr = FRAC[k] || { f: .7 };
       return '<div class="it"><div class="ic" style="background-image:url(\'' + ART[k] + '\');transform:scale(' + (0.62 / fr.f).toFixed(2) + ')"></div>' +
