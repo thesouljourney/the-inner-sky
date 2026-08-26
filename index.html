@@ -121,28 +121,54 @@ body {
               linear-gradient(180deg, rgba(246,243,239,.1), rgba(236,237,239,.07));
   filter: blur(22px);
 }
-/* Canvas 后方的云层:整个 Canvas 只用同一张云图一次。
-   不复制、不平铺、不镜像、不纵向拉伸;云图盖不到的地方保持原本的深蓝星空。
-   云只从 Canvas 左右露出,中间被珍珠白画布挡住,不会压到任何文字或内容。 */
-.canvas > .clouds { position: absolute; inset: 0; z-index: -3; pointer-events: none; }
-.canvas > .clouds .cloud {
-  position: absolute; top: 120px; left: 50%; transform: translateX(-50%);
-  width: 118%; max-width: 1500px; height: auto; object-fit: contain;
-  opacity: .72; filter: blur(.5px) brightness(1.22) saturate(.82);
-  -webkit-mask-image: radial-gradient(78% 74% at 50% 50%, #000 42%, rgba(0,0,0,.55) 72%, transparent 100%);
-  mask-image: radial-gradient(78% 74% at 50% 50%, #000 42%, rgba(0,0,0,.55) 72%, transparent 100%);
+/* Canvas 后方的连续云雾(cloud atmosphere)
+   assets/clouds.png 本身就是一张「上下贯通、中间透空」的云廊素材。
+   这里把它整张贴满 Canvas 的完整高度:::before 取素材左半边贴左缘,
+   ::after 取素材右半边贴右缘,两半在中央交叠淡出,所以是同一张图的左右两侧,
+   不是上下叠两张、也不是平铺重复,画面从 Canvas 顶部到底部不会断开。
+   background-size: auto 100% 只按高度等比缩放,不横向拉伸变形。 */
+.canvas > .clouds {
+  position: absolute; inset: 0; z-index: -3; pointer-events: none;
+  opacity: .46;
+  filter: blur(1px) saturate(.72) brightness(.9) contrast(.95);
+  /* 纵向密度曲线:顶部微露 → 中段低对比但不消失 → 下段回升 → 底部化进深蓝 */
+  -webkit-mask-image: linear-gradient(180deg,
+    rgba(0,0,0,0) 0%, rgba(0,0,0,.5) 5%, rgba(0,0,0,.72) 15%,
+    rgba(0,0,0,.6) 33%, rgba(0,0,0,.58) 52%,
+    rgba(0,0,0,.76) 72%, rgba(0,0,0,.95) 87%, rgba(0,0,0,.62) 95%, rgba(0,0,0,0) 100%);
+  mask-image: linear-gradient(180deg,
+    rgba(0,0,0,0) 0%, rgba(0,0,0,.5) 5%, rgba(0,0,0,.72) 15%,
+    rgba(0,0,0,.6) 33%, rgba(0,0,0,.58) 52%,
+    rgba(0,0,0,.76) 72%, rgba(0,0,0,.95) 87%, rgba(0,0,0,.62) 95%, rgba(0,0,0,0) 100%);
+}
+.canvas > .clouds::before, .canvas > .clouds::after {
+  content: ""; position: absolute; top: 0; bottom: 0; width: 52%;
+  background-image: url(assets/clouds.png);
+  background-repeat: no-repeat;
+  background-size: auto 100%;
+}
+.canvas > .clouds::before {
+  left: 0; background-position: left center;
+  -webkit-mask-image: linear-gradient(90deg, #000 0%, #000 46%, rgba(0,0,0,.55) 72%, rgba(0,0,0,0) 100%);
+  mask-image: linear-gradient(90deg, #000 0%, #000 46%, rgba(0,0,0,.55) 72%, rgba(0,0,0,0) 100%);
+}
+.canvas > .clouds::after {
+  right: 0; background-position: right center;
+  -webkit-mask-image: linear-gradient(270deg, #000 0%, #000 46%, rgba(0,0,0,.55) 72%, rgba(0,0,0,0) 100%);
+  mask-image: linear-gradient(270deg, #000 0%, #000 46%, rgba(0,0,0,.55) 72%, rgba(0,0,0,0) 100%);
 }
 /* Canvas 内的内容比 Canvas 窄一大截,四周留白 */
 .canvas .wrap { width: min(880px, 74%); }
 @media (max-width: 1250px) {
   .canvas::before, .canvas::after { --cw: min(92%, 1120px); }
   .canvas .wrap { width: min(880px, 86%); }
-  .canvas > .clouds .cloud { width: 150%; opacity: .62; top: 40px; }
+  .canvas > .clouds { opacity: .42; }
 }
 @media (max-width: 900px) {
   .canvas::before, .canvas::after { --cw: calc(100% - 28px); }
   .canvas .wrap { width: min(880px, 88%); }
-  .canvas > .clouds .cloud { opacity: .48; width: 132%; }
+  .canvas > .clouds { opacity: .38; filter: blur(.6px) saturate(.72) brightness(.9); }
+  .canvas > .clouds::before, .canvas > .clouds::after { width: 60%; }
   .canvas::before { top: -22px; bottom: 6px; border-radius: 18px;
     -webkit-mask-image: linear-gradient(180deg, #000 calc(100% - 110px), transparent 100%);
     mask-image: linear-gradient(180deg, #000 calc(100% - 110px), transparent 100%); }
@@ -832,10 +858,9 @@ var APP_URL = "app.html";
 </div>
 
 <div class="canvas">
-<!-- 整个 Floating Canvas 后方只有这一张云图,不得再加第二层/镜像/平铺 -->
-<div class="clouds" aria-hidden="true">
-  <img class="cloud" src="assets/clouds.png" alt="">
-</div>
+<!-- Cloud atmosphere:同一张云图贯穿整个 Floating Canvas 的高度,左右两侧连续包裹,
+     全部靠 CSS 伪元素 + 遮罩完成,不平铺、不镜像、不分段 -->
+<div class="clouds" aria-hidden="true"></div>
 <section class="chapters" id="chapters">
   <div class="wrap">
     <h2 class="sec-title animate-fade-up">你今天想靠近哪一部分自己?</h2>
