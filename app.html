@@ -2037,6 +2037,17 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   // 内容架构版本:服务端 Prompt 有重大升级时 +1,旧内容自动重新生成
   const CONTENT_VER = 10;
 
+  /* 生命蓝图「写作层」版本。刻意与 CONTENT_VER 分开:
+     只有生命蓝图的表达方式变了(read-chart v11 的 BLUEPRINT_STYLE),
+     主题解读 / 人生地图 / 三十道探索题的 Prompt 一个字都没动,
+     所以它们不该被牵连重新生成。
+     旧的生命蓝图不会被删除:renderReading 会先照常显示旧的,
+     再在背景重新生成,成功才替换 —— 生成失败时使用者手上仍是原本那一份。 */
+  const BLUEPRINT_VER = 11;
+  function blueprintOutdated(saved) {
+    return !!saved && (saved.bpVer || 0) < BLUEPRINT_VER;
+  }
+
   // ---------- 九个主题(仅 UI 文案;写作规则与资料调用都在服务端) ----------
   const TOPICS9 = [
     { id: "self",    icon: "\u2B50",       name: "个人",     sub: "你是谁，你如何成为自己",
@@ -2276,7 +2287,11 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     // 英文另起指纹,与中文互不覆盖。
     // en-w2:英文写作系统第二版(Bilingual Writing System v1.0 + 内部两步 + 文风修正)。
     //   只换英文标签 —— 中文标签一个字元都没动,既有中文缓存继续命中。
-    const base = String(fpSeed || "") + "|" + kind + sub + "|v10" + (lang === "en" ? "|en-w2" : "");
+    /* 服务端 readings 表按指纹缓存,命中就直接回旧文字、根本不呼叫模型。
+       生命蓝图的写作层换过一次 → 只有它换新标签,重新生成一次;
+       topic / map / question 维持 v10,既有服务端缓存继续命中,不重生成、不额外花钱。 */
+    const ver = (kind === "blueprint") ? "v11-bp" : "v10";
+    const base = String(fpSeed || "") + "|" + kind + sub + "|" + ver + (lang === "en" ? "|en-w2" : "");
     return attempt(base).catch(function (e) {
       if (e.parseFail) return attempt(base + "|retry" + Date.now());
       throw e;
@@ -2443,6 +2458,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
 
   window.Reading = {
     CONTENT_VER: CONTENT_VER,
+    BLUEPRINT_VER: BLUEPRINT_VER, blueprintOutdated: blueprintOutdated,
     curLang: curLang, LK: LK,
     TOPICS9: TOPICS9, findTopic: findTopic, DOMAINS: DOMAINS, findQ: findQ,
     parseChapters: parseChapters, parseTopic: parseTopic,
@@ -3940,6 +3956,62 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   }
 
   let autoGenBusy = false;
+
+  /* ── 生命蓝图写作层升级 ──────────────────────────────────────
+     只有生命蓝图受影响;主题解读、人生地图、探索题一律不碰。
+     刻意做成「不破坏式」:旧的那一份留在画面上,背景重新生成,
+     成功才写回并重画;失败就什么都不动,下次进来再试。
+     每个星盘每次载入最多试一次,不会反覆呼叫。 */
+  const bpRefreshTried = {};
+  function refreshBlueprintStyle(c) {
+    if (!c || !curResult || autoGenBusy) return;
+    if (!window.Reading.hasSupabase()) return;
+    if (bpRefreshTried[c.id]) return;
+
+    const isEN = window.I18N.isEN();
+    // 英文版是从中文版改写的:中文来源还是旧写法的话,得先把中文换成新的
+    const zhOld = window.Reading.blueprintOutdated(c.reading);
+    const curOld = window.Reading.blueprintOutdated(c[window.Reading.LK("reading")]);
+    if (!zhOld && !curOld) return;
+
+    bpRefreshTried[c.id] = true;
+    const fpSeed = [c.date, c.time, c.lat.toFixed(4), c.lon.toFixed(4)].join("|");
+    const stamp = function (parsed) {
+      return Object.assign({ ts: new Date().toISOString().slice(0, 10),
+        ver: window.Reading.CONTENT_VER, bpVer: window.Reading.BLUEPRINT_VER }, parsed);
+    };
+    const stillHere = function () { const a = activeChart(); return !!a && a.id === c.id; };
+
+    // 先把中文换成新写法。这里是「版本升级」本身,不是补空的自动流程,
+    // 所以直接写入,不走 guardWriteZh(那道保护是拦自动补中文时的误覆盖)。
+    const zhJob = zhOld
+      ? window.Reading.fetchReading(curResult, fpSeed, c, "zh").then(function (zhParsed) {
+          if (!stillHere()) throw new Error("chart changed");
+          c.reading = stamp(zhParsed);
+          return true;
+        })
+      : Promise.resolve(false);
+
+    zhJob
+      .then(function (zhDone) {
+        if (!isEN) return zhDone;                       // 中文介面:换完中文就结束
+        return window.Reading.fetchReading(curResult, fpSeed, c, "en").then(function (enParsed) {
+          if (!stillHere()) throw new Error("chart changed");
+          c.reading_en = stamp(enParsed);
+          return true;
+        });
+      })
+      .then(function (changed) {
+        if (!changed || !stillHere()) return;
+        window.Cloud.updateChart(c).catch(function (e) { console.warn(T("syncFail"), e); });
+        renderReading();                                 // 换成新写法后重画
+      })
+      .catch(function (e) {
+        // 失败不做任何破坏:旧的那一份仍在画面上,也仍在云端
+        console.warn("[Inner Sky] 生命蓝图写作层升级未完成,维持原本内容", e);
+      });
+  }
+
   function renderReading(retrying, forceGen) {
     const c = activeChart(), body = $("nineBody");
     if (!c || !curResult) { body.innerHTML = ""; return; }
@@ -3954,6 +4026,8 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       $("readState").textContent = "";
       renderTopics();
       routeRefresh();
+      // 写作层升级过 → 背景重新生成一次。画面上这份旧的先留着,成功才替换。
+      refreshBlueprintStyle(c);
       return;
     }
     // 英文版本尚未生成时,不自动呼叫 AI:显示按钮,由使用者决定。
@@ -3982,7 +4056,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       const needSource = window.I18N.isEN() && !window.Reading.hasChinese(c, "blueprint");
       const job = needSource
         ? window.Reading.fetchReading(curResult, fpSeed, c, "zh").then(function (zhParsed) {
-            var zhVal = Object.assign({ ts: new Date().toISOString().slice(0, 10), ver: window.Reading.CONTENT_VER }, zhParsed);
+            var zhVal = Object.assign({ ts: new Date().toISOString().slice(0, 10), ver: window.Reading.CONTENT_VER, bpVer: window.Reading.BLUEPRINT_VER }, zhParsed);
             if (window.Reading.guardWriteZh(c, "blueprint", null, zhVal)) {
               window.Cloud.updateChart(c).catch(function () { });
             }
@@ -3993,7 +4067,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
         .then(function (parsed) {
           autoGenBusy = false;
           if (!activeChart() || activeChart().id !== c.id) return;
-          c[RK] = Object.assign({ ts: new Date().toISOString().slice(0, 10), ver: window.Reading.CONTENT_VER }, parsed);   // 含 raw 原文
+          c[RK] = Object.assign({ ts: new Date().toISOString().slice(0, 10), ver: window.Reading.CONTENT_VER, bpVer: window.Reading.BLUEPRINT_VER }, parsed);   // 含 raw 原文
           window.Cloud.updateChart(c).catch(function (e) { console.warn(T("syncFail"), e); });
           renderReading();
         })

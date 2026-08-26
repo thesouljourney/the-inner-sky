@@ -90,41 +90,54 @@ if (kind === "blueprint")   systemBlocks.push({ type:"text", text: BLUEPRINT_STY
 
 ---
 
-## 4. ⚠ 部署前必须知道的一件事:服务端快取会挡住新写法
+## 4. 现有使用者怎么看到新写法
 
-`read-chart` 用 `readings` 表按 **fingerprint** 缓存,命中就直接回传旧文字,**根本不会呼叫模型**:
+有两层会挡住新写法,两层都处理了。**只影响生命蓝图**,主题解读 / 人生地图 / 探索题一律不碰。
 
-```ts
-const q = await fetch(sbUrl+"/rest/v1/readings?fingerprint=eq."+fp+"&select=analysis", ...);
-if (rows.length && rows[0].analysis) return json({ text: rows[0].analysis, cached:true }, ...);
-```
+### 4.1 服务端 `readings` 快取(按指纹)
 
-而 fingerprint 由前端拼出来,中文版的版本标签写死是 `|v10`(`app.html:2279`):
+`read-chart` 命中快取就直接回旧文字、**根本不呼叫模型**。指纹由前端拼出来,中文版的版本标签原本写死 `|v10`。改成按 `kind` 区分,只让 blueprint 换标签:
 
 ```js
-const base = String(fpSeed || "") + "|" + kind + sub + "|v10" + (lang === "en" ? "|en-w2" : "");
+// app.html · askServer()
+const ver = (kind === "blueprint") ? "v11-bp" : "v10";
+const base = String(fpSeed || "") + "|" + kind + sub + "|" + ver + (lang === "en" ? "|en-w2" : "");
 ```
 
-所以只换 Edge Function 的话:
+topic / map / question 维持 `v10`,既有服务端快取继续命中,**不重新生成、不额外花钱**。
 
-- **已经存过生命蓝图的使用者** —— 本来就不会重新生成(前端读 `charts.data` 里的 `c.reading`),不受影响,也看不到新写法。
-- **新使用者,但星盘 fingerprint 已经在 `readings` 里** —— 会命中旧快取,拿到**旧写法**。
-- **fingerprint 全新的星盘** —— 才会用到新的 Prompt。
+### 4.2 使用者已经存下来的那一份(`charts.data` 里的 `c.reading`)
 
-要让新写法真正生效,前端需要把版本标签改成**按 kind 区分**,只让 blueprint 换一个标签:
+这一层才是真正的阻挡:前端读的是使用者自己存的 `c.reading`,和服务端快取无关。
 
-```diff
--    const base = String(fpSeed || "") + "|" + kind + sub + "|v10" + (lang === "en" ? "|en-w2" : "");
-+    // blueprint 的写作层在 read-chart v11 换过一次,单独换标签让它重新生成;
-+    // topic / map / question 维持 v10,既有服务端快取继续命中,不重新生成、不额外花钱。
-+    const ver = (kind === "blueprint") ? "v11-bp" : "v10";
-+    const base = String(fpSeed || "") + "|" + kind + sub + "|" + ver + (lang === "en" ? "|en-w2" : "");
+原本 app 里已经有一套「版本过期自动重生成」的机制(`CONTENT_VER` + `isStale` + `cleanupLegacy`),
+但它是**四层共用**的 —— 把 `CONTENT_VER` 从 10 加到 11 会连带把主题解读、人生地图、
+三十道探索题全部清掉重生成。所以另开一条只属于生命蓝图的版本轴:
+
+```js
+const CONTENT_VER  = 10;   // 不动
+const BLUEPRINT_VER = 11;  // 只有生命蓝图的写作层
+function blueprintOutdated(saved) { return !!saved && (saved.bpVer || 0) < BLUEPRINT_VER; }
 ```
 
-**这一行我没有动**,因为它在 `app.html`(不在这次「只改生命蓝图 Prompt」的范围内),而且会让一批
-blueprint 重新生成、产生 API 费用。要不要改、什么时候改,由你决定 —— 说一声我就补上。
+新生成的生命蓝图会盖上 `bpVer: 11`。旧的那些没有这个栏位 → 判定为旧写法。
 
----
+**刻意做成不破坏式**,不走 `cleanupLegacy` 的「先删除再重生成」:
+
+1. 进 `#/reading` 时,**先照常把旧的那一份显示出来**;
+2. 同时在背景重新生成一次;
+3. **成功**才写回 `charts.data` 并重画;
+4. **失败**就什么都不动 —— 旧的那一份仍在画面上、也仍在云端,下次进来再试;
+5. 每个星盘每次载入最多试一次,不会反覆呼叫。
+
+英文介面另外处理:英文版是从中文版改写的,所以先把中文换成新写法、写回,
+再据以重写英文,否则英文会拿旧中文当来源。这一步是「版本升级」本身,
+不是补空的自动流程,所以直接写入,不走 `guardWriteZh`(那道保护是拦自动补中文时的误覆盖)。
+
+### 4.3 成本
+
+每个已经有生命蓝图的使用者,会在下一次进入 `#/reading` 时触发**一次**生命蓝图重新生成。
+一次性,不重复。主题解读、人生地图、探索题不会产生任何额外呼叫。
 
 ## 5. 验证
 
@@ -177,6 +190,21 @@ blueprint 重新生成、产生 API 费用。要不要改、什么时候改,由�
 | `valid` 校验 | blueprint 仍走 `chapters`,其他仍走 `sections` ✓ |
 
 ---
+
+### 5.5 现有使用者能不能拿到新写法(Playwright,模拟已存旧蓝图的帐号)
+
+| 情境 | 结果 |
+| --- | --- |
+| 进 `#/reading`,背景升级完成后 | 画面换成新写法,旧正文消失 ✓ |
+| 这次总共呼叫 read-chart | **1 次,且 `kind` 只有 `blueprint`** ✓ |
+| 写回云端的 `reading.bpVer` | `11` ✓ |
+| 写回云端的 `topics.self` | 仍是原本那份,一个字没动 ✓ |
+| 升级完之后再进一次 | **0 次呼叫**,不会重复生成 ✓ |
+| **后端回 500(生成失败)** | 旧蓝图仍在画面上;只试 1 次;云端那份没被写坏 ✓ |
+| blueprint 指纹(改动前 vs 改动后) | `0adcdeab…` → `d44cc36f…`,**已改变**,会绕过服务端旧快取 ✓ |
+| topic 指纹(改动前 vs 改动后) | `c54628bf…` → `c54628bf…`,**完全一致**,既有快取继续命中 ✓ |
+
+`npm test` 1594 / 1594 通过(含 `testAppBootOrder` 的 TDZ 静态检查)。
 
 ## 6. 上线后建议怎么验收
 
