@@ -165,10 +165,15 @@ body {
   .canvas > .clouds { opacity: .42; }
 }
 @media (max-width: 900px) {
-  .canvas::before, .canvas::after { --cw: calc(100% - 28px); }
-  .canvas .wrap { width: min(880px, 88%); }
-  .canvas > .clouds { opacity: .38; filter: blur(.6px) saturate(.72) brightness(.9); }
-  .canvas > .clouds::before, .canvas > .clouds::after { width: 60%; }
+  /* 手机端把 Canvas 两侧的深蓝缝加宽到 24px,让云层真的露得出来;
+     .wrap 同步收窄,保持 Canvas 内原本的左右留白不变 */
+  .canvas::before, .canvas::after { --cw: calc(100% - 48px); }
+  .canvas .wrap { width: min(880px, 84%); }
+  .canvas > .clouds { opacity: .5; filter: blur(.6px) saturate(.75) brightness(.94); }
+  /* 手机端缝太窄,等比缩放只能看到素材最外缘的一条平缓渐层。
+     这里改成把整张云图压进侧栏(100% 100%),让缝里出现真正的云形与星点;
+     缝只有 24px 宽,看不出横向压缩,仍是同一张图、左右各一侧,不平铺不镜像。 */
+  .canvas > .clouds::before, .canvas > .clouds::after { width: 60%; background-size: 100% 100%; }
   .canvas::before { top: -22px; bottom: 6px; border-radius: 18px;
     -webkit-mask-image: linear-gradient(180deg, #000 calc(100% - 110px), transparent 100%);
     mask-image: linear-gradient(180deg, #000 calc(100% - 110px), transparent 100%); }
