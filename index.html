@@ -126,26 +126,29 @@ body {
    这里把它整张贴满 Canvas 的完整高度:::before 取素材左半边贴左缘,
    ::after 取素材右半边贴右缘,两半在中央交叠淡出,所以是同一张图的左右两侧,
    不是上下叠两张、也不是平铺重复,画面从 Canvas 顶部到底部不会断开。
-   background-size: auto 100% 只按高度等比缩放,不横向拉伸变形。 */
+   background-size 只按高度等比缩放,不横向拉伸变形。 */
 .canvas > .clouds {
   position: absolute; inset: 0; z-index: -3; pointer-events: none;
-  opacity: .46;
-  filter: blur(1px) saturate(.72) brightness(.9) contrast(.95);
-  /* 纵向密度曲线:顶部微露 → 中段低对比但不消失 → 下段回升 → 底部化进深蓝 */
+  opacity: .44;
+  /* 素材本身对比偏高,这里压低并柔化,保持 soft / diffused / moonlit 的质感 */
+  filter: blur(4px) saturate(.7) brightness(.98) contrast(.85);
+  /* 纵向密度曲线:顶部只是极淡的一层 → 中段低对比但不消失 → 下段回升 → 底部化进深蓝 */
   -webkit-mask-image: linear-gradient(180deg,
-    rgba(0,0,0,0) 0%, rgba(0,0,0,.5) 5%, rgba(0,0,0,.72) 15%,
-    rgba(0,0,0,.6) 33%, rgba(0,0,0,.58) 52%,
-    rgba(0,0,0,.76) 72%, rgba(0,0,0,.95) 87%, rgba(0,0,0,.62) 95%, rgba(0,0,0,0) 100%);
+    rgba(0,0,0,0) 0%, rgba(0,0,0,.4) 4%, rgba(0,0,0,.55) 13%,
+    rgba(0,0,0,.52) 28%, rgba(0,0,0,.54) 50%,
+    rgba(0,0,0,.72) 72%, rgba(0,0,0,.88) 87%, rgba(0,0,0,.55) 95%, rgba(0,0,0,0) 100%);
   mask-image: linear-gradient(180deg,
-    rgba(0,0,0,0) 0%, rgba(0,0,0,.5) 5%, rgba(0,0,0,.72) 15%,
-    rgba(0,0,0,.6) 33%, rgba(0,0,0,.58) 52%,
-    rgba(0,0,0,.76) 72%, rgba(0,0,0,.95) 87%, rgba(0,0,0,.62) 95%, rgba(0,0,0,0) 100%);
+    rgba(0,0,0,0) 0%, rgba(0,0,0,.4) 4%, rgba(0,0,0,.55) 13%,
+    rgba(0,0,0,.52) 28%, rgba(0,0,0,.54) 50%,
+    rgba(0,0,0,.72) 72%, rgba(0,0,0,.88) 87%, rgba(0,0,0,.55) 95%, rgba(0,0,0,0) 100%);
 }
 .canvas > .clouds::before, .canvas > .clouds::after {
   content: ""; position: absolute; top: 0; bottom: 0; width: 52%;
   background-image: url(assets/clouds.png);
   background-repeat: no-repeat;
-  background-size: auto 100%;
+  /* 132%:上下各裁掉约 12%,把素材顶部那道锐利的云沿裁出画面,
+     免得云在 Canvas 上方几百像素处「忽然开始」,看起来像一块贴上去的云图 */
+  background-size: auto 132%;
 }
 .canvas > .clouds::before {
   left: 0; background-position: left center;
@@ -169,11 +172,11 @@ body {
      .wrap 同步收窄,保持 Canvas 内原本的左右留白不变 */
   .canvas::before, .canvas::after { --cw: calc(100% - 48px); }
   .canvas .wrap { width: min(880px, 84%); }
-  .canvas > .clouds { opacity: .5; filter: blur(.6px) saturate(.75) brightness(.94); }
+  .canvas > .clouds { opacity: .5; filter: blur(2px) saturate(.72) brightness(1) contrast(.88); }
   /* 手机端缝太窄,等比缩放只能看到素材最外缘的一条平缓渐层。
-     这里改成把整张云图压进侧栏(100% 100%),让缝里出现真正的云形与星点;
+     这里改成把整张云图压进侧栏(100% 132%),让缝里出现真正的云形与星点;
      缝只有 24px 宽,看不出横向压缩,仍是同一张图、左右各一侧,不平铺不镜像。 */
-  .canvas > .clouds::before, .canvas > .clouds::after { width: 60%; background-size: 100% 100%; }
+  .canvas > .clouds::before, .canvas > .clouds::after { width: 60%; background-size: 100% 132%; }
   .canvas::before { top: -22px; bottom: 6px; border-radius: 18px;
     -webkit-mask-image: linear-gradient(180deg, #000 calc(100% - 110px), transparent 100%);
     mask-image: linear-gradient(180deg, #000 calc(100% - 110px), transparent 100%); }
