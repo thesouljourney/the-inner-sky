@@ -35,10 +35,10 @@
 .isky-sign .x{cursor:pointer;border:none;background:none;font-size:16px;color:#8d7fae;padding:2px 4px}
 .isky-sign .meta{font-size:12.5px;letter-spacing:.08em;color:#e2c485;margin:0 0 14px}
 .isky-sign .body{font-family:var(--font-serif-sc);font-size:13.5px;line-height:1.9;color:#c3b5df;text-wrap:pretty}
-.isky-legend{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px 6px;margin:18px auto 0;padding-top:16px;opacity:.92}
-.isky-legend .it{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center}
-.isky-legend .ic{width:30px;height:30px;background-size:contain;background-repeat:no-repeat;background-position:center}
-.isky-legend .nm{font-family:var(--font-serif-sc);font-size:11px;color:rgba(233,225,250,.95);letter-spacing:.02em;white-space:nowrap}
+.isky-legend{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:9px 6px;margin:16px auto 0;padding-top:14px;opacity:.92}
+.isky-legend .it{display:flex;flex-direction:column;align-items:center;gap:7px;text-align:center}
+.isky-legend .ic{width:25px;height:25px;background-size:contain;background-repeat:no-repeat;background-position:center}
+.isky-legend .nm{font-family:var(--font-serif-sc);font-size:10.5px;color:rgba(233,225,250,.95);letter-spacing:.02em;white-space:nowrap}
 .isky-legend .kw{display:none;font-size:10px;color:rgba(190,178,222,.88);letter-spacing:.01em;line-height:1.4}
 .isky-foot{margin:16px 0 0;text-align:center;font-family:var(--font-serif-sc);font-size:11.5px;line-height:1.8;letter-spacing:.04em;color:rgba(214,204,238,.85)}
 .isky-empty{padding:44px 14px;text-align:center;color:#c0b2dd;font-family:var(--font-serif-sc);font-size:14px;line-height:28px}
