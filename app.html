@@ -2794,8 +2794,43 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     return { status: changed ? "changed" : "ok", chart: c };
   }
 
+  /* 更旧的纪录只有城市名、连座标都没有(例如城市清单还是写死那个年代存下来的)。
+     这种资料以前会被判成「不完整」→ 把使用者赶回出生资料页重填。
+     其实我们已经有 63,407 个城市的资料库,能自己把它补回来:
+     Places.resolveLegacy 只在「唯一命中」时才算解析成功,含糊的名字一律不猜,
+     所以不会替使用者编一个地点出来。真的补不回来才留给 onboarding。 */
+  function needsLegacyPlace(c) {
+    if (!c || !c.date) return false;
+    const hasGeo = typeof c.lat === "number" && isFinite(c.lat) &&
+                   typeof c.lon === "number" && isFinite(c.lon);
+    return !hasGeo && !!(c.city || c.placeLabel);
+  }
+  function resolveLegacyPlaces() {
+    const pending = store.charts.filter(needsLegacyPlace);
+    if (!pending.length) return Promise.resolve([]);
+    // 只有真的有旧资料要补时才载入地点资料库,一般使用者不会因此多下载
+    return ensurePlaces().then(function () {
+      const fixed = [];
+      pending.forEach(function (c) {
+        let r = null;
+        try { r = Places.resolveLegacy({ city: c.city || c.placeLabel, lang: "zh" }); }
+        catch (e) { r = null; }
+        if (!r || r.status !== "resolved" || !r.place) return;
+        Object.assign(c, placeFields(r.place));
+        c.placeResolvedFromLegacy = true;   // 留个记号,日后要稽核看得出来
+        delete c.needsPlace;
+        fixed.push(c);
+      });
+      return fixed;
+    }).catch(function () { return []; });   // 载入失败不阻断,照旧走 onboarding
+  }
+
   function migrateAllCharts() {
     if (!store.charts.length) return Promise.resolve();
+    // 先把「只有城市名」的旧纪录补成完整地点,再跑既有的时区迁移
+    return resolveLegacyPlaces().then(runMigration);
+  }
+  function runMigration() {
     let changed = 0, needsPlace = 0;
     const dirty = [];
     store.charts.forEach(function (c) {
@@ -4805,6 +4840,9 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     // 从 Header 登入 / 注册进来的:回到落地页最顶部(有完整资料才算走完流程)
     if (returnToLanding && hasCompleteBirthProfile()) { location.href = LANDING_URL; return; }
     if (!hasCompleteBirthProfile()) {
+      // 去填资料之前先记住原本要去的地方,填完才走得回去。
+      // (routeGuard 那条路径本来就有记,这里以前漏了,使用者填完只会掉到 #/reading。)
+      rememberNext(location.hash);
       if (!curRoute || curRoute.k !== "onboarding") location.hash = "#/onboarding";
       else applyRoute();
       return;
@@ -5722,10 +5760,17 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
         location.replace(location.pathname + location.search + "#/reading");
         return;
       }
-      const c = Object.assign(
-        { id: window.Cloud.uuid(), nick: nick, date: date, time: time, sys: "placidus" },
-        placeFields(obPicked)
-      );
+      /* 这个帐号可能已经有一张「资料不完整」的旧盘(例如缺座标)。
+         那就地把它补好,不要另外新增一张 —— 新增会让主星盘仍然指向那张坏的,
+         使用者填完还是被弹回这一页,而且旧盘上已经生成的解读与收藏会全部变孤儿。 */
+      const broken = primaryChart() || store.charts[0] || null;
+      const repairing = !!(broken && !isCompleteBirthData(broken));
+      const c = repairing
+        ? Object.assign(broken, { nick: broken.nick || nick, date: date, time: time,
+            sys: broken.sys || "placidus" }, placeFields(obPicked))
+        : Object.assign({ id: window.Cloud.uuid(), nick: nick, date: date, time: time, sys: "placidus" },
+            placeFields(obPicked));
+      delete c.needsPlace;
       try {
         stampBirthUtc(c);
       } catch (e) {
@@ -5735,10 +5780,12 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       }
       msg.style.color = "var(--dp-mut)";
       msg.textContent = dpT("正在绘制你的星盘…", "Drawing your chart…");
-      store.charts.push(c);
+      if (!repairing) store.charts.push(c);
       store.activeId = c.id;
-      if (!primaryChartId) setPrimaryChart(c.id);
-      window.Cloud.insertChart(c).catch(function (e) { console.warn(T("syncFail"), e); });
+      // 修好的那张必须同时成为主星盘,否则 hasCompleteBirthProfile() 仍然是 false → 又被弹回来
+      if (!primaryChartId || primaryChartId !== c.id) setPrimaryChart(c.id);
+      const put = repairing ? window.Cloud.updateChart(c) : window.Cloud.insertChart(c);
+      put.catch(function (e) { console.warn(T("syncFail"), e); });
       saveStore();
       renderChartList();
       drawActive();               // 计算 curResult(旧界面不可见,仅供计算)
