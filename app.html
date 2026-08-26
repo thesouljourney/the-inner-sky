@@ -5340,9 +5340,13 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
             esc0(cd.line || "") + "</div></div>";
         }).join("") + "</div>";
       }
+      /* .dp-read 是主题阅读页的正文容器(max-width:var(--dp-text); margin:0 auto)。
+         #/reading 以前的内容是 .dp-card 的直接子层,少了这一层,正文就贴着卡片
+         内缘、比主题页整整靠左 17px。补上同一层容器 → 两边共用同一条正文基准线。
+         只补容器,不动字级、行距、内容宽度与卡片本身。 */
       if (topCards.length)
-        body += '<div class="dp-card"><div class="dp-sec-label">' + dpT("专属建议", "FOR YOU") + '</div>' +
-          cardsHtml(topCards) + "</div>";
+        body += '<div class="dp-card"><div class="dp-read"><div class="dp-sec-label">' + dpT("专属建议", "FOR YOU") + '</div>' +
+          cardsHtml(topCards) + "</div></div>";
 
       const k = favKey(favSrc, chName(ch, readingTab), ch.body || "");
       const favB = '<button class="fav-btn' + (isFaved(k) ? " on" : "") + '" data-fav="' + esc0(k) +
@@ -5350,7 +5354,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
         '" data-source-type="life_blueprint" data-section="' + esc0(chName(ch, readingTab)) +
         '" title="' + esc0(T("saveIt")) + '">' + (isFaved(k) ? "★" : "☆") + "</button>";
       const ownCards = chapterCards[readingTab] || [];
-      body += '<div class="dp-card"><div class="dp-sec-label">' + dpT("详细解读", "IN DETAIL") + '</div>' +
+      body += '<div class="dp-card"><div class="dp-read"><div class="dp-sec-label">' + dpT("详细解读", "IN DETAIL") + '</div>' +
         '<div class="dp-tabs">' + chs.map(function (x, i) {
           return '<button data-rtab="' + i + '"' + (i === readingTab ? ' class="on"' : "") + ">" + esc0(chName(x, i)) + "</button>";
         }).join("") + "</div>" +
@@ -5366,7 +5370,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
           ? '<div class="dp-div" style="margin-top:26px"><span class="st">✦</span><span class="ln"></span></div>' +
             '<div class="dp-sec-label">' + dpT("专属建议", "FOR YOU") + '</div>' + cardsHtml(ownCards)
           : "") +
-        "</div>";
+        "</div></div>";
       foot = dpReturnFoot();
     }
     dpScaffold({
