@@ -5340,13 +5340,18 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
             esc0(cd.line || "") + "</div></div>";
         }).join("") + "</div>";
       }
-      /* .dp-read 是主题阅读页的正文容器(max-width:var(--dp-text); margin:0 auto)。
-         #/reading 以前的内容是 .dp-card 的直接子层,少了这一层,正文就贴着卡片
-         内缘、比主题页整整靠左 17px。补上同一层容器 → 两边共用同一条正文基准线。
-         只补容器,不动字级、行距、内容宽度与卡片本身。 */
+      /* .dp-read 是主题阅读页的正文容器(max-width:var(--dp-text)=820px; margin:0 auto),
+         下面的「详细解读」需要它才能跟主题页共用同一条正文基准线。
+         但上方这四张「专属建议」不是正文,是卡片区块:套上正文栏之后,它们被压在
+         1016px 卡片内容框的正中间,左右各空掉将近 100px,看起来比卡片本身缩了一截。
+         这里改成不套 .dp-read → 直接跟 .dp-card 的内缘对齐,与页面其他卡片区块
+         (.dp-big3 等)同一条左右边界,四张卡片也从 ~191px 变成 ~243px。
+         .dp-cards4 本身是 auto-fit minmax(190px,1fr),窄屏会自己换行;
+         Mobile 上 --dp-text 本来就是 100%,这一区的行为与改动前一致。
+         只动这一层容器,不动卡片设计、字级、间距与内容。 */
       if (topCards.length)
-        body += '<div class="dp-card"><div class="dp-read"><div class="dp-sec-label">' + dpT("专属建议", "FOR YOU") + '</div>' +
-          cardsHtml(topCards) + "</div></div>";
+        body += '<div class="dp-card"><div class="dp-sec-label">' + dpT("专属建议", "FOR YOU") + '</div>' +
+          cardsHtml(topCards) + "</div>";
 
       const k = favKey(favSrc, chName(ch, readingTab), ch.body || "");
       const favB = '<button class="fav-btn' + (isFaved(k) ? " on" : "") + '" data-fav="' + esc0(k) +
@@ -5365,10 +5370,13 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
         '<div class="dp-prose" data-saveable data-source="' + esc0(favSrc) +
         '" data-source-type="life_blueprint" data-section="' + esc0(chName(ch, readingTab)) + '">' +
         dpPara(ch.body) + "</div>" +
-        // 这一章自己的专属建议:接在对应正文下面,上下文更自然
+        /* 这一章自己的专属建议:接在对应正文下面,上下文更自然。
+           这里不再重复印一次「专属建议」小标 —— 页面最上方已经有同名区块,
+           在正文中段再出现一次会让人以为下面又是一整个新区块。
+           分隔线(✦)保留,负责把它和正文分开;卡片内容本身完全不动。 */
         (ownCards.length
           ? '<div class="dp-div" style="margin-top:26px"><span class="st">✦</span><span class="ln"></span></div>' +
-            '<div class="dp-sec-label">' + dpT("专属建议", "FOR YOU") + '</div>' + cardsHtml(ownCards)
+            cardsHtml(ownCards)
           : "") +
         "</div></div>";
       foot = dpReturnFoot();
