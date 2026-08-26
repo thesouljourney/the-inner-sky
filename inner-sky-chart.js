@@ -4,6 +4,7 @@
    { ang:{asc,mc}, cusps:[12], planets:[{key,lon,retro}], aspects:[{a,b,type,name,orb}] }
    没有数据时显示引导，不用示例盘冒充使用者资料。 */
 (function () {
+  window.INNER_SKY_CHART_VERSION = "v3-house-clamp";
   var SIGNS = [
     { name: "白羊座", elem: "火", mode: "开创", ruler: "火星", art: "assets/signs/sm/aries.webp" },
     { name: "金牛座", elem: "土", mode: "固定", ruler: "金星", art: "assets/signs/sm/taurus.webp" },
@@ -44,6 +45,7 @@
     sex: { stroke: "rgba(226,196,133,.62)", dash: "5 6", w: 1.1, name: "六合" },
     squ: { stroke: "rgba(240,222,166,.8)", dash: "9 7", w: 1.3, name: "四分" },
     tri: { stroke: "rgba(226,196,133,.72)", dash: "", w: 1.2, name: "三分" },
+    // 计算引擎会产出梅花(150°),少了这一行会 fallback 成合相的线型
     qcx: { stroke: "rgba(200,186,214,.62)", dash: "3 6", w: 1.0, name: "梅花" },
     opp: { stroke: "rgba(240,222,166,.88)", dash: "14 8", w: 1.4, name: "对分" }
   };
