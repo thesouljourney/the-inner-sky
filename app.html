@@ -567,7 +567,7 @@
   #dpage .dp-card .dp-quote{max-width:var(--dp-text);margin-left:auto;margin-right:auto}
   #dpage .dp-prose p{margin:0 0 13px}
   /* ============================================================
-     阅读中的编辑式区块 —— Theme Reading 与「属于你的生命脉络」共用同一套
+     阅读中的编辑式区块 —— Theme Reading 与「属于我的生命脉络」共用同一套
        .dp-keep     「值得记住」  摘录感:柔和边框卡片 + 引文层次
        .dp-reflect  「留给你的思考」/「试试看」 停下来想一想:不做成厚重卡片
        .dp-start    「从这里开始」 进入正文前的 opening block
@@ -764,6 +764,10 @@
   #dpage table.dp-tbl .pn{display:flex;align-items:center;gap:9px;font-family:var(--dp-serif);font-size:14.5px}
   #dpage table.dp-tbl .num{font-variant-numeric:tabular-nums;color:var(--dp-mut);white-space:nowrap}
   #dpage .dp-scroll{overflow-x:auto}
+  /* 相位名:表格里的一颗小标签,沿用 dp-tbl 的字级与线条,不另立一套 */
+  #dpage table.dp-tbl .asp-t{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;
+    font-size:13px;color:var(--dp-ink)}
+  #dpage table.dp-tbl .asp-t .g{color:var(--dp-mut);font-size:13px;line-height:1}
   #dpage .dp-asp{display:flex;flex-wrap:wrap;gap:8px}
   #dpage .dp-asp .a{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--dp-line);border-radius:14px;
     background:var(--dp-cloud);padding:8px 13px;font-size:13px}
@@ -984,7 +988,7 @@
       </div>
 
       <div class="panel" style="margin-top:18px" id="mapPanel">
-        <h3><span data-i18n="secThread">属于你的生命脉络</span></h3>
+        <h3><span data-i18n="secThread">属于我的生命脉络</span></h3>
         <div id="mapHint" style="font-size:12px;color:var(--muted);margin:-4px 0 12px;line-height:1.7"></div>
         <button class="btn" id="mapBtn" style="width:auto;padding:9px 18px;font-size:13px">生成我的探索地图</button>
         <div id="mapBody" style="margin-top:14px"></div>
@@ -1813,7 +1817,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     /* —— 章节标题 —— */
     secBlueprint:     ["你的生命蓝图", "Your Inner Landscape"],
     secChapters:      ["你的人生章节", "The Chapters of Your Life"],
-    secThread:        ["属于你的生命脉络", "The Pattern of Your Life"],
+    secThread:        ["属于我的生命脉络", "The Pattern of Your Life"],
     threadNeedMore:   ["还需要读完 %s 个主题", "%s more chapters to go"],
     secChaptersSub:   ["", "Nine places to look, whenever you feel like looking"],
 
@@ -2564,6 +2568,46 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     saveProfileCache();
   }
 
+  /* ------------------------------------------------------------
+     阅读进度的唯一来源
+     ------------------------------------------------------------
+     落地页九颗星球点亮用 readTopics,而 #/map 的九格进度与落地页的
+     脉络进度以前是数 chart.topics 里「已生成」几篇 —— 生成过不等于
+     读过,两边因此对不起来,看起来就像 #/map 没接上前面九个主题。
+     这里收敛成一份:已读 = readTopics ∪ 已生成的主题
+     (后者只是保底,让旧使用者的进度不会归零)。
+     ------------------------------------------------------------ */
+  function themeIds() {
+    return (window.Reading && window.Reading.TOPICS9)
+      ? window.Reading.TOPICS9.map(function (t) { return t.id; }) : [];
+  }
+  function themeReadStatus() {
+    const out = {};
+    const c = activeChart();
+    const generated = (c && c[window.Reading.LK("topics")]) || {};
+    themeIds().forEach(function (id) {
+      if (readTopics[id] || generated[id]) out[id] = true;
+    });
+    return out;
+  }
+  function themeReadOrder() {
+    const st = themeReadStatus();
+    const seq = readOrder.filter(function (id) { return st[id]; });
+    themeIds().forEach(function (id) { if (st[id] && seq.indexOf(id) < 0) seq.push(id); });
+    return seq;
+  }
+  function themeReadCount() { return Object.keys(themeReadStatus()).length; }
+  /* 把「生成过但 prefs 没记」的主题补写回 prefs,状态从此只有一份 */
+  function syncReadTopics() {
+    const st = themeReadStatus();
+    let dirty = false;
+    Object.keys(st).forEach(function (id) {
+      if (!readTopics[id]) { readTopics[id] = true; dirty = true; }
+      if (readOrder.indexOf(id) < 0) { readOrder.push(id); dirty = true; }
+    });
+    if (dirty) window.Cloud.savePrefs({ readTopics: readTopics, readOrder: readOrder });
+  }
+
   function primaryChart() {
     const byId = store.charts.find(function (c) { return c.id === primaryChartId; });
     // 未标记过 → 以第一张盘为主星盘(既有用户自动兼容)
@@ -2888,9 +2932,9 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
         nick: nick || "",
         email: (window.Cloud && window.Cloud.email) ? window.Cloud.email() : ""
       }));
-      // 已读章节:以 prefs.readTopics 为准(真正打开阅读过才算)
-      localStorage.setItem("inner_sky_read_v1", JSON.stringify(readTopics));
-      localStorage.setItem("inner_sky_read_order_v1", JSON.stringify(readOrder));
+      // 已读章节与顺序:与 #/map 的九格进度同一份 themeReadStatus()
+      localStorage.setItem("inner_sky_read_v1", JSON.stringify(themeReadStatus()));
+      localStorage.setItem("inner_sky_read_order_v1", JSON.stringify(themeReadOrder()));
       // c 之前没有在这个函式里取过,整段会抛 ReferenceError,收藏快照永远写不出去
       var ac = activeChart();
       localStorage.setItem("inner_sky_favs_v1", JSON.stringify(((ac && ac.favs) || []).slice(0, 4)));
@@ -2943,9 +2987,14 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
         localStorage.removeItem("inner_sky_lifemap_v1");
       }
       // 落地页据此显示进度 / 可生成 / 已生成三态
+      /* title 与 sections 让落地页在「解读太大、没进本地快取」时,
+         仍然显示得出正式标题与完成状态,不必退回催促文案。 */
+      const lmTitle = lm ? (lm.tagline || ((lm.sections && lm.sections[0] && lm.sections[0].title) || "")) : "";
       localStorage.setItem("inner_sky_thread_state_v1", JSON.stringify({
         read: threadReadCount(), gate: THREAD_GATE,
-        generated: !!(lm && lm.sections && lm.sections.length)
+        generated: !!(lm && lm.sections && lm.sections.length),
+        title: lmTitle,
+        sections: (lm && lm.sections) ? lm.sections.length : 0
       }));
     } catch (e) { }
   }
@@ -3825,12 +3874,10 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     });
   }
 
-  // 属于你的生命脉络:读完九个主题才开启
+  // 属于我的生命脉络:读完九个主题才开启
   const THREAD_GATE = 9;
-  function threadReadCount() {
-    const c = activeChart();
-    return c ? Object.keys(c[window.Reading.LK("topics")] || {}).length : 0;
-  }
+  /* 生命脉络的开启条件 = 九个主题读了几个,与落地页星球同一份状态 */
+  function threadReadCount() { return themeReadCount(); }
 
   function renderMap() {
     const c = activeChart(), panel = $("mapPanel"), body = $("mapBody");
@@ -4488,26 +4535,9 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     }
   }
 
-  // 一行行星读数:星座 · 第 N 宫
-  function dpPlaceRows(list, small) {
-    return list.map(function (it) {
-      const p = dpPlacement(it[0]);
-      if (!p) return "";
-      const glyph = GL.symbolSVG ? GL.symbolSVG(p.glyph, 17, "currentColor") : "";
-      return '<div class="row' + (small ? " sm" : "") + '">' +
-        '<span class="gl">' + glyph + '</span>' +
-        '<span><span class="nm">' + esc0(it[1]) + '</span>' +
-        '<span class="vl">' + esc0(p.sign) + ' · ' + esc0(window.I18N.houseLabel ? window.I18N.houseLabel(p.house) : ("第" + p.house + "宫")) + '</span></span>' +
-        (p.retro ? '<span class="rx">℞</span>' : "") + '</div>';
-    }).join("");
-  }
-  function dpAscRow() {
-    const a = dpAscSign();
-    if (!a) return "";
-    return '<div class="row"><span class="gl">↑</span>' +
-      '<span><span class="nm">' + esc0(dpT("上升", "Rising")) + '</span>' +
-      '<span class="vl">' + esc0(a.sign) + '</span></span></div>';
-  }
+  /* dpPlaceRows / dpAscRow / dpAscSign 原本只服务「生命蓝图」页上的
+     基础个人星象盘,该区块已移除,三个函数一并拿掉。
+     dpPlacement 保留 ——「我的星空」的行星列表仍在用它。 */
 
   // 行星资料:供两个页面共用的读数(星座 · 宫位 · 度数 · 逆行)
   function dpPlacement(key) {
@@ -4580,7 +4610,13 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
 
   const NEXT_KEY = "inner_sky_next_v1";   // 因跨日 / 未登入而中断时,记住使用者原本要去的地方
   function rememberNext(hash) {
-    try { localStorage.setItem(NEXT_KEY, hash || location.hash || ""); } catch (e) { }
+    const h = hash || location.hash || "";
+    // onboarding 与 login 本身不是目的地,记了会把使用者绕回填资料页
+    if (!h || h === "#/login" || h.indexOf("#/onboarding") === 0) return;
+    try { localStorage.setItem(NEXT_KEY, h); } catch (e) { }
+  }
+  function peekNext() {
+    try { return localStorage.getItem(NEXT_KEY) || ""; } catch (e) { return ""; }
   }
   function takeNext() {
     let v = "";
@@ -4614,8 +4650,10 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     if (curRoute.k === "onboarding") return true;
     // 设置只处理 Profile 显示名称,与星盘资料无关,不需要先有星盘
     if (curRoute.k === "settings") return true;
-    // 只有「资料库确认这个帐号从来没有建立过星盘」才允许进入建立页面
+    // 只有「资料库确认这个帐号从来没有建立过星盘」才允许进入建立页面。
+    // 去 onboarding 之前先把原本想去的地方记下来,填完资料能自己走回去。
     if (!hasCompleteBirthProfile()) {
+      rememberNext(location.hash);
       location.replace(location.pathname + location.search + "#/onboarding");
       return false;
     }
@@ -4635,16 +4673,21 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   }
 
   function routeAfterEntry() {
-    // 被中断前想去的地方(例如点了「事业」才被要求重新登入)→ 登入后直接回到那里
-    const next = takeNext();
-    if (next && next !== "#/login" && hasCompleteBirthProfile()) {
+    /* 被中断前想去的地方(例如点了「事业」才被要求重新登入)→ 登入后直接回到那里。
+       只有「真的要用它」时才把它取走:如果此刻资料还没确认完、或帐号确实没有星盘,
+       就先留着,等资料到位再回来取。旧写法不论用不用都先 takeNext() 删掉,
+       结果是使用者被丢去 onboarding,而且原本想看的主题永远回不去了。 */
+    const next = peekNext();
+    if (next && next !== "#/login" && next.indexOf("#/onboarding") !== 0 && hasCompleteBirthProfile()) {
+      takeNext();
       returnToLanding = false;
       if (location.hash === next) { applyRoute(); } else { location.hash = next; }
       return;
     }
+    // 资料还没确认完:什么都不跳,目的地留着
+    if (!chartsSettled) { applyRoute(); return; }
     // 从 Header 登入 / 注册进来的:回到落地页最顶部(有完整资料才算走完流程)
     if (returnToLanding && hasCompleteBirthProfile()) { location.href = LANDING_URL; return; }
-    if (!chartsSettled) { applyRoute(); return; }   // 资料还没确认 → 不做任何跳转
     if (!hasCompleteBirthProfile()) {
       if (!curRoute || curRoute.k !== "onboarding") location.hash = "#/onboarding";
       else applyRoute();
@@ -4752,7 +4795,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       [dpT("探索主题", "Explore"), LANDING_TOPICS, "", "menu-m"],
       [dpT("我的生命蓝图", "My Blueprint"), "#/reading", "reading", "both"],
       [dpT("我的星空", "My Sky"), "#/my-sky", "mysky", "both"],
-      [dpT("属于你的生命脉络", "The Pattern"), "#/map", "map", "both"],
+      [dpT("属于我的生命脉络", "The Pattern"), "#/map", "map", "both"],
       [dpT("我的收藏", "Saved"), "#/favorites", "favorites", "both"]
     ];
   }
@@ -4883,7 +4926,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     return esc0(x).split(/\n\s*\n|\n/).filter(function (y) { return y.trim(); })
       .map(function (y) { return "<p>" + y.trim() + "</p>"; }).join("");
   }
-  // 属于你的生命脉络:章节以分页签呈现,一次只读一段
+  // 属于我的生命脉络:章节以分页签呈现,一次只读一段
   /* 段落排版(纯呈现层,一个字都不改动):
      · 段首很短的前导标签(例如「原因是:」)以淡紫色标出
      · 整段以「」包起来的引文缩进并加一条虚线,呼应 Example #1 的层次 */
@@ -4901,7 +4944,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   }
   /* ============================================================
      阅读页尾三个共用区块:从这里开始 / 值得记住 / 留给你的思考 · 试试看
-     Theme Reading 与「属于你的生命脉络」共用同一份实作与同一套样式。
+     Theme Reading 与「属于我的生命脉络」共用同一份实作与同一套样式。
      ============================================================ */
   function dpKeepHtml(list) {
     return '<div class="dp-keep"><div class="hd"><span class="ic" aria-hidden="true">✦</span>' +
@@ -5196,7 +5239,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     }
     dpScaffold({
       chip: dpT("生命蓝图", "BLUEPRINT"),
-      title: dpT("你的星空解读", "Your Sky, In Words"),
+      title: dpT("我的星空解读", "Your Sky, In Words"),
       sub: sub, body: body, foot: foot,
       backLabel: dpT("返回主页", "Back to home"), backHref: LANDING_URL, seed: 99
     });
@@ -5605,7 +5648,9 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       saveStore();
       renderChartList();
       drawActive();               // 计算 curResult(旧界面不可见,仅供计算)
-      location.hash = "#/reading"; // 直接进入新版阅读体验,不停留在任何旧页面
+      // 填资料之前点过某个主题的话,填完直接走回那里,不要丢掉使用者原本的意图
+      const back = takeNext();
+      location.hash = (back && back !== "#/login" && back.indexOf("#/onboarding") !== 0) ? back : "#/reading";
     });
   }
 
@@ -5673,18 +5718,33 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
         return pa && pb && DP_MAJOR.indexOf(pa.key) >= 0 && DP_MAJOR.indexOf(pb.key) >= 0;
       });
       if (asps.length)
-        body += '<div class="dp-card"><div class="dp-sec-label">' + dpT("相位", "ASPECTS") + '</div><div class="dp-asp">' +
-          asps.map(function (a) {
-            const pa = res.planets[a.a], pb = res.planets[a.b];
-            const meta = (C.ASPECTS || []).find(function (x) { return x.key === a.type; }) || { name: a.type, glyph: "" };
-            return '<span class="a">' + esc0(pa.name) + ' <span class="t">' + esc0(meta.glyph + " " + meta.name) + '</span> ' +
-              esc0(pb.name) + ' <span class="t num">' + Math.abs(a.orb).toFixed(1) + '°</span></span>';
-          }).join("") + '</div></div>';
+      {
+        /* 相位改用与「行星位置 / 宫位」同一套 dp-tbl 表格。
+           只换呈现方式,相位配对 / 类型 / 容许度一个数字都没动。 */
+        const aspRows = asps.map(function (a) {
+          const pa = res.planets[a.a], pb = res.planets[a.b];
+          const meta = (C.ASPECTS || []).find(function (x) { return x.key === a.type; }) || { name: a.type, glyph: "" };
+          const nm = function (p) {
+            return '<span class="pn">' + (GL.symbolSVG ? GL.symbolSVG(p.glyphKey, 16, "currentColor") : "") +
+              esc0(window.I18N.isEN() ? p.en : p.name) + '</span>';
+          };
+          return '<tr><td>' + nm(pa) + '</td>' +
+            '<td><span class="asp-t"><span class="g" aria-hidden="true">' + esc0(meta.glyph) + '</span>' +
+            esc0(window.I18N.isEN() ? (meta.en || meta.name) : meta.name) + '</span></td>' +
+            '<td>' + nm(pb) + '</td>' +
+            '<td class="num">' + Math.abs(a.orb).toFixed(1) + '°</td></tr>';
+        }).join("");
+        body += '<div class="dp-card"><div class="dp-sec-label">' + dpT("相位", "ASPECTS") + '</div>' +
+          '<div class="dp-scroll"><table class="dp-tbl" style="min-width:400px"><thead><tr>' +
+          '<th>' + dpT("行星", "Planet") + '</th><th>' + dpT("相位", "Aspect") + '</th>' +
+          '<th>' + dpT("行星", "Planet") + '</th><th>' + dpT("容许度", "Orb") + '</th>' +
+          '</tr></thead><tbody>' + aspRows + '</tbody></table></div></div>';
+      }
     }
 
     dpScaffold({
       chip: dpT("我的星空", "MY SKY"),
-      title: dpT("你的完整星盘", "Your Full Natal Chart"),
+      title: dpT("我的完整星盘", "Your Full Natal Chart"),
       sub: sub,
       body: body,
       foot: (c && curResult) ? '<div class="dp-chart-cta"><a class="dp-link" href="#/reading">← ' +
@@ -5705,7 +5765,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     else {
       const saved = window.Reading.reviveTopic(c[window.Reading.LK("lifemap")]);
       const done = threadReadCount();
-      if (saved) { body = dpThreadHtml(saved, dpT("属于你的生命脉络", "The Pattern of Your Life"), mapTab, "life_thread"); foot = dpReturnFoot(); }
+      if (saved) { body = dpThreadHtml(saved, dpT("属于我的生命脉络", "The Pattern of Your Life"), mapTab, "life_thread"); foot = dpReturnFoot(); }
       else if (mapBusy) body = dpLoading(dpT("正在把九个主题收束成一条线…", "Drawing the nine together…"));
       else if (mapErr) body = dpError(mapErr, "dpRetryM");
       else if (done < THREAD_GATE) {
@@ -5733,8 +5793,8 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     }
 
     dpScaffold({
-      chip: dpT("属于你的生命脉络", "THE PATTERN OF YOUR LIFE"),
-      title: dpT("属于你的生命脉络", "The Pattern of Your Life"),
+      chip: dpT("属于我的生命脉络", "THE PATTERN OF YOUR LIFE"),
+      title: dpT("属于我的生命脉络", "The Pattern of Your Life"),
       sub: dpT("九个主题读完之后，它们会收束成一条线。",
                "When all nine have been read, they come together into one thread."),
       body: body, foot: foot, backLabel: dpT("返回主页", "Back to home"), backHref: LANDING_URL, seed: 55
@@ -5858,6 +5918,8 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
         }
       }).then(function () {
         // 旧纪录补时区 / UTC(见 migrateAllCharts):补完才算确认过
+        // 旧使用者:把「生成过但 prefs 没记」的主题补进已读,两份状态从此合一
+        try { syncReadTopics(); } catch (e) { console.warn("已读状态同步失败", e); }
         return migrateAllCharts().catch(function (e) { console.warn("迁移失败", e); });
       }).then(function () {
         chartsSettled = true;   // 到这里才算「资料库已经确认过」

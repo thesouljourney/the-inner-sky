@@ -604,6 +604,31 @@ header.site > .wrap.nav {
 }
 .thread-gate .go:hover { background: rgba(232,211,162,.16); }
 .thread-gate.ready .tx { color: var(--text-dark); }
+/* 完成态:显示这份解读自己的标题,字级比催促文案大一些 */
+.thread-gate .tx.title { font-size: 18px; line-height: 32px; color: var(--text-dark); letter-spacing: .02em; }
+@media (max-width: 520px) { .thread-gate .tx.title { font-size: 16.5px; line-height: 29px; } }
+
+/* ---------- Mobile:脉络星球改成换行排列 ----------
+   手机上九颗星球挤在同一行,flex 会把每颗压到只剩几个 px,既看不清也没有质感。
+   改成一行三颗:星球不再收缩(放大到 46px),第三、第六颗后面的那条连接线
+   撑成整行并转成一段竖线 —— 换行处仍然连着,读起来还是一条脉络。
+   星球数量会随阅读一颗颗增加,这套写法在 1~9 颗都成立。
+   Desktop 维持原本一条横线,不受影响。 */
+@media (max-width: 560px) {
+  .thread-gate .track { flex-wrap: wrap; justify-content: center; row-gap: 2px; }
+  /* 用百分比而不是固定 px:不论卡片多宽,一行都刚好放得下三颗 */
+  .thread-gate .orb { flex: 0 0 26%; max-width: 64px; }
+  .thread-gate .link { flex: 1 1 auto; min-width: 10px; }
+  .thread-gate .link:nth-child(6),
+  .thread-gate .link:nth-child(12) { flex: 0 0 100%; height: 24px; }
+  .thread-gate .link:nth-child(6)::before,
+  .thread-gate .link:nth-child(12)::before {
+    left: 50%; right: auto; top: 0; width: 1px; height: 100%;
+    background: linear-gradient(180deg, rgba(202,171,116,.15), rgba(202,171,116,.7) 45%, rgba(202,171,116,.15));
+  }
+  .thread-gate .link:nth-child(6)::after,
+  .thread-gate .link:nth-child(12)::after { display: none; }
+}
 @media (max-width: 520px) {
   .thread-gate { padding: 28px 20px 22px; }
   .thread-gate .tx { font-size: 14px; line-height: 28px; }
@@ -763,7 +788,7 @@ var APP_URL = "app.html";
             <a class="m-only" role="menuitem" href="#chapters">探索</a>
             <a role="menuitem" href="app.html#/reading" data-app-hash="#/reading">我的生命蓝图</a>
             <a role="menuitem" href="app.html#/my-sky" data-app-hash="#/my-sky">我的星空</a>
-            <a role="menuitem" href="app.html#/map" data-app-hash="#/map">属于你的生命脉络</a>
+            <a role="menuitem" href="app.html#/map" data-app-hash="#/map">属于我的生命脉络</a>
             <a role="menuitem" href="app.html#/favorites" data-app-hash="#/favorites">我的收藏</a>
             <a class="m-only" role="menuitem" href="#story">关于我们</a>
             <div class="sep"></div>
@@ -817,7 +842,7 @@ var APP_URL = "app.html";
       <div class="rail" id="chapterRail"></div>
 
       <!-- 「为你推荐」暂时停用(RECOMMENDATIONS 与 .reco 样式均保留,改回只需切换此处) -->
-      <div class="section-label thread-label">属于你的生命脉络</div>
+      <div class="section-label thread-label">属于我的生命脉络</div>
       <div class="thread" id="threadSlot"></div>
     </div>
 
@@ -1064,6 +1089,50 @@ function appHref(hash) { return APP_URL + (hash || ""); }
   var GATE = st.gate || 9;
   var doneCount = typeof st.read === "number" ? st.read : Object.keys(READ || {}).length;
 
+  var SEEN_KEY = "inner_sky_thread_seen_v1";
+  var seen = readCache(SEEN_KEY) || {};
+  function markSeen(k) {
+    if (seen[k]) return;
+    seen[k] = true;
+    try { localStorage.setItem(SEEN_KEY, JSON.stringify(seen)); } catch (e) { }
+  }
+
+  /* 详细解读是否已经全部读完。
+     解读内容可能因为太大而没进本地快取,所以段数以 st.sections 为准。 */
+  var total = st.sections || (lm && lm.sections ? lm.sections.length : 0);
+  var allRead = !!st.generated && total > 0 && Object.keys(seen).length >= total;
+  var lmTitle = st.title || (lm && (lm.tagline || (lm.sections && lm.sections[0] && lm.sections[0].title))) || "";
+
+  function fullTrack() {
+    var byId2 = {};
+    CHAPTERS.forEach(function (c) { byId2[c.id] = c; });
+    var ordered = (readCache("inner_sky_read_order_v1") || []).filter(function (id) { return byId2[id]; });
+    CHAPTERS.forEach(function (c) { if (ordered.indexOf(c.id) < 0 && READ[c.id]) ordered.push(c.id); });
+    if (!ordered.length) ordered = CHAPTERS.map(function (c) { return c.id; });
+    return '<div class="track">' + ordered.map(function (id, i) {
+      return (i ? '<span class="link" aria-hidden="true"></span>' : "") +
+        '<span class="orb" title="' + esc(byId2[id].name) + '">' +
+        '<img src="' + byId2[id].orb + '" alt="' + esc(byId2[id].name) + '"></span>';
+    }).join("") + '</div>';
+  }
+
+  /* 最终状态:九个主题读完,而且生命脉络的详细解读也全部读过。
+     这时不再显示催促文案,改成显示这份解读自己的标题。 */
+  if (allRead) {
+    slot.innerHTML = '<div class="thread-gate ready done">' + fullTrack() +
+      (lmTitle ? '<p class="tx title">' + esc(lmTitle) + '</p>' : '') +
+      '<a class="go" href="' + appHref("#/map") + '" data-app-hash="#/map">继续探索 →</a></div>';
+    return;
+  }
+
+  // 已生成但本地没有内容快取:直接给标题与入口,不要退回催促文案
+  if (st.generated && !(lm && lm.sections && lm.sections.length)) {
+    slot.innerHTML = '<div class="thread-gate ready">' + fullTrack() +
+      (lmTitle ? '<p class="tx title">' + esc(lmTitle) + '</p>' : '<p class="tx">你的生命脉络已经写好了。</p>') +
+      '<a class="go" href="' + appHref("#/map") + '" data-app-hash="#/map">继续探索 →</a></div>';
+    return;
+  }
+
   // 还没生成:显示九个主题的进度,读完九个才开启
   if (!(lm && lm.sections && lm.sections.length)) {
     /* 节点 = 使用者实际读过的主题星球,顺序是第一次读完的真实顺序;
@@ -1102,14 +1171,6 @@ function appHref(hash) { return APP_URL + (hash || ""); }
         '<div class="count"><i></i><span class="num">' + doneCount + " / " + GATE + '</span><i></i></div></div>';
     }
     return;
-  }
-
-  var SEEN_KEY = "inner_sky_thread_seen_v1";
-  var seen = readCache(SEEN_KEY) || {};
-  function markSeen(k) {
-    if (seen[k]) return;
-    seen[k] = true;
-    try { localStorage.setItem(SEEN_KEY, JSON.stringify(seen)); } catch (e) { }
   }
 
   // 已生成:落地页只列标题,点击进入独立页面阅读该段内容
