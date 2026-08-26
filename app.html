@@ -3988,6 +3988,8 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       ? window.Reading.fetchReading(curResult, fpSeed, c, "zh").then(function (zhParsed) {
           if (!stillHere()) throw new Error("chart changed");
           c.reading = stamp(zhParsed);
+          // 立刻落地:英文那一步万一失败,中文这一份也已经是新写法且已存好
+          window.Cloud.updateChart(c).catch(function (e) { console.warn(T("syncFail"), e); });
           return true;
         })
       : Promise.resolve(false);
