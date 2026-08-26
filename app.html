@@ -671,6 +671,32 @@
   #dpage .dp-chart-wrap{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(20px,3vw,40px);align-items:center}
   #dpage .dp-wheel{width:100%;max-width:420px;height:auto;display:block;margin:0 auto;overflow:visible}
   #dpage .dp-wheel-full{max-width:560px}
+  /* 我的星空:盘面与页面同一色系(米白),只用极轻的光晕做层次,不出现独立色块 */
+  #dpage .isky2{position:relative;width:100%;max-width:620px;margin:0 auto;
+    background:
+      radial-gradient(58% 58% at 50% 46%, rgba(255,255,255,.72) 0%, rgba(255,255,255,0) 70%),
+      radial-gradient(78% 78% at 50% 50%, rgba(170,160,213,.07) 0%, rgba(170,160,213,0) 72%);
+    border:none;box-shadow:none;border-radius:0;padding:clamp(10px,2vw,20px)}
+  #dpage .isky2 svg{width:100%;height:auto;display:block;overflow:visible}
+  #dpage .isky2 .isky2-layer{position:absolute;left:0;right:0;bottom:2%;display:flex;justify-content:center;pointer-events:none}
+  #dpage .isky2 .isky2-tip{pointer-events:none;background:rgba(252,249,246,.92);backdrop-filter:blur(10px);
+    border:1px solid rgba(170,160,213,.28);border-radius:14px;padding:10px 16px;text-align:center;
+    box-shadow:0 10px 28px rgba(34,35,58,.08)}
+  #dpage .isky2 .isky2-tip .t{font-family:var(--dp-serif);font-size:14px;color:var(--dp-ink)}
+  #dpage .isky2 .isky2-tip .b{margin-top:3px;font-size:12px;color:var(--dp-mut)}
+  #dpage .isky2 .isky2-sign{pointer-events:auto;width:min(360px,86%);background:rgba(252,249,246,.95);
+    backdrop-filter:blur(12px);border:1px solid rgba(170,160,213,.28);
+    border-radius:18px;padding:16px 18px;box-shadow:0 16px 44px rgba(34,35,58,.1);text-align:left}
+  #dpage .isky2 .isky2-sign .row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+  #dpage .isky2 .isky2-sign .ttl{display:flex;align-items:center;gap:10px;font-family:var(--dp-serif);font-size:16px;color:var(--dp-ink)}
+  #dpage .isky2 .isky2-sign .thumb{width:30px;height:30px;border-radius:50%;background-size:cover;background-position:center;flex:none}
+  #dpage .isky2 .isky2-sign .x{border:none;background:transparent;color:#9a94b3;font-size:15px;cursor:pointer;line-height:1}
+  #dpage .isky2 .isky2-sign .meta{margin:10px 0 8px;font-size:12px;letter-spacing:.06em;color:#8a7b52}
+  #dpage .isky2 .isky2-sign .body{font-size:13.5px;line-height:26px;color:#4a4766}
+  #dpage .isky2-tools{display:flex;justify-content:flex-end;margin:0 0 4px}
+  #dpage .isky2-tools button{border:1px solid var(--dp-line);background:var(--dp-cloud);color:var(--dp-mut);
+    border-radius:999px;padding:8px 18px;font-size:12.5px;letter-spacing:.06em;cursor:pointer}
+  #dpage .isky2-tools button:hover{color:var(--dp-ink)}
   #dpage .dp-place{display:grid;gap:10px}
   #dpage .dp-place .row{display:flex;align-items:center;gap:12px;border:1px solid var(--dp-line);border-radius:16px;background:var(--dp-cloud);padding:13px 16px}
   #dpage .dp-place .row.sm{padding:10px 14px;background:transparent;border-color:color-mix(in srgb,var(--dp-line) 70%,transparent)}
@@ -1972,8 +1998,9 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     saveSession(null);
     // 同一台机器换人登入时,不能留下上一位的名字 / 快照
     ["inner_sky_profile_v1", "inner_sky_userid_v1", "inner_sky_wheel_v1", "inner_sky_chart_v1", "inner_sky_favs_v1",
-     "inner_sky_lifemap_v1", "inner_sky_read_v1", "inner_sky_thread_state_v1",
-     "inner_sky_thread_seen_v1", "inner_sky_next_v1"]
+     "inner_sky_lifemap_v1", "inner_sky_read_v1", "inner_sky_read_order_v1",
+     "inner_sky_thread_state_v1", "inner_sky_thread_seen_v1", "inner_sky_next_v1",
+     "inner_sky_thread_orbs_v1"]
       .forEach(function (k) { try { localStorage.removeItem(k); } catch (e) { } });
   }
 
@@ -2916,10 +2943,13 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   let primaryChartId = null;
   /* 已读主题:跟着账号存在 prefs,logout / 换设备后仍然保留 */
   let readTopics = {};
+  /* 阅读顺序:主题第一次真正读完才 push,重复进入不改变顺序 */
+  let readOrder = [];
   function markTopicRead(tid) {
     if (!tid || readTopics[tid]) return;
     readTopics[tid] = true;
-    window.Cloud.savePrefs({ readTopics: readTopics });
+    if (readOrder.indexOf(tid) < 0) readOrder.push(tid);
+    window.Cloud.savePrefs({ readTopics: readTopics, readOrder: readOrder });
     saveProfileCache();
   }
 
@@ -2973,6 +3003,11 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     p = p || {};
     if (p.primaryChartId) primaryChartId = p.primaryChartId;
     if (p.readTopics) readTopics = Object.assign({}, p.readTopics);
+    if (Array.isArray(p.readOrder)) {
+      readOrder = p.readOrder.filter(function (t) { return readTopics[t]; });
+    }
+    // 老用户没有顺序记录:用已读集合补一次,之后按真实顺序继续追加
+    Object.keys(readTopics).forEach(function (t) { if (readOrder.indexOf(t) < 0) readOrder.push(t); });
     if (p.wheelShow) OPT_KEYS.forEach(function (k) { wheelShow[k[0]] = !!p.wheelShow[k[0]]; });
     if (p.glyphMode === "sym" || p.glyphMode === "name") glyphMode = p.glyphMode;
     // p.theme:主题功能已移除,旧偏好值忽略
@@ -3132,6 +3167,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       }));
       // 已读章节:以 prefs.readTopics 为准(真正打开阅读过才算)
       localStorage.setItem("inner_sky_read_v1", JSON.stringify(readTopics));
+      localStorage.setItem("inner_sky_read_order_v1", JSON.stringify(readOrder));
       // c 之前没有在这个函式里取过,整段会抛 ReferenceError,收藏快照永远写不出去
       var ac = activeChart();
       localStorage.setItem("inner_sky_favs_v1", JSON.stringify(((ac && ac.favs) || []).slice(0, 4)));
@@ -4372,6 +4408,337 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     }
   }
 
+  /* ============================================================
+     我的星空 · 完整盘(落地页那套画法,配色改为浅底)
+     行星落第几宫就画在第几宫的扇形里,展开只在本宫角度范围内进行,
+     展开后用一条细引线连回真实黄经;相位线连行星图标的显示位置。
+     ============================================================ */
+  const ISKY_ART_SIGN = ["aries", "taurus", "gemini", "cancer", "leo", "virgo",
+    "libra", "scorpio", "sagittarius", "capricorn", "aquarius", "pisces"]
+    .map(function (n) { return "assets/signs/sm/" + n + ".webp"; });
+  const ISKY_ART_PLANET = {
+    Sun: "assets/planets/sm/sun.webp", Moon: "assets/planets/sm/moon.webp", Mercury: "assets/planets/sm/mercury.webp",
+    Venus: "assets/planets/sm/venus.webp", Mars: "assets/planets/sm/mars.webp", Jupiter: "assets/planets/sm/jupiter.webp",
+    Saturn: "assets/planets/sm/saturn.webp", Uranus: "assets/planets/sm/uranus.webp",
+    Neptune: "assets/planets/sm/neptune.webp", Pluto: "assets/planets/sm/pluto.webp"
+  };
+  // 素材在画面里的占比与视觉中心(与落地页同一份标定)
+  const ISKY_FRAC = {
+    Sun: { f: .500, cx: .500, cy: .473 }, Moon: { f: .530, cx: .519, cy: .500 },
+    Mercury: { f: .427, cx: .500, cy: .508 }, Venus: { f: .651, cx: .500, cy: .493 },
+    Mars: { f: .580, cx: .500, cy: .538 }, Jupiter: { f: .653, cx: .500, cy: .486 },
+    Saturn: { f: .462, cx: .500, cy: .487 }, Uranus: { f: .516, cx: .500, cy: .520 },
+    Neptune: { f: .700, cx: .500, cy: .502 }, Pluto: { f: .447, cx: .500, cy: .489 }
+  };
+  const ISKY_KW = {
+    Sun: ["自我与生命力", "Identity & vitality"], Moon: ["情绪与需求", "Emotion & needs"],
+    Mercury: ["思考与表达", "Mind & speech"], Venus: ["爱与价值", "Love & values"],
+    Mars: ["行动与欲望", "Drive & desire"], Jupiter: ["扩张与机遇", "Growth & luck"],
+    Saturn: ["责任与课题", "Duty & lessons"], Uranus: ["改变与突破", "Change & breaks"],
+    Neptune: ["灵感与想象", "Dream & vision"], Pluto: ["蜕变与重生", "Death & rebirth"]
+  };
+  const ISKY_ASP = {
+    con: { stroke: "rgba(168,154,107,.78)", dash: "", w: 1.4 },
+    sex: { stroke: "rgba(138,134,184,.6)", dash: "5 6", w: 1 },
+    squ: { stroke: "rgba(180,100,90,.5)", dash: "9 7", w: 1.1 },
+    tri: { stroke: "rgba(111,157,140,.58)", dash: "", w: 1.1 },
+    opp: { stroke: "rgba(180,100,90,.6)", dash: "14 8", w: 1.2 }
+  };
+  const ISKY_ELEM_TINT = { "火": "#c9866c", "水": "#8098c4", "土": "#b39a76", "风": "#86b3b0",
+    Fire: "#c9866c", Water: "#8098c4", Earth: "#b39a76", Air: "#86b3b0" };
+  function drawInnerSkyWheel(host, res) {
+    const CX = 500, CY = 500, R_OUT = 440, R_IN = 320, R_PLANET = 282, R_HOUSE_NUM = 238, R_ASP = 192;
+    const n360 = C.n360;
+    const f2 = function (n) { return Number(n).toFixed(2); };
+    const pt = function (r, th) { const t = th * Math.PI / 180; return [CX + r * Math.cos(t), CY - r * Math.sin(t)]; };
+    const EN = window.I18N.isEN();
+    const signName = function (i) { return EN ? window.I18N.TSign(C.SIGNS[i].name) : C.SIGNS[i].name; };
+    const asc = res.ang.asc;
+    const mc = res.ang.mc;
+    const cusps = (res.cusps && res.cusps.length === 12) ? res.cusps
+      : Array.from({ length: 12 }, function (_, i) { return n360(Math.floor(asc / 30) * 30 + i * 30); });
+    const ang = function (lon) { return 180 + (n360(lon) - asc); };
+
+    /* 星座扇形 */
+    const signs = C.SIGNS.map(function (s, i) {
+      const a1 = ang(i * 30), a2 = a1 + 30, mid = (a1 + a2) / 2;
+      const o1 = pt(R_OUT, a1), o2 = pt(R_OUT, a2), i1 = pt(R_IN, a1), i2 = pt(R_IN, a2);
+      const l = pt((R_OUT + R_IN) / 2, mid);
+      const half = 15 * Math.PI / 180, rMid = (R_OUT + R_IN) / 2;
+      const iw = 2 * R_OUT * Math.sin(half), ih = R_OUT - R_IN * Math.cos(half);
+      let tr = 90 - mid; tr = ((tr + 180) % 360 + 360) % 360 - 180;
+      const tRot = Math.abs(tr) > 90 ? tr + 180 : tr;
+      return {
+        i: i, name: signName(i), art: ISKY_ART_SIGN[i], lx: l[0], ly: l[1],
+        ax: l[0] - iw / 2, ay: l[1] - (R_OUT - rMid), aw: iw, ah: ih,
+        rot: "rotate(" + f2(90 - mid) + " " + f2(l[0]) + " " + f2(l[1]) + ")",
+        textRot: "rotate(" + f2(tRot) + " " + f2(l[0]) + " " + f2(l[1]) + ")",
+        wedge: "M" + o1[0] + " " + o1[1] + "A" + R_OUT + " " + R_OUT + " 0 0 0 " + o2[0] + " " + o2[1] +
+          "L" + i2[0] + " " + i2[1] + "A" + R_IN + " " + R_IN + " 0 0 1 " + i1[0] + " " + i1[1] + "Z"
+      };
+    });
+
+    /* 宫位线 / 宫号 / 四轴 */
+    const houseLines = cusps.map(function (cl, i) {
+      const a = ang(cl), p1 = pt(R_ASP, a), p2 = pt(R_IN, a), card = (i % 3 === 0);
+      return {
+        x1: p1[0], y1: p1[1], x2: p2[0], y2: p2[1],
+        stroke: card ? "rgba(129,118,173,.55)" : "rgba(129,118,173,.28)", w: card ? 1.6 : 1.2
+      };
+    });
+    const houseNums = cusps.map(function (cl, i) {
+      const span = n360(cusps[(i + 1) % 12] - cl) || 30, p = pt(R_HOUSE_NUM, ang(cl + span / 2));
+      return { n: String(i + 1), x: p[0], y: p[1] };
+    });
+    const axes = [
+      { label: "ASC", lon: asc }, { label: "DSC", lon: n360(asc + 180) },
+      { label: "MC", lon: mc }, { label: "IC", lon: n360(mc + 180) }
+    ].map(function (a) {
+      const th = ang(a.lon), p1 = pt(R_ASP, th), p2 = pt(R_OUT + 4, th), tp = pt(R_OUT + 40, th);
+      return { label: a.label, x1: p1[0], y1: p1[1], x2: p2[0], y2: p2[1], tx: tp[0], ty: tp[1] };
+    });
+
+    /* 行星:本宫内防重叠展开 */
+    const raw = (res.planets || []).filter(function (p) { return DP_MAJOR.indexOf(p.key) >= 0; });
+    const withAng = raw.map(function (p, i) {
+      let h = p.house;
+      if (!(h >= 1 && h <= 12)) {
+        h = 12;
+        for (let k = 0; k < 12; k++) {
+          const a = cusps[k], span = n360(cusps[(k + 1) % 12] - a) || 30;
+          if (n360(p.lon - a) < span) { h = k + 1; break; }
+        }
+      }
+      return { i: i, key: p.key, name: p.name, lon: n360(p.lon), retro: !!p.retro, house: h };
+    });
+    const idxByKey = {};
+    withAng.forEach(function (p) { idxByKey[p.key] = p.i; });
+    const SEP = 8, angByIdx = {}, byHouse = {};
+    withAng.forEach(function (p) { (byHouse[p.house - 1] || (byHouse[p.house - 1] = [])).push(p); });
+    Object.keys(byHouse).forEach(function (hk) {
+      const h = +hk, grp = byHouse[h];
+      const span = n360(cusps[(h + 1) % 12] - cusps[h]) || 30;
+      const a0 = ang(cusps[h]), m = Math.min(4, span / 6);
+      const lo = a0 + m, hi = a0 + span - m, room = hi - lo, n = grp.length;
+      grp.sort(function (x, y) { return n360(x.lon - cusps[h]) - n360(y.lon - cusps[h]); });
+      if (n === 1) { angByIdx[grp[0].i] = a0 + n360(grp[0].lon - cusps[h]); return; }
+      if ((n - 1) * SEP >= room) {
+        grp.forEach(function (p, k) { angByIdx[p.i] = lo + room * (k / (n - 1)); });
+        return;
+      }
+      const t = grp.map(function (p) { return Math.min(hi, Math.max(lo, a0 + n360(p.lon - cusps[h]))); });
+      for (let pass = 0; pass < 4; pass++) {
+        for (let k = 1; k < n; k++) if (t[k] - t[k - 1] < SEP) t[k] = t[k - 1] + SEP;
+        const over = t[n - 1] - hi;
+        if (over > 0) for (let k2 = 0; k2 < n; k2++) t[k2] = Math.max(lo, t[k2] - over);
+      }
+      grp.forEach(function (p, k) { angByIdx[p.i] = t[k]; });
+    });
+
+    const planets = withAng.map(function (p) {
+      const q = pt(R_PLANET, angByIdx[p.i]);
+      const fr = ISKY_FRAC[p.key] || { f: .7, cx: .5, cy: .5 }, size = 40 / fr.f;
+      const g = C.lonToSign(p.lon);
+      const kw = (ISKY_KW[p.key] || ["", ""])[EN ? 1 : 0];
+      const nm = EN ? window.I18N.TN(p.name) : p.name;
+      return {
+        i: p.i, art: ISKY_ART_PLANET[p.key], size: size,
+        tx1: pt(R_IN - 4, ang(p.lon))[0], ty1: pt(R_IN - 4, ang(p.lon))[1],
+        tx2: pt(R_PLANET + 26, ang(p.lon))[0], ty2: pt(R_PLANET + 26, ang(p.lon))[1],
+        tx3: pt(R_PLANET + 26, angByIdx[p.i])[0], ty3: pt(R_PLANET + 26, angByIdx[p.i])[1],
+        ax: q[0] - size / 2 + (0.5 - fr.cx) * size, ay: q[1] - size / 2 + (0.5 - fr.cy) * size,
+        x: q[0], y: q[1], retro: p.retro,
+        tipT: nm + " · " + (EN ? window.I18N.TSign(g.sign) : g.sign) + " " + Math.floor(g.deg) + "°",
+        tipB: (EN ? window.I18N.houseLabel(p.house) : "第 " + p.house + " 宫") + " · " + kw +
+          (p.retro ? (EN ? " · retrograde" : " · 逆行") : "")
+      };
+    });
+
+    const aspects = (res.aspects || []).map(function (a, i) {
+      const pa = res.planets[a.a], pb = res.planets[a.b];
+      if (!pa || !pb) return null;
+      const ia = idxByKey[pa.key], ib = idxByKey[pb.key];
+      if (ia == null || ib == null) return null;
+      const st = ISKY_ASP[a.type] || ISKY_ASP.con;
+      const meta = (C.ASPECTS || []).find(function (x) { return x.key === a.type; }) || { name: a.type };
+      const p1 = pt(R_ASP - 4, angByIdx[ia]), p2 = pt(R_ASP - 4, angByIdx[ib]);
+      return {
+        i: i, x1: p1[0], y1: p1[1], x2: p2[0], y2: p2[1], stroke: st.stroke, dash: st.dash, w: st.w + .4,
+        tipT: (EN ? window.I18N.TN(pa.name) : pa.name) + " " + meta.name + " " + (EN ? window.I18N.TN(pb.name) : pb.name),
+        tipB: (EN ? "orb " : "误差 ") + (a.orb == null ? "—" : Math.abs(a.orb).toFixed(1) + "°")
+      };
+    }).filter(Boolean);
+
+    /* SVG */
+    const o = ['<svg viewBox="-72 -72 1144 1144">', '<defs>',
+      '<radialGradient id="isky2Rim" cx="50%" cy="50%" r="50%">',
+      '<stop offset="74%" stop-color="#aaa0d5" stop-opacity="0"></stop>',
+      '<stop offset="88%" stop-color="#aaa0d5" stop-opacity=".1"></stop>',
+      '<stop offset="95%" stop-color="#c8b48a" stop-opacity=".14"></stop>',
+      '<stop offset="100%" stop-color="#aaa0d5" stop-opacity="0"></stop></radialGradient>',
+      '<radialGradient id="isky2Band" cx="50%" cy="50%" r="50%">',
+      '<stop offset="0%" stop-color="#fdfbf8" stop-opacity=".9"></stop>',
+      '<stop offset="100%" stop-color="#f4ece4" stop-opacity=".92"></stop></radialGradient>',
+      '<radialGradient id="isky2Core" cx="50%" cy="50%" r="50%">',
+      '<stop offset="0%" stop-color="#ffffff" stop-opacity=".9"></stop>',
+      '<stop offset="100%" stop-color="#f8f2ed" stop-opacity=".55"></stop></radialGradient>',
+      '<filter id="isky2Soft" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="14"></feGaussianBlur></filter>'];
+    signs.forEach(function (s) {
+      o.push('<clipPath id="isky2Clip' + s.i + '"><path d="' + s.wedge + '"></path></clipPath>');
+    });
+    o.push('</defs>');
+    o.push('<circle cx="500" cy="500" r="492" fill="url(#isky2Rim)" filter="url(#isky2Soft)"></circle>');
+    o.push('<circle cx="500" cy="500" r="440" fill="url(#isky2Band)"></circle>');
+    signs.forEach(function (s) {
+      o.push('<path class="isky2-wedge" data-sign="' + s.i + '" d="' + s.wedge + '" fill="' +
+        (ISKY_ELEM_TINT[C.SIGNS[s.i].elem] || "#aaa0d5") +
+        '" fill-opacity=".06" stroke="rgba(129,118,173,.34)" stroke-width="1.3" style="cursor:pointer"></path>');
+    });
+    o.push('<circle cx="500" cy="500" r="320" fill="url(#isky2Core)"></circle>');
+    o.push('<circle cx="500" cy="500" r="448" fill="none" stroke="rgba(129,118,173,.2)" stroke-width="1.3"></circle>');
+    o.push('<circle cx="500" cy="500" r="440" fill="none" stroke="rgba(129,118,173,.46)" stroke-width="1.6"></circle>');
+    o.push('<circle cx="500" cy="500" r="348" fill="none" stroke="rgba(184,158,102,.52)" stroke-width="1.5"></circle>');
+    o.push('<circle cx="500" cy="500" r="320" fill="none" stroke="rgba(129,118,173,.34)" stroke-width="1.3"></circle>');
+    o.push('<circle cx="500" cy="500" r="192" fill="none" stroke="rgba(129,118,173,.24)" stroke-width="1.3"></circle>');
+    signs.forEach(function (s) {
+      o.push('<g clip-path="url(#isky2Clip' + s.i + ')"><image class="isky2-art" data-sign="' + s.i + '" href="' + s.art +
+        '" x="' + f2(s.ax) + '" y="' + f2(s.ay) + '" width="' + f2(s.aw) + '" height="' + f2(s.ah) +
+        '" transform="' + s.rot + '" opacity=".28" preserveAspectRatio="xMidYMid slice"></image></g>');
+    });
+    signs.forEach(function (s) {
+      o.push('<g transform="' + s.textRot + '" style="pointer-events:none"><text class="isky2-signtext" data-sign="' + s.i +
+        '" x="' + f2(s.lx) + '" y="' + f2(s.ly) + '" text-anchor="middle" dominant-baseline="middle" fill="#5d5288" ' +
+        'style="font-size:32px;letter-spacing:.06em;paint-order:stroke;stroke:rgba(252,249,246,.9);stroke-width:6px;stroke-linejoin:round">' +
+        esc0(s.name) + '</text></g>');
+    });
+    houseLines.forEach(function (h) {
+      o.push('<line x1="' + f2(h.x1) + '" y1="' + f2(h.y1) + '" x2="' + f2(h.x2) + '" y2="' + f2(h.y2) +
+        '" stroke="' + h.stroke + '" stroke-width="' + h.w + '"></line>');
+    });
+    houseNums.forEach(function (h) {
+      o.push('<text x="' + f2(h.x) + '" y="' + f2(h.y) + '" text-anchor="middle" dominant-baseline="middle" fill="rgba(93,82,136,.72)" style="font-size:32px;pointer-events:none">' + h.n + '</text>');
+    });
+    axes.forEach(function (a) {
+      o.push('<line x1="' + f2(a.x1) + '" y1="' + f2(a.y1) + '" x2="' + f2(a.x2) + '" y2="' + f2(a.y2) +
+        '" stroke="rgba(184,158,102,.8)" stroke-width="1.5" stroke-dasharray="7 7"></line>');
+      o.push('<text x="' + f2(a.tx) + '" y="' + f2(a.ty) + '" text-anchor="middle" dominant-baseline="middle" fill="#8a7b52" style="font-size:30px;letter-spacing:.14em;font-weight:500;pointer-events:none">' + a.label + '</text>');
+    });
+    o.push('<g id="dpIsky2Aspects" style="transition:opacity .35s">');
+    aspects.forEach(function (a) {
+      o.push('<line class="isky2-asp" data-asp="' + a.i + '" x1="' + f2(a.x1) + '" y1="' + f2(a.y1) + '" x2="' + f2(a.x2) +
+        '" y2="' + f2(a.y2) + '" stroke="' + a.stroke + '" stroke-width="' + a.w + '" stroke-dasharray="' + a.dash +
+        '" opacity=".72" style="cursor:crosshair;transition:opacity .2s,stroke-width .2s"></line>');
+    });
+    o.push('</g>');
+    o.push('<circle cx="500" cy="500" r="46" fill="#e0d3b6" opacity=".28" filter="url(#isky2Soft)"></circle>');
+    o.push('<path d="M500 456a44 44 0 1 0 0 88 34 34 0 1 1 0-88z" fill="#c8b48a" opacity=".42"></path>');
+    planets.forEach(function (p) {
+      o.push('<path d="M' + f2(p.tx1) + ' ' + f2(p.ty1) + 'L' + f2(p.tx2) + ' ' + f2(p.ty2) + 'L' + f2(p.tx3) + ' ' + f2(p.ty3) +
+        '" fill="none" stroke="rgba(184,158,102,.58)" stroke-width="1.1" style="pointer-events:none"></path>');
+      o.push('<image class="isky2-planet" data-planet="' + p.i + '" href="' + p.art + '" x="' + f2(p.ax) + '" y="' + f2(p.ay) +
+        '" width="' + f2(p.size) + '" height="' + f2(p.size) + '" preserveAspectRatio="xMidYMid meet" style="cursor:pointer"></image>');
+      if (p.retro) o.push('<text x="' + f2(p.x) + '" y="' + f2(p.y + 44) + '" text-anchor="middle" fill="#b4645a" style="font-size:24px;pointer-events:none">R</text>');
+    });
+    o.push('</svg>');
+
+    host.innerHTML = o.join("") + '<div class="isky2-layer" id="dpIsky2Layer"></div>';
+    const layer = host.querySelector("#dpIsky2Layer");
+    const svg = host.querySelector("svg");
+    const state = { hoverAsp: null, openSign: null, aspectsOn: true };
+
+    const showTip = function (t, b) {
+      layer.innerHTML = '<div class="isky2-tip"><div class="t">' + esc0(t) + '</div><div class="b">' + esc0(b) + '</div></div>';
+    };
+    const clearLayer = function () { layer.innerHTML = ""; };
+    const setSignDim = function (open) {
+      signs.forEach(function (s) {
+        const art = svg.querySelector('.isky2-art[data-sign="' + s.i + '"]');
+        const txt = svg.querySelector('.isky2-signtext[data-sign="' + s.i + '"]');
+        const on = open === null || open === s.i;
+        if (art) art.setAttribute("opacity", open === null ? ".28" : (on ? ".44" : ".12"));
+        if (txt) txt.setAttribute("opacity", open === null ? "1" : (on ? "1" : ".45"));
+      });
+    };
+    const openSign = function (i) {
+      state.openSign = i;
+      setSignDim(i);
+      const s = C.SIGNS[i];
+      let houseIdx = -1;
+      for (let h = 0; h < 12; h++) {
+        const cl = cusps[h], nx = cusps[(h + 1) % 12], mid = n360(i * 30 + 15);
+        if (n360(mid - cl) < (n360(nx - cl) || 30)) { houseIdx = h; break; }
+      }
+      const inside = withAng.filter(function (p) { return Math.floor(p.lon / 30) === i; })
+        .map(function (p) { return (EN ? window.I18N.TN(p.name) : p.name) + " " + Math.floor(p.lon % 30) + "°"; });
+      const meta = EN
+        ? (s.elem + " · " + s.mode + " · ruler " + s.ruler + (houseIdx >= 0 ? " · house " + (houseIdx + 1) : ""))
+        : (s.elem + "象 · " + s.mode + " · 守护星 " + s.ruler + (houseIdx >= 0 ? " · 落第 " + (houseIdx + 1) + " 宫" : ""));
+      const body = inside.length
+        ? (EN ? "Bodies in this sign: " : "这个星座里的星体：") + inside.join(EN ? ", " : "、") + (EN ? "." : "。")
+        : (EN ? "No bodies here; its energy speaks through its ruler " + s.ruler + "."
+              : "这个星座里没有星体，它的能量通过守护星 " + s.ruler + " 表达。");
+      layer.innerHTML = '<div class="isky2-sign"><div class="row"><div class="ttl">' +
+        '<span class="thumb" style="background-image:url(\'' + ISKY_ART_SIGN[i] + '\')"></span>' + esc0(signName(i)) +
+        '</div><button class="x" type="button" aria-label="close">✕</button></div>' +
+        '<p class="meta">' + esc0(meta) + '</p><div class="body">' + esc0(body) + '</div></div>';
+      layer.querySelector(".x").addEventListener("click", function () {
+        state.openSign = null; setSignDim(null); clearLayer();
+      });
+    };
+
+    svg.addEventListener("mouseover", function (e) {
+      const t = e.target;
+      if (state.openSign !== null) return;
+      if (t.classList.contains("isky2-planet")) {
+        const p = planets[+t.getAttribute("data-planet")];
+        if (p) showTip(p.tipT, p.tipB);
+      } else if (t.classList.contains("isky2-asp")) {
+        const i = +t.getAttribute("data-asp");
+        state.hoverAsp = i;
+        svg.querySelectorAll(".isky2-asp").forEach(function (l) {
+          const k = +l.getAttribute("data-asp"), hot = k === i;
+          const a = aspects.find(function (x) { return x.i === k; }) || { w: 1 };
+          l.setAttribute("opacity", hot ? "1" : ".2");
+          l.setAttribute("stroke-width", String(hot ? a.w + 1 : a.w));
+        });
+        const a = aspects.find(function (x) { return x.i === i; });
+        if (a) showTip(a.tipT, a.tipB);
+      }
+    });
+    svg.addEventListener("mouseout", function (e) {
+      const t = e.target;
+      if (t.classList.contains("isky2-planet") || t.classList.contains("isky2-asp")) {
+        if (state.hoverAsp !== null) {
+          state.hoverAsp = null;
+          svg.querySelectorAll(".isky2-asp").forEach(function (l) {
+            const k = +l.getAttribute("data-asp");
+            const a = aspects.find(function (x) { return x.i === k; }) || { w: 1 };
+            l.setAttribute("opacity", ".72");
+            l.setAttribute("stroke-width", String(a.w));
+          });
+        }
+        if (state.openSign === null) clearLayer();
+      }
+    });
+    svg.addEventListener("click", function (e) {
+      const w = e.target.closest ? e.target.closest(".isky2-wedge") : null;
+      if (!w) return;
+      const i = +w.getAttribute("data-sign");
+      if (state.openSign === i) { state.openSign = null; setSignDim(null); clearLayer(); }
+      else openSign(i);
+    });
+
+    const toggle = document.getElementById("dpAspToggle");
+    if (toggle) {
+      toggle.addEventListener("click", function () {
+        state.aspectsOn = !state.aspectsOn;
+        const g = svg.querySelector("#dpIsky2Aspects");
+        if (g) g.setAttribute("opacity", state.aspectsOn ? "1" : "0");
+        toggle.textContent = state.aspectsOn ? dpT("隐藏相位线", "Hide aspects") : dpT("显示相位线", "Show aspects");
+      });
+    }
+  }
+
   // 一行行星读数:星座 · 第 N 宫
   function dpPlaceRows(list, small) {
     return list.map(function (it) {
@@ -4669,6 +5036,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     store.activeId = null;
     primaryChartId = null;
     readTopics = {};
+    readOrder = [];
     curResult = null;
     chartsLoaded = false;
     chartsSettled = false;
@@ -5431,9 +5799,11 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       sub = c.nick ? esc0(c.nick) + " · " + c.date + " " + c.time : "";
 
       // 盘面
-      body += '<div class="dp-card"><div class="dp-sec-label">' + dpT("你的星盘", "YOUR CHART") + '</div>' +
-        '<svg class="dp-wheel dp-wheel-full" id="dpFullWheel" role="img" aria-label="' +
-        esc0(dpT("完整星盘", "Full natal chart")) + '"></svg></div>';
+      body += '<div class="dp-card"><div style="display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap">' +
+        '<div class="dp-sec-label" style="margin:0">' + dpT("你的星盘", "YOUR CHART") + '</div>' +
+        '<div class="isky2-tools"><button type="button" id="dpAspToggle">' + dpT("隐藏相位线", "Hide aspects") + '</button></div></div>' +
+        '<div class="isky2" id="dpFullWheel" role="img" aria-label="' +
+        esc0(dpT("完整星盘", "Full natal chart")) + '"></div></div>';
 
       // 四轴
       const ax = function (label, lon) {
@@ -5503,7 +5873,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       seed: 77
     });
     const fw = document.getElementById("dpFullWheel");
-    if (fw && curResult) drawChartWheel(fw, curResult, { variant: "full" });
+    if (fw && curResult) drawInnerSkyWheel(fw, curResult);
   }
 
   // ---------- 页面:人生探索地图 ----------
@@ -5770,6 +6140,8 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
           .catch(function () { });
       }
     } else {
+      const want = location.hash || "";
+      if (/^#(\/topic\/|topic-|\/q\/|\/reading|\/map|\/my-sky|\/favorites)/.test(want)) rememberNext(want);
       $("authOverlay").style.display = "";
     }
 
