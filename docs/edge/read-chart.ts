@@ -1959,11 +1959,19 @@ Deno.serve(async (req: Request) => {
     // zh 时 userMsg 完全不变(与 v9 逐字相同)
     userMsg = withLang(userMsg, lang, lang === "en" ? (body.source || body.anchor) : null);
 
-    if (fp && sbUrl && srk) {
+    /* ★ v11:生命蓝图的快取自成一个命名空间。
+       上线顺序如果反过来(前端先上、函式还是 v10),v10 的服务端会把「旧 Prompt 生成的文字」
+       写进 readings 的裸指纹底下;这里加上写作层版本当后缀,v11 永远不会读到那一批,
+       所以部署先后顺序不再影响结果。日后写作层再升版也会自动换一个新的命名空间。 */
+    const cacheFp = (kind === "blueprint" && fp) ? (fp + "-" + BLUEPRINT_STYLE_VERSION) : fp;
+    // 生命蓝图额外回传写作层版本:前端据此判断这份内容到底是不是新写法产出的
+    const bpMeta = kind === "blueprint" ? { blueprint_style_version: BLUEPRINT_STYLE_VERSION } : {};
+
+    if (cacheFp && sbUrl && srk) {
       try {
-        const q = await fetch(sbUrl+"/rest/v1/readings?fingerprint=eq."+fp+"&select=analysis", { headers: dbHeaders });
+        const q = await fetch(sbUrl+"/rest/v1/readings?fingerprint=eq."+cacheFp+"&select=analysis", { headers: dbHeaders });
         if (q.ok) { const rows = await q.json(); if (rows.length && rows[0].analysis)
-          return json(Object.assign({ text:rows[0].analysis, cached:true },
+          return json(Object.assign({ text:rows[0].analysis, cached:true }, bpMeta,
             qMeta ? { prompt_version:PROMPT_VERSION, config_version:qMeta.configVersion } : {}), 200, cors); }
       } catch(_e) { /* 缓存不可用不阻断 */ }
     }
@@ -2006,10 +2014,10 @@ Deno.serve(async (req: Request) => {
       }
     } catch(_e) { valid = false; }
 
-    if (valid && fp && sbUrl && srk && text) {
+    if (valid && cacheFp && sbUrl && srk && text) {
       try {
         await fetch(sbUrl+"/rest/v1/readings", { method:"POST", headers:{ ...dbHeaders, Prefer:"resolution=merge-duplicates" },
-          body: JSON.stringify({ fingerprint:fp, analysis:text }) });
+          body: JSON.stringify({ fingerprint:cacheFp, analysis:text }) });
       } catch(_e) { /* ignore */ }
     }
     if (valid && qMeta && text) {
@@ -2025,7 +2033,7 @@ Deno.serve(async (req: Request) => {
         generated_at: new Date().toISOString()
       });
     }
-    return json(Object.assign({ text, cached:false, valid, lang },
+    return json(Object.assign({ text, cached:false, valid, lang }, bpMeta,
       qMeta ? { prompt_version:PROMPT_VERSION, config_version:qMeta.configVersion } : {}), 200, cors);
   } catch(e) {
     return json({ error:String(e) }, 500, cors);

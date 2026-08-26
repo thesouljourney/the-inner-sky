@@ -2044,8 +2044,27 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
      旧的生命蓝图不会被删除:renderReading 会先照常显示旧的,
      再在背景重新生成,成功才替换 —— 生成失败时使用者手上仍是原本那一份。 */
   const BLUEPRINT_VER = 11;
+  // read-chart v11 的 BLUEPRINT_STYLE 版本号;服务端会在回应里回报同一个字串
+  const BLUEPRINT_STYLE_ID = "blueprint-writing-1.0";
   function blueprintOutdated(saved) {
     return !!saved && (saved.bpVer || 0) < BLUEPRINT_VER;
+  }
+
+  /* 部署顺序保护:先探测服务端到底升级了没有。
+     函式的 GET 不会呼叫模型、也不花钱,一次工作阶段只问一次。
+     没升级就完全不动手 —— 不会拿旧 Prompt 生成一份、再盖上新版号,
+     也不会每次进页面都白花一次生成费用。函式部署好之后自动生效。 */
+  let bpStylePromise = null;
+  function serverBlueprintStyle() {
+    if (bpStylePromise) return bpStylePromise;
+    if (!SUPABASE_FUNC_URL) return (bpStylePromise = Promise.resolve(""));
+    bpStylePromise = fetch(SUPABASE_FUNC_URL, {
+      method: "GET",
+      headers: { "Authorization": "Bearer " + SUPABASE_ANON_KEY, "apikey": SUPABASE_ANON_KEY }
+    }).then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (j) { return (j && j.blueprint_style_version) || ""; })
+      .catch(function () { return ""; });
+    return bpStylePromise;
   }
 
   // ---------- 九个主题(仅 UI 文案;写作规则与资料调用都在服务端) ----------
@@ -2278,6 +2297,8 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
         const parsed = parseFn(raw);
         if (!parsed) { const e = new Error("内容解析失败(可能被截断)"); e.parseFail = true; throw e; }
         parsed.raw = raw;
+        // 服务端回报的生命蓝图写作层版本(旧版服务端没有这个栏位 → 空字串)
+        parsed.styleId = d.blueprint_style_version || "";
         return parsed;
       });
     }
@@ -2458,7 +2479,8 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
 
   window.Reading = {
     CONTENT_VER: CONTENT_VER,
-    BLUEPRINT_VER: BLUEPRINT_VER, blueprintOutdated: blueprintOutdated,
+    BLUEPRINT_VER: BLUEPRINT_VER, BLUEPRINT_STYLE_ID: BLUEPRINT_STYLE_ID,
+    blueprintOutdated: blueprintOutdated, serverBlueprintStyle: serverBlueprintStyle,
     curLang: curLang, LK: LK,
     TOPICS9: TOPICS9, findTopic: findTopic, DOMAINS: DOMAINS, findQ: findQ,
     parseChapters: parseChapters, parseTopic: parseTopic,
@@ -3963,6 +3985,15 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
      成功才写回并重画;失败就什么都不动,下次进来再试。
      每个星盘每次载入最多试一次,不会反覆呼叫。 */
   const bpRefreshTried = {};
+  /* 生命蓝图存档盖章。只有在服务端确实回报了新版写作层时才盖 bpVer,
+     否则留空 —— 函式还没部署时不会被误判成「已经是新写法」。 */
+  function stampBlueprint(parsed) {
+    const o = Object.assign({ ts: new Date().toISOString().slice(0, 10),
+      ver: window.Reading.CONTENT_VER }, parsed);
+    if (parsed && parsed.styleId === window.Reading.BLUEPRINT_STYLE_ID) o.bpVer = window.Reading.BLUEPRINT_VER;
+    delete o.styleId;
+    return o;
+  }
   function refreshBlueprintStyle(c) {
     if (!c || !curResult || autoGenBusy) return;
     if (!window.Reading.hasSupabase()) return;
@@ -3976,12 +4007,20 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
 
     bpRefreshTried[c.id] = true;
     const fpSeed = [c.date, c.time, c.lat.toFixed(4), c.lon.toFixed(4)].join("|");
-    const stamp = function (parsed) {
-      return Object.assign({ ts: new Date().toISOString().slice(0, 10),
-        ver: window.Reading.CONTENT_VER, bpVer: window.Reading.BLUEPRINT_VER }, parsed);
-    };
+    const stamp = stampBlueprint;
     const stillHere = function () { const a = activeChart(); return !!a && a.id === c.id; };
 
+    // 服务端还没部署 v11 就什么都不做:不生成、不写入、不花钱,等函式上线后自动生效
+    window.Reading.serverBlueprintStyle().then(function (styleId) {
+      if (styleId !== window.Reading.BLUEPRINT_STYLE_ID) {
+        bpRefreshTried[c.id] = false;      // 让下次载入可以再探一次
+        return;
+      }
+      if (!stillHere()) return;
+      runUpgrade();
+    });
+
+    function runUpgrade() {
     // 先把中文换成新写法。这里是「版本升级」本身,不是补空的自动流程,
     // 所以直接写入,不走 guardWriteZh(那道保护是拦自动补中文时的误覆盖)。
     const zhJob = zhOld
@@ -4012,6 +4051,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
         // 失败不做任何破坏:旧的那一份仍在画面上,也仍在云端
         console.warn("[Inner Sky] 生命蓝图写作层升级未完成,维持原本内容", e);
       });
+    }
   }
 
   function renderReading(retrying, forceGen) {
@@ -4058,7 +4098,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       const needSource = window.I18N.isEN() && !window.Reading.hasChinese(c, "blueprint");
       const job = needSource
         ? window.Reading.fetchReading(curResult, fpSeed, c, "zh").then(function (zhParsed) {
-            var zhVal = Object.assign({ ts: new Date().toISOString().slice(0, 10), ver: window.Reading.CONTENT_VER, bpVer: window.Reading.BLUEPRINT_VER }, zhParsed);
+            var zhVal = stampBlueprint(zhParsed);
             if (window.Reading.guardWriteZh(c, "blueprint", null, zhVal)) {
               window.Cloud.updateChart(c).catch(function () { });
             }
@@ -4069,7 +4109,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
         .then(function (parsed) {
           autoGenBusy = false;
           if (!activeChart() || activeChart().id !== c.id) return;
-          c[RK] = Object.assign({ ts: new Date().toISOString().slice(0, 10), ver: window.Reading.CONTENT_VER, bpVer: window.Reading.BLUEPRINT_VER }, parsed);   // 含 raw 原文
+          c[RK] = stampBlueprint(parsed);   // 含 raw 原文
           window.Cloud.updateChart(c).catch(function (e) { console.warn(T("syncFail"), e); });
           renderReading();
         })
