@@ -121,30 +121,28 @@ body {
               linear-gradient(180deg, rgba(246,243,239,.1), rgba(236,237,239,.07));
   filter: blur(22px);
 }
-/* Canvas 后方的云层:素材图片两层,只从 Canvas 左右与下方露出 */
+/* Canvas 后方的云层:整个 Canvas 只用同一张云图一次。
+   不复制、不平铺、不镜像、不纵向拉伸;云图盖不到的地方保持原本的深蓝星空。
+   云只从 Canvas 左右露出,中间被珍珠白画布挡住,不会压到任何文字或内容。 */
 .canvas > .clouds { position: absolute; inset: 0; z-index: -3; pointer-events: none; }
-.canvas > .clouds img {
-  position: absolute; left: 50%; transform: translateX(-50%);
+.canvas > .clouds .cloud {
+  position: absolute; top: 120px; left: 50%; transform: translateX(-50%);
   width: 118%; max-width: 1500px; height: auto; object-fit: contain;
   opacity: .72; filter: blur(.5px) brightness(1.22) saturate(.82);
   -webkit-mask-image: radial-gradient(78% 74% at 50% 50%, #000 42%, rgba(0,0,0,.55) 72%, transparent 100%);
   mask-image: radial-gradient(78% 74% at 50% 50%, #000 42%, rgba(0,0,0,.55) 72%, transparent 100%);
 }
-.canvas > .clouds .c1 { top: 120px; }
-.canvas > .clouds .c2 { bottom: -60px; transform: translateX(-50%) scaleX(-1) scale(1.12); opacity: .6; }
 /* Canvas 内的内容比 Canvas 窄一大截,四周留白 */
 .canvas .wrap { width: min(880px, 74%); }
 @media (max-width: 1250px) {
   .canvas::before, .canvas::after { --cw: min(92%, 1120px); }
   .canvas .wrap { width: min(880px, 86%); }
-  .canvas > .clouds img { width: 150%; opacity: .62; }
-  .canvas > .clouds .c1 { top: 40px; }
-  .canvas > .clouds .c2 { bottom: -140px; }
+  .canvas > .clouds .cloud { width: 150%; opacity: .62; top: 40px; }
 }
 @media (max-width: 900px) {
   .canvas::before, .canvas::after { --cw: calc(100% - 28px); }
   .canvas .wrap { width: min(880px, 88%); }
-  .canvas > .clouds img { opacity: .48; width: 132%; }
+  .canvas > .clouds .cloud { opacity: .48; width: 132%; }
   .canvas::before { top: -22px; bottom: 6px; border-radius: 18px;
     -webkit-mask-image: linear-gradient(180deg, #000 calc(100% - 110px), transparent 100%);
     mask-image: linear-gradient(180deg, #000 calc(100% - 110px), transparent 100%); }
@@ -834,9 +832,9 @@ var APP_URL = "app.html";
 </div>
 
 <div class="canvas">
+<!-- 整个 Floating Canvas 后方只有这一张云图,不得再加第二层/镜像/平铺 -->
 <div class="clouds" aria-hidden="true">
-  <img class="c1" src="assets/clouds.png" alt="">
-  <img class="c2" src="assets/clouds.png" alt="">
+  <img class="cloud" src="assets/clouds.png" alt="">
 </div>
 <section class="chapters" id="chapters">
   <div class="wrap">
