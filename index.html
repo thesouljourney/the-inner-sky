@@ -357,10 +357,19 @@ header.site > .wrap.nav {
   animation: fade-up 1.4s .2s var(--ease-soft) both;
 }
 @media (max-width: 900px) {
-  .hero > .wrap { grid-template-columns: 1fr; min-height: 0; padding-top: 24px; padding-bottom: 64px; width: min(92%, 1400px); }
+  .hero > .wrap { grid-template-columns: 1fr; min-height: 0; padding-top: 24px; padding-bottom: 96px; width: min(92%, 1400px); }
   .hero-copy { justify-self: stretch; }
-  .hero-visual { min-height: 0; margin-top: 30px; }
-  .hero-visual img { max-width: 78vw; }
+  /* 手机端 Hero 的「大量留白」其实不是 margin 太大,是素材自带的。
+     行星图上下各留了约 20% 的透明边(为了让光环完整不被裁),
+     这段透明边在版面上和实体一样占高度:390px 时单边就有 59px,
+     768px 时有 117px —— 于是「CTA → 星球」「星球 → 白卡」永远多出一截空白。
+     这里把容器高度收成素材里真正画到东西的那一段(约 61%),
+     透明边靠 flex 置中溢出到容器外,不参与排版。
+     星球尺寸、光晕、水平位置完全没变,只是它的空边不再撑高版面。
+     溢出的是全透明像素,下方留白 96px 远大于光晕需要的 ~50px,不会被裁到;
+     向上溢出可能盖到 CTA,所以这颗装饰性星球在手机端不接收点击。 */
+  .hero-visual { --orb: 78vw; min-height: 0; height: calc(var(--orb) * .61); margin-top: 38px; }
+  .hero-visual img { max-width: var(--orb); pointer-events: none; }
 }
 
 /* ---------- 人生章节(星体入口) ---------- */
@@ -411,8 +420,10 @@ header.site > .wrap.nav {
 .planet-chapter .cap { color: var(--text-secondary); font-size: 13px; line-height: 23px; font-weight: 300; }
 .planet-chapter .done { margin-top: 3px; font-size: 11px; letter-spacing: .1em; color: var(--accent-moon-lavender); min-height: 12px; }
 /* 平板:仍保持 3 列,只缩小星球与间距,避免出现「两排 / 不平均」排列 */
-@media (max-width: 860px) { .chapters { padding: 68px 0 74px; } .chapter-grid { margin-top: 40px; gap: 26px 10px; } .planet-chapter .orb { margin-bottom: 10px; } .planet-chapter .orb { width: clamp(74px, 11vw, 96px); } .planet-chapter .name { font-size: 16px; } }
-@media (max-width: 520px) { .chapters { padding: 68px 0 74px; } .chapter-grid { margin-top: 38px; gap: 26px 8px; } .planet-chapter .orb { width: 64px; margin-bottom: 12px; } .planet-chapter .name { font-size: 14px; letter-spacing: .02em; } .planet-chapter .cap { font-size: 11.5px; line-height: 19px; } }
+/* 手机 / 平板:上下留白从 68 / 74 收到 44 —— 白卡顶到标题、末排星体到「回头再读一次」
+   两段空白都太深。row-gap 26 → 20 略收一点,星体本身、字级、栏宽都不动。 */
+@media (max-width: 860px) { .chapters { padding: 44px 0 44px; } .chapter-grid { margin-top: 40px; gap: 20px 10px; } .planet-chapter .orb { margin-bottom: 10px; } .planet-chapter .orb { width: clamp(74px, 11vw, 96px); } .planet-chapter .name { font-size: 16px; } }
+@media (max-width: 520px) { .chapters { padding: 44px 0 44px; } .chapter-grid { margin-top: 38px; gap: 20px 8px; } .planet-chapter .orb { width: 64px; margin-bottom: 12px; } .planet-chapter .name { font-size: 14px; letter-spacing: .02em; } .planet-chapter .cap { font-size: 11.5px; line-height: 19px; } }
 
 /* ---------- Dashboard 预览 ---------- */
 .preview { padding: 40px 0 96px; background: transparent; }

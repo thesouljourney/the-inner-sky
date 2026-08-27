@@ -698,6 +698,35 @@
   #dpage .dp-cards4 .c4{border:1px solid var(--dp-line);border-radius:18px;background:var(--dp-cloud);padding:18px}
   #dpage .dp-cards4 .c4 b{display:block;font-family:var(--dp-serif);font-weight:500;font-size:14.5px;margin-bottom:8px}
   #dpage .dp-cards4 .c4 div{font-size:13px;line-height:1.95;color:var(--dp-mut);font-weight:300}
+  /* ------------------------------------------------------------
+     连续阅读导航:一章读完之后的「上一个标题 / 下一个标题」出口
+     定位是 Secondary Reading Navigation —— 透明底、极浅边框、muted 文字,
+     不用渐层、不做成 Primary CTA,不与正文抢视觉重点。
+     两颗永远同宽同高并排,首章 / 末章只是把其中一颗变成不可点的 .off,
+     不移除元素,所以切章时不会有 layout shift。
+     ------------------------------------------------------------ */
+  #dpage .dp-chnav{display:flex;gap:10px;margin-top:clamp(26px,4vw,36px)}
+  #dpage .dp-chnav > *{
+    flex:1 1 0;min-width:0;display:flex;flex-direction:column;gap:6px;
+    border:1px solid var(--dp-line);border-radius:14px;padding:13px 15px;
+    background:transparent;color:inherit;text-decoration:none;
+    transition:background .22s ease,border-color .22s ease
+  }
+  #dpage .dp-chnav .lb{font-size:11.5px;letter-spacing:.16em;color:var(--dp-mut);font-weight:400}
+  #dpage .dp-chnav .tt{
+    font-family:var(--dp-serif);font-size:14px;line-height:1.62;font-weight:500;color:var(--dp-ink);
+    display:-webkit-box;-webkit-line-clamp:2;line-clamp:2;-webkit-box-orient:vertical;overflow:hidden
+  }
+  #dpage .dp-chnav .nx{text-align:right}
+  #dpage .dp-chnav a:hover{background:rgba(170,160,213,.07);border-color:rgba(170,160,213,.36)}
+  #dpage .dp-chnav a:active{background:rgba(170,160,213,.12)}
+  #dpage .dp-chnav .off{opacity:.34;pointer-events:none}
+  #dpage .dp-chnav .off .tt{color:var(--dp-mut);font-weight:400}
+  /* 极窄的机型(≈320px)才允许上下堆叠,标准手机维持同一行 */
+  @media(max-width:340px){#dpage .dp-chnav{flex-direction:column}#dpage .dp-chnav .nx{text-align:left}}
+  /* 切章后卷到「详细解读」时,标题上方留一点余白(这一页没有 fixed header,
+     但保留这个值,之后若加上吸顶元件也不会被遮住) */
+  #dpage .dp-detail{scroll-margin-top:18px}
   #dpage .dp-big3{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
   #dpage .dp-big3 .b3{display:flex;gap:12px;align-items:center;border:1px solid var(--dp-line);border-radius:18px;background:var(--dp-cloud);padding:14px 16px}
   #dpage .dp-big3 .b3 .ic{width:38px;height:38px;border-radius:50%;background:rgba(170,160,213,.18);display:flex;align-items:center;justify-content:center;color:#6a5fa0;flex:none}
@@ -4915,6 +4944,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   const FOOT_YEAR = "2026";
   const SOCIAL_IG = "https://www.instagram.com/the_inner.sky?igsh=dDc4YmUwZTllc2h0&utm_source=qr";
   const SOCIAL_XHS = "https://xhslink.cn/m/6XbeCmG8RPc";
+  let readingNavJump = false;   // 上 / 下一章点击后,下一次渲染要卷到「详细解读」顶端
   let favFilter = "all", favSortNew = true, favConfirmKey = null;
   let saveTipEl = null, toastEl = null, pendingSel = null;
 
@@ -5359,7 +5389,26 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
         '" data-source-type="life_blueprint" data-section="' + esc0(chName(ch, readingTab)) +
         '" title="' + esc0(T("saveIt")) + '">' + (isFaved(k) ? "★" : "☆") + "</button>";
       const ownCards = chapterCards[readingTab] || [];
-      body += '<div class="dp-card"><div class="dp-read"><div class="dp-sec-label">' + dpT("详细解读", "IN DETAIL") + '</div>' +
+      /* 连续阅读导航:读完这一章之后,直接跳去上 / 下一章,不必卷回顶端重选。
+         标题一律取自现有的 chs(与页签同一份资料、同一个顺序、同一个 index),
+         不另建清单、不写死章名。首章 / 末章那一侧渲染成不可点的 .off,
+         元素仍然占位,所以切章时两颗按钮的位置不会跳动。 */
+      function chNav() {
+        // cls 只决定左 / 右对齐;i 落在 chs 范围内才是可点的连结,否则同样大小的静态块
+        const cell = function (i, cls, label, endText) {
+          const live = i >= 0 && i < chs.length;
+          const inner = '<div class="lb">' + esc0(label) + '</div>' +
+            '<div class="tt">' + esc0(live ? chName(chs[i], i) : endText) + '</div>';
+          return live
+            ? '<a class="' + cls + '" data-rnav href="#/reading/' + i + '">' + inner + '</a>'
+            : '<span class="' + cls + ' off" aria-disabled="true">' + inner + '</span>';
+        };
+        return '<nav class="dp-chnav" aria-label="' + esc0(dpT("章节导航", "Chapter navigation")) + '">' +
+          cell(readingTab - 1, "pv", dpT("← 上一个标题", "← Previous"), dpT("这是第一章", "This is the first")) +
+          cell(readingTab + 1, "nx", dpT("下一个标题 →", "Next →"), dpT("这是最后一章", "This is the last")) +
+          "</nav>";
+      }
+      body += '<div class="dp-card dp-detail" id="dpDetail"><div class="dp-read"><div class="dp-sec-label">' + dpT("详细解读", "IN DETAIL") + '</div>' +
         '<div class="dp-tabs">' + chs.map(function (x, i) {
           return '<button data-rtab="' + i + '"' + (i === readingTab ? ' class="on"' : "") + ">" + esc0(chName(x, i)) + "</button>";
         }).join("") + "</div>" +
@@ -5378,6 +5427,8 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
           ? '<div class="dp-div" style="margin-top:26px"><span class="st">✦</span><span class="ln"></span></div>' +
             cardsHtml(ownCards)
           : "") +
+        // 这一章的最终阅读出口:排在正文与章末专属建议全部结束之后
+        chNav() +
         "</div></div>";
       foot = dpReturnFoot();
     }
@@ -5390,6 +5441,20 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     $("dpage").querySelectorAll("[data-rtab]").forEach(function (b) {
       b.addEventListener("click", function () { location.hash = "#/reading/" + b.getAttribute("data-rtab"); });
     });
+    /* 上 / 下一章走的是既有的 #/reading/<i> 路由:换的只有 readingTab,
+       curResult、收藏、已读状态、chart 资料都不动,也不会重新跟服务器要内容。
+       renderRoute 那边同一页内换页签本来就不会 scrollTo(0,0),所以这里
+       自己把画面带到「详细解读」的顶端,读者落点就是下一章的标题。 */
+    $("dpage").querySelectorAll("[data-rnav]").forEach(function (a) {
+      a.addEventListener("click", function () { readingNavJump = true; });
+    });
+    if (readingNavJump) {
+      readingNavJump = false;
+      const d = document.getElementById("dpDetail");
+      if (d) requestAnimationFrame(function () {
+        d.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    }
     const gb = document.getElementById("dpGenB");
     if (gb) gb.addEventListener("click", function () { renderReading(false, true); routeRefresh(); });
   }
