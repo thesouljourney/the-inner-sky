@@ -1505,6 +1505,39 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   const FUNC_URL = SUPABASE_URL + "/functions/v1/read-chart";
   window.CloudCfg = { url: SUPABASE_URL, anon: SUPABASE_ANON_KEY, funcUrl: FUNC_URL };
 
+  /* ── 请求逾时保护(全站唯一的网路入口)────────────────────────
+     fetch 本身没有逾时。请求一旦卡住(伺服器不回应、连线断了但 TCP 没断、
+     行动网路切换),Promise 永远不会 settle:画面就停在「正在读取你的星盘…」
+     或「正在为你整理这一章…」不动,既不报错、也没有「再试一次」可按。
+     这里给每一个请求一个上限,逾时就当成一次普通的网路错误往上抛 ——
+     上层本来就有错误卡片与重试入口,资料一个字都不会因此被改动。 */
+  const NET_TIMEOUT = 20000;        // 认证 / 读写资料这类应该很快回来的请求
+  function netFetch(url, opts, ms) {
+    opts = opts || {};
+    if (typeof AbortController !== "function") return fetch(url, opts);   // 极旧浏览器:维持原行为
+    const ac = new AbortController();
+    const outer = opts.signal;
+    if (outer) {
+      if (outer.aborted) ac.abort();
+      else outer.addEventListener("abort", function () { ac.abort(); });
+    }
+    const timer = setTimeout(function () { ac.abort(); }, ms || NET_TIMEOUT);
+    return fetch(url, Object.assign({}, opts, { signal: ac.signal })).then(function (r) {
+      clearTimeout(timer);
+      return r;
+    }, function (e) {
+      clearTimeout(timer);
+      if (e && e.name === "AbortError") {
+        const t = new Error(ms && ms > NET_TIMEOUT ? "生成超时,请再试一次" : "网络请求超时");
+        t.timeout = true;
+        throw t;
+      }
+      throw e;
+    });
+  }
+  window.CloudCfg.fetch = netFetch;
+  window.CloudCfg.timeout = NET_TIMEOUT;
+
   const SESSION_KEY = "xingli_session_v1"; // 唯一的本地键:会话令牌
   let session = null;
   try { session = JSON.parse(localStorage.getItem(SESSION_KEY) || "null"); } catch (e) { }
@@ -1538,7 +1571,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
 
   // ---------- 认证 ----------
   function authCall(path, body) {
-    return fetch(SUPABASE_URL + "/auth/v1/" + path, {
+    return netFetch(SUPABASE_URL + "/auth/v1/" + path, {
       method: "POST",
       headers: { "apikey": SUPABASE_ANON_KEY, "Content-Type": "application/json" },
       body: JSON.stringify(body)
@@ -1609,9 +1642,9 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   /* 向 Supabase 取当前登入者本人的资料(user_metadata → Username 的权威来源) */
   function fetchUser() {
     if (!session) return Promise.reject(new Error("no session"));
-    return fetch(SUPABASE_URL + "/auth/v1/user", { headers: authHeaders() }).then(function (r) {
+    return netFetch(SUPABASE_URL + "/auth/v1/user", { headers: authHeaders() }).then(function (r) {
       if (r.status === 401) return refresh().then(function () {
-        return fetch(SUPABASE_URL + "/auth/v1/user", { headers: authHeaders() }).then(function (r2) {
+        return netFetch(SUPABASE_URL + "/auth/v1/user", { headers: authHeaders() }).then(function (r2) {
           if (!r2.ok) throw new Error("user " + r2.status); return r2.json();
         });
       });
@@ -1633,7 +1666,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     if (!session) return Promise.reject(new Error("no session"));
     const nm = String(name || "").trim();
     if (!nm) return Promise.reject(new Error("empty"));
-    return fetch(SUPABASE_URL + "/auth/v1/user", {
+    return netFetch(SUPABASE_URL + "/auth/v1/user", {
       method: "PUT",
       headers: authHeaders(),
       body: JSON.stringify({ data: { display_name: nm, user_id: nm } })
@@ -1661,7 +1694,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   function rest(path, opts, retried) {
     opts = opts || {};
     opts.headers = Object.assign(authHeaders(), opts.headers || {});
-    return fetch(SUPABASE_URL + "/rest/v1/" + path, opts).then(function (r) {
+    return netFetch(SUPABASE_URL + "/rest/v1/" + path, opts).then(function (r) {
       if (r.status === 401 && !retried && session) {
         return refresh().then(function () { return rest(path, opts, true); });
       }
@@ -2062,6 +2095,12 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   "use strict";
   const SUPABASE_FUNC_URL = (window.CloudCfg || {}).funcUrl || "";
   const SUPABASE_ANON_KEY = (window.CloudCfg || {}).anon || "";
+  /* 与云端层共用同一个「会逾时的 fetch」。生成一篇解读本来就要一分钟上下,
+     所以给它比一般 API 宽得多的上限;但仍然必须有上限 —— 没有上限时
+     一次卡住的请求会让页面永远停在「正在为你整理这一章…」。 */
+  const netFetch = (window.CloudCfg && window.CloudCfg.fetch) || function (u, o) { return fetch(u, o); };
+  const GEN_TIMEOUT = 180000;   // 生成:3 分钟
+  const PROBE_TIMEOUT = 15000;  // 只是探测服务端版本,不该等太久
 
   // 内容架构版本:服务端 Prompt 有重大升级时 +1,旧内容自动重新生成
   const CONTENT_VER = 10;
@@ -2087,10 +2126,10 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   function serverBlueprintStyle() {
     if (bpStylePromise) return bpStylePromise;
     if (!SUPABASE_FUNC_URL) return (bpStylePromise = Promise.resolve(""));
-    bpStylePromise = fetch(SUPABASE_FUNC_URL, {
+    bpStylePromise = netFetch(SUPABASE_FUNC_URL, {
       method: "GET",
       headers: { "Authorization": "Bearer " + SUPABASE_ANON_KEY, "apikey": SUPABASE_ANON_KEY }
-    }).then(function (r) { return r.ok ? r.json() : null; })
+    }, PROBE_TIMEOUT).then(function (r) { return r.ok ? r.json() : null; })
       .then(function (j) { return (j && j.blueprint_style_version) || ""; })
       .catch(function () { return ""; });
     return bpStylePromise;
@@ -2294,11 +2333,11 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   }
   function callFunc(payload, retried) {
     const bearer = (window.Cloud && window.Cloud.token && window.Cloud.token()) || SUPABASE_ANON_KEY;
-    return fetch(SUPABASE_FUNC_URL, {
+    return netFetch(SUPABASE_FUNC_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json", "Authorization": "Bearer " + bearer, "apikey": SUPABASE_ANON_KEY },
       body: JSON.stringify(payload)
-    }).then(function (r) {
+    }, GEN_TIMEOUT).then(function (r) {
       // 令牌过期:静默续期一次后重试(服务端 question 层已开启使用者验证)
       if (r.status === 401 && !retried && window.Cloud && window.Cloud.refresh)
         return window.Cloud.refresh().then(function () { return callFunc(payload, true); });
@@ -3638,7 +3677,9 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   function diagnose(err) {
     const cfg = window.CloudCfg || {};
     const msg = (err && err.message) || String(err || "");
-    return fetch(cfg.funcUrl, { method: "GET", headers: { "apikey": cfg.anon } })
+    const nf = cfg.fetch || function (u, o) { return fetch(u, o); };
+    // 诊断本身也要有上限:探测卡住的话,连「卡在哪一环」都永远显示不出来
+    return nf(cfg.funcUrl, { method: "GET", headers: { "apikey": cfg.anon } }, 15000)
       .then(function (r) { return r.text().then(function (t) { return { status: r.status, text: t }; }); })
       .catch(function (e) { return { status: 0, text: String(e) }; })
       .then(function (probe) {
@@ -4787,6 +4828,9 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   let chartsLoaded = false;     // 已经成功从资料库取回过一次
   let chartsSettled = false;    // 取回成功且结果可信(可以据此判断「确实没有星盘」)
   let chartsError = null;       // 最近一次载入失败的原因(失败 ≠ 没有星盘)
+  /* 载入整条链路的上限。比单一请求的逾时(20s)长一点,
+     让真正的网路错误先带着自己的讯息浮上来,看门狗只兜住「什么都没发生」。 */
+  const BOOT_TIMEOUT = 28000;
 
   const NEXT_KEY = "inner_sky_next_v1";   // 因跨日 / 未登入而中断时,记住使用者原本要去的地方
   function rememberNext(hash) {
@@ -6122,6 +6166,27 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       // loadCharts 失败必须当成「不知道」,不能当成「这个帐号没有星盘」——
       // 后者会把已有星盘的使用者推去重新输入出生资料。
       chartsError = null;
+      /* 看门狗。每一个请求现在都有逾时了,但载入这条链路还经过资料档载入、
+         迁移写回等好几环 —— 只要有任何一环卡住不 settle,画面就会永远停在
+         「正在读取你的星盘…」,既不报错也没有「再试一次」可按。
+         时间到就把它当成一次「暂时读不到资料」:换成可重试的提示卡。
+         这只影响画面,不清任何资料、不跳 onboarding;后台那条链路若稍后
+         才回来,chartsSettled 一样会被设起来,下一次渲染就正常了。 */
+      let bootWatch = setTimeout(function () {
+        bootWatch = null;
+        if (chartsSettled) return;
+        chartsError = new Error(window.I18N.isEN() ? "Loading timed out" : "载入超时");
+        chartsError.timeout = true;
+        if (!silent) {
+          setAuthLoading(false);
+          setAuthMsg(window.I18N.isEN() ? "Could not load your data. Please try again." : "资料载入失败，请再试一次");
+          return;
+        }
+        leaveAuth();
+        if (curRoute) routeRefresh();
+        else location.hash = "#/reading";
+      }, BOOT_TIMEOUT);
+      const clearBootWatch = function () { if (bootWatch) { clearTimeout(bootWatch); bootWatch = null; } };
       return Promise.all([
         window.Cloud.loadPrefs().catch(function () { return {}; }),
         window.Cloud.loadCharts()
@@ -6142,6 +6207,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
         try { syncReadTopics(); } catch (e) { console.warn("已读状态同步失败", e); }
         return migrateAllCharts().catch(function (e) { console.warn("迁移失败", e); });
       }).then(function () {
+        clearBootWatch();
         chartsSettled = true;   // 到这里才算「资料库已经确认过」
         if (!store.activeId || !store.charts.some(c => c.id === store.activeId)) {
           const usable = store.charts.filter(isCompleteBirthData);
@@ -6156,6 +6222,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
         // Username 以帐号自己的 user_metadata 为准,拿到后静默更新一次
         window.Cloud.fetchUser().then(function () { refreshAcctBar(); saveProfileCache(); }).catch(function () { });
       }).catch(function (e) {
+        clearBootWatch();
         console.warn(e);
         chartsError = e;
         chartsSettled = false;
@@ -6168,15 +6235,19 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     }
 
     /* 闲置回来 / refresh / 手动重试:重新跟资料库确认真实状态,而不是相信前端 state */
-    let reloading = null;
+    let reloading = null, reloadingAt = 0;
     function reloadUserData() {
       if (!window.Cloud.hasSession()) { requireLogin("none"); return Promise.resolve(); }
       if (!window.Cloud.dayValid()) { requireLogin("day"); return Promise.resolve(); }
-      if (reloading) return reloading;
-      reloading = enterApp(true);
-      const done = function () { reloading = null; };
-      Promise.resolve(reloading).then(done, done);
-      return reloading;
+      /* 上一次载入若已经卡过了看门狗的时间,就不再等它,直接重来一次。
+         否则使用者按「再试一次」只会共用那条卡住的 Promise —— 按了等于没按。 */
+      if (reloading && Date.now() - reloadingAt < BOOT_TIMEOUT) return reloading;
+      reloadingAt = Date.now();
+      const job = reloading = enterApp(true);
+      // 只清掉自己那一次:卡住的旧载入稍后才回来时,不能把新的那一次一起清掉
+      const done = function () { if (reloading === job) reloading = null; };
+      Promise.resolve(job).then(done, done);
+      return job;
     }
     window.__reloadUserData = reloadUserData;
 
