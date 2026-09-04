@@ -1037,13 +1037,14 @@
     <div class="sky-auth-title" data-i18n="authTitle">回到我的星空</div>
     <div class="sky-auth-sub" data-i18n="authSub">登录后，继续探索属于你的内在宇宙✨</div>
     <div class="auth-form">
-    <div class="field"><label data-i18n="email">邮箱</label><input id="authEmail" type="email" autocomplete="email" placeholder="you@example.com"></div>
-    <div class="field" style="margin-top:10px"><label data-i18n="password">密码</label><input id="authPw" type="password" autocomplete="current-password" data-i18n-ph="pwPh" placeholder="至少 6 位"></div>
+    <div class="field" id="authEmailField"><label data-i18n="email">邮箱</label><input id="authEmail" type="email" autocomplete="email" placeholder="you@example.com"></div>
+    <div class="field" id="authPwField" style="margin-top:10px"><label id="authPwLabel" data-i18n="password">密码</label><input id="authPw" type="password" autocomplete="current-password" data-i18n-ph="pwPh" placeholder="至少 6 位"></div>
     <!-- User ID:仅注册时显示,存进 Supabase user_metadata.display_name,不影响登录逻辑 -->
     <div class="field" id="authIdField" style="margin-top:10px;display:none"><label data-i18n="userId">用户名</label><input id="authUserId" type="text" autocomplete="nickname" data-i18n-ph="userIdPh" placeholder="别人会看到的名字"></div>
     <div id="authMsg" style="min-height:18px;font-size:12px;color:var(--fire);margin:10px 0 4px"></div>
     <button class="btn-main" id="authLogin" data-i18n="login">登 录</button>
     <button class="btn-alt" id="authSignup" data-i18n="signup">没有账号?注 册</button>
+    <a class="sky-auth-back" href="#" id="authForgotLink" style="margin-top:14px" data-i18n="forgotPw">忘记密码?</a>
     </div>
     <div class="sky-auth-loading"><span class="ring"></span><span class="tx">正在进入你的星空…</span></div>
     <a class="sky-auth-back" href="index.html">← 回到首页</a>
@@ -1690,6 +1691,53 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       return session ? session.nick : nm;
     });
   }
+  /* ── 忘记密码 ────────────────────────────────────────────────
+     寄一封重设信,走的跟注册确认信同一条路:redirect_to 指回这一份 app.html,
+     使用者点回来时网址上带的是 type=recovery。
+     ⚠ Supabase 对不存在的邮箱也一律回 200 —— 这是刻意的,免得这个端点
+     变成「查这个 email 有没有注册过」的工具。所以画面上的文案也不能说死。 */
+  function requestPasswordReset(email) {
+    const em = String(email || "").trim();
+    if (!em) return Promise.reject(new Error("empty"));
+    return authCall("recover?redirect_to=" + encodeURIComponent(authRedirectTo()), { email: em })
+      .then(function (r) {
+        if (!r.ok) throw new Error(r.data.msg || r.data.error_description || r.data.message || "寄送失败");
+        return true;
+      });
+  }
+  /* 把回跳网址上那组令牌收成一个会话。只有「重设密码」这条路会用到:
+     使用者得先有一个(短暂的)身分,才有权限把新密码写上去。
+     设完密码就会立刻 logout(),不让它留下来。 */
+  function adoptSession(t) {
+    if (!t || !t.access_token) return false;
+    saveSession({
+      access_token: t.access_token,
+      refresh_token: t.refresh_token || "",
+      user_id: "", email: "",
+      login_date: localDay(),
+      nick: ""
+    });
+    return true;
+  }
+  /* 只改密码,不碰 Email / User ID,也完全不碰 charts 表 ——
+     出生资料、星盘、已生成的解读与收藏都不会因此改变。 */
+  function updatePassword(pw) {
+    if (!session) return Promise.reject(new Error("no session"));
+    if (String(pw || "").length < 6) return Promise.reject(new Error("password too short"));
+    return netFetch(SUPABASE_URL + "/auth/v1/user", {
+      method: "PUT",
+      headers: authHeaders(),
+      body: JSON.stringify({ password: pw })
+    }).then(function (r) {
+      if (!r.ok) return r.text().then(function (t) {
+        let msg = "";
+        try { const o = JSON.parse(t); msg = o.msg || o.error_description || o.message || ""; } catch (e) { }
+        throw new Error(msg || ("HTTP " + r.status));
+      });
+      return r.json().catch(function () { return null; });
+    });
+  }
+
   function logout() {
     saveSession(null);
     // 同一台机器换人登入时,不能留下上一位的名字 / 快照
@@ -1790,6 +1838,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     email: function () { return session ? session.email : ""; },
     signup: signup, login: login, logout: logout, refresh: refresh, fetchUser: fetchUser,
     updateUsername: updateUsername,
+    requestPasswordReset: requestPasswordReset, adoptSession: adoptSession, updatePassword: updatePassword,
     loadCharts: loadCharts, insertChart: insertChart, updateChart: updateChart, deleteChart: deleteChart,
     loadPrefs: loadPrefs, savePrefs: savePrefs, uuid: uuid,
     migrateLegacy: migrateLegacy
@@ -1957,6 +2006,19 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     confirmExpired:   ["这个确认连结已经过期,或者已经用过了。请直接在下面登入;登入不成功就重新注册一次,会再寄一封新的。",
                        "That confirmation link has expired or was already used. Try signing in below; if that fails, sign up again for a fresh link."],
     confirmFail:      ["确认没有成功。", "Confirmation didn’t go through."],
+    forgotPw:         ["忘记密码?", "Forgot your password?"],
+    pwTooShort:       ["密码至少 6 位", "Use at least six characters."],
+    emailNeed:        ["请先输入邮箱", "Enter your email address first."],
+    sendReset:        ["寄出重设连结", "Send reset link"],
+    sendingReset:     ["正在寄出…", "Sending…"],
+    // 刻意不说「这个邮箱不存在」:否则任何人都能拿这里当帐号查询工具
+    resetSent:        ["如果这个邮箱注册过,重设连结已经寄出了。请到信箱查收(记得看看垃圾邮件)。",
+                       "If that address is registered, a reset link is on its way. Check your inbox — and your spam folder."],
+    resetReady:       ["请设定一组新密码。", "Choose a new password."],
+    newPw:            ["新密码", "New password"],
+    setNewPw:         ["设定新密码", "Set new password"],
+    savingPw:         ["正在更新密码…", "Updating your password…"],
+    pwUpdated:        ["密码已更新。请用新密码登入。", "Password updated. Sign in with your new password."],
 
     /* —— 诊断 —— */
     dgNoKey:          ["服务端还没有设置 AI 密钥(ANTHROPIC_API_KEY)", "The server has no AI key set (ANTHROPIC_API_KEY)"],
@@ -4897,12 +4959,16 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       type:  p.type || "",
       error: p.error || p.error_code || "",
       code:  p.error_code || "",
-      desc:  p.error_description || ""
+      desc:  p.error_description || "",
+      /* 只留在记忆体里,网址上那份已经在上面被抹掉了。
+         唯一的用途是「重设密码」——  没有它就没有权限写新密码。 */
+      access_token:  p.access_token || "",
+      refresh_token: p.refresh_token || ""
     };
   }
   /* 回跳失败时给使用者看得懂的话。最常见的是连结过期 / 已经点过一次。 */
   function authCallbackMsg(cb) {
-    if (!cb.error) return { text: T("confirmOk"), ok: true };
+    if (!cb.error) return { text: cb.type === "recovery" ? T("resetReady") : T("confirmOk"), ok: true };
     if (/expired|used|invalid/i.test(cb.code + " " + cb.error + " " + cb.desc))
       return { text: T("confirmExpired"), ok: false };
     return { text: cb.desc || cb.error || T("confirmFail"), ok: false };
@@ -4916,12 +4982,19 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     const ov = $("authOverlay");
     if (ov) ov.style.display = "";
     setAuthLoadingSafe(false);
+    setAuthModeSafe("login");
     const dp = $("dpage");
     if (dp) { dp.style.display = "none"; }
     document.body.classList.remove("dp-open");
   }
   function setAuthLoadingSafe(on, msg) {
     try { if (window.__setAuthLoading) window.__setAuthLoading(on, msg); } catch (e) { }
+  }
+  /* 重新要求登入时,把登入页收回「登录」那一种样子。
+     否则使用者半途离开重设密码的画面、之后又被要求登入,
+     看到的会是一张只剩「新密码」栏位、连邮箱都没有的表单。 */
+  function setAuthModeSafe(mode) {
+    try { if (window.__setAuthMode) window.__setAuthMode(mode); } catch (e) { }
   }
 
   function routeGuard() {
@@ -6317,34 +6390,74 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       if (!bar || !bar.firstChild) return;
       bar.firstChild.textContent = window.Cloud.nick() || window.Cloud.email() || "";
     }
+    /* ── 登入页的四种样子 ────────────────────────────────────
+       同一组栏位,四种用途。以前只有一个 signupMode 布林值、各处零散地改
+       画面,再加两种状态就会互相污染,所以收敛成这一个函式:
+         login  邮箱 + 密码             → 登录 / 没有账号?注册
+         signup 邮箱 + 密码 + 用户名     → 注册 / 返回登入
+         forgot 只要邮箱                → 寄出重设连结 / 返回登入
+         reset  只要新密码(从信里点回来) → 设定新密码
+       只有这个函式动画面,状态永远是完整的一套,不会剩下上一种的残影。 */
+    let authMode = "login";
+    function setAuthMode(mode) {
+      authMode = mode || "login";
+      const isSignup = authMode === "signup", isForgot = authMode === "forgot", isReset = authMode === "reset";
+      $("authEmailField").style.display = isReset  ? "none" : "";
+      $("authPwField").style.display    = isForgot ? "none" : "";
+      $("authIdField").style.display    = isSignup ? "" : "none";
+      $("authForgotLink").style.display = (authMode === "login") ? "" : "none";
+      $("authSignup").style.display     = isReset ? "none" : "";
+      $("authPwLabel").textContent      = isReset ? T("newPw") : T("password");
+      $("authPw").setAttribute("autocomplete", (isSignup || isReset) ? "new-password" : "current-password");
+      if (isSignup)      { $("authLogin").textContent = T("backToLogin"); $("authSignup").textContent = T("signupGo"); }
+      else if (isForgot) { $("authLogin").textContent = T("backToLogin"); $("authSignup").textContent = T("sendReset"); }
+      else if (isReset)  { $("authLogin").textContent = T("setNewPw"); }
+      else               { $("authLogin").textContent = T("login");      $("authSignup").textContent = T("signup"); }
+      // 主要动作那颗才是实心按钮:forgot 的动作在 authSignup 上
+      swapAuthEmphasis(isSignup || isForgot);
+      /* 刻意不在这里清讯息。requireLogin() 也会重设这个模式,而 pageshow
+         在每次载入(hash 是 #/login 且没有会话时)都会走到 requireLogin ——
+         那会把 init 刚设好的「邮箱已确认」/「连结已过期」直接抹掉。
+         所以清讯息交给「使用者自己切换模式」那几个入口负责。 */
+    }
+
+    function doSendReset() {
+      const em = $("authEmail").value.trim();
+      if (!em) { setAuthMsg(T("emailNeed")); return; }
+      setAuthMsg(T("sendingReset"), true);
+      window.Cloud.requestPasswordReset(em)
+        .then(function () { setAuthMsg(T("resetSent"), true); })
+        .catch(function (e) { setAuthMsg(e.message); });
+    }
+    function doSetNewPassword() {
+      const pw = $("authPw").value;
+      // 这一屏没有邮箱栏位,不能沿用「请输入邮箱与至少 6 位密码」
+      if (pw.length < 6) { setAuthMsg(T("pwTooShort")); return; }
+      setAuthMsg(T("savingPw"), true);
+      window.Cloud.updatePassword(pw).then(function () {
+        /* 设完就把这段临时会话丢掉。重设连结很可能是在别人的电脑、
+           或共用的信箱里点开的,不该在那台机器上留下一个已登入的状态。
+           让他用新密码正常登入一次,顺便也确认了密码真的改成功。 */
+        window.Cloud.logout();
+        $("authPw").value = "";
+        setAuthMode("login");
+        setAuthMsg(T("pwUpdated"), true);
+      }).catch(function (e) { setAuthMsg(e.message); });
+    }
+
     $("authLogin").addEventListener("click", function () {
-      if (signupMode) {   // 从注册态退回登录态
-        signupMode = false;
-        $("authIdField").style.display = "none";
-        $("authSignup").textContent = T("signup");
-        $("authLogin").textContent = T("login");
-        swapAuthEmphasis(false);
-        setAuthMsg("");
-        return;
-      }
+      // signup / forgot 状态下,这颗是「返回登入」
+      if (authMode === "signup" || authMode === "forgot") { setAuthMode("login"); setAuthMsg(""); return; }
+      if (authMode === "reset") { doSetNewPassword(); return; }
       const em = $("authEmail").value.trim(), pw = $("authPw").value;
       if (!em || pw.length < 6) { setAuthMsg(T("authNeed")); return; }
       setAuthMsg(T("loggingIn"), true);
       window.Cloud.login(em, pw).then(enterApp).catch(function (e) { setAuthMsg(e.message); });
     });
-    // 第一次点「注册」先展开 User ID 栏位,第二次才真的送出
-    let signupMode = false;
     $("authSignup").addEventListener("click", function () {
-      if (!signupMode) {
-        signupMode = true;
-        $("authIdField").style.display = "";
-        $("authSignup").textContent = T("signupGo");
-        $("authLogin").textContent = T("backToLogin");
-        swapAuthEmphasis(true);
-        setAuthMsg("");
-        $("authUserId").focus();
-        return;
-      }
+      if (authMode === "forgot") { doSendReset(); return; }
+      // 第一次点「注册」先展开 User ID 栏位,第二次才真的送出
+      if (authMode !== "signup") { setAuthMode("signup"); setAuthMsg(""); $("authUserId").focus(); return; }
       const em = $("authEmail").value.trim(), pw = $("authPw").value, uid = $("authUserId").value.trim();
       if (!em || pw.length < 6) { setAuthMsg(T("authNeed")); return; }
       if (!uid) { setAuthMsg(T("userIdNeed")); return; }
@@ -6356,8 +6469,20 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
         else setAuthMsg(T("signupOk"), true);
       }).catch(function (e) { setAuthMsg(e.message); });
     });
+    $("authForgotLink").addEventListener("click", function (ev) {
+      ev.preventDefault();
+      setAuthMode("forgot");
+      setAuthMsg("");
+      $("authEmail").focus();
+    });
     $("authPw").addEventListener("keydown", function (e) { if (e.key === "Enter") $("authLogin").click(); });
+    $("authEmail").addEventListener("keydown", function (e) {
+      if (e.key !== "Enter") return;
+      // forgot 状态下 Enter 是「寄出」,其余情况维持原本的「登入 / 注册」
+      if (authMode === "forgot") $("authSignup").click(); else $("authLogin").click();
+    });
     window.__setAuthLoading = setAuthLoading;
+    window.__setAuthMode = setAuthMode;
 
     /* 冷启动。
        以前是「enterApp 与 refresh 并发」,两条路会同时用同一个 refresh_token 续期,
@@ -6369,10 +6494,21 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
        所以就算回跳带了一组有效的令牌,这里也不采用,只告诉他确认成功了、可以登入。 */
     const authCb = consumeAuthCallback();
     if (authCb) {
-      const m = authCallbackMsg(authCb);
       $("authOverlay").style.display = "";
       setAuthLoading(false);
-      setAuthMsg(m.text, m.ok);
+      /* 重设密码的连结是唯一要留下那组令牌的情况 ——
+         使用者得先有一个身分,才有权限把新密码写上去。设完立刻登出。 */
+      if (!authCb.error && authCb.type === "recovery" && authCb.access_token &&
+          window.Cloud.adoptSession(authCb)) {
+        $("authPw").value = "";
+        setAuthMode("reset");
+        setAuthMsg(T("resetReady"), true);
+        $("authPw").focus();
+      } else {
+        const m = authCallbackMsg(authCb);
+        setAuthMode("login");
+        setAuthMsg(m.text, m.ok);
+      }
     } else if (window.Cloud.hasSession()) {
       if (!window.Cloud.dayValid()) {
         // 跨日了:记住原本要去的地方,重新登入后直接回去
