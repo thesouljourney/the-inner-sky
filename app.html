@@ -8,6 +8,33 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="我的生命蓝图">
 <title>Know Yourself Through the Stars · 看见完整的自己</title>
+<script>
+/* ── 登入页要「立刻」出现 ─────────────────────────────────────
+   没有可用会话的人,不管带的是哪一个 hash,最后一定停在登入页。
+   结论既然是确定的,就不该等 init() 才把它显示出来 —— init() 要等
+   DOMContentLoaded,也就是要等下面那 700 多 KB 的内联脚本解析完。
+
+   ⚠ 这段必须放在字体那三行 <link> 之前。浏览器在样式表还没下载完时
+   会挡住后面每一个 inline script 的执行(要等 CSSOM);Google Fonts
+   在部分地区(例如中国大陆)根本连不上,那一挡就是好几秒 ——
+   放在 <body> 里试过,确实一秒都没跑到。放在这里就不受影响。
+
+   这时 <body> 还没解析,拿不到元素,所以改成在 <html> 上挂一个 class,
+   由样式表把登入页显示出来(规则就在下面那个 <style> 里)。
+   接手之后由 leaveAuth() 把 class 拿掉,显示权交还给 JS。 */
+(function () {
+  try {
+    var s = null;
+    try { s = JSON.parse(localStorage.getItem("xingli_session_v1") || "null"); } catch (e) { }
+    // 登入有效期 = 当天(与 Cloud.dayValid / 落地页的判断同一套规则)
+    var d = new Date();
+    var today = d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2);
+    var usable = !!(s && s.access_token) && (!s.login_date || s.login_date === today);
+    // 有会话的人一律不碰 —— 他们不该看到登入页闪一下
+    if (!usable) document.documentElement.className += " boot-auth";
+  } catch (e) { /* 出任何差错都不要紧:init() 稍后一样会把登入页显示出来 */ }
+})();
+</script>
 <!-- 解读详情页字体:与 Landing(index.html)同一套 -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -75,6 +102,10 @@
   }
   .acct-bar span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:190px}
   /* ---------- 星空登录页(与 Landing 同一套设计语言) ---------- */
+  /* 冷启动时先把登入页显示出来(见 <head> 顶端那段脚本)。
+     要 !important 才盖得过标记上那个 inline 的 display:none。
+     leaveAuth() 会把 boot-auth 拿掉,之后显示与否一律由 JS 决定。 */
+  html.boot-auth #authOverlay{display:flex!important}
   .sky-auth{position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;padding:20px;
     background:radial-gradient(900px 560px at 70% 30%,#17204a 0%,#09122e 60%);overflow:hidden}
   .sky-auth .starfield{position:absolute;inset:0;pointer-events:none}
@@ -888,7 +919,13 @@
   }
 </style>
 </head>
-<body>
+<!-- legacy-off 直接写在标签上,不等 JS。
+     这个 class 原本是 init() 加的,而 init() 要等 DOMContentLoaded ——
+     也就是要等下面那 700 多 KB 的内联脚本全部解析完。在那之前,
+     旧版界面(header.top + .wrap)就这样明晃晃地画在画面上,
+     使用者从落地页点「注册 / 登入」进来,先看到的是那一版旧页面。
+     这个 class 加上去之后从来不会被拿掉,所以直接写死在这里最省事。 -->
+<body class="legacy-off">
 <header class="top">
   <h1><span class="star">✶</span> Know Yourself Through the Stars</h1>
   <span class="sub" data-i18n="tagline">看见完整的自己</span>
@@ -6276,6 +6313,8 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     }
     function leaveAuth() {
       setAuthLoading(false);
+      // 冷启动那道 CSS 规则带 !important,不拿掉的话这里的 display:none 盖不过它
+      document.documentElement.classList.remove("boot-auth");
       $("authOverlay").style.display = "none";
     }
 
