@@ -1596,11 +1596,21 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       nick: (u ? pickNick(u) : "") || (keepDate && session ? (session.nick || "") : "")
     };
   }
+  /* 邮箱确认信里那个连结,点完之后要回到哪里。
+     用当前这一份 app.html 自己的网址,不写死 —— localhost、GitHub Pages、
+     自订网域都自动正确,也不必依赖 Supabase 后台的 Site URL 有没有设对。
+     刻意不带 hash:GoTrue 会把 #access_token=... 接在后面,
+     自己再带一个 # 会变成两个,整串就废了。
+     ⚠ 这个网址必须同时出现在 Supabase 后台的 Redirect URLs 白名单里,
+     否则 GoTrue 会忽略它、改用 Site URL。 */
+  function authRedirectTo() {
+    return location.origin + location.pathname;
+  }
   function signup(email, pw, userId) {
     const body = { email: email, password: pw };
     // Supabase 支持 data 字段写入 user_metadata;不改变既有 auth 流程
     if (userId) body.data = { display_name: userId, user_id: userId };
-    return authCall("signup", body).then(function (r) {
+    return authCall("signup?redirect_to=" + encodeURIComponent(authRedirectTo()), body).then(function (r) {
       if (!r.ok) throw new Error(r.data.msg || r.data.error_description || r.data.message || "注册失败");
       const s = pickSession(r.data);
       if (s) { if (userId && !s.nick) s.nick = userId; saveSession(s); return { loggedIn: true }; }
@@ -1942,6 +1952,11 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     signingUp:        ["注册中…", "Creating account…"],
     authNeed:         ["请输入邮箱与至少 6 位密码", "An email and a password of at least six characters."],
     signupOk:         ["注册成功!请到邮箱点击确认链接,然后回来登录", "You’re in. Confirm through the link in your inbox, then come back and sign in."],
+    confirmOk:        ["邮箱已确认。请用刚才注册的邮箱与密码登入。",
+                       "Email confirmed. Sign in with the address and password you just registered."],
+    confirmExpired:   ["这个确认连结已经过期,或者已经用过了。请直接在下面登入;登入不成功就重新注册一次,会再寄一封新的。",
+                       "That confirmation link has expired or was already used. Try signing in below; if that fails, sign up again for a fresh link."],
+    confirmFail:      ["确认没有成功。", "Confirmation didn’t go through."],
 
     /* —— 诊断 —— */
     dgNoKey:          ["服务端还没有设置 AI 密钥(ANTHROPIC_API_KEY)", "The server has no AI key set (ANTHROPIC_API_KEY)"],
@@ -4847,6 +4862,52 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     try { v = localStorage.getItem(NEXT_KEY) || ""; localStorage.removeItem(NEXT_KEY); } catch (e) { }
     return v;
   }
+  /* ── 邮箱确认 / 密码重设的回跳 ──────────────────────────────
+     GoTrue 验证完那封信里的连结之后,会把结果接在网址上送回来:
+       成功 → #access_token=...&refresh_token=...&type=signup
+       失败 → #error=access_denied&error_code=otp_expired&error_description=...
+       PKCE 专案则是 ?code=... 落在 query 上
+     以前这几种一个都没人接:parseRoute() 认不得,applyDeepLink() 最后一行的
+     history.replaceState 会把整段直接抹掉 —— 使用者点完确认信绕一圈回来,
+     看到的是一张什么都没说的登入页;连结过期也不会有任何提示。
+     这里把结果读下来、顺手把 token 从网址上清掉,再交给 init 决定显示什么。 */
+  function consumeAuthCallback() {
+    const h = (location.hash || "").replace(/^#/, "");
+    const q = (location.search || "").replace(/^\?/, "");
+    if (!/(^|&)(access_token|code|error|error_code|error_description)=/.test(h) &&
+        !/(^|&)(access_token|code|error|error_code|error_description)=/.test(q)) return null;
+    const dec = function (x) {
+      try { return decodeURIComponent(String(x).replace(/\+/g, " ")); } catch (e) { return String(x); }
+    };
+    const readParams = function (str, into) {
+      String(str).split("&").forEach(function (kv) {
+        if (!kv) return;
+        const i = kv.indexOf("=");
+        const k = dec(i < 0 ? kv : kv.slice(0, i));
+        if (k && !(k in into)) into[k] = i < 0 ? "" : dec(kv.slice(i + 1));
+      });
+      return into;
+    };
+    const p = readParams(h, readParams(q, {}));
+    /* 令牌绝不留在网址上:浏览历史、被分享出去的连结、截图都不该带着它。
+       连 query 一起丢掉 —— ?code= 也是同一类东西。 */
+    try { history.replaceState(null, "", location.pathname + "#/login"); }
+    catch (e) { location.hash = "#/login"; }
+    return {
+      type:  p.type || "",
+      error: p.error || p.error_code || "",
+      code:  p.error_code || "",
+      desc:  p.error_description || ""
+    };
+  }
+  /* 回跳失败时给使用者看得懂的话。最常见的是连结过期 / 已经点过一次。 */
+  function authCallbackMsg(cb) {
+    if (!cb.error) return { text: T("confirmOk"), ok: true };
+    if (/expired|used|invalid/i.test(cb.code + " " + cb.error + " " + cb.desc))
+      return { text: T("confirmExpired"), ok: false };
+    return { text: cb.desc || cb.error || T("confirmFail"), ok: false };
+  }
+
   /* 需要重新登入:记住目的地 → 显示新版登入页 */
   function requireLogin(reason) {
     // 先登出再记目的地:logout 会清掉本机快照(含 NEXT_KEY)
@@ -6302,7 +6363,17 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
        以前是「enterApp 与 refresh 并发」,两条路会同时用同一个 refresh_token 续期,
        第二个必然失败并清空会话 → 已有星盘的人被当成新用户。
        现在改成串行:先把令牌换新,再用新令牌去读资料。 */
-    if (window.Cloud.hasSession()) {
+    /* 从邮箱确认信点回来的:一律停在登入页。
+       确认这一步只是把帐号启用,不等于「这台浏览器就该自动登入」——
+       使用者多半是在 email app 里点开的,跟他注册时用的浏览器根本不是同一个。
+       所以就算回跳带了一组有效的令牌,这里也不采用,只告诉他确认成功了、可以登入。 */
+    const authCb = consumeAuthCallback();
+    if (authCb) {
+      const m = authCallbackMsg(authCb);
+      $("authOverlay").style.display = "";
+      setAuthLoading(false);
+      setAuthMsg(m.text, m.ok);
+    } else if (window.Cloud.hasSession()) {
       if (!window.Cloud.dayValid()) {
         // 跨日了:记住原本要去的地方,重新登入后直接回去
         requireLogin("day");
