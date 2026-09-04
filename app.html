@@ -1037,13 +1037,14 @@
     <div class="sky-auth-title" data-i18n="authTitle">回到我的星空</div>
     <div class="sky-auth-sub" data-i18n="authSub">登录后，继续探索属于你的内在宇宙✨</div>
     <div class="auth-form">
-    <div class="field"><label data-i18n="email">邮箱</label><input id="authEmail" type="email" autocomplete="email" placeholder="you@example.com"></div>
-    <div class="field" style="margin-top:10px"><label data-i18n="password">密码</label><input id="authPw" type="password" autocomplete="current-password" data-i18n-ph="pwPh" placeholder="至少 6 位"></div>
+    <div class="field" id="authEmailField"><label data-i18n="email">邮箱</label><input id="authEmail" type="email" autocomplete="email" placeholder="you@example.com"></div>
+    <div class="field" id="authPwField" style="margin-top:10px"><label id="authPwLabel" data-i18n="password">密码</label><input id="authPw" type="password" autocomplete="current-password" data-i18n-ph="pwPh" placeholder="至少 6 位"></div>
     <!-- User ID:仅注册时显示,存进 Supabase user_metadata.display_name,不影响登录逻辑 -->
     <div class="field" id="authIdField" style="margin-top:10px;display:none"><label data-i18n="userId">用户名</label><input id="authUserId" type="text" autocomplete="nickname" data-i18n-ph="userIdPh" placeholder="别人会看到的名字"></div>
     <div id="authMsg" style="min-height:18px;font-size:12px;color:var(--fire);margin:10px 0 4px"></div>
     <button class="btn-main" id="authLogin" data-i18n="login">登 录</button>
     <button class="btn-alt" id="authSignup" data-i18n="signup">没有账号?注 册</button>
+    <a class="sky-auth-back" href="#" id="authForgotLink" style="margin-top:14px" data-i18n="forgotPw">忘记密码?</a>
     </div>
     <div class="sky-auth-loading"><span class="ring"></span><span class="tx">正在进入你的星空…</span></div>
     <a class="sky-auth-back" href="index.html">← 回到首页</a>
@@ -1505,6 +1506,39 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   const FUNC_URL = SUPABASE_URL + "/functions/v1/read-chart";
   window.CloudCfg = { url: SUPABASE_URL, anon: SUPABASE_ANON_KEY, funcUrl: FUNC_URL };
 
+  /* ── 请求逾时保护(全站唯一的网路入口)────────────────────────
+     fetch 本身没有逾时。请求一旦卡住(伺服器不回应、连线断了但 TCP 没断、
+     行动网路切换),Promise 永远不会 settle:画面就停在「正在读取你的星盘…」
+     或「正在为你整理这一章…」不动,既不报错、也没有「再试一次」可按。
+     这里给每一个请求一个上限,逾时就当成一次普通的网路错误往上抛 ——
+     上层本来就有错误卡片与重试入口,资料一个字都不会因此被改动。 */
+  const NET_TIMEOUT = 20000;        // 认证 / 读写资料这类应该很快回来的请求
+  function netFetch(url, opts, ms) {
+    opts = opts || {};
+    if (typeof AbortController !== "function") return fetch(url, opts);   // 极旧浏览器:维持原行为
+    const ac = new AbortController();
+    const outer = opts.signal;
+    if (outer) {
+      if (outer.aborted) ac.abort();
+      else outer.addEventListener("abort", function () { ac.abort(); });
+    }
+    const timer = setTimeout(function () { ac.abort(); }, ms || NET_TIMEOUT);
+    return fetch(url, Object.assign({}, opts, { signal: ac.signal })).then(function (r) {
+      clearTimeout(timer);
+      return r;
+    }, function (e) {
+      clearTimeout(timer);
+      if (e && e.name === "AbortError") {
+        const t = new Error(ms && ms > NET_TIMEOUT ? "生成超时,请再试一次" : "网络请求超时");
+        t.timeout = true;
+        throw t;
+      }
+      throw e;
+    });
+  }
+  window.CloudCfg.fetch = netFetch;
+  window.CloudCfg.timeout = NET_TIMEOUT;
+
   const SESSION_KEY = "xingli_session_v1"; // 唯一的本地键:会话令牌
   let session = null;
   try { session = JSON.parse(localStorage.getItem(SESSION_KEY) || "null"); } catch (e) { }
@@ -1538,7 +1572,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
 
   // ---------- 认证 ----------
   function authCall(path, body) {
-    return fetch(SUPABASE_URL + "/auth/v1/" + path, {
+    return netFetch(SUPABASE_URL + "/auth/v1/" + path, {
       method: "POST",
       headers: { "apikey": SUPABASE_ANON_KEY, "Content-Type": "application/json" },
       body: JSON.stringify(body)
@@ -1563,11 +1597,21 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       nick: (u ? pickNick(u) : "") || (keepDate && session ? (session.nick || "") : "")
     };
   }
+  /* 邮箱确认信里那个连结,点完之后要回到哪里。
+     用当前这一份 app.html 自己的网址,不写死 —— localhost、GitHub Pages、
+     自订网域都自动正确,也不必依赖 Supabase 后台的 Site URL 有没有设对。
+     刻意不带 hash:GoTrue 会把 #access_token=... 接在后面,
+     自己再带一个 # 会变成两个,整串就废了。
+     ⚠ 这个网址必须同时出现在 Supabase 后台的 Redirect URLs 白名单里,
+     否则 GoTrue 会忽略它、改用 Site URL。 */
+  function authRedirectTo() {
+    return location.origin + location.pathname;
+  }
   function signup(email, pw, userId) {
     const body = { email: email, password: pw };
     // Supabase 支持 data 字段写入 user_metadata;不改变既有 auth 流程
     if (userId) body.data = { display_name: userId, user_id: userId };
-    return authCall("signup", body).then(function (r) {
+    return authCall("signup?redirect_to=" + encodeURIComponent(authRedirectTo()), body).then(function (r) {
       if (!r.ok) throw new Error(r.data.msg || r.data.error_description || r.data.message || "注册失败");
       const s = pickSession(r.data);
       if (s) { if (userId && !s.nick) s.nick = userId; saveSession(s); return { loggedIn: true }; }
@@ -1609,9 +1653,9 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   /* 向 Supabase 取当前登入者本人的资料(user_metadata → Username 的权威来源) */
   function fetchUser() {
     if (!session) return Promise.reject(new Error("no session"));
-    return fetch(SUPABASE_URL + "/auth/v1/user", { headers: authHeaders() }).then(function (r) {
+    return netFetch(SUPABASE_URL + "/auth/v1/user", { headers: authHeaders() }).then(function (r) {
       if (r.status === 401) return refresh().then(function () {
-        return fetch(SUPABASE_URL + "/auth/v1/user", { headers: authHeaders() }).then(function (r2) {
+        return netFetch(SUPABASE_URL + "/auth/v1/user", { headers: authHeaders() }).then(function (r2) {
           if (!r2.ok) throw new Error("user " + r2.status); return r2.json();
         });
       });
@@ -1633,7 +1677,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     if (!session) return Promise.reject(new Error("no session"));
     const nm = String(name || "").trim();
     if (!nm) return Promise.reject(new Error("empty"));
-    return fetch(SUPABASE_URL + "/auth/v1/user", {
+    return netFetch(SUPABASE_URL + "/auth/v1/user", {
       method: "PUT",
       headers: authHeaders(),
       body: JSON.stringify({ data: { display_name: nm, user_id: nm } })
@@ -1647,6 +1691,53 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       return session ? session.nick : nm;
     });
   }
+  /* ── 忘记密码 ────────────────────────────────────────────────
+     寄一封重设信,走的跟注册确认信同一条路:redirect_to 指回这一份 app.html,
+     使用者点回来时网址上带的是 type=recovery。
+     ⚠ Supabase 对不存在的邮箱也一律回 200 —— 这是刻意的,免得这个端点
+     变成「查这个 email 有没有注册过」的工具。所以画面上的文案也不能说死。 */
+  function requestPasswordReset(email) {
+    const em = String(email || "").trim();
+    if (!em) return Promise.reject(new Error("empty"));
+    return authCall("recover?redirect_to=" + encodeURIComponent(authRedirectTo()), { email: em })
+      .then(function (r) {
+        if (!r.ok) throw new Error(r.data.msg || r.data.error_description || r.data.message || "寄送失败");
+        return true;
+      });
+  }
+  /* 把回跳网址上那组令牌收成一个会话。只有「重设密码」这条路会用到:
+     使用者得先有一个(短暂的)身分,才有权限把新密码写上去。
+     设完密码就会立刻 logout(),不让它留下来。 */
+  function adoptSession(t) {
+    if (!t || !t.access_token) return false;
+    saveSession({
+      access_token: t.access_token,
+      refresh_token: t.refresh_token || "",
+      user_id: "", email: "",
+      login_date: localDay(),
+      nick: ""
+    });
+    return true;
+  }
+  /* 只改密码,不碰 Email / User ID,也完全不碰 charts 表 ——
+     出生资料、星盘、已生成的解读与收藏都不会因此改变。 */
+  function updatePassword(pw) {
+    if (!session) return Promise.reject(new Error("no session"));
+    if (String(pw || "").length < 6) return Promise.reject(new Error("password too short"));
+    return netFetch(SUPABASE_URL + "/auth/v1/user", {
+      method: "PUT",
+      headers: authHeaders(),
+      body: JSON.stringify({ password: pw })
+    }).then(function (r) {
+      if (!r.ok) return r.text().then(function (t) {
+        let msg = "";
+        try { const o = JSON.parse(t); msg = o.msg || o.error_description || o.message || ""; } catch (e) { }
+        throw new Error(msg || ("HTTP " + r.status));
+      });
+      return r.json().catch(function () { return null; });
+    });
+  }
+
   function logout() {
     saveSession(null);
     // 同一台机器换人登入时,不能留下上一位的名字 / 快照
@@ -1661,7 +1752,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   function rest(path, opts, retried) {
     opts = opts || {};
     opts.headers = Object.assign(authHeaders(), opts.headers || {});
-    return fetch(SUPABASE_URL + "/rest/v1/" + path, opts).then(function (r) {
+    return netFetch(SUPABASE_URL + "/rest/v1/" + path, opts).then(function (r) {
       if (r.status === 401 && !retried && session) {
         return refresh().then(function () { return rest(path, opts, true); });
       }
@@ -1747,6 +1838,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     email: function () { return session ? session.email : ""; },
     signup: signup, login: login, logout: logout, refresh: refresh, fetchUser: fetchUser,
     updateUsername: updateUsername,
+    requestPasswordReset: requestPasswordReset, adoptSession: adoptSession, updatePassword: updatePassword,
     loadCharts: loadCharts, insertChart: insertChart, updateChart: updateChart, deleteChart: deleteChart,
     loadPrefs: loadPrefs, savePrefs: savePrefs, uuid: uuid,
     migrateLegacy: migrateLegacy
@@ -1909,6 +2001,24 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     signingUp:        ["注册中…", "Creating account…"],
     authNeed:         ["请输入邮箱与至少 6 位密码", "An email and a password of at least six characters."],
     signupOk:         ["注册成功!请到邮箱点击确认链接,然后回来登录", "You’re in. Confirm through the link in your inbox, then come back and sign in."],
+    confirmOk:        ["邮箱已确认。请用刚才注册的邮箱与密码登入。",
+                       "Email confirmed. Sign in with the address and password you just registered."],
+    confirmExpired:   ["这个确认连结已经过期,或者已经用过了。请直接在下面登入;登入不成功就重新注册一次,会再寄一封新的。",
+                       "That confirmation link has expired or was already used. Try signing in below; if that fails, sign up again for a fresh link."],
+    confirmFail:      ["确认没有成功。", "Confirmation didn’t go through."],
+    forgotPw:         ["忘记密码?", "Forgot your password?"],
+    pwTooShort:       ["密码至少 6 位", "Use at least six characters."],
+    emailNeed:        ["请先输入邮箱", "Enter your email address first."],
+    sendReset:        ["寄出重设连结", "Send reset link"],
+    sendingReset:     ["正在寄出…", "Sending…"],
+    // 刻意不说「这个邮箱不存在」:否则任何人都能拿这里当帐号查询工具
+    resetSent:        ["如果这个邮箱注册过,重设连结已经寄出了。请到信箱查收(记得看看垃圾邮件)。",
+                       "If that address is registered, a reset link is on its way. Check your inbox — and your spam folder."],
+    resetReady:       ["请设定一组新密码。", "Choose a new password."],
+    newPw:            ["新密码", "New password"],
+    setNewPw:         ["设定新密码", "Set new password"],
+    savingPw:         ["正在更新密码…", "Updating your password…"],
+    pwUpdated:        ["密码已更新。请用新密码登入。", "Password updated. Sign in with your new password."],
 
     /* —— 诊断 —— */
     dgNoKey:          ["服务端还没有设置 AI 密钥(ANTHROPIC_API_KEY)", "The server has no AI key set (ANTHROPIC_API_KEY)"],
@@ -2062,6 +2172,12 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   "use strict";
   const SUPABASE_FUNC_URL = (window.CloudCfg || {}).funcUrl || "";
   const SUPABASE_ANON_KEY = (window.CloudCfg || {}).anon || "";
+  /* 与云端层共用同一个「会逾时的 fetch」。生成一篇解读本来就要一分钟上下,
+     所以给它比一般 API 宽得多的上限;但仍然必须有上限 —— 没有上限时
+     一次卡住的请求会让页面永远停在「正在为你整理这一章…」。 */
+  const netFetch = (window.CloudCfg && window.CloudCfg.fetch) || function (u, o) { return fetch(u, o); };
+  const GEN_TIMEOUT = 180000;   // 生成:3 分钟
+  const PROBE_TIMEOUT = 15000;  // 只是探测服务端版本,不该等太久
 
   // 内容架构版本:服务端 Prompt 有重大升级时 +1,旧内容自动重新生成
   const CONTENT_VER = 10;
@@ -2087,10 +2203,10 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   function serverBlueprintStyle() {
     if (bpStylePromise) return bpStylePromise;
     if (!SUPABASE_FUNC_URL) return (bpStylePromise = Promise.resolve(""));
-    bpStylePromise = fetch(SUPABASE_FUNC_URL, {
+    bpStylePromise = netFetch(SUPABASE_FUNC_URL, {
       method: "GET",
       headers: { "Authorization": "Bearer " + SUPABASE_ANON_KEY, "apikey": SUPABASE_ANON_KEY }
-    }).then(function (r) { return r.ok ? r.json() : null; })
+    }, PROBE_TIMEOUT).then(function (r) { return r.ok ? r.json() : null; })
       .then(function (j) { return (j && j.blueprint_style_version) || ""; })
       .catch(function () { return ""; });
     return bpStylePromise;
@@ -2294,11 +2410,11 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   }
   function callFunc(payload, retried) {
     const bearer = (window.Cloud && window.Cloud.token && window.Cloud.token()) || SUPABASE_ANON_KEY;
-    return fetch(SUPABASE_FUNC_URL, {
+    return netFetch(SUPABASE_FUNC_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json", "Authorization": "Bearer " + bearer, "apikey": SUPABASE_ANON_KEY },
       body: JSON.stringify(payload)
-    }).then(function (r) {
+    }, GEN_TIMEOUT).then(function (r) {
       // 令牌过期:静默续期一次后重试(服务端 question 层已开启使用者验证)
       if (r.status === 401 && !retried && window.Cloud && window.Cloud.refresh)
         return window.Cloud.refresh().then(function () { return callFunc(payload, true); });
@@ -3638,7 +3754,9 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   function diagnose(err) {
     const cfg = window.CloudCfg || {};
     const msg = (err && err.message) || String(err || "");
-    return fetch(cfg.funcUrl, { method: "GET", headers: { "apikey": cfg.anon } })
+    const nf = cfg.fetch || function (u, o) { return fetch(u, o); };
+    // 诊断本身也要有上限:探测卡住的话,连「卡在哪一环」都永远显示不出来
+    return nf(cfg.funcUrl, { method: "GET", headers: { "apikey": cfg.anon } }, 15000)
       .then(function (r) { return r.text().then(function (t) { return { status: r.status, text: t }; }); })
       .catch(function (e) { return { status: 0, text: String(e) }; })
       .then(function (probe) {
@@ -4787,6 +4905,9 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   let chartsLoaded = false;     // 已经成功从资料库取回过一次
   let chartsSettled = false;    // 取回成功且结果可信(可以据此判断「确实没有星盘」)
   let chartsError = null;       // 最近一次载入失败的原因(失败 ≠ 没有星盘)
+  /* 载入整条链路的上限。比单一请求的逾时(20s)长一点,
+     让真正的网路错误先带着自己的讯息浮上来,看门狗只兜住「什么都没发生」。 */
+  const BOOT_TIMEOUT = 28000;
 
   const NEXT_KEY = "inner_sky_next_v1";   // 因跨日 / 未登入而中断时,记住使用者原本要去的地方
   function rememberNext(hash) {
@@ -4803,6 +4924,56 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     try { v = localStorage.getItem(NEXT_KEY) || ""; localStorage.removeItem(NEXT_KEY); } catch (e) { }
     return v;
   }
+  /* ── 邮箱确认 / 密码重设的回跳 ──────────────────────────────
+     GoTrue 验证完那封信里的连结之后,会把结果接在网址上送回来:
+       成功 → #access_token=...&refresh_token=...&type=signup
+       失败 → #error=access_denied&error_code=otp_expired&error_description=...
+       PKCE 专案则是 ?code=... 落在 query 上
+     以前这几种一个都没人接:parseRoute() 认不得,applyDeepLink() 最后一行的
+     history.replaceState 会把整段直接抹掉 —— 使用者点完确认信绕一圈回来,
+     看到的是一张什么都没说的登入页;连结过期也不会有任何提示。
+     这里把结果读下来、顺手把 token 从网址上清掉,再交给 init 决定显示什么。 */
+  function consumeAuthCallback() {
+    const h = (location.hash || "").replace(/^#/, "");
+    const q = (location.search || "").replace(/^\?/, "");
+    if (!/(^|&)(access_token|code|error|error_code|error_description)=/.test(h) &&
+        !/(^|&)(access_token|code|error|error_code|error_description)=/.test(q)) return null;
+    const dec = function (x) {
+      try { return decodeURIComponent(String(x).replace(/\+/g, " ")); } catch (e) { return String(x); }
+    };
+    const readParams = function (str, into) {
+      String(str).split("&").forEach(function (kv) {
+        if (!kv) return;
+        const i = kv.indexOf("=");
+        const k = dec(i < 0 ? kv : kv.slice(0, i));
+        if (k && !(k in into)) into[k] = i < 0 ? "" : dec(kv.slice(i + 1));
+      });
+      return into;
+    };
+    const p = readParams(h, readParams(q, {}));
+    /* 令牌绝不留在网址上:浏览历史、被分享出去的连结、截图都不该带着它。
+       连 query 一起丢掉 —— ?code= 也是同一类东西。 */
+    try { history.replaceState(null, "", location.pathname + "#/login"); }
+    catch (e) { location.hash = "#/login"; }
+    return {
+      type:  p.type || "",
+      error: p.error || p.error_code || "",
+      code:  p.error_code || "",
+      desc:  p.error_description || "",
+      /* 只留在记忆体里,网址上那份已经在上面被抹掉了。
+         唯一的用途是「重设密码」——  没有它就没有权限写新密码。 */
+      access_token:  p.access_token || "",
+      refresh_token: p.refresh_token || ""
+    };
+  }
+  /* 回跳失败时给使用者看得懂的话。最常见的是连结过期 / 已经点过一次。 */
+  function authCallbackMsg(cb) {
+    if (!cb.error) return { text: cb.type === "recovery" ? T("resetReady") : T("confirmOk"), ok: true };
+    if (/expired|used|invalid/i.test(cb.code + " " + cb.error + " " + cb.desc))
+      return { text: T("confirmExpired"), ok: false };
+    return { text: cb.desc || cb.error || T("confirmFail"), ok: false };
+  }
+
   /* 需要重新登入:记住目的地 → 显示新版登入页 */
   function requireLogin(reason) {
     // 先登出再记目的地:logout 会清掉本机快照(含 NEXT_KEY)
@@ -4811,12 +4982,19 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     const ov = $("authOverlay");
     if (ov) ov.style.display = "";
     setAuthLoadingSafe(false);
+    setAuthModeSafe("login");
     const dp = $("dpage");
     if (dp) { dp.style.display = "none"; }
     document.body.classList.remove("dp-open");
   }
   function setAuthLoadingSafe(on, msg) {
     try { if (window.__setAuthLoading) window.__setAuthLoading(on, msg); } catch (e) { }
+  }
+  /* 重新要求登入时,把登入页收回「登录」那一种样子。
+     否则使用者半途离开重设密码的画面、之后又被要求登入,
+     看到的会是一张只剩「新密码」栏位、连邮箱都没有的表单。 */
+  function setAuthModeSafe(mode) {
+    try { if (window.__setAuthMode) window.__setAuthMode(mode); } catch (e) { }
   }
 
   function routeGuard() {
@@ -6122,6 +6300,27 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       // loadCharts 失败必须当成「不知道」,不能当成「这个帐号没有星盘」——
       // 后者会把已有星盘的使用者推去重新输入出生资料。
       chartsError = null;
+      /* 看门狗。每一个请求现在都有逾时了,但载入这条链路还经过资料档载入、
+         迁移写回等好几环 —— 只要有任何一环卡住不 settle,画面就会永远停在
+         「正在读取你的星盘…」,既不报错也没有「再试一次」可按。
+         时间到就把它当成一次「暂时读不到资料」:换成可重试的提示卡。
+         这只影响画面,不清任何资料、不跳 onboarding;后台那条链路若稍后
+         才回来,chartsSettled 一样会被设起来,下一次渲染就正常了。 */
+      let bootWatch = setTimeout(function () {
+        bootWatch = null;
+        if (chartsSettled) return;
+        chartsError = new Error(window.I18N.isEN() ? "Loading timed out" : "载入超时");
+        chartsError.timeout = true;
+        if (!silent) {
+          setAuthLoading(false);
+          setAuthMsg(window.I18N.isEN() ? "Could not load your data. Please try again." : "资料载入失败，请再试一次");
+          return;
+        }
+        leaveAuth();
+        if (curRoute) routeRefresh();
+        else location.hash = "#/reading";
+      }, BOOT_TIMEOUT);
+      const clearBootWatch = function () { if (bootWatch) { clearTimeout(bootWatch); bootWatch = null; } };
       return Promise.all([
         window.Cloud.loadPrefs().catch(function () { return {}; }),
         window.Cloud.loadCharts()
@@ -6142,6 +6341,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
         try { syncReadTopics(); } catch (e) { console.warn("已读状态同步失败", e); }
         return migrateAllCharts().catch(function (e) { console.warn("迁移失败", e); });
       }).then(function () {
+        clearBootWatch();
         chartsSettled = true;   // 到这里才算「资料库已经确认过」
         if (!store.activeId || !store.charts.some(c => c.id === store.activeId)) {
           const usable = store.charts.filter(isCompleteBirthData);
@@ -6156,6 +6356,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
         // Username 以帐号自己的 user_metadata 为准,拿到后静默更新一次
         window.Cloud.fetchUser().then(function () { refreshAcctBar(); saveProfileCache(); }).catch(function () { });
       }).catch(function (e) {
+        clearBootWatch();
         console.warn(e);
         chartsError = e;
         chartsSettled = false;
@@ -6168,15 +6369,19 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     }
 
     /* 闲置回来 / refresh / 手动重试:重新跟资料库确认真实状态,而不是相信前端 state */
-    let reloading = null;
+    let reloading = null, reloadingAt = 0;
     function reloadUserData() {
       if (!window.Cloud.hasSession()) { requireLogin("none"); return Promise.resolve(); }
       if (!window.Cloud.dayValid()) { requireLogin("day"); return Promise.resolve(); }
-      if (reloading) return reloading;
-      reloading = enterApp(true);
-      const done = function () { reloading = null; };
-      Promise.resolve(reloading).then(done, done);
-      return reloading;
+      /* 上一次载入若已经卡过了看门狗的时间,就不再等它,直接重来一次。
+         否则使用者按「再试一次」只会共用那条卡住的 Promise —— 按了等于没按。 */
+      if (reloading && Date.now() - reloadingAt < BOOT_TIMEOUT) return reloading;
+      reloadingAt = Date.now();
+      const job = reloading = enterApp(true);
+      // 只清掉自己那一次:卡住的旧载入稍后才回来时,不能把新的那一次一起清掉
+      const done = function () { if (reloading === job) reloading = null; };
+      Promise.resolve(job).then(done, done);
+      return job;
     }
     window.__reloadUserData = reloadUserData;
 
@@ -6185,34 +6390,74 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       if (!bar || !bar.firstChild) return;
       bar.firstChild.textContent = window.Cloud.nick() || window.Cloud.email() || "";
     }
+    /* ── 登入页的四种样子 ────────────────────────────────────
+       同一组栏位,四种用途。以前只有一个 signupMode 布林值、各处零散地改
+       画面,再加两种状态就会互相污染,所以收敛成这一个函式:
+         login  邮箱 + 密码             → 登录 / 没有账号?注册
+         signup 邮箱 + 密码 + 用户名     → 注册 / 返回登入
+         forgot 只要邮箱                → 寄出重设连结 / 返回登入
+         reset  只要新密码(从信里点回来) → 设定新密码
+       只有这个函式动画面,状态永远是完整的一套,不会剩下上一种的残影。 */
+    let authMode = "login";
+    function setAuthMode(mode) {
+      authMode = mode || "login";
+      const isSignup = authMode === "signup", isForgot = authMode === "forgot", isReset = authMode === "reset";
+      $("authEmailField").style.display = isReset  ? "none" : "";
+      $("authPwField").style.display    = isForgot ? "none" : "";
+      $("authIdField").style.display    = isSignup ? "" : "none";
+      $("authForgotLink").style.display = (authMode === "login") ? "" : "none";
+      $("authSignup").style.display     = isReset ? "none" : "";
+      $("authPwLabel").textContent      = isReset ? T("newPw") : T("password");
+      $("authPw").setAttribute("autocomplete", (isSignup || isReset) ? "new-password" : "current-password");
+      if (isSignup)      { $("authLogin").textContent = T("backToLogin"); $("authSignup").textContent = T("signupGo"); }
+      else if (isForgot) { $("authLogin").textContent = T("backToLogin"); $("authSignup").textContent = T("sendReset"); }
+      else if (isReset)  { $("authLogin").textContent = T("setNewPw"); }
+      else               { $("authLogin").textContent = T("login");      $("authSignup").textContent = T("signup"); }
+      // 主要动作那颗才是实心按钮:forgot 的动作在 authSignup 上
+      swapAuthEmphasis(isSignup || isForgot);
+      /* 刻意不在这里清讯息。requireLogin() 也会重设这个模式,而 pageshow
+         在每次载入(hash 是 #/login 且没有会话时)都会走到 requireLogin ——
+         那会把 init 刚设好的「邮箱已确认」/「连结已过期」直接抹掉。
+         所以清讯息交给「使用者自己切换模式」那几个入口负责。 */
+    }
+
+    function doSendReset() {
+      const em = $("authEmail").value.trim();
+      if (!em) { setAuthMsg(T("emailNeed")); return; }
+      setAuthMsg(T("sendingReset"), true);
+      window.Cloud.requestPasswordReset(em)
+        .then(function () { setAuthMsg(T("resetSent"), true); })
+        .catch(function (e) { setAuthMsg(e.message); });
+    }
+    function doSetNewPassword() {
+      const pw = $("authPw").value;
+      // 这一屏没有邮箱栏位,不能沿用「请输入邮箱与至少 6 位密码」
+      if (pw.length < 6) { setAuthMsg(T("pwTooShort")); return; }
+      setAuthMsg(T("savingPw"), true);
+      window.Cloud.updatePassword(pw).then(function () {
+        /* 设完就把这段临时会话丢掉。重设连结很可能是在别人的电脑、
+           或共用的信箱里点开的,不该在那台机器上留下一个已登入的状态。
+           让他用新密码正常登入一次,顺便也确认了密码真的改成功。 */
+        window.Cloud.logout();
+        $("authPw").value = "";
+        setAuthMode("login");
+        setAuthMsg(T("pwUpdated"), true);
+      }).catch(function (e) { setAuthMsg(e.message); });
+    }
+
     $("authLogin").addEventListener("click", function () {
-      if (signupMode) {   // 从注册态退回登录态
-        signupMode = false;
-        $("authIdField").style.display = "none";
-        $("authSignup").textContent = T("signup");
-        $("authLogin").textContent = T("login");
-        swapAuthEmphasis(false);
-        setAuthMsg("");
-        return;
-      }
+      // signup / forgot 状态下,这颗是「返回登入」
+      if (authMode === "signup" || authMode === "forgot") { setAuthMode("login"); setAuthMsg(""); return; }
+      if (authMode === "reset") { doSetNewPassword(); return; }
       const em = $("authEmail").value.trim(), pw = $("authPw").value;
       if (!em || pw.length < 6) { setAuthMsg(T("authNeed")); return; }
       setAuthMsg(T("loggingIn"), true);
       window.Cloud.login(em, pw).then(enterApp).catch(function (e) { setAuthMsg(e.message); });
     });
-    // 第一次点「注册」先展开 User ID 栏位,第二次才真的送出
-    let signupMode = false;
     $("authSignup").addEventListener("click", function () {
-      if (!signupMode) {
-        signupMode = true;
-        $("authIdField").style.display = "";
-        $("authSignup").textContent = T("signupGo");
-        $("authLogin").textContent = T("backToLogin");
-        swapAuthEmphasis(true);
-        setAuthMsg("");
-        $("authUserId").focus();
-        return;
-      }
+      if (authMode === "forgot") { doSendReset(); return; }
+      // 第一次点「注册」先展开 User ID 栏位,第二次才真的送出
+      if (authMode !== "signup") { setAuthMode("signup"); setAuthMsg(""); $("authUserId").focus(); return; }
       const em = $("authEmail").value.trim(), pw = $("authPw").value, uid = $("authUserId").value.trim();
       if (!em || pw.length < 6) { setAuthMsg(T("authNeed")); return; }
       if (!uid) { setAuthMsg(T("userIdNeed")); return; }
@@ -6224,14 +6469,47 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
         else setAuthMsg(T("signupOk"), true);
       }).catch(function (e) { setAuthMsg(e.message); });
     });
+    $("authForgotLink").addEventListener("click", function (ev) {
+      ev.preventDefault();
+      setAuthMode("forgot");
+      setAuthMsg("");
+      $("authEmail").focus();
+    });
     $("authPw").addEventListener("keydown", function (e) { if (e.key === "Enter") $("authLogin").click(); });
+    $("authEmail").addEventListener("keydown", function (e) {
+      if (e.key !== "Enter") return;
+      // forgot 状态下 Enter 是「寄出」,其余情况维持原本的「登入 / 注册」
+      if (authMode === "forgot") $("authSignup").click(); else $("authLogin").click();
+    });
     window.__setAuthLoading = setAuthLoading;
+    window.__setAuthMode = setAuthMode;
 
     /* 冷启动。
        以前是「enterApp 与 refresh 并发」,两条路会同时用同一个 refresh_token 续期,
        第二个必然失败并清空会话 → 已有星盘的人被当成新用户。
        现在改成串行:先把令牌换新,再用新令牌去读资料。 */
-    if (window.Cloud.hasSession()) {
+    /* 从邮箱确认信点回来的:一律停在登入页。
+       确认这一步只是把帐号启用,不等于「这台浏览器就该自动登入」——
+       使用者多半是在 email app 里点开的,跟他注册时用的浏览器根本不是同一个。
+       所以就算回跳带了一组有效的令牌,这里也不采用,只告诉他确认成功了、可以登入。 */
+    const authCb = consumeAuthCallback();
+    if (authCb) {
+      $("authOverlay").style.display = "";
+      setAuthLoading(false);
+      /* 重设密码的连结是唯一要留下那组令牌的情况 ——
+         使用者得先有一个身分,才有权限把新密码写上去。设完立刻登出。 */
+      if (!authCb.error && authCb.type === "recovery" && authCb.access_token &&
+          window.Cloud.adoptSession(authCb)) {
+        $("authPw").value = "";
+        setAuthMode("reset");
+        setAuthMsg(T("resetReady"), true);
+        $("authPw").focus();
+      } else {
+        const m = authCallbackMsg(authCb);
+        setAuthMode("login");
+        setAuthMsg(m.text, m.ok);
+      }
+    } else if (window.Cloud.hasSession()) {
       if (!window.Cloud.dayValid()) {
         // 跨日了:记住原本要去的地方,重新登入后直接回去
         requireLogin("day");
