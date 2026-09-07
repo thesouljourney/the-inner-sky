@@ -38,7 +38,7 @@
 <!-- 解读详情页字体:与 Landing(index.html)同一套 -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&family=Noto+Serif+SC:wght@400;500&family=Noto+Sans+SC:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&family=Noto+Serif+SC:wght@400;500;600;700&family=Noto+Sans+SC:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
   :root{
     --night:#f2ead8;        /* 米色底 */
@@ -832,6 +832,541 @@
   #dpage .dp-asp .a{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--dp-line);border-radius:14px;
     background:var(--dp-cloud);padding:8px 13px;font-size:13px}
   #dpage .dp-asp .a .t{color:var(--dp-mut);font-size:11.5px}
+
+  /* ============================================================
+     我的星空 · 完整星盘 —— 编辑式版面
+     ------------------------------------------------------------
+     一页到底,靠「盘面 → 四个核心 → 逐层展开的读数」建立节奏。
+     所有数值仍然来自 curResult,这一整段只负责呈现,没有任何计算。
+
+     三层视觉分工,彼此不混在一起:
+       页面  → 云雾(The Inner Sky 这个世界的空气)
+       核心卡 → 星座插画(属于这个使用者的位置)
+       内容  → 读数本身,永远在最上层
+
+     区块之间刻意不用同一种白卡片:
+       四个核心 = 插画卡 / 行星 = 半透明资料层 /
+       中场 = 什么容器都没有 / 宫位 = 编辑式方块 / 相位 = 关系式列
+     ============================================================ */
+
+  /* 这一页比其他内页宽:四张核心卡并排、行星与宫位都要摊得开。
+     只作用在 #/my-sky(sky-page 由 renderRoute 挂上),不影响其他页面。 */
+  #dpage.sky-page{--dp-wide:min(84vw,1400px)}
+  #dpage.sky-page .dp-body{
+    --sky-pad:clamp(16px,3vw,40px);
+    padding:clamp(20px,2.6vw,36px) var(--sky-pad) 80px
+  }
+
+  /* ==========================================================
+     云天:整页只有上下两端有天空,中段是干净的象牙底。
+     两张素材在做成资产时就先提亮压向象牙白,所以文字直接压在上面
+     就读得清楚,不需要再盖一层白纱把云糊掉。
+     ========================================================== */
+
+  /* —— 开场:导航 + 标题 + 盘面同在一片天空下 ——
+     hero 在这一页(而且只有这一页)不再是深蓝色块,换成上方那张云天;
+     导航与标题改成深色字,盘面就放在标题旁边。开场因此是一整块,
+     不再是「深蓝标题条 + 底下另外一块盘面」。 */
+  #dpage.sky-page .dp-hero{
+    background:
+      linear-gradient(180deg,rgba(250,245,240,0) 60%,rgba(248,242,237,.7) 84%,var(--dp-cream) 100%),
+      url(assets/atmos/sky-top.webp) center top / 100% auto no-repeat,
+      var(--dp-cream);
+    color:var(--dp-ink);
+    padding-bottom:clamp(30px,4vw,56px)
+  }
+  /* 深色底才需要的白色星点,在浅色天空上只会变成脏点 */
+  #dpage.sky-page .dp-hero .dp-stars{display:none}
+  /* 导航的结构、连结与下拉都没有动,只是在浅色天空上换成深色字 */
+  #dpage.sky-page .dp-brand{color:var(--dp-ink)}
+  #dpage.sky-page .dp-brand .s{color:#b8a678}
+  #dpage.sky-page .dp-navlink{color:rgba(34,35,58,.66)}
+  #dpage.sky-page .dp-navlink:hover,#dpage.sky-page .dp-navlink.on{color:var(--dp-ink)}
+  #dpage.sky-page .dp-navlink.on{border-bottom-color:rgba(184,166,120,.85)}
+  #dpage.sky-page .dp-back{color:var(--dp-ink)}
+  #dpage.sky-page .dp-acct-btn{color:rgba(34,35,58,.8);border-color:rgba(34,35,58,.18)}
+  #dpage.sky-page .dp-acct-btn:hover{color:var(--dp-ink);border-color:rgba(184,166,120,.75)}
+  #dpage.sky-page .dp-acct-btn .caret{color:rgba(34,35,58,.45)}
+  /* chip 变成一行 eyebrow,不再是深蓝底上的胶囊 */
+  #dpage.sky-page .dp-chip{
+    background:none;border:none;padding:0;margin-bottom:14px;
+    font-size:11.5px;letter-spacing:.3em;color:#9b8a5f
+  }
+  #dpage.sky-page h1.dp-title{font-weight:700;color:var(--dp-ink);margin-bottom:18px}
+  #dpage.sky-page .dp-sub{color:rgba(34,35,58,.72);max-width:22em}
+  #dpage.sky-page .sky-latin{
+    font-family:var(--dp-display);font-size:clamp(15px,1.5vw,18px);line-height:1.75;color:#8e86a6;
+    margin-top:clamp(16px,2vw,22px)
+  }
+  #dpage.sky-page .sky-meta{
+    font-size:12px;letter-spacing:.1em;color:var(--dp-mut);font-variant-numeric:tabular-nums;
+    margin-top:clamp(18px,2.4vw,26px);padding-top:clamp(14px,1.8vw,18px);
+    border-top:1px solid rgba(34,35,58,.12);max-width:20em
+  }
+  /* 标题在左、盘面在右;盘面本身与 drawInnerSkyWheel 都没有改动 */
+  #dpage.sky-page .dp-hero-grid{
+    grid-template-columns:minmax(0,1fr) minmax(0,1.38fr);
+    gap:clamp(24px,4vw,64px);align-items:center
+  }
+  #dpage.sky-page .dp-hero-side{position:relative;min-width:0}
+  #dpage.sky-page .dp-hero-side .isky2{max-width:min(740px,100%);margin:0 auto}
+  #dpage.sky-page .dp-hero-side .isky2-tools{justify-content:center;margin:clamp(-26px,-2vw,-10px) 0 0}
+  #dpage.sky-page .sky-script{
+    position:absolute;right:-1%;bottom:14%;transform:rotate(-8deg);pointer-events:none;
+    font-family:var(--dp-display);font-style:italic;font-size:clamp(15px,1.6vw,19px);line-height:1.6;
+    color:#8e86a6;opacity:.85;text-align:center
+  }
+  @media(max-width:1100px){
+    #dpage.sky-page .dp-hero-grid{grid-template-columns:1fr;gap:clamp(22px,4vw,36px)}
+    #dpage.sky-page .dp-sub{max-width:34em}
+    #dpage.sky-page .sky-meta{max-width:none}
+    /* 窄萤幕不要用 cover(会裁到素材中段最深的一块,导航压在上面变闷),
+       改成按宽度放大一点、贴齐顶端,并在最上方多一层很淡的象牙纱 */
+    #dpage.sky-page .dp-hero{
+      background:
+        linear-gradient(180deg,rgba(250,245,240,.3) 0,rgba(250,245,240,.06) 24%,rgba(248,242,237,.72) 64%,var(--dp-cream) 90%),
+        url(assets/atmos/sky-top.webp) center top / 175% auto no-repeat,
+        var(--dp-cream)
+    }
+    #dpage.sky-page .sky-script{position:static;transform:none;text-align:center;margin-top:14px;opacity:.8}
+  }
+
+  /* —— 收尾:另一片天空,一路接进深蓝页脚 —— */
+  #dpage .sky-zone{position:relative;isolation:isolate}
+  #dpage .sky-atmos{
+    position:absolute;z-index:-1;pointer-events:none;
+    left:calc(50% - 50vw);right:calc(50% - 50vw);
+    top:var(--at,-60px);bottom:var(--ab,-84px);
+    background:url(assets/atmos/sky-bottom.webp) center bottom / 100% auto no-repeat;
+    opacity:.9;
+    /* 顶端化开,看不到任何图片边界 */
+    -webkit-mask-image:linear-gradient(180deg,transparent 0,rgba(0,0,0,.5) 34%,#000 62%);
+    mask-image:linear-gradient(180deg,transparent 0,rgba(0,0,0,.5) 34%,#000 62%)
+  }
+  @media(max-width:900px){#dpage .sky-atmos{opacity:.8;background-size:auto 100%}}
+  /* —— 四个核心:整页里星座插画最强的一处 —— */
+  #dpage .sky-core{
+    position:relative;z-index:1;
+    display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:clamp(13px,1.6vw,20px)
+  }
+  #dpage .sky-card{
+    position:relative;overflow:hidden;isolation:isolate;
+    background:linear-gradient(180deg,rgba(253,251,249,.96),rgba(252,249,246,.9));
+    border:1px solid var(--dp-line);border-radius:24px;
+    box-shadow:0 14px 44px rgba(9,18,46,.07);
+    padding:clamp(24px,2.8vw,34px);min-height:clamp(292px,28vw,364px);
+    display:flex;flex-direction:column;
+    transition:transform .4s cubic-bezier(.22,1,.36,1),border-color .4s,box-shadow .4s
+  }
+  /* 星座插画:大面积、低透明度的编辑式插画,不是一颗小 icon。
+     等比例、不拉伸,允许裁出卡片外。 */
+  #dpage .sky-card .art{
+    position:absolute;right:-12%;bottom:-10%;width:88%;height:82%;
+    object-fit:contain;object-position:right bottom;
+    opacity:.18;pointer-events:none;user-select:none;z-index:-1;
+    transition:opacity .4s ease
+  }
+  #dpage .sky-card>*{position:relative}
+  #dpage .sky-card .hd{display:flex;align-items:center;gap:10px;margin-bottom:clamp(14px,1.8vw,20px)}
+  #dpage .sky-card .hd .gl{
+    width:28px;height:28px;flex:none;display:grid;place-items:center;border-radius:50%;
+    background:rgba(232,211,162,.26);color:#8a7b52;font-size:14px;line-height:1
+  }
+  /* 上升 / 天顶没有行星符号,改用两个字母的小徽记,与行星符号同一个圆 */
+  #dpage .sky-card .hd .gl.tx{font-family:var(--dp-sans);font-size:10px;letter-spacing:.04em;font-weight:500}
+  #dpage .sky-card .hd .lb{font-size:11.5px;letter-spacing:.2em;color:var(--dp-mut)}
+  #dpage .sky-card .sign{font-family:var(--dp-serif);font-weight:500;font-size:clamp(25px,3vw,33px);color:var(--dp-ink);line-height:1.28}
+  /* 星座的英文名:比中文小很多,只是把层次撑开,不是另一行标题 */
+  #dpage .sky-card .lat{
+    font-family:var(--dp-display);font-size:14px;letter-spacing:.16em;color:#9b9078;
+    margin-top:6px;line-height:1.4
+  }
+  #dpage .sky-card .hs{font-size:12.5px;color:var(--dp-mut);margin-top:9px;font-variant-numeric:tabular-nums}
+  #dpage .sky-card .rule{width:26px;height:1px;background:rgba(184,166,120,.6);margin:clamp(15px,2vw,20px) 0 clamp(12px,1.6vw,16px)}
+  #dpage .sky-card .ttl{font-family:var(--dp-serif);font-size:16.5px;color:var(--dp-ink);margin-top:auto}
+  #dpage .sky-card .sub{font-size:13px;line-height:1.9;color:var(--dp-mut);margin-top:4px}
+  @media(hover:hover){
+    #dpage .sky-card:hover{transform:translateY(-3px);border-color:rgba(184,166,120,.45);box-shadow:0 18px 52px rgba(9,18,46,.1)}
+    #dpage .sky-card:hover .art{opacity:.24}
+  }
+  @media(max-width:1024px){#dpage .sky-core{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  @media(max-width:600px){
+    #dpage .sky-core{gap:11px}
+    #dpage .sky-card{min-height:224px;border-radius:20px;padding:18px 16px}
+    #dpage .sky-card .sign{font-size:21px}
+    #dpage .sky-card .lat{font-size:12px;letter-spacing:.12em;margin-top:4px}
+    /* 两栏时「月亮 MOON」会挤到换行,收一点字距就够了 */
+    #dpage .sky-card .hd{gap:8px;margin-bottom:14px}
+    #dpage .sky-card .hd .gl{width:26px;height:26px}
+    #dpage .sky-card .hd .lb{font-size:10.5px;letter-spacing:.11em;white-space:nowrap}
+    #dpage .sky-card .art{width:92%;right:-16%;opacity:.16}
+  }
+
+  /* —— 区段标头 —— */
+  #dpage .sky-sec{position:relative;margin-top:clamp(46px,5.4vw,84px)}
+  #dpage .sky-hd{margin-bottom:clamp(18px,2.2vw,26px)}
+  /* 页面其他部分刻意都很软,标题因此靠字重撑出结构 */
+  #dpage .sky-hd h2{
+    font-family:var(--dp-serif);font-weight:600;font-size:clamp(19px,2.2vw,25px);
+    color:var(--dp-ink);margin:0;line-height:1.6
+  }
+  #dpage .sky-hd .note{font-size:13.5px;line-height:1.95;color:var(--dp-mut);margin-top:7px;max-width:var(--dp-text)}
+  /* 四个核心是这一页的招牌区块,它的引言比其他区段重一级 */
+  #dpage .sky-hd.lead{margin-bottom:clamp(20px,2.6vw,30px)}
+  #dpage .sky-hd.lead h2{font-size:clamp(23px,2.8vw,32px);line-height:1.5}
+  #dpage .sky-hd.lead .lat{
+    font-family:var(--dp-display);font-size:15px;letter-spacing:.05em;color:#9b9078;
+    margin-top:5px;line-height:1.6
+  }
+  #dpage .sky-hd.lead .note{font-size:14px;margin-top:9px}
+
+  /* —— 相位:两颗星之间的一次对话,不是另一张表 ——
+     中间那条线是这一段的重点:让「谁和谁在互动」一眼看得出来。 */
+  #dpage .sky-asps{display:grid;gap:2px;max-width:1140px}
+  #dpage .sky-asp{
+    display:grid;align-items:center;gap:clamp(10px,1.4vw,18px);
+    grid-template-columns:clamp(120px,15vw,215px) minmax(0,1fr) clamp(120px,15vw,215px) 74px;
+    padding:clamp(13px,1.7vw,18px) 4px;
+    border-bottom:1px solid color-mix(in srgb,var(--dp-line) 62%,transparent);
+    transition:background .35s
+  }
+  #dpage .sky-asp:last-child{border-bottom:none}
+  #dpage .sky-more .sky-asp:last-child{border-bottom:none}
+  @media(hover:hover){#dpage .sky-asp:hover{background:rgba(255,255,255,.5)}}
+  #dpage .sky-asp .pn{display:flex;align-items:center;gap:12px;font-family:var(--dp-serif);font-size:15.5px;color:var(--dp-ink)}
+  #dpage .sky-asp .pn svg{flex:none;color:#8a7b52}
+  #dpage .sky-asp .pn.b{justify-content:flex-end;text-align:right}
+  #dpage .sky-asp .lk{display:flex;align-items:center;gap:10px;min-width:0}
+  /* 连接线从两端的行星淡入到中间的相位名,而不是一条从头到尾一样浓的线 */
+  #dpage .sky-asp .lk .ln{flex:1;height:1px;min-width:14px;background:linear-gradient(90deg,rgba(184,166,120,.06),rgba(184,166,120,.62))}
+  #dpage .sky-asp .lk .ln+.rel+.ln{background:linear-gradient(270deg,rgba(184,166,120,.06),rgba(184,166,120,.62))}
+  #dpage .sky-asp .rel{
+    display:inline-flex;align-items:center;gap:7px;white-space:nowrap;flex:none;
+    font-size:13.5px;letter-spacing:.06em;color:#6f6244
+  }
+  #dpage .sky-asp .rel .g{font-size:13px;line-height:1;color:#a9915c}
+  #dpage .sky-asp .orb{font-size:12.5px;color:#9c9aa8;font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+
+  /* —— 十二个生命领域:编辑式方块,不是十二张大卡片 —— */
+  #dpage .sky-houses{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:clamp(11px,1.4vw,16px)}
+  /* —— 十二个生命领域 ——
+     这一区现在是整页的主要资讯区:十二宫全开,行星直接画在自己那一宫里。
+     背景保持干净的象牙底,不再叠云,也不用星座插画(那是四个核心的语言)——
+     这一区的视觉语言是宫号本身:一个很淡的大字压在右上角。 */
+  /* 三个章节面板。不用边框、不用阴影,颜色本身就是分章的方式。
+     用实色而不是低透明度的叠色 —— 叠在象牙底上永远只会差个两三步,
+     缩到 25% 就消失了。核心暖香槟、发展哑光灰绿、内在雾灰紫,
+     与页面象牙底的明度差大约 12–18%,缩图也分得出来。 */
+  #dpage .sky-group{
+    position:relative;isolation:isolate;
+    margin-top:clamp(22px,2.6vw,34px);
+    border-radius:22px;padding:clamp(22px,2.6vw,34px)
+  }
+  #dpage .sky-group:first-of-type{margin-top:0}
+  /* 底色之上再叠一层几乎察觉不到的白 —— 右侧亮一点、左侧沉一点,
+     让整块看起来像纸上的一片光,而不是一块印上去的色块。
+     刻意做得很浅:不是渐层效果,是让平涂不要那么死。 */
+  #dpage .sky-group.g1{background:radial-gradient(112% 88% at 92% 46%,rgba(255,255,255,.5),rgba(255,255,255,0) 66%),#f4e5d6}
+  #dpage .sky-group.g2{background:radial-gradient(112% 88% at 92% 46%,rgba(255,255,255,.5),rgba(255,255,255,0) 66%),#e4e7dd}
+  #dpage .sky-group.g3{background:radial-gradient(112% 88% at 92% 46%,rgba(255,255,255,.5),rgba(255,255,255,0) 66%),#e5e4ed}
+  #dpage .sky-group-hd{
+    display:flex;align-items:baseline;flex-wrap:wrap;gap:6px 12px;
+    margin:0 0 clamp(12px,1.6vw,17px);position:relative
+  }
+  /* 章节符号:跟着各自章节的标题色走,只比文字大一点点 —— 是重音,不是插图 */
+  #dpage .sky-group-hd .ic{flex:none;display:inline-flex;align-items:center;transform:translateY(1px)}
+  #dpage .sky-group-hd .ic,#dpage .sky-group-hd .nm{color:#a86f3d}
+  /* 只有这三个标题上暗金色,后面的宫号与说明维持安静 */
+  #dpage .sky-group-hd .nm{
+    font-family:var(--dp-serif);font-weight:600;font-size:17px;
+    letter-spacing:.04em;flex:none
+  }
+  /* 标题 / 宫号序列 / 说明各自一行 —— 像一章的开场,不是表头 */
+  #dpage .sky-group-hd .nos{
+    font-size:12px;letter-spacing:.2em;color:#7f7a6c;
+    flex:0 0 100%;font-variant-numeric:tabular-nums;margin-top:5px
+  }
+  /* 说明永远自己占一行:标题与宫号在第一行,说明在第二行 */
+  /* max-width 会让它的假想宽度缩到放得进第一行,于是又跟标题挤在一起;
+     所以这里只留 flex-basis:100%,让它一定另起一行。 */
+  /* 面板底色变深,说明文字跟着压深一级,对比维持在 4.5:1 以上 */
+  #dpage .sky-group-hd .ds{
+    font-size:12.5px;line-height:1.85;color:#6b6a7c;
+    flex:0 0 100%;min-width:0;margin-top:4px
+  }
+  #dpage .sky-houses{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:clamp(11px,1.4vw,16px)}
+  #dpage .sky-house{
+    position:relative;overflow:hidden;display:flex;flex-direction:column;
+    /* 卡片一律是同一张浅纸,不跟着章节染色 —— 有颜色的章节底 + 浅色的卡,
+       层次才出得来。边线是一条暖中性的细线,主要的分层交给底色去做。 */
+    border:1px solid #d8cabc;border-radius:18px;background:#fbf8f3;
+    box-shadow:0 4px 18px rgba(70,50,35,.06);
+    padding:clamp(15px,1.7vw,19px);min-height:clamp(136px,12.5vw,150px);
+    transition:border-color .24s ease,background .24s ease,box-shadow .24s ease,transform .24s ease
+  }
+  /* 宫号是这张卡的第一层视觉:左上、正常流,桌机与手机同一种构成 ——
+     宫号 → 领域语句 → 星座度数 → 行星,由上往下读。 */
+  #dpage .sky-house .bg{
+    display:block;pointer-events:none;user-select:none;
+    font-family:var(--dp-display);font-weight:300;font-size:clamp(34px,3.4vw,44px);line-height:1;
+    color:#c1926b;letter-spacing:.01em;margin:0 0 clamp(8px,.9vw,10px)
+  }
+  #dpage .sky-house>*{position:relative}
+  /* 这张卡的主角:一句话讲清楚这个领域是什么样的经验 */
+  #dpage .sky-house .fld{
+    font-family:var(--dp-serif);font-weight:600;font-size:17px;line-height:1.6;
+    color:var(--dp-ink)
+  }
+  #dpage .sky-house .sg{font-size:12.5px;color:rgba(34,35,58,.6);margin-top:7px}
+  #dpage .sky-house .sg .d{color:var(--dp-mut);font-variant-numeric:tabular-nums}
+  /* 落在这一宫的行星:靠右下,避开右上角那个大宫号。多颗会自己折行,
+     不收起、不做成下拉,一律直接看得到。 */
+  #dpage .sky-house .pls{
+    display:flex;flex-wrap:wrap;justify-content:flex-end;gap:5px 13px;
+    margin-top:auto;padding-top:clamp(10px,1.1vw,13px)
+  }
+  #dpage .sky-house .pl{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;cursor:default}
+  #dpage .sky-house .pl svg{flex:none;color:#4b4b73}
+  #dpage .sky-house .pl b{font-weight:400;font-size:12px;color:var(--dp-mut)}
+  #dpage .sky-house .pl .rx{font-style:normal;font-size:10px;color:#b4645a;margin-left:-2px}
+  /* 桌机 hover:很轻的一下 —— 边线清楚一点、抬起 2px、影子稍微明显。
+     不缩放、不发光、不换底色。手机不靠 hover,预设的边线本身就够清楚。 */
+  @media(hover:hover){
+    #dpage .sky-house:hover{
+      border-color:#cbb69f;background:#fffdf9;
+      box-shadow:0 8px 24px rgba(70,50,35,.09);
+      transform:translateY(-2px)
+    }
+  }
+  @media (prefers-reduced-motion:reduce){#dpage .sky-house{transition:none}#dpage .sky-house:hover{transform:none}}
+  @media(max-width:1024px){#dpage .sky-houses{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  @media(max-width:600px){
+    #dpage .sky-houses{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+    #dpage .sky-house{padding:15px 14px;min-height:142px;border-radius:16px}
+    #dpage .sky-house .fld{font-size:15.5px}
+    #dpage .sky-house .sg{font-size:12px;margin-top:9px}
+    #dpage .sky-house .pls{gap:4px 10px;padding-top:12px}
+    #dpage .sky-house .pl b{font-size:11px}
+  }
+
+  /* —— 展开:同一个区段里长出来,不开 modal、不换页 ——
+     收起状态由 max-height:0 决定;展开时的高度由 JS 按实际内容量给,
+     不写死一个上限 —— 相位多的盘不会被截掉最后几条。 */
+  #dpage .sky-more{
+    overflow:hidden;max-height:0;opacity:0;
+    transition:max-height .55s cubic-bezier(.22,1,.36,1),opacity .4s ease,margin-top .55s cubic-bezier(.22,1,.36,1)
+  }
+  #dpage .sky-more.on{opacity:1}
+  @media (prefers-reduced-motion:reduce){#dpage .sky-more{transition:none}}
+  #dpage .sky-expand{
+    display:inline-flex;align-items:center;gap:9px;margin-top:clamp(18px,2.2vw,26px);
+    background:rgba(255,255,255,.4);border:1px solid var(--dp-line);border-radius:24px;
+    padding:12px 24px;min-height:46px;cursor:pointer;
+    font-family:var(--dp-sans);font-size:13.5px;letter-spacing:.04em;color:var(--dp-ink);
+    transition:border-color .3s,background .3s,color .3s
+  }
+  #dpage .sky-expand:hover{border-color:rgba(184,166,120,.55);background:rgba(232,211,162,.14)}
+  #dpage .sky-expand:focus-visible{outline:1px solid rgba(184,166,120,.7);outline-offset:2px}
+  #dpage .sky-expand .cv{font-size:10px;color:#8a7b52;transition:transform .35s ease}
+  #dpage .sky-expand[aria-expanded="true"] .cv{transform:rotate(180deg)}
+
+  /* —— 中场:资料与资料之间的一次呼吸。没有容器,直接浮在云雾上 —— */
+  #dpage .sky-pause{
+    position:relative;text-align:center;
+    margin:clamp(54px,6.2vw,92px) 0;padding:clamp(10px,1.6vw,18px) 0
+  }
+  #dpage .sky-pause .st{
+    display:block;font-size:13px;color:#b8a678;line-height:1;
+    margin:0 auto clamp(20px,2.6vw,30px)
+  }
+  #dpage .sky-pause .st.end{margin:clamp(20px,2.6vw,30px) auto 0}
+  #dpage .sky-pause .say{
+    font-family:var(--dp-serif);font-size:clamp(24px,3.3vw,36px);line-height:1.95;color:var(--dp-ink);
+    white-space:pre-line;margin:0 auto;max-width:min(620px,92%)
+  }
+
+  /* —— 结尾:探索到这里为止,安静收束,不做成行销 banner —— */
+  #dpage .sky-close{
+    position:relative;text-align:center;
+    margin-top:clamp(52px,6vw,88px);padding-top:clamp(38px,4.4vw,58px)
+  }
+  #dpage .sky-close .tp{
+    display:block;width:clamp(120px,18vw,220px);height:1px;margin:0 auto clamp(24px,3vw,36px);
+    background:linear-gradient(90deg,transparent,rgba(184,166,120,.5),transparent)
+  }
+  #dpage .sky-close .say{
+    font-family:var(--dp-serif);font-size:clamp(23px,3.1vw,34px);line-height:1.95;color:var(--dp-ink);
+    white-space:pre-line;margin:0 auto;max-width:min(620px,92%)
+  }
+  #dpage .sky-close .sub{
+    font-size:14px;line-height:2.05;color:var(--dp-mut);white-space:pre-line;
+    margin:clamp(16px,2vw,22px) auto 0;max-width:min(540px,92%)
+  }
+  #dpage .sky-close .dp-cta{margin-top:clamp(26px,3.2vw,36px)}
+  /* .dp-link 自带 border-bottom:display:block 会让底线横贯整页,
+     纯 inline-block 又会跟 CTA 挤在同一行。用 fit-content + auto margin:
+     自己独占一行,底线只跟着文字走。 */
+  #dpage .sky-close .back{
+    display:block;width:fit-content;margin:clamp(18px,2.2vw,24px) auto 0
+  }
+  /* ==========================================================
+     中段的空气层
+     ------------------------------------------------------------
+     页面上下两端是真的天空,中间原本是一整片平的象牙白。这里补几层
+     极淡的光,让天空的感觉一路延续下来 —— 全部是 CSS 渐层与两条细弧,
+     没有加图片、没有动画、没有 parallax,也不叠在文字上面。
+     每一层都放在 z-index:-1,父层 isolation:isolate,所以永远在内容底下。
+     手机比桌机明显一点(直向滚动缺少横向变化,桌机则本来就够丰富)。
+     ========================================================== */
+  #dpage .sky-air{position:relative;isolation:isolate}
+  #dpage .sky-air>.l{
+    position:absolute;z-index:-1;pointer-events:none;
+    left:calc(50% - 50vw);right:calc(50% - 50vw);
+    top:var(--at,-60px);bottom:var(--ab,-60px)
+  }
+
+  /* 四个核心:一片柔和的珠光,从右上进来、往左下化开 */
+  #dpage .air-core>.l{
+    --at:-90px;--ab:-50px;
+    background:
+      radial-gradient(50% 44% at 80% 22%, rgba(232,211,162,.16), rgba(232,211,162,0) 70%),
+      radial-gradient(44% 40% at 12% 78%, rgba(170,160,213,.11), rgba(170,160,213,0) 72%);
+    opacity:.55
+  }
+
+  /* 十二宫:两道超大的细弧。不是星盘、没有符号,只是让平的象牙底有远近。
+     圆心刻意落在内容区之外,所以画面里只会出现弧的一段。 */
+  #dpage .air-house>.l{
+    --at:-70px;--ab:-70px;overflow:hidden;
+    background:radial-gradient(38% 26% at 86% 12%, rgba(232,211,162,.10), rgba(232,211,162,0) 72%);
+    opacity:.32
+  }
+  #dpage .air-house>.l::before,#dpage .air-house>.l::after{
+    content:"";position:absolute;border-radius:50%;border:1px solid rgba(184,166,120,.18)
+  }
+  #dpage .air-house>.l::before{width:1560px;height:1560px;left:-30%;top:4%}
+  #dpage .air-house>.l::after{
+    width:1180px;height:1180px;right:-26%;bottom:-16%;border-color:rgba(170,160,213,.15)
+  }
+
+  /* 中场:光落在纸上 —— 白心 + 香槟 + 一点灰紫,四周自然化开,没有边界 */
+  #dpage .air-note>.l{
+    --at:-40px;--ab:-40px;
+    background:
+      radial-gradient(40% 54% at 50% 46%, rgba(255,255,255,.9), rgba(255,255,255,0) 72%),
+      radial-gradient(56% 66% at 50% 44%, rgba(232,211,162,.17), rgba(232,211,162,0) 72%),
+      radial-gradient(72% 80% at 50% 58%, rgba(170,160,213,.10), rgba(170,160,213,0) 76%);
+    opacity:.7
+  }
+
+  /* 相位:几颗极淡的光点。是「几颗」,不是星空 —— 桌机 5 颗、手机 7 颗。 */
+  #dpage .air-dust>.l{
+    --at:-50px;--ab:-50px;
+    background:
+      radial-gradient(1.7px 1.7px at 11% 24%, rgba(184,166,120,.55), transparent 100%),
+      radial-gradient(1.3px 1.3px at 79% 13%, rgba(184,166,120,.42), transparent 100%),
+      radial-gradient(1.9px 1.9px at 92% 62%, rgba(170,160,213,.4), transparent 100%),
+      radial-gradient(1.2px 1.2px at 26% 82%, rgba(184,166,120,.38), transparent 100%),
+      radial-gradient(1.5px 1.5px at 62% 92%, rgba(170,160,213,.34), transparent 100%);
+    background-repeat:no-repeat;opacity:.6
+  }
+
+  /* 落在这一宫的行星:卡片右下一点极淡的珠光,不是换底色、不是边框加粗。
+     用 ::after 而不是 background,滑过卡片时底色变化不会把它盖掉。 */
+  #dpage .sky-house{isolation:isolate}
+  #dpage .sky-house.has::after{
+    content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
+    background:radial-gradient(80% 64% at 84% 88%, rgba(201,162,126,.13), rgba(201,162,126,0) 74%)
+  }
+
+  /* ==========================================================
+     手机版(≤767px)—— 只改呈现,资料与桌机版都不动。
+     所有规则都收在这一个 media query 里,而且放在最后,
+     不会外溢到桌机;桌机除了大宫号的颜色以外完全没有变。
+     ========================================================== */
+  @media(max-width:767px){
+    /* 盘面下方的签名只出现在桌机;手机上整句不显示 */
+    #dpage.sky-page .sky-script{display:none}
+
+    /* —— 盘面:手机上是这一屏的主角 ——
+       让它突破 hero 的左右留白、在页面里置中,占到约 90vw。
+       用宽度与负 margin,不用 transform:scale() —— 缩放会带来溢出与糊边。
+       等比例、不裁切,黄道标签与四轴一样完整。 */
+    #dpage.sky-page .dp-hero-side .isky2{
+      width:90vw;max-width:90vw;
+      margin-left:calc(50% - 45vw);margin-right:calc(50% - 45vw)
+    }
+    /* 盘面变大之后,方形容器与圆之间的空隙跟着变大,按钮往上收一点,
+       盘面 → 签名 → 四个核心之间不要断开 */
+    #dpage.sky-page .dp-hero-side .isky2-tools{margin-top:-16px}
+
+    /* —— 四个核心:横向滑动,露出下一张的边,让人知道可以滑 ——
+       卡片本身的设计、插画与字级都没有换,只是换了排列方式。 */
+    #dpage .sky-core{
+      display:flex;gap:12px;
+      overflow-x:auto;overscroll-behavior-x:contain;
+      scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;
+      scrollbar-width:none;-ms-overflow-style:none;
+      /* 往两侧的页面留白铺出去,第一张可以贴齐页缘,最后一张仍有右边距 */
+      margin-left:calc(-1 * var(--sky-pad));margin-right:calc(-1 * var(--sky-pad));
+      padding:2px var(--sky-pad) 8px
+    }
+    #dpage .sky-core::-webkit-scrollbar{display:none}
+    #dpage .sky-card{flex:0 0 88%;scroll-snap-align:start}
+
+    /* —— 十二宫:每一组自己就是一个 2×2,组与组之间留出章节感 —— */
+    #dpage .sky-group{margin-top:clamp(26px,6vw,36px);border-radius:20px;padding:18px 15px}
+    /* 章节开头让它呼吸:标题一行、宫号一行、说明一行 */
+    #dpage .sky-group-hd .nm{font-size:18px}
+    #dpage .sky-houses{gap:11px}
+    #dpage .sky-house .bg{font-size:30px;margin-bottom:8px}
+    #dpage .sky-group-hd .ic svg{width:14px;height:14px}
+
+    /* 有行星的那几宫:手机上辉光再明显一点点,仍然不是换底色 */
+    #dpage .sky-house.has::after{
+      background:radial-gradient(82% 66% at 84% 88%, rgba(201,162,126,.17), rgba(201,162,126,0) 76%)
+    }
+    /* 行星符号比中文名再明显一点 */
+    #dpage .sky-house .pl svg{width:19px;height:19px}
+    #dpage .sky-house .pl b{font-size:11.5px}
+
+    /* —— 中场:资料与资料之间真正停一下 —— */
+    #dpage .sky-pause{margin:clamp(64px,15vw,84px) 0}
+    /* 92% 的上限会让第二行在窄萤幕上断在「更多能」/「量，」之间,
+       文案一个字都没改,只是把可用宽度放满。 */
+    #dpage .sky-pause .say{max-width:100%}
+
+    /* 直向滚动缺少横向变化,中段的空气比桌机明显一点(但仍然是象牙底为主)*/
+    #dpage .air-core>.l{opacity:.95}
+    #dpage .air-house>.l{opacity:.55}
+    #dpage .air-house>.l::before{width:940px;height:940px;left:-42%;top:2%}
+    #dpage .air-house>.l::after{width:760px;height:760px;right:-40%;bottom:-8%}
+    #dpage .air-note>.l{opacity:1}
+    #dpage .air-dust>.l{
+      opacity:.9;
+      background:
+        radial-gradient(1.8px 1.8px at 11% 24%, rgba(184,166,120,.6), transparent 100%),
+        radial-gradient(1.4px 1.4px at 79% 13%, rgba(184,166,120,.48), transparent 100%),
+        radial-gradient(2px 2px at 92% 58%, rgba(170,160,213,.45), transparent 100%),
+        radial-gradient(1.3px 1.3px at 26% 82%, rgba(184,166,120,.42), transparent 100%),
+        radial-gradient(1.6px 1.6px at 62% 92%, rgba(170,160,213,.38), transparent 100%),
+        radial-gradient(1.2px 1.2px at 45% 34%, rgba(184,166,120,.3), transparent 100%),
+        radial-gradient(1.5px 1.5px at 88% 88%, rgba(170,160,213,.3), transparent 100%);
+      background-repeat:no-repeat
+    }
+
+    /* —— 相位:两颗星分列左右,关系与容许度落在中间下方 ——
+       不是把桌机那条横线压扁,也不回到表格。 */
+    #dpage .sky-asp{
+      grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+      row-gap:9px;column-gap:10px;padding:16px 2px
+    }
+    #dpage .sky-asp .pn{grid-column:1;grid-row:1;font-size:15px}
+    #dpage .sky-asp .pn.b{grid-column:2;grid-row:1;justify-content:flex-end;text-align:right}
+    #dpage .sky-asp .lk{grid-column:1/-1;grid-row:2;justify-content:center}
+    #dpage .sky-asp .lk .ln{max-width:64px}
+    #dpage .sky-asp .orb{grid-column:1/-1;grid-row:3;text-align:center}
+  }
   /* 划词收藏:轻盈的浮动动作,不打断阅读 */
   #dpSaveTip{position:absolute;z-index:90;display:none;align-items:center;gap:6px;
     font-family:"Noto Sans SC","Helvetica Neue",Arial,sans-serif;font-size:12.5px;color:#fff;background:rgba(26,22,52,.94);
@@ -5136,6 +5671,8 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   function renderRoute() {
     const r = curRoute;
     if (!r) return;
+    // 完整星盘比其他内页宽(四张核心卡要并排),这个 class 只挂在这一页上
+    $("dpage").classList.toggle("sky-page", r.k === "mysky");
     if (r.k === "topic") renderTopicPage(r.id);
     else if (r.k === "q") renderQPage(r.id);
     else if (r.k === "reading") { readingTab = r.tab || 0; renderReadingPage(); }
@@ -5315,7 +5852,11 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       (o.chip ? '<span class="dp-chip">' + esc0(o.chip) + '</span>' : "") +
       '<h1 class="dp-title">' + esc0(o.title || "") + '</h1>' +
       (o.sub ? '<div class="dp-sub">' + esc0(o.sub) + '</div>' : "") +
+      /* lead / side 是两个可选插槽:目前只有「我的完整星盘」用到 ——
+         它要把标题与盘面并排放进同一个 hero。其他页面不传就跟以前一样。 */
+      (o.lead || "") +
       '</div>' +
+      (o.side ? '<div class="dp-hero-side">' + o.side + '</div>' : "") +
       (o.art ? '<img class="dp-hero-art" src="' + o.art + '" alt="">' : "") +
       '</div></div>' +
       '<div class="dp-body">' + (o.body || "") + (o.foot || "") + '</div>' +
@@ -6088,103 +6629,287 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   }
 
   // ---------- 页面:我的星空(完整星盘)----------
-  // 不重算任何东西:所有读数来自 curResult,与生命蓝图的简化盘同源
+  /* 不重算任何东西:所有读数来自 curResult,与生命蓝图的简化盘同源。
+     这一页只换呈现方式 ——
+       盘面放大成主角 → 四个核心 → 行星 / 宫位 / 相位各自收起,
+     使用者点开才展开,而不是一次把整份报告摊在眼前。
+     星座插画只是水印,真正的主角始终是读数本身。 */
+
+  // 星座 index(0=白羊)→ 水印插画。用 lonToSign 回传的 idx 取,
+  // 不靠中文字串比对,英文介面切换时同样有效。
+  const SKY_ART = ["aries", "taurus", "gemini", "cancer", "leo", "virgo",
+                   "libra", "scorpio", "sagittarius", "capricorn", "aquarius", "pisces"];
+  function skyArtSrc(idx) { return "assets/signs/art/" + SKY_ART[((idx % 12) + 12) % 12] + ".webp"; }
+
+  /* 十二宫的领域名。纯粹是给宫位一个可读的标签,
+     不参与任何计算,也不产生新的占星结论。 */
+  const SKY_FIELD = [
+    ["面对世界的方式", "How you meet the world"],
+    ["价值与安全感", "Value and security"],
+    ["理解与表达", "Understanding and expression"],
+    ["根基与归属", "Roots and belonging"],
+    ["喜欢、创造与表达", "Delight, making and play"],
+    ["日常、责任与照顾", "Daily life, duty and care"],
+    ["与他人建立关系", "Relating to others"],
+    ["深层连接与改变", "Deep bonds and change"],
+    ["视野、信念与探索", "Horizons, belief and search"],
+    ["走向世界与被看见", "Going out and being seen"],
+    ["群体、连接与未来", "Community, connection and what's ahead"],
+    ["内在、独处与潜意识", "Inwardness, solitude and the unseen"]
+  ];
+
+  // 收起 / 展开的按钮:同一个区段里长出来,不开 modal、不换页
+  function skyExpandBtn(boxId, openTx, closeTx) {
+    return '<button type="button" class="sky-expand" aria-expanded="false" aria-controls="' + boxId + '"' +
+      ' data-more="' + boxId + '" data-open="' + esc0(openTx) + '" data-less="' + esc0(closeTx) + '">' +
+      '<span class="tx">' + esc0(openTx) + '</span><span class="cv" aria-hidden="true">▾</span></button>';
+  }
+
   function renderMySkyPage() {
     const c = activeChart();
-    let body = "", sub = "";
+    let body = "", sub = "", heroSide = "", heroLead = "";
     if (!c || !curResult) body = dpNeedChart();
     else {
       const res = curResult;
+      const EN = window.I18N.isEN();
+      const signOf = function (lon) {
+        const g = C.lonToSign(lon);
+        return { idx: g.idx, name: EN ? window.I18N.TSign(g.sign) : g.sign, deg: g.deg };
+      };
       sub = c.nick ? esc0(c.nick) + " · " + c.date + " " + c.time : "";
 
-      // 盘面
-      body += '<div class="dp-card"><div style="display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap">' +
-        '<div class="dp-sec-label" style="margin:0">' + dpT("你的星盘", "YOUR CHART") + '</div>' +
-        '<div class="isky2-tools"><button type="button" id="dpAspToggle">' + dpT("隐藏相位线", "Hide aspects") + '</button></div></div>' +
+      /* —— 1. 盘面 ——
+         盘面不再是 body 里独立的一段:它跟标题一起放进 hero(dpScaffold 新加的
+         side 插槽),云天、标题与盘面属于同一个开场,不再上下切成两块。
+         drawInnerSkyWheel 与 #dpFullWheel / #dpAspToggle 都没有改动。 */
+      heroSide =
         '<div class="isky2" id="dpFullWheel" role="img" aria-label="' +
-        esc0(dpT("完整星盘", "Full natal chart")) + '"></div></div>';
+        esc0(dpT("完整星盘", "Full natal chart")) + '"></div>' +
+        '<div class="isky2-tools"><button type="button" id="dpAspToggle">' +
+        dpT("隐藏相位线", "Hide aspects") + '</button></div>' +
+        '<div class="sky-script" aria-hidden="true">' +
+        '<span class="a">Same sky.<br></span><span class="b">Different you.</span></div>';
+      heroLead =
+        '<div class="sky-latin">A map of the sky,<br>for the one and only you.</div>' +
+        (sub ? '<div class="sky-meta">' + sub + '</div>' : "");
 
-      // 四轴
-      const ax = function (label, lon) {
-        const g = C.lonToSign(lon);
-        const nm = window.I18N.isEN() ? window.I18N.TSign(g.sign) : g.sign;
-        return '<div class="ax"><small>' + label + '</small><b>' + esc0(nm) + '</b>' +
-          '<div class="num" style="font-size:12px;margin-top:3px">' + g.deg.toFixed(1) + '°</div></div>';
+      /* —— 2. 四个核心 ——
+         太阳 / 月亮 取自 dpPlacement,上升 / 天顶 取自 res.ang,
+         与旧版「四轴」同一组数字,只是换个说法呈现。 */
+      const core = [];
+      const sun = dpPlacement("Sun"), moon = dpPlacement("Moon");
+      const ascS = signOf(res.ang.asc), mcS = signOf(res.ang.mc);
+      // 中文介面下多给一行星座英文名(层次用的,不是另一行标题);英文介面就不重复了
+      const lat = function (idx) { return EN ? "" : (C.SIGNS[idx] ? C.SIGNS[idx].en : ""); };
+      if (sun) {
+        const i = C.lonToSign(res.planets.find(function (p) { return p.key === "Sun"; }).lon).idx;
+        core.push({ gl: GL.symbolSVG ? GL.symbolSVG(sun.glyph, 15, "currentColor") : "", tx: "",
+          lb: dpT("太阳 SUN", "SUN"), sign: sun.sign, lat: lat(i), idx: i,
+          house: sun.house, ttl: dpT("核心自我", "Core Self"), sb: dpT("你如何发光", "How you shine") });
+      }
+      if (moon) {
+        const i = C.lonToSign(res.planets.find(function (p) { return p.key === "Moon"; }).lon).idx;
+        core.push({ gl: GL.symbolSVG ? GL.symbolSVG(moon.glyph, 15, "currentColor") : "", tx: "",
+          lb: dpT("月亮 MOON", "MOON"), sign: moon.sign, lat: lat(i), idx: i,
+          house: moon.house, ttl: dpT("情绪世界", "Inner Weather"), sb: dpT("你如何感受", "How you feel") });
+      }
+      core.push({ gl: "", tx: "AC", lb: dpT("上升 ASC", "RISING"), sign: ascS.name, lat: lat(ascS.idx), idx: ascS.idx, house: 1,
+        ttl: dpT("外在形象", "Outer Self"), sb: dpT("你如何与世界相遇", "How you meet the world") });
+      core.push({ gl: "", tx: "MC", lb: dpT("天顶 MC", "MIDHEAVEN"), sign: mcS.name, lat: lat(mcS.idx), idx: mcS.idx, house: 10,
+        ttl: dpT("人生方向", "Direction"), sb: dpT("你渴望成为的样子", "Who you're becoming") });
+
+      body += '<div class="sky-air air-core"><span class="l" aria-hidden="true"></span>' +
+        '<div class="sky-hd lead">' +
+        '<h2>' + esc0(dpT("先认识你的四个核心", "Start with your four cornerstones")) + '</h2>' +
+        '<div class="note">' + esc0(dpT("这四个位置，构成了你生命的基本轮廓。",
+          "These four placements outline the basic shape of a life.")) + '</div></div>' +
+        '<div class="sky-core">' +
+        core.map(function (k) {
+          return '<article class="sky-card">' +
+            '<img class="art" src="' + skyArtSrc(k.idx) + '" alt="" aria-hidden="true" loading="lazy" decoding="async">' +
+            '<div class="hd"><span class="gl' + (k.tx ? " tx" : "") + '" aria-hidden="true">' + (k.tx ? esc0(k.tx) : k.gl) + '</span>' +
+            '<span class="lb">' + esc0(k.lb) + '</span></div>' +
+            '<div class="sign">' + esc0(k.sign) + '</div>' +
+            (k.lat ? '<div class="lat">' + esc0(k.lat) + '</div>' : "") +
+            '<div class="hs">' + esc0(window.I18N.houseLabel(k.house)) + '</div>' +
+            '<div class="rule" aria-hidden="true"></div>' +
+            '<div class="ttl">' + esc0(k.ttl) + '</div>' +
+            '<div class="sub">' + esc0(k.sb) + '</div></article>';
+        }).join("") + '</div></div>';
+
+      /* —— 3. 十二个生命领域 ——
+         这一段现在是整页的主要资讯区:十二宫全部摊开,不再收起,
+         而且每颗行星直接画在它所在的那一宫里 —— 原本独立的「行星落点」
+         表格因此拿掉,资讯不再重复两次。
+         归宫完全依 res.planets 每颗的 house 栏位,没有任何新的计算。 */
+      const byHouse = {};
+      DP_MAJOR.forEach(function (k) {
+        const p = res.planets.find(function (x) { return x.key === k; });
+        if (!p || !p.house) return;
+        (byHouse[p.house] || (byHouse[p.house] = [])).push(p);
+      });
+      /* 行星本身的星座 / 度数 / 逆行不再单独列表,但一个字都没有丢:
+         收进 title,滑上去(或读屏)仍然读得到。 */
+      const planetChip = function (p) {
+        const g = C.lonToSign(p.lon);
+        const nm = EN ? p.en : p.name;
+        const tip = nm + " · " + (EN ? window.I18N.TSign(g.sign) : g.sign) + " " + C.fmtDeg(g.deg) +
+          (p.retro ? " · " + dpT("逆行", "retrograde") : "");
+        return '<span class="pl" title="' + esc0(tip) + '">' +
+          (GL.symbolSVG ? GL.symbolSVG(p.glyphKey, 17, "currentColor") : "") +
+          '<b>' + esc0(nm) + '</b>' +
+          (p.retro ? '<i class="rx" aria-hidden="true">℞</i>' : "") + '</span>';
       };
-      body += '<div class="dp-card"><div class="dp-sec-label">' + dpT("四轴", "ANGLES") + '</div><div class="dp-axes">' +
-        ax("ASC", res.ang.asc) + ax("MC", res.ang.mc) +
-        ax("DSC", C.n360(res.ang.asc + 180)) + ax("IC", C.n360(res.ang.mc + 180)) +
-        '</div></div>';
+      const houseTile = function (i) {
+        const g = signOf(res.cusps[i]);
+        const pls = byHouse[i + 1] || [];
+        return '<div class="sky-house' + (pls.length ? " has" : "") + '">' +
+          '<span class="bg" aria-hidden="true">' + ("0" + (i + 1)).slice(-2) + '</span>' +
+          '<div class="fld">' + esc0(SKY_FIELD[i][EN ? 1 : 0]) + '</div>' +
+          '<div class="sg">' + esc0(g.name) + '<span class="d"> · ' + esc0(C.fmtDeg(g.deg)) + '</span></div>' +
+          (pls.length ? '<div class="pls">' + pls.map(planetChip).join("") + '</div>' : "") +
+          '</div>';
+      };
+      /* 三组的名字用一般人听得懂的说法,不写「角宫 / 续宫 / 果宫」。
+         分组只是让十二个宫读起来有条理,不是新的占星判断。 */
+      /* 三个小符号:四角星 / 新芽 / 弯月。手写的 inline SVG,单色跟着章节色走,
+         专案本来就没有图示库,这里也不为了三个符号引进一个。 */
+      /* 三个小符号:四角星 / 一片叶 / 弯月。手写的 inline SVG,单色跟着章节色走,
+         专案本来就没有图示库,这里也不为了三个符号引进一个。
+         三个都刻意画得瘦 —— 尤其是月:内外两条弧的半径只差一点点,
+         弧身细、两端收尖,不会变成一个圆胖的月牙。 */
+      const SKY_SYM = {
+        star: '<svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true" focusable="false">' +
+          '<path fill="currentColor" d="M8 .5c.32 4.42 2.76 6.86 7.2 7.5-4.44.64-6.88 3.08-7.2 7.5-.32-4.42-2.76-6.86-7.2-7.5C5.24 7.36 7.68 4.92 8 .5Z"/></svg>',
+        leaf: '<svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true" focusable="false">' +
+          '<path fill="currentColor" d="M14.1 1.7c.4 6.1-3.4 10.5-10 11.4C3.4 7.3 7.3 2.7 14.1 1.7Z"/>' +
+          '<path fill="none" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" d="M2.3 14.3 6 10.2"/></svg>',
+        /* 外弧 r=6.9、内弧 r=6.5、圆心只偏 1.0 —— 最厚处 1.4,两端自然收尖 */
+        moon: '<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false">' +
+          '<path fill="currentColor" d="M6.27 1.32A6.9 6.9 0 1 0 14.46 10.42 6.5 6.5 0 0 1 6.27 1.32Z"/></svg>'
+      };
+      const SKY_GROUPS = [
+        { ids: [1, 4, 7, 10], sym: SKY_SYM.star, cls: "g1", nm: ["核心领域", "Core Areas"],
+          ds: ["与你的自我、家庭、关系与事业有关，是人生中最直接、最容易被感受到的领域。",
+               "Your self, home, relationships and work — the areas you feel most directly."] },
+        { ids: [2, 5, 8, 11], sym: SKY_SYM.leaf, cls: "g2", nm: ["发展领域", "Growth Areas"],
+          ds: ["与你的资源、创造、转化与社群有关，是随着经历逐渐累积与发展的领域。",
+               "Your resources, creativity, change and community — the areas that build up over time."] },
+        { ids: [3, 6, 9, 12], sym: SKY_SYM.moon, cls: "g3", nm: ["内在领域", "Inner Areas"],
+          ds: ["与你的学习、日常、信念与内在世界有关，是帮助你理解、调整与沉淀自己的领域。",
+               "Your learning, routines, beliefs and inner world — where you make sense of yourself."] }
+      ];
+      body += '<section class="sky-sec sky-air air-house">' +
+        '<span class="l" aria-hidden="true"></span><div class="sky-hd">' +
+        '<h2>' + esc0(dpT("你的十二个生命领域", "Your twelve fields of life")) + '</h2>' +
+        '<div class="note">' + esc0(dpT("十二宫位象徵人生不同的领域，落在其中的行星，就是那个领域里正在运作的能量。",
+          "The twelve houses mark the different areas a life is lived in. The planets inside them are the energies at work there.")) +
+        '</div></div>' +
+        SKY_GROUPS.map(function (gp) {
+          return '<div class="sky-group ' + gp.cls + '"><div class="sky-group-hd">' +
+            '<span class="ic" aria-hidden="true">' + gp.sym + '</span>' +
+            '<span class="nm">' + esc0(gp.nm[EN ? 1 : 0]) + '</span>' +
+            '<span class="nos">' + gp.ids.join(" · ") + '</span>' +
+            '<span class="ds">' + esc0(gp.ds[EN ? 1 : 0]) + '</span></div>' +
+            '<div class="sky-houses">' + gp.ids.map(function (n) { return houseTile(n - 1); }).join("") + '</div></div>';
+        }).join("") + '</section>';
 
-      // 行星表:星座 · 度数 · 宫位 · 逆行
-      const rows = DP_MAJOR.map(function (k) {
-        const p = dpPlacement(k);
-        if (!p) return "";
-        return '<tr><td><span class="pn">' + (GL.symbolSVG ? GL.symbolSVG(p.glyph, 16, "currentColor") : "") +
-          esc0(p.name) + '</span></td>' +
-          '<td>' + esc0(p.sign) + '</td>' +
-          '<td class="num">' + p.deg.toFixed(2) + '°</td>' +
-          '<td class="num">' + esc0(window.I18N.houseLabel(p.house)) + '</td>' +
-          '<td class="num">' + (p.retro ? '<span style="color:#b4645a">℞</span>' : "") + '</td></tr>';
-      }).join("");
-      body += '<div class="dp-card"><div class="dp-sec-label">' + dpT("行星位置", "PLANETS") + '</div>' +
-        '<div class="dp-scroll"><table class="dp-tbl"><thead><tr>' +
-        '<th>' + dpT("行星", "Planet") + '</th><th>' + dpT("星座", "Sign") + '</th>' +
-        '<th>' + dpT("度数", "Degree") + '</th><th>' + dpT("宫位", "House") + '</th><th></th>' +
-        '</tr></thead><tbody>' + rows + '</tbody></table></div></div>';
+      /* —— 4. 中场:十二宫之后、相位之前的一次呼吸 ——
+         纯编辑文案,不下任何新的占星判断。 */
+      body += '<section class="sky-pause sky-air air-note">' +
+        '<span class="l" aria-hidden="true"></span>' +
+        '<span class="st" aria-hidden="true">✦</span>' +
+        '<div class="say">' + esc0(dpT("你的星空里，\n有些领域承载着更多能量，\n也更容易被你感受到。",
+          "In your sky, some areas carry\nmore energy than others —\nand you feel them more.")) + '</div>' +
+        '<span class="st end" aria-hidden="true">✦</span>' +
+        '</section>';
 
-      // 宫头
-      const cuspRows = res.cusps.map(function (cl, i) {
-        const g = C.lonToSign(cl);
-        const nm = window.I18N.isEN() ? window.I18N.TSign(g.sign) : g.sign;
-        return '<tr><td class="num">' + esc0(window.I18N.houseLabel(i + 1)) + '</td>' +
-          '<td>' + esc0(nm) + '</td><td class="num">' + g.deg.toFixed(2) + '°</td></tr>';
-      }).join("");
-      body += '<div class="dp-card"><div class="dp-sec-label">' + dpT("宫位", "HOUSES") + '</div>' +
-        '<div class="dp-scroll"><table class="dp-tbl" style="min-width:320px"><thead><tr>' +
-        '<th>' + dpT("宫", "House") + '</th><th>' + dpT("宫头星座", "Cusp sign") + '</th><th>' + dpT("度数", "Degree") + '</th>' +
-        '</tr></thead><tbody>' + cuspRows + '</tbody></table></div></div>';
-
-      // 相位
+      /* —— 5. 相位:预设只露三条 ——
+         配对 / 类型 / 容许度都没动;这里只是照容许度由紧到松排一次序,
+         让预设露出来的三条是最紧密的那三条。 */
       const asps = (res.aspects || []).filter(function (a) {
         const pa = res.planets[a.a], pb = res.planets[a.b];
         return pa && pb && DP_MAJOR.indexOf(pa.key) >= 0 && DP_MAJOR.indexOf(pb.key) >= 0;
-      });
-      if (asps.length)
-      {
-        /* 相位改用与「行星位置 / 宫位」同一套 dp-tbl 表格。
-           只换呈现方式,相位配对 / 类型 / 容许度一个数字都没动。 */
-        const aspRows = asps.map(function (a) {
+      }).slice().sort(function (x, y) { return Math.abs(x.orb) - Math.abs(y.orb); });
+      if (asps.length) {
+        const aspRow = function (a) {
           const pa = res.planets[a.a], pb = res.planets[a.b];
           const meta = (C.ASPECTS || []).find(function (x) { return x.key === a.type; }) || { name: a.type, glyph: "" };
-          const nm = function (p) {
-            return '<span class="pn">' + (GL.symbolSVG ? GL.symbolSVG(p.glyphKey, 16, "currentColor") : "") +
-              esc0(window.I18N.isEN() ? p.en : p.name) + '</span>';
+          const nm = function (p, cls) {
+            return '<span class="pn' + cls + '">' + (GL.symbolSVG ? GL.symbolSVG(p.glyphKey, 19, "currentColor") : "") +
+              esc0(EN ? p.en : p.name) + '</span>';
           };
-          return '<tr><td>' + nm(pa) + '</td>' +
-            '<td><span class="asp-t"><span class="g" aria-hidden="true">' + esc0(meta.glyph) + '</span>' +
-            esc0(window.I18N.isEN() ? (meta.en || meta.name) : meta.name) + '</span></td>' +
-            '<td>' + nm(pb) + '</td>' +
-            '<td class="num">' + Math.abs(a.orb).toFixed(1) + '°</td></tr>';
-        }).join("");
-        body += '<div class="dp-card"><div class="dp-sec-label">' + dpT("相位", "ASPECTS") + '</div>' +
-          '<div class="dp-scroll"><table class="dp-tbl" style="min-width:400px"><thead><tr>' +
-          '<th>' + dpT("行星", "Planet") + '</th><th>' + dpT("相位", "Aspect") + '</th>' +
-          '<th>' + dpT("行星", "Planet") + '</th><th>' + dpT("容许度", "Orb") + '</th>' +
-          '</tr></thead><tbody>' + aspRows + '</tbody></table></div></div>';
+          return '<div class="sky-asp">' + nm(pa, "") +
+            '<span class="lk"><i class="ln" aria-hidden="true"></i>' +
+            '<span class="rel"><span class="g" aria-hidden="true">' + esc0(meta.glyph) + '</span>' +
+            esc0(EN ? (meta.en || meta.name) : meta.name) + '</span>' +
+            '<i class="ln" aria-hidden="true"></i></span>' +
+            nm(pb, " b") +
+            '<span class="orb">' + esc0(C.fmtDeg(Math.abs(a.orb))) + '</span></div>';
+        };
+        body += '<section class="sky-sec sky-air air-dust">' +
+          '<span class="l" aria-hidden="true"></span><div class="sky-hd">' +
+          '<h2>' + esc0(dpT("星盘之间的对话", "Conversations inside your chart")) + '</h2>' +
+          '<div class="note">' + esc0(dpT("相位显示行星之间的角度关系，揭示这些能量如何互动、流动。",
+            "Aspects are the angles between planets — how these energies meet and move together.")) + '</div></div>' +
+          '<div class="sky-asps">' + asps.slice(0, 3).map(aspRow).join("") +
+          '<div class="sky-more" id="skyMoreAsp" aria-hidden="true">' + asps.slice(3).map(aspRow).join("") + '</div></div>' +
+          (asps.length > 3 ? skyExpandBtn("skyMoreAsp",
+            dpT("查看全部相位 · " + asps.length + " 条", "See all " + asps.length + " aspects"),
+            dpT("收起", "Collapse")) : "") +
+          '</section>';
       }
+
+      /* —— 7. 结尾:安静收束,不做成行销 banner —— */
+      body += '<div class="sky-zone sky-zone-c">' +
+        '<span class="sky-atmos" aria-hidden="true"></span>' +
+        '<section class="sky-close">' +
+        '<span class="tp" aria-hidden="true"></span>' +
+        '<div class="say">' + esc0(dpT("星盘不是终点，\n而是一个起点。",
+          "A chart is not a conclusion.\nIt is a place to begin.")) + '</div>' +
+        '<div class="sub">' + esc0(dpT("它不定义你，但它可以帮助你更认识自己。",
+          "It doesn't define you. It helps you know yourself a little better.")) + '</div>' +
+        '<a class="dp-cta" href="' + LANDING_TOPICS + '">' +
+        esc0(dpT("开始探索你的主题解读", "Start exploring your themes")) + ' →</a>' +
+        '<a class="dp-link back" href="#/reading">← ' + esc0(dpT("回到生命蓝图", "Back to your blueprint")) + '</a>' +
+        '</section></div>';
     }
 
     dpScaffold({
-      chip: dpT("我的星空", "MY SKY"),
+      chip: "",
       title: dpT("我的完整星盘", "Your Full Natal Chart"),
-      sub: sub,
+      /* hero 的说明文字换成介绍这张盘是什么;出生资料移到 lead 里的 sky-meta,
+         一个字都没有少,只是换了位置。 */
+      sub: (c && curResult) ? dpT("这是一张属于你的天空地图，\n记录了你出生那一刻，\n星辰为你描绘的独特排列。",
+        "This is a map of the sky as it stood\nat the moment you were born.") : "",
+      lead: (c && curResult) ? heroLead : "",
+      side: (c && curResult) ? heroSide : "",
       body: body,
-      foot: (c && curResult) ? '<div class="dp-chart-cta"><a class="dp-link" href="#/reading">← ' +
-        dpT("回到生命蓝图", "Back to your blueprint") + '</a></div>' : "",
+      foot: "",
       backLabel: dpT("返回主页", "Back to home"),
       backHref: LANDING_URL,
       seed: 77
+    });
+    // 展开 / 收起:每次重画后重新绑定(dpScaffold 会换掉整块 innerHTML)
+    document.querySelectorAll("#dpage .sky-expand").forEach(function (btn) {
+      const box = document.getElementById(btn.getAttribute("data-more"));
+      if (!box) return;
+      /* 展开完成后把上限拿掉:之后换行、换字体或转屏都不会再被截断 */
+      box.addEventListener("transitionend", function (e) {
+        if (e.target === box && e.propertyName === "max-height" && box.classList.contains("on"))
+          box.style.maxHeight = "none";
+      });
+      btn.addEventListener("click", function () {
+        const on = !box.classList.contains("on");
+        box.classList.toggle("on", on);
+        box.setAttribute("aria-hidden", on ? "false" : "true");
+        btn.setAttribute("aria-expanded", on ? "true" : "false");
+        const tx = btn.querySelector(".tx");
+        if (tx) tx.textContent = btn.getAttribute(on ? "data-less" : "data-open");
+        // 收起时要先回到当前实际高度再归零,否则从 none 直接跳 0 不会有过渡
+        box.style.maxHeight = box.scrollHeight + "px";
+        if (!on) { box.getBoundingClientRect(); box.style.maxHeight = "0px"; }
+      });
     });
     const fw = document.getElementById("dpFullWheel");
     if (fw && curResult) drawInnerSkyWheel(fw, curResult);
