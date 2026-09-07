@@ -38,7 +38,7 @@
 <!-- 解读详情页字体:与 Landing(index.html)同一套 -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&family=Noto+Serif+SC:wght@400;500&family=Noto+Sans+SC:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&family=Noto+Serif+SC:wght@400;500;600;700&family=Noto+Sans+SC:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
   :root{
     --night:#f2ead8;        /* 米色底 */
@@ -889,7 +889,7 @@
     background:none;border:none;padding:0;margin-bottom:14px;
     font-size:11.5px;letter-spacing:.3em;color:#9b8a5f
   }
-  #dpage.sky-page h1.dp-title{color:var(--dp-ink);margin-bottom:18px}
+  #dpage.sky-page h1.dp-title{font-weight:700;color:var(--dp-ink);margin-bottom:18px}
   #dpage.sky-page .dp-sub{color:rgba(34,35,58,.72);max-width:22em}
   #dpage.sky-page .sky-latin{
     font-family:var(--dp-display);font-size:clamp(15px,1.5vw,18px);line-height:1.75;color:#8e86a6;
@@ -986,17 +986,6 @@
     #dpage .sky-card:hover{transform:translateY(-3px);border-color:rgba(184,166,120,.45);box-shadow:0 18px 52px rgba(9,18,46,.1)}
     #dpage .sky-card:hover .art{opacity:.24}
   }
-  /* 四轴:上升 / 天顶已经在上面四张卡里,下降与天底在这里一行带过,
-     资料一个都不少,但不再占掉一整个区块。 */
-  #dpage .sky-angles{
-    position:relative;z-index:1;
-    display:flex;flex-wrap:wrap;gap:9px clamp(18px,2.6vw,34px);
-    margin-top:clamp(18px,2.2vw,26px);padding-top:clamp(15px,1.9vw,20px);
-    border-top:1px solid var(--dp-line);
-    font-size:12.5px;color:var(--dp-mut);font-variant-numeric:tabular-nums
-  }
-  #dpage .sky-angles span{display:inline-flex;align-items:baseline;gap:8px}
-  #dpage .sky-angles b{font-weight:400;font-size:10.5px;letter-spacing:.18em;color:#8a7b52}
   @media(max-width:1024px){#dpage .sky-core{grid-template-columns:repeat(2,minmax(0,1fr))}}
   @media(max-width:600px){
     #dpage .sky-core{gap:11px}
@@ -1013,8 +1002,9 @@
   /* —— 区段标头 —— */
   #dpage .sky-sec{position:relative;margin-top:clamp(46px,5.4vw,84px)}
   #dpage .sky-hd{margin-bottom:clamp(18px,2.2vw,26px)}
+  /* 页面其他部分刻意都很软,标题因此靠字重撑出结构 */
   #dpage .sky-hd h2{
-    font-family:var(--dp-serif);font-weight:500;font-size:clamp(19px,2.2vw,25px);
+    font-family:var(--dp-serif);font-weight:600;font-size:clamp(19px,2.2vw,25px);
     color:var(--dp-ink);margin:0;line-height:1.6
   }
   #dpage .sky-hd .note{font-size:13.5px;line-height:1.95;color:var(--dp-mut);margin-top:7px;max-width:var(--dp-text)}
@@ -1077,7 +1067,11 @@
     content:"";position:absolute;left:0;top:.15em;bottom:.15em;width:2px;border-radius:2px;
     background:rgba(184,166,120,.75)
   }
-  #dpage .sky-group-hd .nm{font-family:var(--dp-serif);font-size:16.5px;color:var(--dp-ink);flex:none}
+  /* 只有这三个标题上暗金色,后面的宫号与说明维持安静 */
+  #dpage .sky-group-hd .nm{
+    font-family:var(--dp-serif);font-weight:600;font-size:17px;color:#a06937;
+    letter-spacing:.04em;flex:none
+  }
   #dpage .sky-group-hd .nos{font-size:12px;letter-spacing:.14em;color:#a08f63;flex:none;font-variant-numeric:tabular-nums}
   #dpage .sky-group-hd .ds{font-size:12.5px;line-height:1.85;color:var(--dp-mut);flex:1 1 320px;min-width:0}
   #dpage .sky-houses{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:clamp(11px,1.4vw,16px)}
@@ -1087,16 +1081,19 @@
     padding:clamp(17px,2vw,22px);min-height:clamp(158px,15.5vw,186px);
     transition:border-color .35s,background .35s
   }
+  /* 大数字现在同时是宫号与章节号,所以从贴边挪开一点,像章节编号而不是标签 */
   #dpage .sky-house .bg{
-    position:absolute;right:14px;top:6px;pointer-events:none;user-select:none;
-    font-family:var(--dp-display);font-weight:300;font-size:clamp(50px,5.4vw,70px);line-height:1;
-    color:rgba(34,35,58,.06);letter-spacing:-.02em
+    position:absolute;right:14px;top:20px;pointer-events:none;user-select:none;
+    font-family:var(--dp-display);font-weight:300;font-size:clamp(46px,5vw,66px);line-height:1;
+    color:rgba(34,35,58,.055);letter-spacing:-.02em
   }
   #dpage .sky-house>*{position:relative}
-  #dpage .sky-house .no{font-size:11px;letter-spacing:.16em;color:var(--dp-mut);font-variant-numeric:tabular-nums}
-  #dpage .sky-house .fld{font-family:var(--dp-serif);font-size:18.5px;color:var(--dp-ink);margin:8px 0 2px}
-  #dpage .sky-house .lat{font-family:var(--dp-display);font-size:11.5px;letter-spacing:.2em;color:#9b9078}
-  #dpage .sky-house .sg{font-size:13.5px;color:var(--dp-ink);margin-top:11px}
+  /* 这张卡的主角:一句话讲清楚这个领域是什么样的经验 */
+  #dpage .sky-house .fld{
+    font-family:var(--dp-serif);font-weight:600;font-size:17.5px;line-height:1.6;
+    color:var(--dp-ink);max-width:78%
+  }
+  #dpage .sky-house .sg{font-size:13px;color:rgba(34,35,58,.62);margin-top:10px}
   #dpage .sky-house .sg .d{color:var(--dp-mut);font-variant-numeric:tabular-nums}
   /* 落在这一宫的行星:靠右下,避开右上角那个大宫号。多颗会自己折行,
      不收起、不做成下拉,一律直接看得到。 */
@@ -1113,11 +1110,10 @@
   @media(max-width:600px){
     #dpage .sky-houses{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
     #dpage .sky-house{padding:15px 14px;min-height:150px;border-radius:16px}
-    #dpage .sky-house .fld{font-size:16.5px}
-    /* 窄卡片放不下 TRANSFORMATION 这种长字,收字距而不是让它被裁掉 */
-    #dpage .sky-house .lat{font-size:10px;letter-spacing:.1em}
-    #dpage .sky-house .sg{font-size:12.5px;margin-top:9px}
-    #dpage .sky-house .bg{font-size:44px;right:10px;top:6px}
+    #dpage .sky-house .fld{font-size:15.5px;max-width:70%}
+    #dpage .sky-house .sg{font-size:12px;margin-top:9px}
+    /* 窄卡片上语句会折成两行,大数字再淡一点、再往边上靠一点 */
+    #dpage .sky-house .bg{font-size:40px;right:10px;top:16px;color:rgba(34,35,58,.048)}
     #dpage .sky-house .pls{gap:4px 10px;padding-top:12px}
     #dpage .sky-house .pl b{font-size:11px}
     #dpage .sky-group-hd .ds{flex-basis:100%}
@@ -1157,10 +1153,6 @@
   #dpage .sky-pause .say{
     font-family:var(--dp-serif);font-size:clamp(24px,3.3vw,36px);line-height:1.95;color:var(--dp-ink);
     white-space:pre-line;margin:0 auto;max-width:min(620px,92%)
-  }
-  #dpage .sky-pause .en{
-    font-family:var(--dp-display);font-size:15px;letter-spacing:.14em;color:#a09eb0;
-    line-height:2;white-space:pre-line;margin-top:clamp(20px,2.6vw,30px)
   }
 
   /* —— 结尾:探索到这里为止,安静收束,不做成行销 banner —— */
@@ -6468,9 +6460,18 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   /* 十二宫的领域名。纯粹是给宫位一个可读的标签,
      不参与任何计算,也不产生新的占星结论。 */
   const SKY_FIELD = [
-    ["自我", "Self"], ["资源", "Resources"], ["学习", "Learning"], ["家庭", "Home"],
-    ["创造", "Creativity"], ["日常", "Daily Life"], ["关系", "Relationships"], ["转化", "Transformation"],
-    ["信念", "Belief"], ["事业", "Vocation"], ["社群", "Community"], ["内在", "Inner World"]
+    ["面对世界的方式", "How you meet the world"],
+    ["价值与安全感", "Value and security"],
+    ["理解与表达", "Understanding and expression"],
+    ["根基与归属", "Roots and belonging"],
+    ["喜欢、创造与表达", "Delight, making and play"],
+    ["日常、责任与照顾", "Daily life, duty and care"],
+    ["与他人建立关系", "Relating to others"],
+    ["深层连接与改变", "Deep bonds and change"],
+    ["视野、信念与探索", "Horizons, belief and search"],
+    ["走向世界与被看见", "Going out and being seen"],
+    ["群体、连接与未来", "Community, connection and what's ahead"],
+    ["内在、独处与潜意识", "Inwardness, solitude and the unseen"]
   ];
 
   // 收起 / 展开的按钮:同一个区段里长出来,不开 modal、不换页
@@ -6534,7 +6535,6 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
 
       body += '<div class="sky-hd lead">' +
         '<h2>' + esc0(dpT("先认识你的四个核心", "Start with your four cornerstones")) + '</h2>' +
-        (EN ? "" : '<div class="lat">These four placements form the first layer of your sky.</div>') +
         '<div class="note">' + esc0(dpT("这四个位置，构成了你生命的基本轮廓。",
           "These four placements outline the basic shape of a life.")) + '</div></div>' +
         '<div class="sky-core">' +
@@ -6549,14 +6549,6 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
             '<div class="rule" aria-hidden="true"></div>' +
             '<div class="ttl">' + esc0(k.ttl) + '</div>' +
             '<div class="sub">' + esc0(k.sb) + '</div></article>';
-        }).join("") + '</div>';
-
-      /* 四轴一行带过:上升 / 天顶已经在上面四张卡里,
-         这里补上下降与天底,资料一个都不少,但不再占掉一整个区块。 */
-      const dscS = signOf(C.n360(res.ang.asc + 180)), icS = signOf(C.n360(res.ang.mc + 180));
-      body += '<div class="sky-angles">' +
-        [["ASC", ascS], ["DSC", dscS], ["MC", mcS], ["IC", icS]].map(function (a) {
-          return '<span><b>' + a[0] + '</b>' + esc0(a[1].name) + ' ' + esc0(C.fmtDeg(a[1].deg)) + '</span>';
         }).join("") + '</div>';
 
       /* —— 3. 十二个生命领域 ——
@@ -6587,9 +6579,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
         const pls = byHouse[i + 1] || [];
         return '<div class="sky-house">' +
           '<span class="bg" aria-hidden="true">' + ("0" + (i + 1)).slice(-2) + '</span>' +
-          '<div class="no">' + esc0(window.I18N.houseLabel(i + 1)) + '</div>' +
           '<div class="fld">' + esc0(SKY_FIELD[i][EN ? 1 : 0]) + '</div>' +
-          (EN ? "" : '<div class="lat">' + esc0(SKY_FIELD[i][1].toUpperCase()) + '</div>') +
           '<div class="sg">' + esc0(g.name) + '<span class="d"> · ' + esc0(C.fmtDeg(g.deg)) + '</span></div>' +
           (pls.length ? '<div class="pls">' + pls.map(planetChip).join("") + '</div>' : "") +
           '</div>';
@@ -6624,9 +6614,8 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
          纯编辑文案,不下任何新的占星判断。 */
       body += '<section class="sky-pause">' +
         '<span class="st" aria-hidden="true">✦</span>' +
-        '<div class="say">' + esc0(dpT("你的星空里，\n有些能量会比其他地方\n更容易被你感受到。",
-          "In your sky, some energies\nare felt more readily\nthan others.")) + '</div>' +
-        (EN ? "" : '<div class="en">Some energies stay.\nBecause they matter.</div>') +
+        '<div class="say">' + esc0(dpT("你的星空里，\n有些领域承载着更多能量，\n也更容易被你感受到。",
+          "In your sky, some areas carry\nmore energy than others —\nand you feel them more.")) + '</div>' +
         '<span class="st end" aria-hidden="true">✦</span>' +
         '</section>';
 
@@ -6681,7 +6670,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     }
 
     dpScaffold({
-      chip: "YOUR NATAL CHART",
+      chip: "",
       title: dpT("我的完整星盘", "Your Full Natal Chart"),
       /* hero 的说明文字换成介绍这张盘是什么;出生资料移到 lead 里的 sky-meta,
          一个字都没有少,只是换了位置。 */
