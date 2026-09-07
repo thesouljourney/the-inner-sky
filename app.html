@@ -1053,33 +1053,38 @@
      这一区现在是整页的主要资讯区:十二宫全开,行星直接画在自己那一宫里。
      背景保持干净的象牙底,不再叠云,也不用星座插画(那是四个核心的语言)——
      这一区的视觉语言是宫号本身:一个很淡的大字压在右上角。 */
-  /* 三组读起来要像三个章节,所以彼此之间留得比组内多 */
-  #dpage .sky-group{position:relative;isolation:isolate;margin-top:clamp(30px,3.6vw,46px)}
-  #dpage .sky-group:first-of-type{margin-top:0}
-  /* 每一组一层极淡的空气。用 radial + transparent 收边,不会变成三个色块;
-     强度大约 2–3%,是感觉得到、但不会意识到「这里换底色了」的程度。 */
-  #dpage .sky-group::before{
-    content:"";position:absolute;z-index:-1;pointer-events:none;
-    left:calc(50% - 50vw);right:calc(50% - 50vw);top:-26px;bottom:-26px
+  /* 三个章节面板。不用边框、不用阴影,只靠底色的一点点差别把三章分开 ——
+     面板略带透明,底下那两道细弧仍然透得出来,三章因此还是同一片天空。
+     三种色温都只离页面的象牙底一两步:核心偏暖、发展中性、内在偏冷,
+     远看仍然是象牙 + 深蓝 + 香槟,凑近才觉得「这一章的光不太一样」。 */
+  #dpage .sky-group{
+    position:relative;isolation:isolate;
+    margin-top:clamp(22px,2.6vw,34px);
+    border-radius:26px;padding:clamp(22px,2.6vw,34px)
   }
-  #dpage .sky-group.g1::before{background:radial-gradient(62% 76% at 42% 46%, rgba(232,211,162,.13), transparent 76%)}
-  #dpage .sky-group.g2::before{background:radial-gradient(62% 76% at 58% 50%, rgba(206,199,176,.13), transparent 76%)}
-  #dpage .sky-group.g3::before{background:radial-gradient(62% 76% at 46% 54%, rgba(170,160,213,.11), transparent 76%)}
+  #dpage .sky-group:first-of-type{margin-top:0}
+  #dpage .sky-group.g1{background:rgba(247,238,227,.88)}
+  #dpage .sky-group.g2{background:rgba(243,242,235,.88)}
+  #dpage .sky-group.g3{background:rgba(241,240,244,.88)}
   #dpage .sky-group-hd{
     display:flex;align-items:baseline;flex-wrap:wrap;gap:6px 12px;
     margin:0 0 clamp(12px,1.6vw,17px);position:relative
   }
-  /* 章节符号:与标题同一个色系,只比文字大一点点 —— 是重音,不是插图 */
-  #dpage .sky-group-hd .ic{
-    flex:none;display:inline-flex;align-items:center;color:#b0844b;
-    transform:translateY(1px)
-  }
+  /* 章节符号:跟着各自章节的标题色走,只比文字大一点点 —— 是重音,不是插图 */
+  #dpage .sky-group-hd .ic{flex:none;display:inline-flex;align-items:center;transform:translateY(1px)}
+  #dpage .g1 .sky-group-hd .ic,#dpage .g1 .sky-group-hd .nm{color:#a86f3d}
+  #dpage .g2 .sky-group-hd .ic,#dpage .g2 .sky-group-hd .nm{color:#8d7346}
+  #dpage .g3 .sky-group-hd .ic,#dpage .g3 .sky-group-hd .nm{color:#5d6178}
   /* 只有这三个标题上暗金色,后面的宫号与说明维持安静 */
   #dpage .sky-group-hd .nm{
-    font-family:var(--dp-serif);font-weight:600;font-size:17px;color:#a06937;
+    font-family:var(--dp-serif);font-weight:600;font-size:17px;
     letter-spacing:.04em;flex:none
   }
-  #dpage .sky-group-hd .nos{font-size:12px;letter-spacing:.14em;color:#a08f63;flex:none;font-variant-numeric:tabular-nums}
+  /* 宫号序列退到面板右缘:标题最强,序列安静 */
+  #dpage .sky-group-hd .nos{
+    font-size:12px;letter-spacing:.14em;color:#9c9382;flex:none;
+    font-variant-numeric:tabular-nums;margin-left:auto
+  }
   /* 说明永远自己占一行:标题与宫号在第一行,说明在第二行 */
   /* max-width 会让它的假想宽度缩到放得进第一行,于是又跟标题挤在一起;
      所以这里只留 flex-basis:100%,让它一定另起一行。 */
@@ -1090,21 +1095,23 @@
   #dpage .sky-houses{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:clamp(11px,1.4vw,16px)}
   #dpage .sky-house{
     position:relative;overflow:hidden;display:flex;flex-direction:column;
-    border:1px solid var(--dp-line);border-radius:18px;background:rgba(255,255,255,.58);
+    /* 半透明的白:自动比所属面板亮一级,也自动带一点点该章的色温,
+       所以十二张卡仍然是同一家族,不需要三套写死的底色。 */
+    border:1px solid rgba(255,255,255,.72);border-radius:18px;background:rgba(255,255,255,.72);
     padding:clamp(17px,2vw,22px);min-height:clamp(158px,15.5vw,186px);
     transition:border-color .35s,background .35s
   }
   /* 大数字同时是宫号与章节号:一眼看得到,但仍然在文字层次底下 */
   #dpage .sky-house .bg{
     position:absolute;right:16px;top:18px;pointer-events:none;user-select:none;
-    font-family:var(--dp-display);font-weight:300;font-size:clamp(52px,5.6vw,74px);line-height:1;
-    color:rgba(158,131,86,.46);letter-spacing:-.02em
+    font-family:var(--dp-display);font-weight:300;font-size:clamp(46px,4.9vw,64px);line-height:1;
+    color:#c1926b;letter-spacing:-.02em
   }
   #dpage .sky-house>*{position:relative}
   /* 这张卡的主角:一句话讲清楚这个领域是什么样的经验 */
   #dpage .sky-house .fld{
     font-family:var(--dp-serif);font-weight:600;font-size:17.5px;line-height:1.6;
-    color:var(--dp-ink);max-width:78%
+    color:var(--dp-ink);max-width:70%
   }
   #dpage .sky-house .sg{font-size:13px;color:rgba(34,35,58,.62);margin-top:10px}
   #dpage .sky-house .sg .d{color:var(--dp-mut);font-variant-numeric:tabular-nums}
@@ -1118,7 +1125,7 @@
   #dpage .sky-house .pl svg{flex:none;color:#4b4b73}
   #dpage .sky-house .pl b{font-weight:400;font-size:12px;color:var(--dp-mut)}
   #dpage .sky-house .pl .rx{font-style:normal;font-size:10px;color:#b4645a;margin-left:-2px}
-  @media(hover:hover){#dpage .sky-house:hover{border-color:rgba(184,166,120,.45);background:rgba(255,255,255,.8)}}
+  @media(hover:hover){#dpage .sky-house:hover{border-color:rgba(184,166,120,.4);background:rgba(255,255,255,.92)}}
   @media(max-width:1024px){#dpage .sky-houses{grid-template-columns:repeat(2,minmax(0,1fr))}}
   @media(max-width:600px){
     #dpage .sky-houses{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
@@ -1219,7 +1226,7 @@
   #dpage .air-house>.l{
     --at:-70px;--ab:-70px;overflow:hidden;
     background:radial-gradient(38% 26% at 86% 12%, rgba(232,211,162,.10), rgba(232,211,162,0) 72%);
-    opacity:.5
+    opacity:.32
   }
   #dpage .air-house>.l::before,#dpage .air-house>.l::after{
     content:"";position:absolute;border-radius:50%;border:1px solid rgba(184,166,120,.18)
@@ -1256,7 +1263,7 @@
   #dpage .sky-house{isolation:isolate}
   #dpage .sky-house.has::after{
     content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
-    background:radial-gradient(78% 62% at 84% 88%, rgba(232,211,162,.26), rgba(232,211,162,0) 74%)
+    background:radial-gradient(80% 64% at 84% 88%, rgba(201,162,126,.13), rgba(201,162,126,0) 74%)
   }
 
   /* ==========================================================
@@ -1295,20 +1302,22 @@
     #dpage .sky-card{flex:0 0 88%;scroll-snap-align:start}
 
     /* —— 十二宫:每一组自己就是一个 2×2,组与组之间留出章节感 —— */
-    #dpage .sky-group{margin-top:clamp(44px,10vw,58px)}
+    #dpage .sky-group{margin-top:clamp(26px,6vw,36px);border-radius:20px;padding:18px 15px}
+    /* 章节开头让它呼吸:标题一行、宫号一行、说明一行 */
+    #dpage .sky-group-hd .nos{flex:0 0 100%;margin-left:0;margin-top:2px}
     #dpage .sky-group-hd .nm{font-size:18px}
     #dpage .sky-houses{gap:11px}
     /* 窄卡片上宫号不再当水印躲在角落:直接进到卡片顶端,成为第一层视觉。
        语句因此不必再避开它,可以用满整个宽度自然换行。 */
     #dpage .sky-house .bg{
       position:static;display:block;font-size:32px;line-height:1;
-      margin:0 0 9px;color:rgba(158,131,86,.62)
+      margin:0 0 9px;color:#c1926b
     }
     #dpage .sky-group-hd .ic svg{width:14px;height:14px}
 
     /* 有行星的那几宫:手机上辉光再明显一点点,仍然不是换底色 */
     #dpage .sky-house.has::after{
-      background:radial-gradient(78% 62% at 84% 88%, rgba(232,211,162,.34), rgba(232,211,162,0) 74%)
+      background:radial-gradient(82% 66% at 84% 88%, rgba(201,162,126,.17), rgba(201,162,126,0) 76%)
     }
     /* 行星符号比中文名再明显一点 */
     #dpage .sky-house .pl svg{width:19px;height:19px}
@@ -1322,7 +1331,7 @@
 
     /* 直向滚动缺少横向变化,中段的空气比桌机明显一点(但仍然是象牙底为主)*/
     #dpage .air-core>.l{opacity:.95}
-    #dpage .air-house>.l{opacity:.9}
+    #dpage .air-house>.l{opacity:.55}
     #dpage .air-house>.l::before{width:940px;height:940px;left:-42%;top:2%}
     #dpage .air-house>.l::after{width:760px;height:760px;right:-40%;bottom:-8%}
     #dpage .air-note>.l{opacity:1}
