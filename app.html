@@ -1053,28 +1053,26 @@
      这一区现在是整页的主要资讯区:十二宫全开,行星直接画在自己那一宫里。
      背景保持干净的象牙底,不再叠云,也不用星座插画(那是四个核心的语言)——
      这一区的视觉语言是宫号本身:一个很淡的大字压在右上角。 */
-  /* 三个章节面板。不用边框、不用阴影,只靠底色的一点点差别把三章分开 ——
-     面板略带透明,底下那两道细弧仍然透得出来,三章因此还是同一片天空。
-     三种色温都只离页面的象牙底一两步:核心偏暖、发展中性、内在偏冷,
-     远看仍然是象牙 + 深蓝 + 香槟,凑近才觉得「这一章的光不太一样」。 */
+  /* 三个章节面板。不用边框、不用阴影,颜色本身就是分章的方式。
+     用实色而不是低透明度的叠色 —— 叠在象牙底上永远只会差个两三步,
+     缩到 25% 就消失了。核心暖香槟、发展哑光灰绿、内在雾灰紫,
+     与页面象牙底的明度差大约 12–18%,缩图也分得出来。 */
   #dpage .sky-group{
     position:relative;isolation:isolate;
     margin-top:clamp(22px,2.6vw,34px);
     border-radius:26px;padding:clamp(22px,2.6vw,34px)
   }
   #dpage .sky-group:first-of-type{margin-top:0}
-  #dpage .sky-group.g1{background:rgba(247,238,227,.88)}
-  #dpage .sky-group.g2{background:rgba(243,242,235,.88)}
-  #dpage .sky-group.g3{background:rgba(241,240,244,.88)}
+  #dpage .sky-group.g1{background:#efe1d3}
+  #dpage .sky-group.g2{background:#dfe6dc}
+  #dpage .sky-group.g3{background:#dfe1ea}
   #dpage .sky-group-hd{
     display:flex;align-items:baseline;flex-wrap:wrap;gap:6px 12px;
     margin:0 0 clamp(12px,1.6vw,17px);position:relative
   }
   /* 章节符号:跟着各自章节的标题色走,只比文字大一点点 —— 是重音,不是插图 */
   #dpage .sky-group-hd .ic{flex:none;display:inline-flex;align-items:center;transform:translateY(1px)}
-  #dpage .g1 .sky-group-hd .ic,#dpage .g1 .sky-group-hd .nm{color:#a86f3d}
-  #dpage .g2 .sky-group-hd .ic,#dpage .g2 .sky-group-hd .nm{color:#8d7346}
-  #dpage .g3 .sky-group-hd .ic,#dpage .g3 .sky-group-hd .nm{color:#5d6178}
+  #dpage .sky-group-hd .ic,#dpage .sky-group-hd .nm{color:#a86f3d}
   /* 只有这三个标题上暗金色,后面的宫号与说明维持安静 */
   #dpage .sky-group-hd .nm{
     font-family:var(--dp-serif);font-weight:600;font-size:17px;
@@ -1082,25 +1080,24 @@
   }
   /* 宫号序列退到面板右缘:标题最强,序列安静 */
   #dpage .sky-group-hd .nos{
-    font-size:12px;letter-spacing:.14em;color:#9c9382;flex:none;
+    font-size:12px;letter-spacing:.14em;color:#7f7a6c;flex:none;
     font-variant-numeric:tabular-nums;margin-left:auto
   }
   /* 说明永远自己占一行:标题与宫号在第一行,说明在第二行 */
   /* max-width 会让它的假想宽度缩到放得进第一行,于是又跟标题挤在一起;
      所以这里只留 flex-basis:100%,让它一定另起一行。 */
+  /* 面板底色变深,说明文字跟着压深一级,对比维持在 4.5:1 以上 */
   #dpage .sky-group-hd .ds{
-    font-size:12.5px;line-height:1.85;color:var(--dp-mut);
+    font-size:12.5px;line-height:1.85;color:#6b6a7c;
     flex:0 0 100%;min-width:0;margin-top:4px
   }
   #dpage .sky-houses{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:clamp(11px,1.4vw,16px)}
   #dpage .sky-house{
     position:relative;overflow:hidden;display:flex;flex-direction:column;
-    /* 半透明的白:自动比所属面板亮一级,也自动带一点点该章的色温,
-       所以十二张卡仍然是同一家族,不需要三套写死的底色。
-       边线用暖香槟而不是白:白色在面板上几乎看不见,尤其是发展领域那一章。
-       再加一层很宽、很淡的影子 —— 目的是「纸叠在纸上」,不是把卡片浮起来。 */
-    border:1px solid rgba(186,164,130,.45);border-radius:18px;background:rgba(255,255,255,.72);
-    box-shadow:0 6px 18px rgba(9,18,46,.05),0 1px 2px rgba(9,18,46,.03);
+    /* 卡片一律是同一张浅纸,不跟着章节染色 —— 有颜色的章节底 + 浅色的卡,
+       层次才出得来。边线是一条暖中性的细线,主要的分层交给底色去做。 */
+    border:1px solid #d8cabc;border-radius:18px;background:#fbf8f3;
+    box-shadow:0 4px 18px rgba(70,50,35,.06);
     padding:clamp(17px,2vw,22px);min-height:clamp(158px,15.5vw,186px);
     transition:border-color .24s ease,background .24s ease,box-shadow .24s ease,transform .24s ease
   }
@@ -1132,8 +1129,8 @@
      不缩放、不发光、不换底色。手机不靠 hover,预设的边线本身就够清楚。 */
   @media(hover:hover){
     #dpage .sky-house:hover{
-      border-color:rgba(176,148,106,.62);background:rgba(255,255,255,.9);
-      box-shadow:0 10px 26px rgba(9,18,46,.08),0 1px 2px rgba(9,18,46,.04);
+      border-color:#cbb69f;background:#fffdf9;
+      box-shadow:0 8px 24px rgba(70,50,35,.09);
       transform:translateY(-2px)
     }
   }
