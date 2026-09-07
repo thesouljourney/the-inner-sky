@@ -905,11 +905,11 @@
   }
   /* 标题在左、盘面在右;盘面本身与 drawInnerSkyWheel 都没有改动 */
   #dpage.sky-page .dp-hero-grid{
-    grid-template-columns:minmax(0,1fr) minmax(0,1.08fr);
+    grid-template-columns:minmax(0,1fr) minmax(0,1.38fr);
     gap:clamp(24px,4vw,64px);align-items:center
   }
   #dpage.sky-page .dp-hero-side{position:relative;min-width:0}
-  #dpage.sky-page .dp-hero-side .isky2{max-width:min(660px,100%);margin:0 auto}
+  #dpage.sky-page .dp-hero-side .isky2{max-width:min(740px,100%);margin:0 auto}
   #dpage.sky-page .dp-hero-side .isky2-tools{justify-content:center;margin:clamp(-26px,-2vw,-10px) 0 0}
   #dpage.sky-page .sky-script{
     position:absolute;right:-1%;bottom:14%;transform:rotate(-8deg);pointer-events:none;
@@ -1183,6 +1183,18 @@
   @media(max-width:767px){
     /* 盘面下方的签名只出现在桌机;手机上整句不显示 */
     #dpage.sky-page .sky-script{display:none}
+
+    /* —— 盘面:手机上是这一屏的主角 ——
+       让它突破 hero 的左右留白、在页面里置中,占到约 90vw。
+       用宽度与负 margin,不用 transform:scale() —— 缩放会带来溢出与糊边。
+       等比例、不裁切,黄道标签与四轴一样完整。 */
+    #dpage.sky-page .dp-hero-side .isky2{
+      width:90vw;max-width:90vw;
+      margin-left:calc(50% - 45vw);margin-right:calc(50% - 45vw)
+    }
+    /* 盘面变大之后,方形容器与圆之间的空隙跟着变大,按钮往上收一点,
+       盘面 → 签名 → 四个核心之间不要断开 */
+    #dpage.sky-page .dp-hero-side .isky2-tools{margin-top:-16px}
 
     /* —— 四个核心:横向滑动,露出下一张的边,让人知道可以滑 ——
        卡片本身的设计、插画与字级都没有换,只是换了排列方式。 */
