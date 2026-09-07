@@ -1096,10 +1096,13 @@
   #dpage .sky-house{
     position:relative;overflow:hidden;display:flex;flex-direction:column;
     /* 半透明的白:自动比所属面板亮一级,也自动带一点点该章的色温,
-       所以十二张卡仍然是同一家族,不需要三套写死的底色。 */
-    border:1px solid rgba(255,255,255,.72);border-radius:18px;background:rgba(255,255,255,.72);
+       所以十二张卡仍然是同一家族,不需要三套写死的底色。
+       边线用暖香槟而不是白:白色在面板上几乎看不见,尤其是发展领域那一章。
+       再加一层很宽、很淡的影子 —— 目的是「纸叠在纸上」,不是把卡片浮起来。 */
+    border:1px solid rgba(186,164,130,.45);border-radius:18px;background:rgba(255,255,255,.72);
+    box-shadow:0 6px 18px rgba(9,18,46,.05),0 1px 2px rgba(9,18,46,.03);
     padding:clamp(17px,2vw,22px);min-height:clamp(158px,15.5vw,186px);
-    transition:border-color .35s,background .35s
+    transition:border-color .24s ease,background .24s ease,box-shadow .24s ease,transform .24s ease
   }
   /* 大数字同时是宫号与章节号:一眼看得到,但仍然在文字层次底下 */
   #dpage .sky-house .bg{
@@ -1125,7 +1128,16 @@
   #dpage .sky-house .pl svg{flex:none;color:#4b4b73}
   #dpage .sky-house .pl b{font-weight:400;font-size:12px;color:var(--dp-mut)}
   #dpage .sky-house .pl .rx{font-style:normal;font-size:10px;color:#b4645a;margin-left:-2px}
-  @media(hover:hover){#dpage .sky-house:hover{border-color:rgba(184,166,120,.4);background:rgba(255,255,255,.92)}}
+  /* 桌机 hover:很轻的一下 —— 边线清楚一点、抬起 2px、影子稍微明显。
+     不缩放、不发光、不换底色。手机不靠 hover,预设的边线本身就够清楚。 */
+  @media(hover:hover){
+    #dpage .sky-house:hover{
+      border-color:rgba(176,148,106,.62);background:rgba(255,255,255,.9);
+      box-shadow:0 10px 26px rgba(9,18,46,.08),0 1px 2px rgba(9,18,46,.04);
+      transform:translateY(-2px)
+    }
+  }
+  @media (prefers-reduced-motion:reduce){#dpage .sky-house{transition:none}#dpage .sky-house:hover{transform:none}}
   @media(max-width:1024px){#dpage .sky-houses{grid-template-columns:repeat(2,minmax(0,1fr))}}
   @media(max-width:600px){
     #dpage .sky-houses{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
