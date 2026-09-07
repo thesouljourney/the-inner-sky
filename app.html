@@ -852,7 +852,10 @@
   /* 这一页比其他内页宽:四张核心卡并排、行星与宫位都要摊得开。
      只作用在 #/my-sky(sky-page 由 renderRoute 挂上),不影响其他页面。 */
   #dpage.sky-page{--dp-wide:min(84vw,1400px)}
-  #dpage.sky-page .dp-body{padding:clamp(20px,2.6vw,36px) clamp(16px,3vw,40px) 80px}
+  #dpage.sky-page .dp-body{
+    --sky-pad:clamp(16px,3vw,40px);
+    padding:clamp(20px,2.6vw,36px) var(--sky-pad) 80px
+  }
 
   /* ==========================================================
      云天:整页只有上下两端有天空,中段是干净的象牙底。
@@ -1043,13 +1046,6 @@
   }
   #dpage .sky-asp .rel .g{font-size:13px;line-height:1;color:#a9915c}
   #dpage .sky-asp .orb{font-size:12.5px;color:#9c9aa8;font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
-  @media(max-width:720px){
-    #dpage .sky-asp{grid-template-columns:minmax(0,1fr) auto;row-gap:7px;padding:15px 2px}
-    #dpage .sky-asp .pn{grid-column:1;grid-row:1}
-    #dpage .sky-asp .lk{grid-column:1/-1;grid-row:2;padding:1px 0}
-    #dpage .sky-asp .pn.b{grid-column:1;grid-row:3;justify-content:flex-start;text-align:left}
-    #dpage .sky-asp .orb{grid-column:2;grid-row:1}
-  }
 
   /* —— 十二个生命领域:编辑式方块,不是十二张大卡片 —— */
   #dpage .sky-houses{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:clamp(11px,1.4vw,16px)}
@@ -1085,7 +1081,7 @@
   #dpage .sky-house .bg{
     position:absolute;right:14px;top:20px;pointer-events:none;user-select:none;
     font-family:var(--dp-display);font-weight:300;font-size:clamp(46px,5vw,66px);line-height:1;
-    color:rgba(34,35,58,.055);letter-spacing:-.02em
+    color:rgba(162,134,92,.24);letter-spacing:-.02em
   }
   #dpage .sky-house>*{position:relative}
   /* 这张卡的主角:一句话讲清楚这个领域是什么样的经验 */
@@ -1113,7 +1109,7 @@
     #dpage .sky-house .fld{font-size:15.5px;max-width:70%}
     #dpage .sky-house .sg{font-size:12px;margin-top:9px}
     /* 窄卡片上语句会折成两行,大数字再淡一点、再往边上靠一点 */
-    #dpage .sky-house .bg{font-size:40px;right:10px;top:16px;color:rgba(34,35,58,.048)}
+    #dpage .sky-house .bg{font-size:40px;right:10px;top:16px;color:rgba(162,134,92,.26)}
     #dpage .sky-house .pls{gap:4px 10px;padding-top:12px}
     #dpage .sky-house .pl b{font-size:11px}
     #dpage .sky-group-hd .ds{flex-basis:100%}
@@ -1179,9 +1175,57 @@
   #dpage .sky-close .back{
     display:block;width:fit-content;margin:clamp(18px,2.2vw,24px) auto 0
   }
-  @media(max-width:900px){
-    /* 手机上云再淡一些,并且只留窄窄一条在边缘,不压到文字 */
-    #dpage .sky-atmos::before,#dpage .sky-atmos::after{width:34vw;opacity:calc(var(--op,.1) * .66)}
+  /* ==========================================================
+     手机版(≤767px)—— 只改呈现,资料与桌机版都不动。
+     所有规则都收在这一个 media query 里,而且放在最后,
+     不会外溢到桌机;桌机除了大宫号的颜色以外完全没有变。
+     ========================================================== */
+  @media(max-width:767px){
+    /* —— 盘面下方的签名:手机上只留后半句,轻轻靠右 —— */
+    #dpage.sky-page .sky-script{
+      position:static;transform:none;opacity:.85;
+      text-align:right;padding-right:7%;margin-top:10px
+    }
+    #dpage.sky-page .sky-script .a{display:none}
+
+    /* —— 四个核心:横向滑动,露出下一张的边,让人知道可以滑 ——
+       卡片本身的设计、插画与字级都没有换,只是换了排列方式。 */
+    #dpage .sky-core{
+      display:flex;gap:12px;
+      overflow-x:auto;overscroll-behavior-x:contain;
+      scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;
+      scrollbar-width:none;-ms-overflow-style:none;
+      /* 往两侧的页面留白铺出去,第一张可以贴齐页缘,最后一张仍有右边距 */
+      margin-left:calc(-1 * var(--sky-pad));margin-right:calc(-1 * var(--sky-pad));
+      padding:2px var(--sky-pad) 8px
+    }
+    #dpage .sky-core::-webkit-scrollbar{display:none}
+    #dpage .sky-card{flex:0 0 88%;scroll-snap-align:start}
+
+    /* —— 十二宫:每一组自己就是一个 2×2,组与组之间留出章节感 —— */
+    #dpage .sky-group{margin-top:clamp(30px,7vw,40px)}
+    #dpage .sky-group-hd .nm{font-size:18px}
+    #dpage .sky-houses{gap:11px}
+    /* 有行星的那几宫:极淡的暖边,只是让眼睛扫过时注意得到,不加任何标记 */
+    #dpage .sky-house.has{border-color:rgba(184,166,120,.42)}
+    /* 行星符号比中文名再明显一点 */
+    #dpage .sky-house .pl svg{width:19px;height:19px}
+    #dpage .sky-house .pl b{font-size:11.5px}
+
+    /* —— 中场:资料与资料之间真正停一下 —— */
+    #dpage .sky-pause{margin:clamp(64px,15vw,84px) 0}
+
+    /* —— 相位:两颗星分列左右,关系与容许度落在中间下方 ——
+       不是把桌机那条横线压扁,也不回到表格。 */
+    #dpage .sky-asp{
+      grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+      row-gap:9px;column-gap:10px;padding:16px 2px
+    }
+    #dpage .sky-asp .pn{grid-column:1;grid-row:1;font-size:15px}
+    #dpage .sky-asp .pn.b{grid-column:2;grid-row:1;justify-content:flex-end;text-align:right}
+    #dpage .sky-asp .lk{grid-column:1/-1;grid-row:2;justify-content:center}
+    #dpage .sky-asp .lk .ln{max-width:64px}
+    #dpage .sky-asp .orb{grid-column:1/-1;grid-row:3;text-align:center}
   }
   /* 划词收藏:轻盈的浮动动作,不打断阅读 */
   #dpSaveTip{position:absolute;z-index:90;display:none;align-items:center;gap:6px;
@@ -6503,7 +6547,8 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
         esc0(dpT("完整星盘", "Full natal chart")) + '"></div>' +
         '<div class="isky2-tools"><button type="button" id="dpAspToggle">' +
         dpT("隐藏相位线", "Hide aspects") + '</button></div>' +
-        '<div class="sky-script" aria-hidden="true">Same sky.<br>Different you.</div>';
+        '<div class="sky-script" aria-hidden="true">' +
+        '<span class="a">Same sky.<br></span><span class="b">Different you.</span></div>';
       heroLead =
         '<div class="sky-latin">A map of the sky,<br>for the one and only you.</div>' +
         (sub ? '<div class="sky-meta">' + sub + '</div>' : "");
@@ -6577,7 +6622,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       const houseTile = function (i) {
         const g = signOf(res.cusps[i]);
         const pls = byHouse[i + 1] || [];
-        return '<div class="sky-house">' +
+        return '<div class="sky-house' + (pls.length ? " has" : "") + '">' +
           '<span class="bg" aria-hidden="true">' + ("0" + (i + 1)).slice(-2) + '</span>' +
           '<div class="fld">' + esc0(SKY_FIELD[i][EN ? 1 : 0]) + '</div>' +
           '<div class="sg">' + esc0(g.name) + '<span class="d"> · ' + esc0(C.fmtDeg(g.deg)) + '</span></div>' +
