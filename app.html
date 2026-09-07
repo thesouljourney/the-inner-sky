@@ -1053,15 +1053,26 @@
      这一区现在是整页的主要资讯区:十二宫全开,行星直接画在自己那一宫里。
      背景保持干净的象牙底,不再叠云,也不用星座插画(那是四个核心的语言)——
      这一区的视觉语言是宫号本身:一个很淡的大字压在右上角。 */
-  #dpage .sky-group{margin-top:clamp(22px,2.8vw,34px)}
+  /* 三组读起来要像三个章节,所以彼此之间留得比组内多 */
+  #dpage .sky-group{position:relative;isolation:isolate;margin-top:clamp(30px,3.6vw,46px)}
   #dpage .sky-group:first-of-type{margin-top:0}
-  #dpage .sky-group-hd{
-    display:flex;align-items:baseline;flex-wrap:wrap;gap:6px 14px;
-    margin:0 0 clamp(12px,1.6vw,17px);padding-left:13px;position:relative
+  /* 每一组一层极淡的空气。用 radial + transparent 收边,不会变成三个色块;
+     强度大约 2–3%,是感觉得到、但不会意识到「这里换底色了」的程度。 */
+  #dpage .sky-group::before{
+    content:"";position:absolute;z-index:-1;pointer-events:none;
+    left:calc(50% - 50vw);right:calc(50% - 50vw);top:-26px;bottom:-26px
   }
-  #dpage .sky-group-hd::before{
-    content:"";position:absolute;left:0;top:.15em;bottom:.15em;width:2px;border-radius:2px;
-    background:rgba(184,166,120,.75)
+  #dpage .sky-group.g1::before{background:radial-gradient(62% 76% at 42% 46%, rgba(232,211,162,.13), transparent 76%)}
+  #dpage .sky-group.g2::before{background:radial-gradient(62% 76% at 58% 50%, rgba(206,199,176,.13), transparent 76%)}
+  #dpage .sky-group.g3::before{background:radial-gradient(62% 76% at 46% 54%, rgba(170,160,213,.11), transparent 76%)}
+  #dpage .sky-group-hd{
+    display:flex;align-items:baseline;flex-wrap:wrap;gap:6px 12px;
+    margin:0 0 clamp(12px,1.6vw,17px);position:relative
+  }
+  /* 章节符号:与标题同一个色系,只比文字大一点点 —— 是重音,不是插图 */
+  #dpage .sky-group-hd .ic{
+    flex:none;display:inline-flex;align-items:center;color:#b0844b;
+    transform:translateY(1px)
   }
   /* 只有这三个标题上暗金色,后面的宫号与说明维持安静 */
   #dpage .sky-group-hd .nm{
@@ -1074,7 +1085,7 @@
      所以这里只留 flex-basis:100%,让它一定另起一行。 */
   #dpage .sky-group-hd .ds{
     font-size:12.5px;line-height:1.85;color:var(--dp-mut);
-    flex:0 0 100%;min-width:0;margin-top:3px
+    flex:0 0 100%;min-width:0;margin-top:4px
   }
   #dpage .sky-houses{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:clamp(11px,1.4vw,16px)}
   #dpage .sky-house{
@@ -1083,11 +1094,11 @@
     padding:clamp(17px,2vw,22px);min-height:clamp(158px,15.5vw,186px);
     transition:border-color .35s,background .35s
   }
-  /* 大数字现在同时是宫号与章节号,所以从贴边挪开一点,像章节编号而不是标签 */
+  /* 大数字同时是宫号与章节号:一眼看得到,但仍然在文字层次底下 */
   #dpage .sky-house .bg{
-    position:absolute;right:14px;top:20px;pointer-events:none;user-select:none;
-    font-family:var(--dp-display);font-weight:300;font-size:clamp(46px,5vw,66px);line-height:1;
-    color:rgba(162,134,92,.24);letter-spacing:-.02em
+    position:absolute;right:16px;top:18px;pointer-events:none;user-select:none;
+    font-family:var(--dp-display);font-weight:300;font-size:clamp(52px,5.6vw,74px);line-height:1;
+    color:rgba(158,131,86,.46);letter-spacing:-.02em
   }
   #dpage .sky-house>*{position:relative}
   /* 这张卡的主角:一句话讲清楚这个领域是什么样的经验 */
@@ -1111,11 +1122,9 @@
   @media(max-width:1024px){#dpage .sky-houses{grid-template-columns:repeat(2,minmax(0,1fr))}}
   @media(max-width:600px){
     #dpage .sky-houses{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-    #dpage .sky-house{padding:15px 14px;min-height:150px;border-radius:16px}
-    #dpage .sky-house .fld{font-size:15.5px;max-width:70%}
+    #dpage .sky-house{padding:16px 15px;min-height:172px;border-radius:16px}
+    #dpage .sky-house .fld{font-size:15.5px}
     #dpage .sky-house .sg{font-size:12px;margin-top:9px}
-    /* 窄卡片上语句会折成两行,大数字再淡一点、再往边上靠一点 */
-    #dpage .sky-house .bg{font-size:40px;right:10px;top:16px;color:rgba(162,134,92,.26)}
     #dpage .sky-house .pls{gap:4px 10px;padding-top:12px}
     #dpage .sky-house .pl b{font-size:11px}
   }
@@ -1247,7 +1256,7 @@
   #dpage .sky-house{isolation:isolate}
   #dpage .sky-house.has::after{
     content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
-    background:radial-gradient(76% 60% at 84% 88%, rgba(232,211,162,.20), rgba(232,211,162,0) 72%)
+    background:radial-gradient(78% 62% at 84% 88%, rgba(232,211,162,.26), rgba(232,211,162,0) 74%)
   }
 
   /* ==========================================================
@@ -1286,9 +1295,17 @@
     #dpage .sky-card{flex:0 0 88%;scroll-snap-align:start}
 
     /* —— 十二宫:每一组自己就是一个 2×2,组与组之间留出章节感 —— */
-    #dpage .sky-group{margin-top:clamp(30px,7vw,40px)}
+    #dpage .sky-group{margin-top:clamp(44px,10vw,58px)}
     #dpage .sky-group-hd .nm{font-size:18px}
     #dpage .sky-houses{gap:11px}
+    /* 窄卡片上宫号不再当水印躲在角落:直接进到卡片顶端,成为第一层视觉。
+       语句因此不必再避开它,可以用满整个宽度自然换行。 */
+    #dpage .sky-house .bg{
+      position:static;display:block;font-size:32px;line-height:1;
+      margin:0 0 9px;color:rgba(158,131,86,.62)
+    }
+    #dpage .sky-group-hd .ic svg{width:14px;height:14px}
+
     /* 有行星的那几宫:手机上辉光再明显一点点,仍然不是换底色 */
     #dpage .sky-house.has::after{
       background:radial-gradient(78% 62% at 84% 88%, rgba(232,211,162,.34), rgba(232,211,162,0) 74%)
@@ -6739,14 +6756,26 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       };
       /* 三组的名字用一般人听得懂的说法,不写「角宫 / 续宫 / 果宫」。
          分组只是让十二个宫读起来有条理,不是新的占星判断。 */
+      /* 三个小符号:四角星 / 新芽 / 弯月。手写的 inline SVG,单色跟着章节色走,
+         专案本来就没有图示库,这里也不为了三个符号引进一个。 */
+      const SKY_SYM = {
+        star: '<svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true" focusable="false">' +
+          '<path fill="currentColor" d="M8 .8c.55 4.1 3.1 6.65 7.2 7.2-4.1.55-6.65 3.1-7.2 7.2-.55-4.1-3.1-6.65-7.2-7.2C4.9 7.45 7.45 4.9 8 .8Z"/></svg>',
+        /* 一片叶子:13px 下比「茎 + 两片小叶」清楚得多(那样会看成一个 Y) */
+        sprout: '<svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true" focusable="false">' +
+          '<path fill="currentColor" d="M13.9 1.9c.7 6.2-3.2 11-10.2 12C2.6 7.9 6.6 2.8 13.9 1.9Z"/>' +
+          '<path fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" d="M2.1 14.4 6.2 9.9"/></svg>',
+        moon: '<svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true" focusable="false">' +
+          '<path fill="currentColor" d="M10.9 1.6A6.6 6.6 0 1 0 13.6 10.6 5.3 5.3 0 0 1 10.9 1.6Z"/></svg>'
+      };
       const SKY_GROUPS = [
-        { ids: [1, 4, 7, 10], nm: ["核心领域", "Core Areas"],
+        { ids: [1, 4, 7, 10], sym: SKY_SYM.star, cls: "g1", nm: ["核心领域", "Core Areas"],
           ds: ["与你的自我、家庭、关系与事业有关，是人生中最直接、最容易被感受到的领域。",
                "Your self, home, relationships and work — the areas you feel most directly."] },
-        { ids: [2, 5, 8, 11], nm: ["发展领域", "Growth Areas"],
+        { ids: [2, 5, 8, 11], sym: SKY_SYM.sprout, cls: "g2", nm: ["发展领域", "Growth Areas"],
           ds: ["与你的资源、创造、转化与社群有关，是随着经历逐渐累积与发展的领域。",
                "Your resources, creativity, change and community — the areas that build up over time."] },
-        { ids: [3, 6, 9, 12], nm: ["内在领域", "Inner Areas"],
+        { ids: [3, 6, 9, 12], sym: SKY_SYM.moon, cls: "g3", nm: ["内在领域", "Inner Areas"],
           ds: ["与你的学习、日常、信念与内在世界有关，是帮助你理解、调整与沉淀自己的领域。",
                "Your learning, routines, beliefs and inner world — where you make sense of yourself."] }
       ];
@@ -6757,7 +6786,8 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
           "The twelve houses mark the different areas a life is lived in. The planets inside them are the energies at work there.")) +
         '</div></div>' +
         SKY_GROUPS.map(function (gp) {
-          return '<div class="sky-group"><div class="sky-group-hd">' +
+          return '<div class="sky-group ' + gp.cls + '"><div class="sky-group-hd">' +
+            '<span class="ic" aria-hidden="true">' + gp.sym + '</span>' +
             '<span class="nm">' + esc0(gp.nm[EN ? 1 : 0]) + '</span>' +
             '<span class="nos">' + gp.ids.join(" · ") + '</span>' +
             '<span class="ds">' + esc0(gp.ds[EN ? 1 : 0]) + '</span></div>' +
