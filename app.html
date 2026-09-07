@@ -1181,12 +1181,8 @@
      不会外溢到桌机;桌机除了大宫号的颜色以外完全没有变。
      ========================================================== */
   @media(max-width:767px){
-    /* —— 盘面下方的签名:手机上只留后半句,轻轻靠右 —— */
-    #dpage.sky-page .sky-script{
-      position:static;transform:none;opacity:.85;
-      text-align:right;padding-right:7%;margin-top:10px
-    }
-    #dpage.sky-page .sky-script .a{display:none}
+    /* 盘面下方的签名只出现在桌机;手机上整句不显示 */
+    #dpage.sky-page .sky-script{display:none}
 
     /* —— 四个核心:横向滑动,露出下一张的边,让人知道可以滑 ——
        卡片本身的设计、插画与字级都没有换,只是换了排列方式。 */
