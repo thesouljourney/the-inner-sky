@@ -1069,7 +1069,13 @@
     letter-spacing:.04em;flex:none
   }
   #dpage .sky-group-hd .nos{font-size:12px;letter-spacing:.14em;color:#a08f63;flex:none;font-variant-numeric:tabular-nums}
-  #dpage .sky-group-hd .ds{font-size:12.5px;line-height:1.85;color:var(--dp-mut);flex:1 1 320px;min-width:0}
+  /* 说明永远自己占一行:标题与宫号在第一行,说明在第二行 */
+  /* max-width 会让它的假想宽度缩到放得进第一行,于是又跟标题挤在一起;
+     所以这里只留 flex-basis:100%,让它一定另起一行。 */
+  #dpage .sky-group-hd .ds{
+    font-size:12.5px;line-height:1.85;color:var(--dp-mut);
+    flex:0 0 100%;min-width:0;margin-top:3px
+  }
   #dpage .sky-houses{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:clamp(11px,1.4vw,16px)}
   #dpage .sky-house{
     position:relative;overflow:hidden;display:flex;flex-direction:column;
@@ -1112,7 +1118,6 @@
     #dpage .sky-house .bg{font-size:40px;right:10px;top:16px;color:rgba(162,134,92,.26)}
     #dpage .sky-house .pls{gap:4px 10px;padding-top:12px}
     #dpage .sky-house .pl b{font-size:11px}
-    #dpage .sky-group-hd .ds{flex-basis:100%}
   }
 
   /* —— 展开:同一个区段里长出来,不开 modal、不换页 ——
@@ -1176,6 +1181,76 @@
     display:block;width:fit-content;margin:clamp(18px,2.2vw,24px) auto 0
   }
   /* ==========================================================
+     中段的空气层
+     ------------------------------------------------------------
+     页面上下两端是真的天空,中间原本是一整片平的象牙白。这里补几层
+     极淡的光,让天空的感觉一路延续下来 —— 全部是 CSS 渐层与两条细弧,
+     没有加图片、没有动画、没有 parallax,也不叠在文字上面。
+     每一层都放在 z-index:-1,父层 isolation:isolate,所以永远在内容底下。
+     手机比桌机明显一点(直向滚动缺少横向变化,桌机则本来就够丰富)。
+     ========================================================== */
+  #dpage .sky-air{position:relative;isolation:isolate}
+  #dpage .sky-air>.l{
+    position:absolute;z-index:-1;pointer-events:none;
+    left:calc(50% - 50vw);right:calc(50% - 50vw);
+    top:var(--at,-60px);bottom:var(--ab,-60px)
+  }
+
+  /* 四个核心:一片柔和的珠光,从右上进来、往左下化开 */
+  #dpage .air-core>.l{
+    --at:-90px;--ab:-50px;
+    background:
+      radial-gradient(50% 44% at 80% 22%, rgba(232,211,162,.16), rgba(232,211,162,0) 70%),
+      radial-gradient(44% 40% at 12% 78%, rgba(170,160,213,.11), rgba(170,160,213,0) 72%);
+    opacity:.55
+  }
+
+  /* 十二宫:两道超大的细弧。不是星盘、没有符号,只是让平的象牙底有远近。
+     圆心刻意落在内容区之外,所以画面里只会出现弧的一段。 */
+  #dpage .air-house>.l{
+    --at:-70px;--ab:-70px;overflow:hidden;
+    background:radial-gradient(38% 26% at 86% 12%, rgba(232,211,162,.10), rgba(232,211,162,0) 72%);
+    opacity:.5
+  }
+  #dpage .air-house>.l::before,#dpage .air-house>.l::after{
+    content:"";position:absolute;border-radius:50%;border:1px solid rgba(184,166,120,.18)
+  }
+  #dpage .air-house>.l::before{width:1560px;height:1560px;left:-30%;top:4%}
+  #dpage .air-house>.l::after{
+    width:1180px;height:1180px;right:-26%;bottom:-16%;border-color:rgba(170,160,213,.15)
+  }
+
+  /* 中场:光落在纸上 —— 白心 + 香槟 + 一点灰紫,四周自然化开,没有边界 */
+  #dpage .air-note>.l{
+    --at:-40px;--ab:-40px;
+    background:
+      radial-gradient(40% 54% at 50% 46%, rgba(255,255,255,.9), rgba(255,255,255,0) 72%),
+      radial-gradient(56% 66% at 50% 44%, rgba(232,211,162,.17), rgba(232,211,162,0) 72%),
+      radial-gradient(72% 80% at 50% 58%, rgba(170,160,213,.10), rgba(170,160,213,0) 76%);
+    opacity:.7
+  }
+
+  /* 相位:几颗极淡的光点。是「几颗」,不是星空 —— 桌机 5 颗、手机 7 颗。 */
+  #dpage .air-dust>.l{
+    --at:-50px;--ab:-50px;
+    background:
+      radial-gradient(1.7px 1.7px at 11% 24%, rgba(184,166,120,.55), transparent 100%),
+      radial-gradient(1.3px 1.3px at 79% 13%, rgba(184,166,120,.42), transparent 100%),
+      radial-gradient(1.9px 1.9px at 92% 62%, rgba(170,160,213,.4), transparent 100%),
+      radial-gradient(1.2px 1.2px at 26% 82%, rgba(184,166,120,.38), transparent 100%),
+      radial-gradient(1.5px 1.5px at 62% 92%, rgba(170,160,213,.34), transparent 100%);
+    background-repeat:no-repeat;opacity:.6
+  }
+
+  /* 落在这一宫的行星:卡片右下一点极淡的珠光,不是换底色、不是边框加粗。
+     用 ::after 而不是 background,滑过卡片时底色变化不会把它盖掉。 */
+  #dpage .sky-house{isolation:isolate}
+  #dpage .sky-house.has::after{
+    content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
+    background:radial-gradient(76% 60% at 84% 88%, rgba(232,211,162,.20), rgba(232,211,162,0) 72%)
+  }
+
+  /* ==========================================================
      手机版(≤767px)—— 只改呈现,资料与桌机版都不动。
      所有规则都收在这一个 media query 里,而且放在最后,
      不会外溢到桌机;桌机除了大宫号的颜色以外完全没有变。
@@ -1214,14 +1289,38 @@
     #dpage .sky-group{margin-top:clamp(30px,7vw,40px)}
     #dpage .sky-group-hd .nm{font-size:18px}
     #dpage .sky-houses{gap:11px}
-    /* 有行星的那几宫:极淡的暖边,只是让眼睛扫过时注意得到,不加任何标记 */
-    #dpage .sky-house.has{border-color:rgba(184,166,120,.42)}
+    /* 有行星的那几宫:手机上辉光再明显一点点,仍然不是换底色 */
+    #dpage .sky-house.has::after{
+      background:radial-gradient(78% 62% at 84% 88%, rgba(232,211,162,.34), rgba(232,211,162,0) 74%)
+    }
     /* 行星符号比中文名再明显一点 */
     #dpage .sky-house .pl svg{width:19px;height:19px}
     #dpage .sky-house .pl b{font-size:11.5px}
 
     /* —— 中场:资料与资料之间真正停一下 —— */
     #dpage .sky-pause{margin:clamp(64px,15vw,84px) 0}
+    /* 92% 的上限会让第二行在窄萤幕上断在「更多能」/「量，」之间,
+       文案一个字都没改,只是把可用宽度放满。 */
+    #dpage .sky-pause .say{max-width:100%}
+
+    /* 直向滚动缺少横向变化,中段的空气比桌机明显一点(但仍然是象牙底为主)*/
+    #dpage .air-core>.l{opacity:.95}
+    #dpage .air-house>.l{opacity:.9}
+    #dpage .air-house>.l::before{width:940px;height:940px;left:-42%;top:2%}
+    #dpage .air-house>.l::after{width:760px;height:760px;right:-40%;bottom:-8%}
+    #dpage .air-note>.l{opacity:1}
+    #dpage .air-dust>.l{
+      opacity:.9;
+      background:
+        radial-gradient(1.8px 1.8px at 11% 24%, rgba(184,166,120,.6), transparent 100%),
+        radial-gradient(1.4px 1.4px at 79% 13%, rgba(184,166,120,.48), transparent 100%),
+        radial-gradient(2px 2px at 92% 58%, rgba(170,160,213,.45), transparent 100%),
+        radial-gradient(1.3px 1.3px at 26% 82%, rgba(184,166,120,.42), transparent 100%),
+        radial-gradient(1.6px 1.6px at 62% 92%, rgba(170,160,213,.38), transparent 100%),
+        radial-gradient(1.2px 1.2px at 45% 34%, rgba(184,166,120,.3), transparent 100%),
+        radial-gradient(1.5px 1.5px at 88% 88%, rgba(170,160,213,.3), transparent 100%);
+      background-repeat:no-repeat
+    }
 
     /* —— 相位:两颗星分列左右,关系与容许度落在中间下方 ——
        不是把桌机那条横线压扁,也不回到表格。 */
@@ -6586,7 +6685,8 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       core.push({ gl: "", tx: "MC", lb: dpT("天顶 MC", "MIDHEAVEN"), sign: mcS.name, lat: lat(mcS.idx), idx: mcS.idx, house: 10,
         ttl: dpT("人生方向", "Direction"), sb: dpT("你渴望成为的样子", "Who you're becoming") });
 
-      body += '<div class="sky-hd lead">' +
+      body += '<div class="sky-air air-core"><span class="l" aria-hidden="true"></span>' +
+        '<div class="sky-hd lead">' +
         '<h2>' + esc0(dpT("先认识你的四个核心", "Start with your four cornerstones")) + '</h2>' +
         '<div class="note">' + esc0(dpT("这四个位置，构成了你生命的基本轮廓。",
           "These four placements outline the basic shape of a life.")) + '</div></div>' +
@@ -6602,7 +6702,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
             '<div class="rule" aria-hidden="true"></div>' +
             '<div class="ttl">' + esc0(k.ttl) + '</div>' +
             '<div class="sub">' + esc0(k.sb) + '</div></article>';
-        }).join("") + '</div>';
+        }).join("") + '</div></div>';
 
       /* —— 3. 十二个生命领域 ——
          这一段现在是整页的主要资讯区:十二宫全部摊开,不再收起,
@@ -6650,7 +6750,8 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
           ds: ["与你的学习、日常、信念与内在世界有关，是帮助你理解、调整与沉淀自己的领域。",
                "Your learning, routines, beliefs and inner world — where you make sense of yourself."] }
       ];
-      body += '<section class="sky-sec"><div class="sky-hd">' +
+      body += '<section class="sky-sec sky-air air-house">' +
+        '<span class="l" aria-hidden="true"></span><div class="sky-hd">' +
         '<h2>' + esc0(dpT("你的十二个生命领域", "Your twelve fields of life")) + '</h2>' +
         '<div class="note">' + esc0(dpT("十二宫位象徵人生不同的领域，落在其中的行星，就是那个领域里正在运作的能量。",
           "The twelve houses mark the different areas a life is lived in. The planets inside them are the energies at work there.")) +
@@ -6665,7 +6766,8 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
 
       /* —— 4. 中场:十二宫之后、相位之前的一次呼吸 ——
          纯编辑文案,不下任何新的占星判断。 */
-      body += '<section class="sky-pause">' +
+      body += '<section class="sky-pause sky-air air-note">' +
+        '<span class="l" aria-hidden="true"></span>' +
         '<span class="st" aria-hidden="true">✦</span>' +
         '<div class="say">' + esc0(dpT("你的星空里，\n有些领域承载着更多能量，\n也更容易被你感受到。",
           "In your sky, some areas carry\nmore energy than others —\nand you feel them more.")) + '</div>' +
@@ -6695,7 +6797,8 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
             nm(pb, " b") +
             '<span class="orb">' + esc0(C.fmtDeg(Math.abs(a.orb))) + '</span></div>';
         };
-        body += '<section class="sky-sec"><div class="sky-hd">' +
+        body += '<section class="sky-sec sky-air air-dust">' +
+          '<span class="l" aria-hidden="true"></span><div class="sky-hd">' +
           '<h2>' + esc0(dpT("星盘之间的对话", "Conversations inside your chart")) + '</h2>' +
           '<div class="note">' + esc0(dpT("相位显示行星之间的角度关系，揭示这些能量如何互动、流动。",
             "Aspects are the angles between planets — how these energies meet and move together.")) + '</div></div>' +
