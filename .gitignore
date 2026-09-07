@@ -1,3 +1,9 @@
 node_modules/
 tools/ephe/
 .DS_Store
+
+# design canvas 的中间产物:extract.js / extract-mysky.js 抓下来的原始 DOM,
+# 以及 seed-canvas.mjs 打包出来的 4MB 画布档 —— 都能重新产生,不进版控。
+design/raw.json
+design/raw-mysky.json
+inner-sky-canvas.html

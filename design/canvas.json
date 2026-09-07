@@ -1,45 +1,77 @@
 {
   "artboards": [
     {
-      "file": "Hero.dc.html",
+      "file": "Sky-Hero.dc.html",
       "x": 0,
+      "y": 0,
+      "w": 1440,
+      "h": 880,
+      "title": "我的完整星盘 · 云天开场"
+    },
+    {
+      "file": "Sky-Core.dc.html",
+      "x": 1560,
+      "y": 0,
+      "w": 1440,
+      "h": 600,
+      "title": "四个核心"
+    },
+    {
+      "file": "Sky-Houses.dc.html",
+      "x": 1560,
+      "y": 720,
+      "w": 1440,
+      "h": 1400,
+      "title": "十二个生命领域(含行星)"
+    },
+    {
+      "file": "Sky-Tail.dc.html",
+      "x": 0,
+      "y": 1000,
+      "w": 1440,
+      "h": 1620,
+      "title": "中场 · 相位 · 结尾"
+    },
+    {
+      "file": "Hero.dc.html",
+      "x": 3120,
       "y": 0,
       "w": 1440,
       "h": 760,
-      "title": "Hero · 首屏"
+      "title": "落地页 · 首屏"
     },
     {
       "file": "Chapters.dc.html",
-      "x": 1560,
+      "x": 4680,
       "y": 0,
       "w": 1440,
       "h": 1000,
-      "title": "九个主题 3×3"
+      "title": "落地页 · 九个主题 3×3"
     },
     {
       "file": "Main.dc.html",
-      "x": 0,
+      "x": 3120,
       "y": 1160,
       "w": 1440,
       "h": 990,
-      "title": "我的星空 · 探索卡 · 生命脉络"
+      "title": "落地页 · 我的星空 · 生命脉络"
     },
     {
       "file": "Story.dc.html",
-      "x": 1560,
+      "x": 4680,
       "y": 1160,
       "w": 1440,
       "h": 650,
-      "title": "CTA · 你不是来寻找答案"
+      "title": "落地页 · CTA"
     }
   ],
   "annotations": [
     {
       "id": "seed-note",
       "x": 0,
-      "y": -150,
-      "w": 640,
-      "text": "从 main 现行的 index.html 抓下来的真实区块(渲染后的 DOM + 完整 CSS)。\n对应 main commit:df666e0\n改设计时以这里为准,不要再从旧档案开始。"
+      "y": -200,
+      "w": 760,
+      "text": "从 main 现行的 app.html(#/my-sky)与 index.html 抓下来的真实区块 ——\nChromium 跑完 JS 之后的 DOM + 完整 CSS,盘面 / 插画 / 行星归宫都是实际算出来的。\n对应 main commit:1ff87c7\n左边四块是完整星盘页,右边四块是落地页。改设计以这里为准。"
     }
   ],
   "launch": {
