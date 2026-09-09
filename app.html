@@ -1496,6 +1496,256 @@
   }
   /* v3 的 600 段把章节容器的内距收成 18px —— 横向滑动的负 margin 要跟着收 */
   @media(max-width:600px){#dpage .sky-group{--sky-gx:18px}}
+  /* ============================================================
+     属于我的生命脉络(#/map)—— 编辑式的「一条线」版面
+     ------------------------------------------------------------
+     主题页与这一页共用同一份 component(dpAnswerHtml / dpTailBlocks),
+     所以底下每一条规则都必须带 .thread-page —— 一条都不能外溢到主题页。
+     内容、文案、资料绑定、fav 按钮、data-saveable、sec-<i> 锚点全部没动,
+     这一整段只负责呈现。
+     ============================================================ */
+  #dpage.thread-page{--dp-wide:min(1120px,calc(100vw - 96px));background:#f7f3ef}
+  @media(max-width:1024px){#dpage.thread-page{--dp-wide:100%}}
+
+  /* —— Hero:云天底 + 右侧大月亮,再柔和地化进象牙色的正文区 —— */
+  #dpage.thread-page .dp-hero{
+    background:
+      linear-gradient(180deg,rgba(9,18,46,.66) 0%,rgba(9,18,46,.24) 42%,rgba(9,18,46,.42) 100%),
+      /* 底图右上角自己带一颗月亮 —— 放大并靠左取景把它推出画面,
+         这一页只留 asset 02 那一颗,不要两颗月亮打架 */
+      url(assets/life/hero-sky.webp) left 56% / 142% auto no-repeat,
+      var(--dp-navy);
+    padding-bottom:clamp(66px,9vw,124px)
+  }
+  #dpage.thread-page .dp-hero .dp-stars i{opacity:calc(var(--o,.5) * .55)}
+  /* 底缘化进正文的象牙色 —— hero 不设 overflow:hidden(账号选单会被切掉) */
+  #dpage.thread-page .dp-hero::after{
+    content:"";position:absolute;left:0;right:0;bottom:0;z-index:1;pointer-events:none;
+    height:clamp(60px,9vw,132px);
+    background:linear-gradient(180deg,rgba(247,243,239,0),rgba(247,243,239,.82) 68%,#f7f3ef)
+  }
+  /* 标题置中、月亮浮在右侧。overflow 只锁在 hero-grid —— 顶栏是它的兄弟,不受影响 */
+  #dpage.thread-page .dp-hero-grid{
+    z-index:2;grid-template-columns:minmax(0,1fr);overflow:hidden;
+    text-align:center;justify-items:center;
+    padding:clamp(26px,5vw,62px) 0 clamp(18px,4vw,40px);
+    min-height:clamp(230px,30vw,400px);align-content:center
+  }
+  #dpage.thread-page .dp-hero-grid > div{max-width:min(100%,var(--dp-text))}
+  #dpage.thread-page .dp-sub{max-width:30em;margin:0 auto}
+  #dpage.thread-page h1.dp-title{font-size:clamp(28px,4.4vw,50px);letter-spacing:.03em}
+  #dpage.thread-page .dp-hero-art{
+    position:absolute;right:clamp(-46px,-1vw,0px);top:50%;transform:translateY(-50%);
+    width:clamp(146px,25vw,320px);opacity:.9;pointer-events:none;
+    filter:drop-shadow(0 20px 64px rgba(120,105,175,.42))
+  }
+
+  /* —— 正文区:暖珍珠底 + 几片极淡的薰衣草 / 香槟辉光 —— */
+  #dpage.thread-page .dp-body{
+    position:relative;
+    background:
+      radial-gradient(58% 26% at 10% 4%,rgba(170,160,213,.11),rgba(170,160,213,0) 72%),
+      radial-gradient(50% 24% at 94% 34%,rgba(232,211,162,.11),rgba(232,211,162,0) 74%),
+      radial-gradient(60% 26% at 16% 74%,rgba(170,160,213,.09),rgba(170,160,213,0) 72%);
+    padding:clamp(34px,5vw,72px) clamp(18px,4vw,48px) clamp(84px,10vw,140px)
+  }
+  /* 这一页不要一格一格的白卡片:等待 / 进度 / 错误那几种状态卡保持原样,
+     只有读完之后的长文版面走开放式排版。 */
+  #dpage.thread-page .thread-flow{position:relative}
+  #dpage.thread-page{--th-col:clamp(46px,4.6vw,66px);--th-gap:clamp(14px,2.2vw,30px)}
+
+  /* —— 生命线:一条极细、微微弯曲的路径,压在章节号那一栏的正中 —— */
+  #dpage.thread-page .thread-line{
+    position:absolute;left:0;top:6px;bottom:clamp(40px,6vw,90px);
+    width:var(--th-col);pointer-events:none;
+    -webkit-mask-image:linear-gradient(180deg,transparent,#000 5%,#000 90%,transparent);
+            mask-image:linear-gradient(180deg,transparent,#000 5%,#000 90%,transparent)
+  }
+  #dpage.thread-page .thread-line svg{display:block;width:100%;height:100%}
+
+  /* —— 开场引文:从卡片里拿出来,放大成这一页的第一句话 —— */
+  #dpage.thread-page .thread-open{
+    padding-left:calc(var(--th-col) + var(--th-gap));
+    margin:0 0 clamp(40px,5vw,68px)
+  }
+  #dpage.thread-page .thread-open .dp-quote{
+    max-width:min(100%,26em);margin:0;padding:clamp(16px,2.4vw,26px) 0;
+    text-align:left;font-size:clamp(19px,2.4vw,27px);line-height:1.95;color:#232445
+  }
+  #dpage.thread-page .thread-open .dp-quote .q{font-size:44px;vertical-align:-14px}
+  #dpage.thread-page .dp-sec-label{
+    padding-left:calc(var(--th-col) + var(--th-gap));
+    letter-spacing:.28em;margin-bottom:clamp(22px,3vw,34px)
+  }
+
+  /* —— 一章 = 章节号 + 正文 + 一张浮在右边的插画 —— */
+  #dpage.thread-page .thread-ch{
+    position:relative;display:grid;align-items:start;
+    grid-template-columns:var(--th-col) minmax(0,1fr);
+    gap:var(--th-gap);
+    margin:0 0 clamp(84px,11vw,140px);border-radius:0
+  }
+  #dpage.thread-page .thread-ch:last-of-type{margin-bottom:clamp(60px,8vw,110px)}
+  #dpage.thread-page .ch-mark{
+    display:flex;flex-direction:column;align-items:center;gap:12px;padding-top:2px
+  }
+  #dpage.thread-page .ch-mark .no{
+    font-family:var(--dp-display);font-weight:300;line-height:1;
+    font-size:clamp(28px,3.4vw,44px);letter-spacing:.05em;
+    color:rgba(129,118,173,.66);font-variant-numeric:tabular-nums
+  }
+  /* 记号要盖住线,所以给它一个与页面同色的底 —— 线才像穿过它,而不是压在上面 */
+  #dpage.thread-page .ch-mark .nd{
+    display:inline-flex;align-items:center;justify-content:center;
+    width:30px;height:30px;border-radius:50%;
+    background:#f7f3ef;border:1px solid rgba(130,110,175,.26);
+    color:rgba(129,118,173,.82)
+  }
+  #dpage.thread-page .ch-body{min-width:0}
+  #dpage.thread-page .thread-ch h3.dp-h{font-size:clamp(20px,2.3vw,27px);line-height:1.6;letter-spacing:.01em}
+  #dpage.thread-page .thread-ch .dp-prose{font-size:16.5px;line-height:1.95;color:#2c2d48}
+  #dpage.thread-page .thread-ch .dp-prose p{margin:0 0 20px}
+  #dpage.thread-page .thread-ch .dp-prose p:last-child{margin-bottom:0}
+
+  /* 插画:装饰层,不进卡片、不加边框;每一章的大小与位置刻意不同 */
+  #dpage.thread-page .ch-art{pointer-events:none;user-select:none}
+  #dpage.thread-page .ch-art img{display:block;width:100%;height:auto;object-fit:contain}
+  #dpage.thread-page .ch-art.a1 img{opacity:.96}
+  #dpage.thread-page .ch-art.a2 img{opacity:.88}
+  #dpage.thread-page .ch-art.a3 img{opacity:.92}
+  /* 这两张是满版的方形插画(不是去背素材):边缘化掉,才不会看起来像一张卡片 */
+  #dpage.thread-page .ch-art.a3 img,#dpage.thread-page .ch-art.a4 img{
+    -webkit-mask-image:radial-gradient(112% 112% at 50% 48%,#000 32%,rgba(0,0,0,.36) 66%,transparent 92%);
+            mask-image:radial-gradient(112% 112% at 50% 48%,#000 32%,rgba(0,0,0,.36) 66%,transparent 92%)
+  }
+  #dpage.thread-page .ch-art.a4 img{opacity:1}
+  #dpage.thread-page .ch-art.a5 img{opacity:.86}
+
+  /* —— 中场:罗盘记号,标示从「解读」走进「留给你的」 —— */
+  #dpage.thread-page .thread-tail{padding-left:calc(var(--th-col) + var(--th-gap))}
+  #dpage.thread-page .thread-tail::before{
+    content:"";display:block;
+    width:clamp(46px,6vw,76px);height:clamp(46px,6vw,76px);
+    margin:0 auto clamp(30px,4.4vw,50px);
+    background:url(assets/life/compass.webp) center / contain no-repeat;opacity:.6
+  }
+
+  /* —— 从这里开始:改成一组问句卡,大号码、清爽的字 —— */
+  #dpage.thread-page .dp-start-list{
+    grid-template-columns:repeat(auto-fit,minmax(min(100%,248px),1fr));
+    gap:clamp(14px,1.8vw,20px)
+  }
+  #dpage.thread-page .dp-step{
+    grid-template-columns:1fr;gap:12px;align-content:start;
+    background:rgba(255,255,255,.62);border:1px solid rgba(150,130,180,.16);
+    border-radius:20px;padding:clamp(20px,2.4vw,28px);
+    box-shadow:0 1px 2px rgba(60,50,90,.02),0 10px 30px rgba(60,50,90,.045);
+    transition:border-color .4s ease,box-shadow .4s ease,transform .4s cubic-bezier(.22,1,.36,1)
+  }
+  @media(hover:hover){
+    #dpage.thread-page .dp-step:hover{
+      transform:translateY(-3px);border-color:rgba(130,110,175,.34);
+      box-shadow:0 1px 2px rgba(60,50,90,.03),0 16px 38px rgba(60,50,90,.075)
+    }
+  }
+  #dpage.thread-page .dp-step .no{place-items:start;padding:0}
+  #dpage.thread-page .dp-step .no i{display:none}
+  #dpage.thread-page .dp-step .no b{
+    font-family:var(--dp-display);font-weight:300;font-size:clamp(30px,3.2vw,40px);
+    line-height:1;color:rgba(129,118,173,.6)
+  }
+  #dpage.thread-page .dp-step .ct{border-left:none;padding-left:0}
+  #dpage.thread-page .dp-step .ct .bd{font-size:14.5px;line-height:1.95}
+
+  /* —— 值得记住:一组轻盈的象牙卡,分隔用的小星就不需要了 —— */
+  #dpage.thread-page .dp-keep{
+    background:none;border:none;box-shadow:none;padding:0;
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));
+    gap:clamp(14px,1.8vw,20px)
+  }
+  #dpage.thread-page .dp-keep .hd{grid-column:1/-1;margin-bottom:4px}
+  #dpage.thread-page .dp-keep .sp{display:none}
+  #dpage.thread-page .dp-keep .q{
+    background:rgba(255,255,255,.6);border:1px solid rgba(150,130,180,.15);
+    border-radius:20px;padding:clamp(20px,2.4vw,26px);
+    box-shadow:0 1px 2px rgba(60,50,90,.02),0 10px 28px rgba(60,50,90,.04)
+  }
+
+  /* —— 留给你的思考:一条横过页面的静谧长条,左标题 / 右内文 —— */
+  #dpage.thread-page .dp-reflect{
+    padding:clamp(26px,3.4vw,42px) clamp(22px,3vw,40px);
+    border-radius:24px;background:rgba(255,255,255,.55);
+    border:1px solid rgba(150,130,180,.16);
+    box-shadow:0 1px 2px rgba(60,50,90,.02),0 14px 40px rgba(60,50,90,.05)
+  }
+  #dpage.thread-page .dp-reflect.act{border-left:1px solid rgba(150,130,180,.16)}
+  #dpage.thread-page .dp-reflect .bd{font-size:15.5px;line-height:1.95;max-width:none}
+  @media(min-width:901px){
+    #dpage.thread-page .dp-reflect{
+      display:grid;grid-template-columns:minmax(200px,290px) minmax(0,1fr);
+      column-gap:clamp(26px,3.4vw,52px);align-items:start
+    }
+    #dpage.thread-page .dp-reflect .eb{grid-column:1;grid-row:1;margin-bottom:11px}
+    #dpage.thread-page .dp-reflect h3.rt{grid-column:1;grid-row:2}
+    #dpage.thread-page .dp-reflect .rule{grid-column:1;grid-row:3;margin:14px 0 0}
+    #dpage.thread-page .dp-reflect .bd{grid-column:2;grid-row:1/4}
+  }
+
+  /* —— 页脚:同一片天空当底图,文字仍然是真的 HTML —— */
+  #dpage.thread-page .dp-foot{
+    background:
+      linear-gradient(180deg,rgba(9,18,46,.8),rgba(9,18,46,.9)),
+      url(assets/life/foot-sky.webp) center 34% / cover no-repeat,
+      var(--dp-navy)
+  }
+
+  /* —— 桌机:插画进第三栏,奇偶章错开高度,页面才有节奏 —— */
+  @media(min-width:1025px){
+    #dpage.thread-page .thread-ch{
+      grid-template-columns:var(--th-col) minmax(0,1fr) clamp(186px,21vw,286px)
+    }
+    #dpage.thread-page .ch-art{grid-column:3;align-self:start}
+    #dpage.thread-page .ch-art.a1{margin-top:clamp(4px,1vw,14px)}
+    #dpage.thread-page .ch-art.a2{margin-top:clamp(26px,4vw,64px);transform:scale(1.06)}
+    #dpage.thread-page .ch-art.a3{margin-top:clamp(10px,2vw,30px);transform:scale(.92)}
+    #dpage.thread-page .ch-art.a4{margin-top:clamp(30px,4.4vw,70px);transform:scale(1.1)}
+    #dpage.thread-page .ch-art.a5{margin-top:clamp(16px,2.6vw,40px);transform:scale(.88)}
+  }
+  /* —— 平板 / 手机:插画落到正文下方靠右,生命线收窄贴着章节号 —— */
+  @media(max-width:1024px){
+    #dpage.thread-page .ch-art{
+      grid-column:2;justify-self:end;width:min(62%,260px);margin-top:clamp(14px,3vw,24px)
+    }
+    #dpage.thread-page .ch-art.a2,#dpage.thread-page .ch-art.a4{width:min(72%,300px)}
+  }
+  @media(max-width:767px){
+    #dpage.thread-page{--th-col:38px;--th-gap:14px}
+    #dpage.thread-page .ch-mark .no{font-size:24px}
+    #dpage.thread-page .ch-mark .nd{width:24px;height:24px}
+    #dpage.thread-page .ch-mark .nd svg{width:11px;height:11px}
+    #dpage.thread-page .thread-ch{margin-bottom:clamp(62px,13vw,84px)}
+    #dpage.thread-page .thread-ch h3.dp-h{font-size:19px}
+    #dpage.thread-page .thread-ch .dp-prose{font-size:15.5px;line-height:1.95}
+    #dpage.thread-page .ch-art{width:min(74%,240px)}
+    #dpage.thread-page .thread-open,#dpage.thread-page .thread-tail,
+    #dpage.thread-page .dp-sec-label{padding-left:calc(var(--th-col) + var(--th-gap))}
+    #dpage.thread-page .thread-open .dp-quote{font-size:19px;line-height:1.9}
+    #dpage.thread-page .dp-hero-art{
+      width:clamp(112px,34vw,170px);opacity:.72;top:auto;bottom:6%;transform:none;right:-14px
+    }
+    #dpage.thread-page .dp-hero-grid{min-height:0;padding-bottom:clamp(70px,20vw,110px)}
+  }
+
+  /* —— 进场:只有 12px 的位移与淡入。JS 只在允许动态时才挂 .rise —— */
+  #dpage.thread-page .rise{
+    opacity:0;transform:translateY(12px);
+    transition:opacity .7s ease,transform .7s cubic-bezier(.22,1,.36,1)
+  }
+  #dpage.thread-page .rise.in{opacity:1;transform:none}
+  @media (prefers-reduced-motion:reduce){
+    #dpage.thread-page .rise{opacity:1;transform:none;transition:none}
+  }
+
   /* 划词收藏:轻盈的浮动动作,不打断阅读 */
   #dpSaveTip{position:absolute;z-index:90;display:none;align-items:center;gap:6px;
     font-family:"Noto Sans SC","Helvetica Neue",Arial,sans-serif;font-size:12.5px;color:#fff;background:rgba(26,22,52,.94);
@@ -5802,6 +6052,8 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     if (!r) return;
     // 完整星盘比其他内页宽(四张核心卡要并排),这个 class 只挂在这一页上
     $("dpage").classList.toggle("sky-page", r.k === "mysky");
+    // 生命脉络是编辑式长文版面(生命线 / 章节号 / 插画位),同样只挂在这一页
+    $("dpage").classList.toggle("thread-page", r.k === "map");
     if (r.k === "topic") renderTopicPage(r.id);
     else if (r.k === "q") renderQPage(r.id);
     else if (r.k === "reading") { readingTab = r.tab || 0; renderReadingPage(); }
@@ -6070,8 +6322,67 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
      排,内容宽度 / 标题字级 / 分隔线 / 段距 / 值得记住 / 留给你的思考
      全部是同一份 component 与同一套 CSS,手机版自然也跟着一致。
      tab 只用来决定进页后卷到哪一段(#/map/<i> 的深链仍然有效)。 */
+  /* 每一章右侧那张插画:大小、位置、浓度刻意不一样,页面才有节奏。
+     插画一律是装饰(aria-hidden + 空 alt),不承载任何内容。 */
+  const THREAD_ART = [
+    { src: "assets/life/ch-gate.webp",    cls: "a1" },
+    { src: "assets/life/ch-planets.webp", cls: "a2" },
+    { src: "assets/life/ch-sky.webp",     cls: "a3" },
+    { src: "assets/life/ch-road.webp",    cls: "a4" },
+    { src: "assets/life/ch-clouds.webp",  cls: "a5" }
+  ];
+  /* 生命线上的记号:星芒 / 弦月 / 罗盘轮流出现。手写 inline SVG,不进图档。 */
+  const THREAD_NODE = [
+    '<svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true" focusable="false">' +
+      '<path fill="currentColor" d="M8 .6c.31 4.35 2.71 6.75 7.06 7.06-4.35.31-6.75 2.71-7.06 7.06-.31-4.35-2.71-6.75-7.06-7.06C5.29 7.35 7.69 4.95 8 .6Z"/></svg>',
+    '<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false">' +
+      '<path fill="currentColor" d="M6.27 1.32A6.9 6.9 0 1 0 14.46 10.42 6.5 6.5 0 0 1 6.27 1.32Z"/></svg>',
+    '<svg viewBox="0 0 18 18" width="15" height="15" aria-hidden="true" focusable="false">' +
+      '<circle cx="9" cy="9" r="7.2" fill="none" stroke="currentColor" stroke-width=".8" opacity=".5"/>' +
+      '<path fill="currentColor" d="M9 1.6 10.2 7.8 16.4 9l-6.2 1.2L9 16.4 7.8 10.2 1.6 9l6.2-1.2Z"/></svg>'
+  ];
+  /* 生命线本体:一条极细、微微弯曲的路径。viewBox 被拉伸(preserveAspectRatio=none),
+     所以不管页面多长都只是一条柔和的线,不会变成硬邦邦的时间轴。 */
+  function dpThreadLine() {
+    return '<span class="thread-line" aria-hidden="true">' +
+      '<svg viewBox="0 0 40 1000" preserveAspectRatio="none" focusable="false">' +
+      '<path d="M20 0 C 27 140, 13 260, 20 400 S 28 640, 20 780 S 14 920, 20 1000" ' +
+      'fill="none" stroke="rgba(130,110,175,.25)" stroke-width="1.2" vector-effect="non-scaling-stroke"/>' +
+      "</svg></span>";
+  }
+  /* 「属于我的生命脉络」的呈现层。
+     资料、fav 按钮、data-saveable 的挂点、sec-<i> 的锚点、dpTailBlocks
+     全部沿用主题页那一份 —— 这里只多包一层编辑式版面(章节号 / 生命线 / 插画位),
+     而且样式全锁在 #dpage.thread-page 底下,主题页一个像素都不受影响。 */
   function dpThreadHtml(data, favSource, tab, favType) {
-    return dpAnswerHtml(data, favSource, favType);
+    favType = favType || "";
+    let h = '<div class="thread-flow">' + dpThreadLine();
+    if (data.tagline)
+      h += '<div class="thread-open"><div class="dp-quote"><span class="q">“</span>' +
+        esc0(data.tagline) + "</div></div>";
+    h += '<div class="dp-sec-label">' + dpT("详细解读", "READING") + "</div>";
+    h += (data.sections || []).map(function (sc, si) {
+      const k = favKey(favSource, sc.title || "", sc.body || "");
+      const btn = '<button class="fav-btn' + (isFaved(k) ? " on" : "") + '" data-fav="' + esc0(k) +
+        '" data-text="' + esc0(String(sc.body || "").slice(0, 300)) + '" data-source="' + esc0(favSource) +
+        '" data-source-type="' + esc0(favType) +
+        '" data-section="' + esc0(sc.title || "") + '" title="' + esc0(T("saveIt")) + '">' + (isFaved(k) ? "★" : "☆") + "</button>";
+      const art = THREAD_ART[si % THREAD_ART.length];
+      return '<section class="dp-sec thread-ch" id="sec-' + si + '">' +
+        '<div class="ch-mark" aria-hidden="true"><span class="no">' + ("0" + (si + 1)).slice(-2) + "</span>" +
+        '<span class="nd">' + THREAD_NODE[si % THREAD_NODE.length] + "</span></div>" +
+        '<div class="ch-body"><div class="dp-h-row">' +
+        (sc.title ? '<h3 class="dp-h">' + esc0(sc.title) + "</h3>" : "<span></span>") + btn + "</div>" +
+        (sc.title ? '<div class="dp-div"><span class="st">✦</span><span class="ln"></span></div>' : "") +
+        '<div class="dp-prose" data-saveable data-source="' + esc0(favSource) +
+        '" data-source-type="' + esc0(favType) +
+        '" data-section="' + esc0(sc.title || "") + '">' + dpPara(sc.body) + "</div></div>" +
+        '<div class="ch-art ' + art.cls + '" aria-hidden="true">' +
+        '<img src="' + art.src + '" alt="" loading="lazy" decoding="async"></div>' +
+        "</section>";
+    }).join("");
+    h += '<div class="thread-tail">' + dpTailBlocks(data) + "</div>";
+    return h + "</div>";
   }
   function dpAnswerHtml(data, favSource, favType) {
     favType = favType || "";
@@ -7216,12 +7527,34 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       title: dpT("属于我的生命脉络", "The Pattern of Your Life"),
       sub: dpT("九个主题读完之后，它们会收束成一条线。",
                "When all nine have been read, they come together into one thread."),
+      // 月亮走 art 插槽(dpScaffold 既有的),天空底与页脚底图交给 CSS
+      art: "assets/life/moon.webp",
       body: body, foot: foot, backLabel: dpT("返回主页", "Back to home"), backHref: LANDING_URL, seed: 55
     });
     const rm = document.getElementById("dpRetryM");
     if (rm) rm.addEventListener("click", function () { mapErr = null; toggleMap(); });
     const gm = document.getElementById("dpGenMap");
     if (gm) gm.addEventListener("click", function () { toggleMap(); });
+    /* 进场:只有 12px 的位移与淡入,没有缩放、没有视差。
+       使用者要求减少动态、或浏览器没有 IntersectionObserver 时完全不挂 ——
+       内容一律以最终状态呈现,绝不会因为 JS 没跑而看不见。 */
+    (function () {
+      const host = $("dpage");
+      if (!host.classList.contains("thread-page")) return;
+      if (!("IntersectionObserver" in window)) return;
+      if (window.matchMedia && window.matchMedia("(prefers-reduced-motion:reduce)").matches) return;
+      const els = host.querySelectorAll(".thread-open,.thread-ch,.thread-tail > *");
+      if (!els.length) return;
+      const io = new IntersectionObserver(function (list) {
+        list.forEach(function (e) {
+          if (!e.isIntersecting) return;
+          e.target.classList.add("in");
+          io.unobserve(e.target);
+        });
+      }, { rootMargin: "0px 0px -6% 0px", threshold: .06 });
+      els.forEach(function (el) { el.classList.add("rise"); io.observe(el); });
+    })();
+
     /* 详细解读现在跟主题页一样整篇往下排,不再有分页签。
        #/map/<i> 这种深链仍然有效 —— 进页后卷到那一段就好。 */
     if (mapTab) {
