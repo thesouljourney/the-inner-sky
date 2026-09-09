@@ -1437,6 +1437,26 @@
     #dpage .sky-core::-webkit-scrollbar{display:none}
     #dpage .sky-card{flex:0 0 88%;scroll-snap-align:start}
 
+    /* —— 十二个生命领域:手机上跟四个核心同一套做法,横向滑动 ——
+       每一章自己是一条,引言在上、四张卡在下滑动。
+       --sky-gx 是章节容器的左右内距:卡片要铺到容器边缘,负 margin 得跟它一样宽。 */
+    #dpage .sky-group{--sky-gx:clamp(28px,3vw,42px)}
+    #dpage .sky-row{gap:clamp(16px,3.4vw,22px)}
+    #dpage .sky-intro{flex:1 1 100%;min-width:0}
+    #dpage .sky-houses{
+      flex:1 1 100%;min-width:0;
+      display:flex;gap:12px;
+      overflow-x:auto;overscroll-behavior-x:contain;
+      scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;
+      scrollbar-width:none;-ms-overflow-style:none;
+      margin-left:calc(-1 * var(--sky-gx));margin-right:calc(-1 * var(--sky-gx));
+      padding:2px var(--sky-gx) 8px
+    }
+    #dpage .sky-houses::-webkit-scrollbar{display:none}
+    /* 62% 会露出下一张的边(知道可以滑);上限 230px 是给平板宽度用的,
+       不然 700px 左右时一张卡会宽到不像卡片 */
+    #dpage .sky-house{flex:0 0 min(62%,230px);scroll-snap-align:start}
+
     /* —— 中场:资料与资料之间真正停一下 —— */
     #dpage .sky-pause{margin:clamp(64px,15vw,84px) 0}
     /* 92% 的上限会让第二行在窄萤幕上断在「更多能」/「量，」之间,
@@ -1474,6 +1494,8 @@
     #dpage .sky-asp .lk .ln{max-width:64px}
     #dpage .sky-asp .orb{grid-column:1/-1;grid-row:3;text-align:center}
   }
+  /* v3 的 600 段把章节容器的内距收成 18px —— 横向滑动的负 margin 要跟着收 */
+  @media(max-width:600px){#dpage .sky-group{--sky-gx:18px}}
   /* 划词收藏:轻盈的浮动动作,不打断阅读 */
   #dpSaveTip{position:absolute;z-index:90;display:none;align-items:center;gap:6px;
     font-family:"Noto Sans SC","Helvetica Neue",Arial,sans-serif;font-size:12.5px;color:#fff;background:rgba(26,22,52,.94);
@@ -7126,6 +7148,19 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       // 点浮层本身不关;点别处、按 Esc、改变视窗大小都收起来
       document.querySelectorAll("#dpage .sky-fexp").forEach(function (box) {
         box.addEventListener("click", function (e) { e.stopPropagation(); });
+      });
+      /* 手机版四张卡是横向滑动的:滑的时候浮层跟着卡走,
+         卡片中线滑出可视范围才收起来。
+         (不能一有 scroll 就关 —— 点卡片时浏览器会把它捲进视野,那也是一次 scroll) */
+      document.querySelectorAll("#dpage .sky-houses").forEach(function (rail) {
+        rail.addEventListener("scroll", function () {
+          if (!openCard || !rail.contains(openCard)) return;
+          const rr = rail.getBoundingClientRect(), cr = openCard.getBoundingClientRect();
+          const mid = cr.left + cr.width / 2;
+          if (mid < rr.left || mid > rr.right) { shut(); return; }
+          const box = boxOf(openCard);
+          if (box) place(openCard, box);
+        }, { passive: true });
       });
       document.addEventListener("click", shut);
       document.addEventListener("keydown", function (e) { if (e.key === "Escape") shut(); });
