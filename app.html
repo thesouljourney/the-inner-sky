@@ -1047,106 +1047,237 @@
   #dpage .sky-asp .rel .g{font-size:13px;line-height:1;color:#a9915c}
   #dpage .sky-asp .orb{font-size:12.5px;color:#9c9aa8;font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
 
-  /* —— 十二个生命领域:编辑式方块,不是十二张大卡片 —— */
-  #dpage .sky-houses{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:clamp(11px,1.4vw,16px)}
-  /* —— 十二个生命领域 ——
-     这一区现在是整页的主要资讯区:十二宫全开,行星直接画在自己那一宫里。
-     背景保持干净的象牙底,不再叠云,也不用星座插画(那是四个核心的语言)——
-     这一区的视觉语言是宫号本身:一个很淡的大字压在右上角。 */
-  /* 三个章节面板。不用边框、不用阴影,颜色本身就是分章的方式。
-     用实色而不是低透明度的叠色 —— 叠在象牙底上永远只会差个两三步,
-     缩到 25% 就消失了。核心暖香槟、发展哑光灰绿、内在雾灰紫,
-     与页面象牙底的明度差大约 12–18%,缩图也分得出来。 */
+  /* —— 你的十二个生命领域 · v3 ——
+     一章一个容器:左栏引言(31.5%) + 右栏四张同尺寸卡片。
+     overflow:hidden 是给素材出血用的 —— 素材铺过容器/卡片边缘就被切齐。 */
+  #dpage .sky-sep{
+    display:flex;align-items:center;justify-content:center;gap:14px;
+    margin:clamp(28px,3.3vw,48px) 0 clamp(21px,2.3vw,31px)
+  }
+  #dpage .sky-sep i{flex:none;width:clamp(52px,7vw,96px);height:1px}
+  #dpage .sky-sep i.l{background:linear-gradient(to right,rgba(184,146,95,0),rgba(184,146,95,.2))}
+  #dpage .sky-sep i.r{background:linear-gradient(to left,rgba(184,146,95,0),rgba(184,146,95,.2))}
+  #dpage .sky-sep .mo{flex:none;display:inline-flex;align-items:center;opacity:.8}
+
   #dpage .sky-group{
-    position:relative;isolation:isolate;
-    margin-top:clamp(22px,2.6vw,34px);
-    border-radius:22px;padding:clamp(22px,2.6vw,34px)
+    position:relative;isolation:isolate;overflow:hidden;
+    border-radius:26px;padding:clamp(28px,3vw,42px);
+    padding-bottom:clamp(26px,2.6vw,36px);
+    border:1px solid rgba(150,120,88,.07);
+    box-shadow:0 1px 2px rgba(80,60,40,.012), 0 14px 40px rgba(80,60,40,.022)
   }
-  #dpage .sky-group:first-of-type{margin-top:0}
-  /* 底色之上再叠一层几乎察觉不到的白 —— 右侧亮一点、左侧沉一点,
-     让整块看起来像纸上的一片光,而不是一块印上去的色块。
-     刻意做得很浅:不是渐层效果,是让平涂不要那么死。 */
-  #dpage .sky-group.g1{background:radial-gradient(112% 88% at 92% 46%,rgba(255,255,255,.5),rgba(255,255,255,0) 66%),#f4e5d6}
-  #dpage .sky-group.g2{background:radial-gradient(112% 88% at 92% 46%,rgba(255,255,255,.5),rgba(255,255,255,0) 66%),#e4e7dd}
-  #dpage .sky-group.g3{background:radial-gradient(112% 88% at 92% 46%,rgba(255,255,255,.5),rgba(255,255,255,0) 66%),#e5e4ed}
-  #dpage .sky-group-hd{
-    display:flex;align-items:baseline;flex-wrap:wrap;gap:6px 12px;
-    margin:0 0 clamp(12px,1.6vw,17px);position:relative
+  /* 三支色仍是各章的本色,只是掺进页面底色后只剩 5% —— 容器不再是一块印上去的色块 */
+  #dpage .sky-group.g1{--t1:#e9c79a;--t2:#dcae76;--t3:#cf9a5c}
+  #dpage .sky-group.g2{--t1:#b3cba4;--t2:#95b581;--t3:#7ca066}
+  #dpage .sky-group.g3{--t1:#c2c0da;--t2:#a9a7c7;--t3:#9391b6}
+  #dpage .sky-group{
+    background:
+      radial-gradient(66% 58% at 13% 4%,rgba(255,255,255,.62),rgba(255,255,255,0) 72%),
+      radial-gradient(88% 78% at 96% 2%,rgba(255,255,255,.46),rgba(255,255,255,0) 66%),
+      linear-gradient(to bottom,rgba(250,246,241,0) 62%,rgba(250,246,241,.72) 100%),
+      linear-gradient(168deg,
+        color-mix(in oklab,var(--t1) 5%,#faf6f1) 0%,
+        color-mix(in oklab,var(--t2) 5%,#faf6f1) 58%,
+        color-mix(in oklab,var(--t3) 5%,#faf6f1) 100%)
   }
-  /* 章节符号:跟着各自章节的标题色走,只比文字大一点点 —— 是重音,不是插图 */
-  #dpage .sky-group-hd .ic{flex:none;display:inline-flex;align-items:center;transform:translateY(1px)}
-  #dpage .sky-group-hd .ic,#dpage .sky-group-hd .nm{color:#a86f3d}
-  /* 只有这三个标题上暗金色,后面的宫号与说明维持安静 */
-  #dpage .sky-group-hd .nm{
-    font-family:var(--dp-serif);font-weight:600;font-size:17px;
-    letter-spacing:.04em;flex:none
+  /* 天体氛围:两圈极淡的轨道 + 一道大弧 + 三颗星尘,压在最底层 */
+  #dpage .sky-group .atmos{position:absolute;inset:0;z-index:0;pointer-events:none}
+  #dpage .sky-group .atmos i{position:absolute;display:block;border-radius:50%}
+  #dpage .sky-group .atmos .dust{inset:0;border-radius:0}
+  #dpage .sky-group.g1 .atmos .o1{left:-16%;bottom:-58%;width:64%;padding-bottom:64%;border:1px solid rgba(154,106,52,.09)}
+  #dpage .sky-group.g1 .atmos .o2{right:6%;top:-42%;width:46%;padding-bottom:46%;border:1px solid rgba(90,90,125,.055)}
+  #dpage .sky-group.g1 .atmos .o3{left:34%;top:-120%;width:150%;padding-bottom:150%;border:1px solid rgba(154,106,52,.06)}
+  #dpage .sky-group.g1 .atmos .dust{background-image:
+    radial-gradient(1.3px 1.3px at 17% 24%,rgba(154,106,52,.2),transparent 60%),
+    radial-gradient(1.1px 1.1px at 73% 11%,rgba(90,90,125,.17),transparent 60%),
+    radial-gradient(1.5px 1.5px at 89% 76%,rgba(154,106,52,.15),transparent 60%)}
+  #dpage .sky-group.g2 .atmos .o1{right:-12%;top:-46%;width:58%;padding-bottom:58%;border:1px solid rgba(154,106,52,.075)}
+  #dpage .sky-group.g2 .atmos .o2{left:22%;bottom:-64%;width:40%;padding-bottom:40%;border:1px solid rgba(90,90,125,.05)}
+  #dpage .sky-group.g2 .atmos .o3{left:-38%;top:-30%;width:128%;padding-bottom:128%;border:1px solid rgba(154,106,52,.05)}
+  #dpage .sky-group.g2 .atmos .dust{background-image:
+    radial-gradient(1.2px 1.2px at 8% 14%,rgba(90,90,125,.16),transparent 60%),
+    radial-gradient(1.5px 1.5px at 58% 84%,rgba(154,106,52,.16),transparent 60%),
+    radial-gradient(1.1px 1.1px at 92% 30%,rgba(90,90,125,.15),transparent 60%)}
+  #dpage .sky-group.g3 .atmos .o1{left:-10%;top:-52%;width:56%;padding-bottom:56%;border:1px solid rgba(90,90,125,.075)}
+  #dpage .sky-group.g3 .atmos .o2{right:18%;bottom:-60%;width:42%;padding-bottom:42%;border:1px solid rgba(154,106,52,.06)}
+  #dpage .sky-group.g3 .atmos .o3{right:-30%;bottom:-100%;width:140%;padding-bottom:140%;border:1px solid rgba(90,90,125,.05)}
+  #dpage .sky-group.g3 .atmos .dust{background-image:
+    radial-gradient(1.4px 1.4px at 26% 78%,rgba(90,90,125,.17),transparent 60%),
+    radial-gradient(1.2px 1.2px at 66% 18%,rgba(154,106,52,.15),transparent 60%),
+    radial-gradient(1.1px 1.1px at 94% 58%,rgba(90,90,125,.14),transparent 60%)}
+
+  /* 章节山景:只留在左栏下缘,上缘用 mask 化进底色 */
+  #dpage .sky-group > .art{
+    position:absolute;bottom:0;z-index:0;display:block;
+    pointer-events:none;user-select:none;
+    filter:saturate(.8) contrast(.94);
+    left:-3%;width:32%;height:238px;transform:translateY(18px);
+    object-fit:cover;object-position:bottom left;opacity:.3;
+    -webkit-mask-image:radial-gradient(128% 140% at 14% 100%,#000 38%,transparent 86%);
+    mask-image:radial-gradient(128% 140% at 14% 100%,#000 38%,transparent 86%)
   }
-  /* 标题 / 宫号序列 / 说明各自一行 —— 像一章的开场,不是表头 */
+  #dpage .sky-group.g1 > .art{
+    left:2.2%;width:27.5%;height:296px;transform:translateY(6px);
+    object-fit:contain;object-position:bottom center;opacity:.34;
+    -webkit-mask-image:radial-gradient(118% 150% at 50% 102%,#000 44%,rgba(0,0,0,.55) 76%,transparent 96%);
+    mask-image:radial-gradient(118% 150% at 50% 102%,#000 44%,rgba(0,0,0,.55) 76%,transparent 96%)
+  }
+  #dpage .sky-group.g3 > .art{opacity:.26}
+
+  /* 一条水平阅读路径:左栏引言 → 右栏四张卡 */
+  #dpage .sky-row{
+    position:relative;z-index:1;display:flex;flex-wrap:wrap;
+    align-items:stretch;gap:clamp(20px,2.1vw,32px)
+  }
+  #dpage .sky-intro{
+    flex:0 1 31.5%;min-width:min(240px,100%);
+    display:flex;align-items:flex-start
+  }
+  #dpage .sky-group-hd{flex:1 1 250px;min-width:0;max-width:30em;margin:0}
+  #dpage .sky-group-hd .mo{display:inline-flex;align-items:center;opacity:.85}
   #dpage .sky-group-hd .nos{
-    font-size:12px;letter-spacing:.2em;color:#7f7a6c;
-    flex:0 0 100%;font-variant-numeric:tabular-nums;margin-top:5px
+    display:block;font-family:var(--dp-display);font-size:16px;letter-spacing:.26em;
+    color:#8a6a3c;font-variant-numeric:tabular-nums;margin-top:12px
   }
-  /* 说明永远自己占一行:标题与宫号在第一行,说明在第二行 */
-  /* max-width 会让它的假想宽度缩到放得进第一行,于是又跟标题挤在一起;
-     所以这里只留 flex-basis:100%,让它一定另起一行。 */
-  /* 面板底色变深,说明文字跟着压深一级,对比维持在 4.5:1 以上 */
+  #dpage .sky-group-hd .ttl{display:flex;align-items:center;gap:11px;margin-top:13px;color:#9a6a34}
+  #dpage .sky-group-hd .ic{flex:none;display:inline-flex;align-items:center;transform:translateY(1px)}
+  #dpage .sky-group-hd .nm{
+    font-family:var(--dp-serif);font-weight:600;font-size:clamp(24px,2.5vw,30px);
+    letter-spacing:.05em;line-height:1.35;color:#2b2925;margin:0
+  }
+  #dpage .sky-group-hd .en{
+    display:block;font-family:var(--dp-display);font-size:12px;letter-spacing:.3em;
+    color:#8a7351;margin-top:11px;text-transform:uppercase
+  }
+  #dpage .sky-group-hd .rule{
+    display:block;width:46px;height:1px;margin:24px 0 0;
+    background:linear-gradient(to right,rgba(154,106,52,.38),rgba(154,106,52,0))
+  }
   #dpage .sky-group-hd .ds{
-    font-size:12.5px;line-height:1.85;color:#6b6a7c;
-    flex:0 0 100%;min-width:0;margin-top:4px
+    display:block;font-size:12.5px;line-height:2.45;color:#6e695c;
+    margin-top:20px;max-width:19em;text-wrap:pretty
   }
-  #dpage .sky-houses{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:clamp(11px,1.4vw,16px)}
+
+  /* 右栏:四张同尺寸卡片,间距统一 14px。窄到装不下就整栏掉到引言下方 */
+  #dpage .sky-houses{
+    flex:1 1 600px;min-width:min(600px,100%);
+    display:grid;grid-template-columns:repeat(4,minmax(0,1fr));
+    align-items:stretch;gap:14px
+  }
   #dpage .sky-house{
-    position:relative;overflow:hidden;display:flex;flex-direction:column;
-    /* 卡片一律是同一张浅纸,不跟着章节染色 —— 有颜色的章节底 + 浅色的卡,
-       层次才出得来。边线是一条暖中性的细线,主要的分层交给底色去做。 */
-    border:1px solid #d8cabc;border-radius:18px;background:#fbf8f3;
-    box-shadow:0 4px 18px rgba(70,50,35,.06);
-    padding:clamp(15px,1.7vw,19px);min-height:clamp(136px,12.5vw,150px);
-    transition:border-color .24s ease,background .24s ease,box-shadow .24s ease,transform .24s ease
+    position:relative;overflow:hidden;cursor:pointer;
+    border-radius:20px;padding:clamp(18px,1.8vw,23px);min-height:286px;
+    background:#fdfbf7;border:1px solid rgba(150,120,88,.09);
+    box-shadow:0 1px 2px rgba(80,60,40,.014), 0 8px 22px rgba(80,60,40,.022);
+    transition:transform .5s cubic-bezier(.22,1,.36,1),border-color .45s ease,box-shadow .45s ease
   }
-  /* 宫号是这张卡的第一层视觉:左上、正常流,桌机与手机同一种构成 ——
-     宫号 → 领域语句 → 星座度数 → 行星,由上往下读。 */
+  #dpage .sky-house.has{background:#fffdf9}
+  #dpage .sky-house .in{position:relative;z-index:2}
+  /* 素材:主体放大,左右出血由 overflow:hidden 裁掉;
+     上缘长渐隐 —— 雾气自然延伸到卡片中部,文字区不受遮挡 */
+  #dpage .sky-house .art{
+    position:absolute;left:50%;bottom:0;z-index:0;display:block;
+    transform:translateX(-50%);width:100%;height:150px;opacity:.8;
+    object-fit:contain;object-position:bottom center;
+    filter:saturate(.82) contrast(.93);
+    pointer-events:none;user-select:none;
+    -webkit-mask-image:linear-gradient(to top,#000 58%,rgba(0,0,0,.55) 82%,rgba(0,0,0,.16) 94%,transparent 100%);
+    mask-image:linear-gradient(to top,#000 58%,rgba(0,0,0,.55) 82%,rgba(0,0,0,.16) 94%,transparent 100%)
+  }
+  /* 逐宫补偿:框高 = 视觉重量,浓度 = 素材本身的色重,
+     宽度 >100% 的四张(05/06/09/12)刻意左右出血被裁 */
+  #dpage .sky-house[data-field="1"]  .art{height:168px;bottom:14px;opacity:.74}
+  #dpage .sky-house[data-field="2"]  .art{height:153px;bottom:6px;opacity:.66}
+  #dpage .sky-house[data-field="3"]  .art{height:171px;bottom:8px;opacity:.69}
+  #dpage .sky-house[data-field="4"]  .art{height:170px;bottom:14px;opacity:.75}
+  #dpage .sky-house[data-field="5"]  .art{height:159px;bottom:8px;opacity:.77;width:112%}
+  #dpage .sky-house[data-field="6"]  .art{height:159px;bottom:8px;opacity:.72;width:110%}
+  #dpage .sky-house[data-field="7"]  .art{height:159px;bottom:10px;opacity:.69;object-fit:cover;object-position:50% 68%}
+  #dpage .sky-house[data-field="8"]  .art{height:180px;bottom:6px;opacity:.64}
+  #dpage .sky-house[data-field="9"]  .art{height:203px;bottom:-10px;opacity:.74;width:150%;object-fit:cover;object-position:50% 38%}
+  #dpage .sky-house[data-field="10"] .art{height:174px;bottom:12px;opacity:.75}
+  #dpage .sky-house[data-field="11"] .art{height:162px;bottom:0;opacity:.74;object-fit:cover;object-position:50% 66%}
+  #dpage .sky-house[data-field="12"] .art{height:201px;bottom:-6px;opacity:.75;width:160%;object-fit:cover;object-position:56% 44%}
+  #dpage .sky-house .veil{
+    position:absolute;left:0;right:0;bottom:0;height:60%;z-index:1;pointer-events:none;
+    background:radial-gradient(78% 60% at 50% 106%,rgba(255,255,255,.14),rgba(255,255,255,0) 74%)
+  }
+  #dpage .sky-house .top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
   #dpage .sky-house .bg{
     display:block;pointer-events:none;user-select:none;
-    font-family:var(--dp-display);font-weight:300;font-size:clamp(34px,3.4vw,44px);line-height:1;
-    color:#c1926b;letter-spacing:.01em;margin:0 0 clamp(8px,.9vw,10px)
+    font-family:var(--dp-display);font-weight:300;font-size:clamp(20px,1.65vw,23px);
+    letter-spacing:.34em;line-height:1;color:#c5aa8c;
+    font-variant-numeric:tabular-nums;margin:0
   }
-  #dpage .sky-house>*{position:relative}
-  /* 这张卡的主角:一句话讲清楚这个领域是什么样的经验 */
+  #dpage .sky-house .top i.dash{
+    display:block;width:14px;height:1px;
+    background:linear-gradient(to right,rgba(181,144,106,.42),rgba(181,144,106,0))
+  }
+  #dpage .sky-house .top .mk{flex:none;display:inline-flex;align-items:center;transform:translateY(2px)}
   #dpage .sky-house .fld{
-    font-family:var(--dp-serif);font-weight:600;font-size:17px;line-height:1.6;
-    color:var(--dp-ink)
+    font-family:var(--dp-serif);font-weight:600;font-size:17.5px;line-height:1.55;
+    letter-spacing:.02em;color:#2b2925;margin-top:11px;max-width:7.4em;text-wrap:pretty
   }
-  #dpage .sky-house .sg{font-size:12.5px;color:rgba(34,35,58,.6);margin-top:7px}
-  #dpage .sky-house .sg .d{color:var(--dp-mut);font-variant-numeric:tabular-nums}
-  /* 落在这一宫的行星:靠右下,避开右上角那个大宫号。多颗会自己折行,
-     不收起、不做成下拉,一律直接看得到。 */
-  #dpage .sky-house .pls{
-    display:flex;flex-wrap:wrap;justify-content:flex-end;gap:5px 13px;
-    margin-top:auto;padding-top:clamp(10px,1.1vw,13px)
+  #dpage .sky-house .sg{font-size:11.5px;letter-spacing:.17em;color:#6f6a58;margin-top:6px}
+  #dpage .sky-house .sg .d{font-variant-numeric:tabular-nums}
+  #dpage .sky-house .pls{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:6px;min-height:16px}
+  #dpage .sky-house .pl{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+  #dpage .sky-house .pl b{font-weight:400;font-size:11.5px;letter-spacing:.03em;color:#5d5a52}
+  #dpage .sky-house:hover{
+    transform:translateY(-4px);border-color:rgba(184,146,95,.3);
+    box-shadow:0 1px 2px rgba(80,60,40,.02), 0 14px 34px rgba(80,60,40,.05), 0 0 0 1px rgba(184,146,95,.09)
   }
-  #dpage .sky-house .pl{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;cursor:default}
-  #dpage .sky-house .pl svg{flex:none;color:#4b4b73}
-  #dpage .sky-house .pl b{font-weight:400;font-size:12px;color:var(--dp-mut)}
-  #dpage .sky-house .pl .rx{font-style:normal;font-size:10px;color:#b4645a;margin-left:-2px}
-  /* 桌机 hover:很轻的一下 —— 边线清楚一点、抬起 2px、影子稍微明显。
-     不缩放、不发光、不换底色。手机不靠 hover,预设的边线本身就够清楚。 */
-  @media(hover:hover){
-    #dpage .sky-house:hover{
-      border-color:#cbb69f;background:#fffdf9;
-      box-shadow:0 8px 24px rgba(70,50,35,.09);
-      transform:translateY(-2px)
-    }
+  #dpage .sky-house:focus-visible{outline:1px solid rgba(184,166,120,.75);outline-offset:2px}
+  #dpage .sky-house[aria-expanded="true"]{
+    transform:translateY(-2px);border-color:rgba(154,106,52,.24);
+    box-shadow:0 1px 3px rgba(80,60,40,.03), 0 16px 38px rgba(80,60,40,.055)
   }
-  @media (prefers-reduced-motion:reduce){#dpage .sky-house{transition:none}#dpage .sky-house:hover{transform:none}}
-  @media(max-width:1024px){#dpage .sky-houses{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+  /* 展开:一个浮在卡片旁的小格子。半透明 + 毛玻璃,压在同排其他卡之上。
+     位置由 JS 依被点的那张卡算,并夹在章节容器内(容器是 overflow:hidden)。
+     没有 max-height —— 行星再多也不会被截断。 */
+  #dpage .sky-fexp{
+    /* 减掉左右各 14px 的夹边余量,窄屏才不会被容器的 overflow:hidden 切掉 */
+    position:absolute;left:0;top:0;z-index:5;width:min(320px,calc(100% - 28px));
+    opacity:0;visibility:hidden;transform:translateY(-6px);
+    transition:opacity .32s ease,transform .32s cubic-bezier(.22,1,.36,1),visibility 0s linear .32s
+  }
+  #dpage .sky-fexp.on{opacity:1;visibility:visible;transform:none;transition-delay:0s,0s,0s}
+  @media (prefers-reduced-motion:reduce){#dpage .sky-fexp{transition:none}}
+  #dpage .sky-fexp .in{
+    margin:0;padding:20px 22px;border-radius:18px;
+    background:rgba(253,251,247,.82);
+    -webkit-backdrop-filter:blur(14px) saturate(1.08);backdrop-filter:blur(14px) saturate(1.08);
+    border:1px solid rgba(150,120,88,.18);
+    box-shadow:0 2px 6px rgba(80,60,40,.04), 0 18px 44px rgba(80,60,40,.1)
+  }
+  #dpage .sky-fexp .ttl{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+  #dpage .sky-fexp .ttl b{font-family:var(--dp-serif);font-weight:600;font-size:19px;letter-spacing:.02em;color:#2b2925}
+  #dpage .sky-fexp .ttl span{font-size:11px;letter-spacing:.2em;color:#9a6a34}
+  #dpage .sky-fexp .cusp{font-size:12px;letter-spacing:.1em;color:#6b6759;margin-top:11px}
+  #dpage .sky-fexp .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:15px}
+  #dpage .sky-fexp .chips .pi{
+    display:inline-flex;align-items:center;gap:9px;font-size:12.5px;color:#2b2925;
+    background:rgba(255,255,255,.7);border:1px solid rgba(150,120,88,.16);
+    border-radius:22px;padding:8px 14px
+  }
+  #dpage .sky-fexp .chips .pi svg{flex:none;color:#5a5a7d}
+  #dpage .sky-fexp .chips .pi small{color:#6b6759;font-variant-numeric:tabular-nums}
+  #dpage .sky-fexp .chips .pi .rx{font-style:normal;font-size:10px;color:#b4645a}
+
+  @media(max-width:1100px){
+    #dpage .sky-houses{grid-template-columns:repeat(2,minmax(0,1fr))}
+    #dpage .sky-group > .art{width:44%;height:210px}
+    #dpage .sky-group.g1 > .art{width:40%;height:230px}
+  }
   @media(max-width:600px){
-    #dpage .sky-houses{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-    #dpage .sky-house{padding:15px 14px;min-height:142px;border-radius:16px}
-    #dpage .sky-house .fld{font-size:15.5px}
-    #dpage .sky-house .sg{font-size:12px;margin-top:9px}
-    #dpage .sky-house .pls{gap:4px 10px;padding-top:12px}
-    #dpage .sky-house .pl b{font-size:11px}
+    #dpage .sky-group{border-radius:22px;padding:22px 18px}
+    #dpage .sky-houses{flex:1 1 100%;min-width:0;gap:12px}
+    #dpage .sky-house{padding:16px 15px;border-radius:16px;min-height:262px}
+    #dpage .sky-house .fld{font-size:16px}
+    #dpage .sky-house .art{height:132px}
+    #dpage .sky-group > .art{width:58%;height:170px;opacity:.24}
+    #dpage .sky-group.g1 > .art{width:56%;height:180px;opacity:.26}
   }
 
   /* —— 展开:同一个区段里长出来,不开 modal、不换页 ——
@@ -1271,14 +1402,6 @@
     background-repeat:no-repeat;opacity:.6
   }
 
-  /* 落在这一宫的行星:卡片右下一点极淡的珠光,不是换底色、不是边框加粗。
-     用 ::after 而不是 background,滑过卡片时底色变化不会把它盖掉。 */
-  #dpage .sky-house{isolation:isolate}
-  #dpage .sky-house.has::after{
-    content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
-    background:radial-gradient(80% 64% at 84% 88%, rgba(201,162,126,.13), rgba(201,162,126,0) 74%)
-  }
-
   /* ==========================================================
      手机版(≤767px)—— 只改呈现,资料与桌机版都不动。
      所有规则都收在这一个 media query 里,而且放在最后,
@@ -1314,21 +1437,25 @@
     #dpage .sky-core::-webkit-scrollbar{display:none}
     #dpage .sky-card{flex:0 0 88%;scroll-snap-align:start}
 
-    /* —— 十二宫:每一组自己就是一个 2×2,组与组之间留出章节感 —— */
-    #dpage .sky-group{margin-top:clamp(26px,6vw,36px);border-radius:20px;padding:18px 15px}
-    /* 章节开头让它呼吸:标题一行、宫号一行、说明一行 */
-    #dpage .sky-group-hd .nm{font-size:18px}
-    #dpage .sky-houses{gap:11px}
-    #dpage .sky-house .bg{font-size:30px;margin-bottom:8px}
-    #dpage .sky-group-hd .ic svg{width:14px;height:14px}
-
-    /* 有行星的那几宫:手机上辉光再明显一点点,仍然不是换底色 */
-    #dpage .sky-house.has::after{
-      background:radial-gradient(82% 66% at 84% 88%, rgba(201,162,126,.17), rgba(201,162,126,0) 76%)
+    /* —— 十二个生命领域:手机上跟四个核心同一套做法,横向滑动 ——
+       每一章自己是一条,引言在上、四张卡在下滑动。
+       --sky-gx 是章节容器的左右内距:卡片要铺到容器边缘,负 margin 得跟它一样宽。 */
+    #dpage .sky-group{--sky-gx:clamp(28px,3vw,42px)}
+    #dpage .sky-row{gap:clamp(16px,3.4vw,22px)}
+    #dpage .sky-intro{flex:1 1 100%;min-width:0}
+    #dpage .sky-houses{
+      flex:1 1 100%;min-width:0;
+      display:flex;gap:12px;
+      overflow-x:auto;overscroll-behavior-x:contain;
+      scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;
+      scrollbar-width:none;-ms-overflow-style:none;
+      margin-left:calc(-1 * var(--sky-gx));margin-right:calc(-1 * var(--sky-gx));
+      padding:2px var(--sky-gx) 8px
     }
-    /* 行星符号比中文名再明显一点 */
-    #dpage .sky-house .pl svg{width:19px;height:19px}
-    #dpage .sky-house .pl b{font-size:11.5px}
+    #dpage .sky-houses::-webkit-scrollbar{display:none}
+    /* 62% 会露出下一张的边(知道可以滑);上限 230px 是给平板宽度用的,
+       不然 700px 左右时一张卡会宽到不像卡片 */
+    #dpage .sky-house{flex:0 0 min(62%,230px);scroll-snap-align:start}
 
     /* —— 中场:资料与资料之间真正停一下 —— */
     #dpage .sky-pause{margin:clamp(64px,15vw,84px) 0}
@@ -1367,6 +1494,8 @@
     #dpage .sky-asp .lk .ln{max-width:64px}
     #dpage .sky-asp .orb{grid-column:1/-1;grid-row:3;text-align:center}
   }
+  /* v3 的 600 段把章节容器的内距收成 18px —— 横向滑动的负 margin 要跟着收 */
+  @media(max-width:600px){#dpage .sky-group{--sky-gx:18px}}
   /* 划词收藏:轻盈的浮动动作,不打断阅读 */
   #dpSaveTip{position:absolute;z-index:90;display:none;align-items:center;gap:6px;
     font-family:"Noto Sans SC","Helvetica Neue",Arial,sans-serif;font-size:12.5px;color:#fff;background:rgba(26,22,52,.94);
@@ -6760,14 +6889,47 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
           '<b>' + esc0(nm) + '</b>' +
           (p.retro ? '<i class="rx" aria-hidden="true">℞</i>' : "") + '</span>';
       };
+      /* 四张卡的排版逻辑完全一致:同高、同字级、同间距。
+         差别只在素材的裁切位置、放大量与浓度 —— 由 CSS 的 [data-field] 那一组规则给。 */
       const houseTile = function (i) {
         const g = signOf(res.cusps[i]);
         const pls = byHouse[i + 1] || [];
-        return '<div class="sky-house' + (pls.length ? " has" : "") + '">' +
-          '<span class="bg" aria-hidden="true">' + ("0" + (i + 1)).slice(-2) + '</span>' +
+        const no = ("0" + (i + 1)).slice(-2);
+        return '<div class="sky-house' + (pls.length ? " has" : "") + '"' +
+          ' role="button" tabindex="0" aria-expanded="false"' +
+          ' data-field="' + (i + 1) + '" aria-controls="skyField' + (i + 1) + '">' +
+          '<img class="art" src="assets/atmos/h' + no + '-r.webp" alt="" aria-hidden="true" loading="lazy" decoding="async">' +
+          '<span class="veil" aria-hidden="true"></span>' +
+          '<div class="in">' +
+          '<div class="top"><span class="bg" aria-hidden="true">' + no + '</span>' +
+          '<i class="dash" aria-hidden="true"></i>' +
+          '<span class="mk" aria-hidden="true">' + SKY_MARK + '</span></div>' +
           '<div class="fld">' + esc0(SKY_FIELD[i][EN ? 1 : 0]) + '</div>' +
           '<div class="sg">' + esc0(g.name) + '<span class="d"> · ' + esc0(C.fmtDeg(g.deg)) + '</span></div>' +
-          (pls.length ? '<div class="pls">' + pls.map(planetChip).join("") + '</div>' : "") +
+          '<div class="pls">' + pls.map(planetChip).join("") + '</div>' +
+          '</div></div>';
+      };
+
+      /* 展开面板的内容 —— 补丁里没有这一段(它属于从未合并的 v2),
+         版面与文案照 reference/十二个生命领域 v3.dc.html 的原型写。
+         资料全部来自 res.cusps / byHouse,没有新的占星判断。 */
+      const houseDetail = function (i) {
+        const n = i + 1;
+        const g = signOf(res.cusps[i]);
+        const pls = byHouse[n] || [];
+        const chip = function (pl) {
+          const sg = C.lonToSign(pl.lon);
+          return '<span class="pi">' +
+            (GL.symbolSVG ? GL.symbolSVG(pl.glyphKey, 15, "currentColor") : "") +
+            esc0(EN ? pl.en : pl.name) +
+            '<small>' + esc0((EN ? window.I18N.TSign(sg.sign) : sg.sign) + " " + C.fmtDeg(sg.deg)) + '</small>' +
+            (pl.retro ? '<i class="rx" aria-hidden="true">℞</i>' : "") + '</span>';
+        };
+        return '<div class="in">' +
+          '<div class="ttl"><b>' + esc0(SKY_FIELD[i][EN ? 1 : 0]) + '</b>' +
+          '<span>' + esc0(dpT("第 " + n + " 宫", "House " + n)) + '</span></div>' +
+          '<div class="cusp">' + esc0(dpT("宫头", "Cusp") + " · " + g.name + " " + C.fmtDeg(g.deg)) + '</div>' +
+          (pls.length ? '<div class="chips">' + pls.map(chip).join("") + '</div>' : "") +
           '</div>';
       };
       /* 三组的名字用一般人听得懂的说法,不写「角宫 / 续宫 / 果宫」。
@@ -6788,6 +6950,10 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
         moon: '<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false">' +
           '<path fill="currentColor" d="M6.27 1.32A6.9 6.9 0 1 0 14.46 10.42 6.5 6.5 0 0 1 6.27 1.32Z"/></svg>'
       };
+      /* 全页反覆出现的一个记号:一段极细的金色轨道,轨道上停一颗点。
+         出现在三处 —— 章节之间的间隔、章节引言的开头、每张卡的右上角。用得少才有份量。 */
+      const SKY_MOTIF = '<svg viewBox="0 0 30 11" width="30" height="11" aria-hidden="true"><path d="M1 9.4C5.6 3 24.4 3 29 9.4" fill="none" stroke="#b8925f" stroke-width=".7" stroke-linecap="round" opacity=".34"/><circle cx="15" cy="4.2" r="1.4" fill="#b8925f" opacity=".5"/></svg>';
+      const SKY_MARK = '<svg viewBox="0 0 20 20" width="12" height="12" aria-hidden="true"><circle cx="10" cy="10" r="8.6" fill="none" stroke="#b8925f" stroke-width=".7" opacity=".2"/><circle cx="10" cy="1.4" r="1.2" fill="#b8925f" opacity=".42"/></svg>';
       const SKY_GROUPS = [
         { ids: [1, 4, 7, 10], sym: SKY_SYM.star, cls: "g1", nm: ["核心领域", "Core Areas"],
           ds: ["与你的自我、家庭、关系与事业有关，是人生中最直接、最容易被感受到的领域。",
@@ -6805,13 +6971,30 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
         '<div class="note">' + esc0(dpT("十二宫位象徵人生不同的领域，落在其中的行星，就是那个领域里正在运作的能量。",
           "The twelve houses mark the different areas a life is lived in. The planets inside them are the energies at work there.")) +
         '</div></div>' +
-        SKY_GROUPS.map(function (gp) {
-          return '<div class="sky-group ' + gp.cls + '"><div class="sky-group-hd">' +
-            '<span class="ic" aria-hidden="true">' + gp.sym + '</span>' +
-            '<span class="nm">' + esc0(gp.nm[EN ? 1 : 0]) + '</span>' +
-            '<span class="nos">' + gp.ids.join(" · ") + '</span>' +
-            '<span class="ds">' + esc0(gp.ds[EN ? 1 : 0]) + '</span></div>' +
-            '<div class="sky-houses">' + gp.ids.map(function (n) { return houseTile(n - 1); }).join("") + '</div></div>';
+        SKY_GROUPS.map(function (gp, gi) {
+          return (gi ? '<div class="sky-sep" aria-hidden="true"><i class="l"></i>' +
+              '<span class="mo">' + SKY_MOTIF + '</span><i class="r"></i></div>' : "") +
+            '<div class="sky-group ' + gp.cls + '">' +
+            '<span class="atmos" aria-hidden="true"><i class="o1"></i><i class="o2"></i><i class="o3"></i><i class="dust"></i></span>' +
+            '<img class="art" src="assets/atmos/band-' + gp.cls + '.webp" alt="" aria-hidden="true" loading="lazy" decoding="async">' +
+            '<div class="sky-row">' +
+            '<div class="sky-intro"><div class="sky-group-hd">' +
+            '<span class="mo" aria-hidden="true">' + SKY_MOTIF + '</span>' +
+            '<span class="nos">' + gp.ids.map(function (n) { return ("0" + n).slice(-2); }).join("   ·   ") + '</span>' +
+            '<div class="ttl"><span class="ic" aria-hidden="true">' + gp.sym + '</span>' +
+            '<h3 class="nm">' + esc0(gp.nm[EN ? 1 : 0]) + '</h3></div>' +
+            (EN ? "" : '<span class="en">' + esc0(gp.nm[1]) + '</span>') +
+            '<span class="rule" aria-hidden="true"></span>' +
+            '<span class="ds">' + esc0(gp.ds[EN ? 1 : 0]) + '</span>' +
+            '</div></div>' +
+            '<div class="sky-houses">' +
+            gp.ids.map(function (n) { return houseTile(n - 1); }).join("") +
+            '</div></div>' +
+            gp.ids.map(function (n) {
+              return '<div class="sky-fexp" id="skyField' + n + '" aria-hidden="true">' +
+                houseDetail(n - 1) + '</div>';
+            }).join("") +
+            '</div>';
         }).join("") + '</section>';
 
       /* —— 4. 中场:十二宫之后、相位之前的一次呼吸 ——
@@ -6911,6 +7094,84 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
         if (!on) { box.getBoundingClientRect(); box.style.maxHeight = "0px"; }
       });
     });
+    /* 十二宫卡片:点一下,一个半透明的小格子浮在那张卡旁边,一次只开一张。
+       浮层是 .sky-group 的子元素,而容器 overflow:hidden —— 所以位置算完之后
+       要夹回容器内,不然靠边那几张会被切掉。没有 max-height,内容不会被截断。 */
+    (function () {
+      const cards = Array.prototype.slice.call(
+        document.querySelectorAll("#dpage .sky-house[data-field]"));
+      if (!cards.length) return;
+      const boxOf = function (card) { return document.getElementById(card.getAttribute("aria-controls")); };
+      let openCard = null;
+
+      const shut = function () {
+        if (!openCard) return;
+        const box = boxOf(openCard);
+        if (box) { box.classList.remove("on"); box.setAttribute("aria-hidden", "true"); }
+        openCard.setAttribute("aria-expanded", "false");
+        openCard = null;
+      };
+      const place = function (card, box) {
+        const group = card.closest(".sky-group");
+        if (!group) return;
+        const gr = group.getBoundingClientRect(), cr = card.getBoundingClientRect();
+        const pad = 14;
+        // visibility:hidden 仍然有版面,可以先量再定位
+        const w = box.offsetWidth, h = box.offsetHeight;
+        let left = cr.left - gr.left;
+        let top = cr.top - gr.top + cr.height * 0.42;
+        left = Math.max(pad, Math.min(left, gr.width - w - pad));
+        top = Math.max(pad, Math.min(top, gr.height - h - pad));
+        box.style.left = Math.round(left) + "px";
+        box.style.top = Math.round(top) + "px";
+      };
+      const open = function (card) {
+        const box = boxOf(card);
+        if (!box) return;
+        shut();
+        place(card, box);
+        box.classList.add("on");
+        box.setAttribute("aria-hidden", "false");
+        card.setAttribute("aria-expanded", "true");
+        openCard = card;
+      };
+      cards.forEach(function (card) {
+        const toggle = function (e) {
+          if (e) e.stopPropagation();
+          if (openCard === card) shut(); else open(card);
+        };
+        card.addEventListener("click", toggle);
+        card.addEventListener("keydown", function (e) {
+          if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(e); }
+        });
+      });
+      // 点浮层本身不关;点别处、按 Esc、改变视窗大小都收起来
+      document.querySelectorAll("#dpage .sky-fexp").forEach(function (box) {
+        box.addEventListener("click", function (e) { e.stopPropagation(); });
+      });
+      /* 手机版四张卡是横向滑动的:滑的时候浮层跟着卡走,
+         卡片中线滑出可视范围才收起来。
+         (不能一有 scroll 就关 —— 点卡片时浏览器会把它捲进视野,那也是一次 scroll) */
+      document.querySelectorAll("#dpage .sky-houses").forEach(function (rail) {
+        rail.addEventListener("scroll", function () {
+          if (!openCard || !rail.contains(openCard)) return;
+          const rr = rail.getBoundingClientRect(), cr = openCard.getBoundingClientRect();
+          const mid = cr.left + cr.width / 2;
+          if (mid < rr.left || mid > rr.right) { shut(); return; }
+          const box = boxOf(openCard);
+          if (box) place(openCard, box);
+        }, { passive: true });
+      });
+      document.addEventListener("click", shut);
+      document.addEventListener("keydown", function (e) { if (e.key === "Escape") shut(); });
+      /* 转屏 / 手机网址列收合都会触发 resize —— 重新定位就好,不要把浮层关掉 */
+      window.addEventListener("resize", function () {
+        if (!openCard) return;
+        const box = boxOf(openCard);
+        if (box) place(openCard, box);
+      });
+    })();
+
     const fw = document.getElementById("dpFullWheel");
     if (fw && curResult) drawInnerSkyWheel(fw, curResult);
   }
