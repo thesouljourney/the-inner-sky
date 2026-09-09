@@ -1583,9 +1583,9 @@
     position:relative;display:grid;align-items:start;
     grid-template-columns:var(--th-col) minmax(0,1fr);
     gap:var(--th-gap);
-    margin:0 0 clamp(84px,11vw,140px);border-radius:0
+    margin:0 0 clamp(66px,8vw,108px);border-radius:0
   }
-  #dpage.thread-page .thread-ch:last-of-type{margin-bottom:clamp(60px,8vw,110px)}
+  #dpage.thread-page .thread-ch:last-of-type{margin-bottom:clamp(50px,6vw,84px)}
   #dpage.thread-page .ch-mark{
     display:flex;flex-direction:column;align-items:center;gap:12px;padding-top:2px
   }
@@ -1691,6 +1691,31 @@
     #dpage.thread-page .dp-reflect .bd{grid-column:2;grid-row:1/4}
   }
 
+  /* —— 渐进展开:先露前面几段,其余收在「继续查看」后面 ——
+     收起是 max-height:0,不是 line-clamp;文字完整留在 DOM 里。 */
+  #dpage.thread-page .fold-rest{
+    overflow:hidden;max-height:0;opacity:0;
+    transition:max-height .5s cubic-bezier(.22,1,.36,1),opacity .38s ease
+  }
+  #dpage.thread-page .fold-rest.on{opacity:1}
+  @media (prefers-reduced-motion:reduce){#dpage.thread-page .fold-rest{transition:none}}
+  #dpage.thread-page .fold-btn{
+    display:inline-flex;align-items:center;gap:8px;
+    margin-top:12px;min-height:40px;padding:8px 2px;
+    background:none;border:none;cursor:pointer;
+    font-family:var(--dp-sans);font-size:13.5px;letter-spacing:.08em;
+    color:#7a6fa8;transition:color .3s ease
+  }
+  #dpage.thread-page .fold-btn .cv{font-size:11px;line-height:1;transition:transform .3s ease}
+  #dpage.thread-page .fold-btn:hover{color:#4c4470}
+  #dpage.thread-page .fold-btn:focus-visible{
+    outline:1px solid rgba(129,118,173,.7);outline-offset:3px;border-radius:8px
+  }
+  /* 卡片里的按钮沉到底,收起状态下三张卡的高度才对得齐 */
+  #dpage.thread-page .dp-step .ct{display:flex;flex-direction:column;height:100%}
+  #dpage.thread-page .dp-step .ct .bd{display:flex;flex-direction:column}
+  #dpage.thread-page .dp-step .ct .bd .fold-btn{margin-top:auto;padding-top:12px}
+
   /* —— 页脚:同一片天空当底图,文字仍然是真的 HTML —— */
   #dpage.thread-page .dp-foot{
     background:
@@ -1702,7 +1727,7 @@
   /* —— 桌机:插画进第三栏,奇偶章错开高度,页面才有节奏 —— */
   @media(min-width:1025px){
     #dpage.thread-page .thread-ch{
-      grid-template-columns:var(--th-col) minmax(0,1fr) clamp(186px,21vw,286px)
+      grid-template-columns:var(--th-col) minmax(0,1fr) clamp(170px,19vw,252px)
     }
     #dpage.thread-page .ch-art{grid-column:3;align-self:start}
     #dpage.thread-page .ch-art.a1{margin-top:clamp(4px,1vw,14px)}
@@ -1718,22 +1743,72 @@
     }
     #dpage.thread-page .ch-art.a2,#dpage.thread-page .ch-art.a4{width:min(72%,300px)}
   }
+  /* ============================================================
+     手机版(≤767px)—— 自己一套版面,不是把桌机缩小
+     ============================================================ */
   @media(max-width:767px){
-    #dpage.thread-page{--th-col:38px;--th-gap:14px}
-    #dpage.thread-page .ch-mark .no{font-size:24px}
-    #dpage.thread-page .ch-mark .nd{width:24px;height:24px}
-    #dpage.thread-page .ch-mark .nd svg{width:11px;height:11px}
-    #dpage.thread-page .thread-ch{margin-bottom:clamp(62px,13vw,84px)}
-    #dpage.thread-page .thread-ch h3.dp-h{font-size:19px}
-    #dpage.thread-page .thread-ch .dp-prose{font-size:15.5px;line-height:1.95}
-    #dpage.thread-page .ch-art{width:min(74%,240px)}
+    #dpage.thread-page{--th-col:34px;--th-gap:12px}
+    /* 左右留白 20px,内容满版一栏 */
+    #dpage.thread-page .dp-body{padding:26px 20px 72px}
+
+    /* —— Hero:压低、云少一点、月亮小一圈,标题永远不被压到 —— */
+    #dpage.thread-page .dp-hero{
+      background:
+        linear-gradient(180deg,rgba(9,18,46,.6) 0%,rgba(9,18,46,.26) 46%,rgba(9,18,46,.46) 100%),
+        url(assets/life/hero-sky.webp) left 34% / 215% auto no-repeat,
+        var(--dp-navy);
+      padding-bottom:clamp(34px,9vw,52px)
+    }
+    #dpage.thread-page .dp-hero-grid{
+      min-height:0;padding:clamp(18px,5vw,30px) 0 clamp(14px,4vw,22px)
+    }
+    #dpage.thread-page h1.dp-title{font-size:29px;line-height:1.45;margin-bottom:11px}
+    #dpage.thread-page .dp-sub{font-size:14px;line-height:1.9;max-width:22em}
+    /* 月亮缩到 26vw、压在右上角的天空里 —— 标题在它下方置中,不会重叠 */
+    #dpage.thread-page .dp-hero-art{
+      width:clamp(94px,26vw,138px);opacity:.6;
+      top:0;right:-16px;bottom:auto;transform:none
+    }
+    #dpage.thread-page .dp-hero::after{height:clamp(40px,12vw,64px)}
+
+    /* —— 字级:不缩小到要放大才读得到 —— */
+    #dpage.thread-page .thread-ch h3.dp-h{font-size:21px;line-height:1.6}
+    #dpage.thread-page .thread-ch .dp-prose{font-size:15.5px;line-height:1.9}
+    #dpage.thread-page .thread-ch .dp-prose p{margin-bottom:17px}
+    #dpage.thread-page .thread-open .dp-quote{font-size:19.5px;line-height:1.9}
+    #dpage.thread-page .dp-sec-label{font-size:11.5px;letter-spacing:.22em}
+    #dpage.thread-page .dp-step .ct .bd,
+    #dpage.thread-page .dp-reflect .bd,
+    #dpage.thread-page .dp-keep .q .bd{font-size:15px;line-height:1.9}
+    /* 手指点得到:继续查看 / 收起至少 44px 高 */
+    #dpage.thread-page .fold-btn{min-height:44px;font-size:14px}
+
+    /* —— 生命线:收窄贴着章节号,记号缩小,不占走内容宽度 —— */
+    #dpage.thread-page .ch-mark .no{font-size:23px}
+    #dpage.thread-page .ch-mark .nd{width:22px;height:22px}
+    #dpage.thread-page .ch-mark .nd svg{width:10px;height:10px}
+    #dpage.thread-page .thread-line{bottom:clamp(30px,8vw,60px)}
+    #dpage.thread-page .thread-ch{margin-bottom:clamp(56px,12vw,78px)}
     #dpage.thread-page .thread-open,#dpage.thread-page .thread-tail,
     #dpage.thread-page .dp-sec-label{padding-left:calc(var(--th-col) + var(--th-gap))}
-    #dpage.thread-page .thread-open .dp-quote{font-size:19px;line-height:1.9}
-    #dpage.thread-page .dp-hero-art{
-      width:clamp(112px,34vw,170px);opacity:.72;top:auto;bottom:6%;transform:none;right:-14px
+
+    /* —— 插画:落到正文下方、置中、缩到 62%,不与文字重叠 —— */
+    #dpage.thread-page .ch-art{
+      grid-column:2;justify-self:center;width:62%;max-width:230px;
+      margin-top:clamp(16px,4vw,26px)
     }
-    #dpage.thread-page .dp-hero-grid{min-height:0;padding-bottom:clamp(70px,20vw,110px)}
+    #dpage.thread-page .ch-art.a2,#dpage.thread-page .ch-art.a4{width:72%;max-width:270px}
+
+    /* —— 卡片一律单栏 —— */
+    #dpage.thread-page .dp-start-list,#dpage.thread-page .dp-keep{grid-template-columns:1fr}
+    #dpage.thread-page .dp-step{padding:20px 18px}
+    #dpage.thread-page .dp-keep .q{padding:20px 18px}
+    #dpage.thread-page .dp-reflect{padding:24px 20px;border-radius:20px}
+    #dpage.thread-page .thread-tail::before{width:52px;height:52px;margin-bottom:26px}
+  }
+  /* 极窄的萤幕:装饰插画让位给文字(内容本身永远不隐藏) */
+  @media(max-width:359px){
+    #dpage.thread-page .ch-art{display:none}
   }
 
   /* —— 进场:只有 12px 的位移与淡入。JS 只在允许动态时才挂 .rise —— */
@@ -2901,6 +2976,8 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     worthKeeping:     ["值 得 记 住 的 话", "Worth coming back to"],
     tryThis:          ["\u2192 试试看:", "\u2192 If you feel like trying something:"],
     readMore:         ["展开阅读 \u2228", "Keep reading \u2228"],
+    keepReading:      ["继续查看", "Keep reading"],
+    foldUp:           ["收起", "Close"],
     readLess:         ["收起 \u2227", "Close \u2227"],
     openRead:         ["展开阅读 \u2192", "Open \u2192"],
     collapseUp:       ["收起 \u25B2", "Close \u25B2"],
@@ -6247,6 +6324,53 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     return esc0(x).split(/\n\s*\n|\n/).filter(function (y) { return y.trim(); })
       .map(function (y) { return "<p>" + y.trim() + "</p>"; }).join("");
   }
+  /* ============================================================
+     渐进展开(段落感知)—— 一个地方写,好几处共用
+     ------------------------------------------------------------
+     不用 line-clamp:它会切在句子中间。这里是把已经渲染好的 <p> 依段落
+     切成「先看得到的」与「继续查看之后才出现的」两段,两段都留在 DOM 里,
+     文字一个字都没有改。收起状态由 max-height:0 决定,展开时的高度由 JS
+     按实际内容量给,不写死上限 —— 再长的段落也不会被截断。
+     ============================================================ */
+  let dpFoldSeq = 0;
+  function dpMakeFoldable(host, keep) {
+    if (!host || host.dataset.folded) return;
+    const ps = Array.prototype.filter.call(host.children, function (n) { return n.tagName === "P"; });
+    // 只多出一段就不值得折
+    if (ps.length <= keep + 1) return;
+    host.dataset.folded = "1";
+    const id = "fold" + (++dpFoldSeq);
+    const rest = document.createElement("div");
+    rest.className = "fold-rest";
+    rest.id = id;
+    ps.slice(keep).forEach(function (n) { rest.appendChild(n); });
+    host.appendChild(rest);
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "fold-btn";
+    btn.setAttribute("aria-expanded", "false");
+    btn.setAttribute("aria-controls", id);
+    btn.innerHTML = '<span class="tx"></span><span class="cv" aria-hidden="true">↓</span>';
+    btn.querySelector(".tx").textContent = T("keepReading");
+    host.appendChild(btn);
+    /* 展开完成后把上限拿掉:之后换行、换字体或转屏都不会再被截断 */
+    rest.addEventListener("transitionend", function (e) {
+      if (e.target === rest && e.propertyName === "max-height" && rest.classList.contains("on"))
+        rest.style.maxHeight = "none";
+    });
+    btn.addEventListener("click", function () {
+      const on = !rest.classList.contains("on");
+      rest.classList.toggle("on", on);
+      btn.setAttribute("aria-expanded", on ? "true" : "false");
+      btn.classList.toggle("open", on);
+      btn.querySelector(".tx").textContent = on ? T("foldUp") : T("keepReading");
+      btn.querySelector(".cv").textContent = on ? "↑" : "↓";
+      // 收起时要先回到当前实际高度再归零,否则从 none 直接跳 0 不会有过渡
+      rest.style.maxHeight = rest.scrollHeight + "px";
+      if (!on) { rest.getBoundingClientRect(); rest.style.maxHeight = "0px"; }
+    });
+  }
+
   // 属于我的生命脉络:章节以分页签呈现,一次只读一段
   /* 段落排版(纯呈现层,一个字都不改动):
      · 段首很短的前导标签(例如「原因是:」)以淡紫色标出
@@ -7523,7 +7647,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     }
 
     dpScaffold({
-      chip: dpT("属于我的生命脉络", "THE PATTERN OF YOUR LIFE"),
+      // chip 原本就是标题本身,与 h1 一字不差 —— 这一页不再重复一次
       title: dpT("属于我的生命脉络", "The Pattern of Your Life"),
       sub: dpT("九个主题读完之后，它们会收束成一条线。",
                "When all nine have been read, they come together into one thread."),
@@ -7535,6 +7659,19 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     if (rm) rm.addEventListener("click", function () { mapErr = null; toggleMap(); });
     const gm = document.getElementById("dpGenMap");
     if (gm) gm.addEventListener("click", function () { toggleMap(); });
+    /* 渐进展开:章节正文、练习卡、思考区块各自先露出前面几段,
+       其余收在「继续查看」后面。段落切分在 DOM 上做 —— 共用的
+       dpStartHtml / dpReflectHtml 一个字都没动,主题页也就不受影响。 */
+    (function () {
+      const host = $("dpage");
+      if (!host.classList.contains("thread-page")) return;
+      // brief 给的范围:桌机 2–3 段、手机 1–2 段。取偏短的一端,首屏才真的变轻。
+      const keep = 2;
+      host.querySelectorAll(".thread-ch .dp-prose").forEach(function (el) { dpMakeFoldable(el, keep); });
+      host.querySelectorAll(".dp-step .ct .bd").forEach(function (el) { dpMakeFoldable(el, 1); });
+      host.querySelectorAll(".dp-reflect .bd").forEach(function (el) { dpMakeFoldable(el, 1); });
+    })();
+
     /* 进场:只有 12px 的位移与淡入,没有缩放、没有视差。
        使用者要求减少动态、或浏览器没有 IntersectionObserver 时完全不挂 ——
        内容一律以最终状态呈现,绝不会因为 JS 没跑而看不见。 */
