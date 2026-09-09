@@ -1223,13 +1223,6 @@
   #dpage .sky-house .pls{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:6px;min-height:16px}
   #dpage .sky-house .pl{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
   #dpage .sky-house .pl b{font-weight:400;font-size:11.5px;letter-spacing:.03em;color:#5d5a52}
-  #dpage .sky-house .go{
-    margin-top:13px;width:29px;height:29px;border-radius:50%;
-    display:flex;align-items:center;justify-content:center;
-    background:rgba(255,255,255,.55);border:1px solid rgba(150,120,88,.14);
-    color:#7a6a55;font-size:11.5px;pointer-events:none;
-    transition:transform .35s,background .35s,border-color .35s,color .35s
-  }
   #dpage .sky-house:hover{
     transform:translateY(-4px);border-color:rgba(184,146,95,.3);
     box-shadow:0 1px 2px rgba(80,60,40,.02), 0 14px 34px rgba(80,60,40,.05), 0 0 0 1px rgba(184,146,95,.09)
@@ -1239,21 +1232,30 @@
     transform:translateY(-2px);border-color:rgba(154,106,52,.24);
     box-shadow:0 1px 3px rgba(80,60,40,.03), 0 16px 38px rgba(80,60,40,.055)
   }
-  #dpage .sky-house[aria-expanded="true"] .go{
-    background:#9a6a34;border-color:#9a6a34;color:#fdfbf9;transform:rotate(90deg)
-  }
 
-  /* 展开的面板:落在这一章容器的下缘,与相位那一段共用 .sky-more 的过渡 */
-  #dpage .sky-fexp{position:relative;z-index:1}
+  /* 展开:一个浮在卡片旁的小格子。半透明 + 毛玻璃,压在同排其他卡之上。
+     位置由 JS 依被点的那张卡算,并夹在章节容器内(容器是 overflow:hidden)。
+     没有 max-height —— 行星再多也不会被截断。 */
+  #dpage .sky-fexp{
+    /* 减掉左右各 14px 的夹边余量,窄屏才不会被容器的 overflow:hidden 切掉 */
+    position:absolute;left:0;top:0;z-index:5;width:min(320px,calc(100% - 28px));
+    opacity:0;visibility:hidden;transform:translateY(-6px);
+    transition:opacity .32s ease,transform .32s cubic-bezier(.22,1,.36,1),visibility 0s linear .32s
+  }
+  #dpage .sky-fexp.on{opacity:1;visibility:visible;transform:none;transition-delay:0s,0s,0s}
+  @media (prefers-reduced-motion:reduce){#dpage .sky-fexp{transition:none}}
   #dpage .sky-fexp .in{
-    margin:clamp(16px,1.8vw,24px) 0 0;padding:26px clamp(20px,2.4vw,30px);
-    border-radius:20px;background:rgba(255,255,255,.62);border:1px solid rgba(150,120,88,.14)
+    margin:0;padding:20px 22px;border-radius:18px;
+    background:rgba(253,251,247,.82);
+    -webkit-backdrop-filter:blur(14px) saturate(1.08);backdrop-filter:blur(14px) saturate(1.08);
+    border:1px solid rgba(150,120,88,.18);
+    box-shadow:0 2px 6px rgba(80,60,40,.04), 0 18px 44px rgba(80,60,40,.1)
   }
   #dpage .sky-fexp .ttl{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
   #dpage .sky-fexp .ttl b{font-family:var(--dp-serif);font-weight:600;font-size:19px;letter-spacing:.02em;color:#2b2925}
   #dpage .sky-fexp .ttl span{font-size:11px;letter-spacing:.2em;color:#9a6a34}
   #dpage .sky-fexp .cusp{font-size:12px;letter-spacing:.1em;color:#6b6759;margin-top:11px}
-  #dpage .sky-fexp .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:17px}
+  #dpage .sky-fexp .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:15px}
   #dpage .sky-fexp .chips .pi{
     display:inline-flex;align-items:center;gap:9px;font-size:12.5px;color:#2b2925;
     background:rgba(255,255,255,.7);border:1px solid rgba(150,120,88,.16);
@@ -1262,7 +1264,6 @@
   #dpage .sky-fexp .chips .pi svg{flex:none;color:#5a5a7d}
   #dpage .sky-fexp .chips .pi small{color:#6b6759;font-variant-numeric:tabular-nums}
   #dpage .sky-fexp .chips .pi .rx{font-style:normal;font-size:10px;color:#b4645a}
-  #dpage .sky-fexp .note{font-size:12.5px;line-height:2.05;color:#605c52;margin-top:16px;max-width:44em}
 
   @media(max-width:1100px){
     #dpage .sky-houses{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -6884,7 +6885,6 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
           '<div class="fld">' + esc0(SKY_FIELD[i][EN ? 1 : 0]) + '</div>' +
           '<div class="sg">' + esc0(g.name) + '<span class="d"> · ' + esc0(C.fmtDeg(g.deg)) + '</span></div>' +
           '<div class="pls">' + pls.map(planetChip).join("") + '</div>' +
-          '<span class="go" aria-hidden="true">→</span>' +
           '</div></div>';
       };
 
@@ -6908,12 +6908,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
           '<span>' + esc0(dpT("第 " + n + " 宫", "House " + n)) + '</span></div>' +
           '<div class="cusp">' + esc0(dpT("宫头", "Cusp") + " · " + g.name + " " + C.fmtDeg(g.deg)) + '</div>' +
           (pls.length ? '<div class="chips">' + pls.map(chip).join("") + '</div>' : "") +
-          '<div class="note">' + esc0(pls.length
-            ? dpT("行星的星座、度数与逆行原本只写在 title 里，展开之后直接读得到。",
-                  "Each planet's sign, degree and retrograde motion — spelled out here instead of hidden in a tooltip.")
-            : dpT("这一宫没有行星驻守 —— 它的事情由宫头星座的性质来表达，通常安静，不代表空白。",
-                  "No planet sits in this house. Its matters are carried by the sign on the cusp: quiet, not empty.")) +
-          '</div></div>';
+          '</div>';
       };
       /* 三组的名字用一般人听得懂的说法,不写「角宫 / 续宫 / 果宫」。
          分组只是让十二个宫读起来有条理,不是新的占星判断。 */
@@ -6974,7 +6969,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
             gp.ids.map(function (n) { return houseTile(n - 1); }).join("") +
             '</div></div>' +
             gp.ids.map(function (n) {
-              return '<div class="sky-more sky-fexp" id="skyField' + n + '" aria-hidden="true">' +
+              return '<div class="sky-fexp" id="skyField' + n + '" aria-hidden="true">' +
                 houseDetail(n - 1) + '</div>';
             }).join("") +
             '</div>';
@@ -7077,47 +7072,71 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
         if (!on) { box.getBoundingClientRect(); box.style.maxHeight = "0px"; }
       });
     });
-    /* 十二宫卡片:点一下在所属章节的下缘展开,一次只开一张。
-       高度跟相位那一段同一套做法 —— JS 量 scrollHeight,不写死上限,
-       行星多的宫不会被截掉(这是你选的做法,不是原型的固定 460px)。 */
+    /* 十二宫卡片:点一下,一个半透明的小格子浮在那张卡旁边,一次只开一张。
+       浮层是 .sky-group 的子元素,而容器 overflow:hidden —— 所以位置算完之后
+       要夹回容器内,不然靠边那几张会被切掉。没有 max-height,内容不会被截断。 */
     (function () {
-      const cards = document.querySelectorAll("#dpage .sky-house[data-field]");
+      const cards = Array.prototype.slice.call(
+        document.querySelectorAll("#dpage .sky-house[data-field]"));
       if (!cards.length) return;
       const boxOf = function (card) { return document.getElementById(card.getAttribute("aria-controls")); };
-      const shut = function (card) {
-        const box = boxOf(card);
-        if (!box || !box.classList.contains("on")) return;
-        // 先回到当前实际高度再归零,否则从 none 直接跳 0 不会有过渡
-        box.style.maxHeight = box.scrollHeight + "px";
-        box.getBoundingClientRect();
-        box.classList.remove("on");
-        box.setAttribute("aria-hidden", "true");
-        box.style.maxHeight = "0px";
-        card.setAttribute("aria-expanded", "false");
+      let openCard = null;
+
+      const shut = function () {
+        if (!openCard) return;
+        const box = boxOf(openCard);
+        if (box) { box.classList.remove("on"); box.setAttribute("aria-hidden", "true"); }
+        openCard.setAttribute("aria-expanded", "false");
+        openCard = null;
       };
-      cards.forEach(function (card) {
+      const place = function (card, box) {
+        const group = card.closest(".sky-group");
+        if (!group) return;
+        const gr = group.getBoundingClientRect(), cr = card.getBoundingClientRect();
+        const pad = 14;
+        // visibility:hidden 仍然有版面,可以先量再定位
+        const w = box.offsetWidth, h = box.offsetHeight;
+        let left = cr.left - gr.left;
+        let top = cr.top - gr.top + cr.height * 0.42;
+        left = Math.max(pad, Math.min(left, gr.width - w - pad));
+        top = Math.max(pad, Math.min(top, gr.height - h - pad));
+        box.style.left = Math.round(left) + "px";
+        box.style.top = Math.round(top) + "px";
+      };
+      const open = function (card) {
         const box = boxOf(card);
         if (!box) return;
-        /* 展开完成后把上限拿掉:之后换行、换字体或转屏都不会再被截断 */
-        box.addEventListener("transitionend", function (e) {
-          if (e.target === box && e.propertyName === "max-height" && box.classList.contains("on"))
-            box.style.maxHeight = "none";
-        });
-        const toggle = function () {
-          const on = !box.classList.contains("on");
-          cards.forEach(function (other) { if (other !== card) shut(other); });
-          if (!on) { shut(card); return; }
-          box.classList.add("on");
-          box.setAttribute("aria-hidden", "false");
-          card.setAttribute("aria-expanded", "true");
-          box.style.maxHeight = box.scrollHeight + "px";
+        shut();
+        place(card, box);
+        box.classList.add("on");
+        box.setAttribute("aria-hidden", "false");
+        card.setAttribute("aria-expanded", "true");
+        openCard = card;
+      };
+      cards.forEach(function (card) {
+        const toggle = function (e) {
+          if (e) e.stopPropagation();
+          if (openCard === card) shut(); else open(card);
         };
         card.addEventListener("click", toggle);
         card.addEventListener("keydown", function (e) {
-          if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(); }
+          if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(e); }
         });
       });
+      // 点浮层本身不关;点别处、按 Esc、改变视窗大小都收起来
+      document.querySelectorAll("#dpage .sky-fexp").forEach(function (box) {
+        box.addEventListener("click", function (e) { e.stopPropagation(); });
+      });
+      document.addEventListener("click", shut);
+      document.addEventListener("keydown", function (e) { if (e.key === "Escape") shut(); });
+      /* 转屏 / 手机网址列收合都会触发 resize —— 重新定位就好,不要把浮层关掉 */
+      window.addEventListener("resize", function () {
+        if (!openCard) return;
+        const box = boxOf(openCard);
+        if (box) place(openCard, box);
+      });
     })();
+
     const fw = document.getElementById("dpFullWheel");
     if (fw && curResult) drawInnerSkyWheel(fw, curResult);
   }
