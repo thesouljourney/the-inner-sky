@@ -1534,6 +1534,32 @@
   #dpage.thread-page .dp-hero-grid > div{max-width:min(100%,var(--dp-text))}
   #dpage.thread-page .dp-sub{max-width:30em;margin:0 auto}
   #dpage.thread-page h1.dp-title{font-size:clamp(28px,4.4vw,50px);letter-spacing:.03em}
+  /* 两行引导语:第一行轻、第二行收 —— 中间一颗小星把呼吸拉开 */
+  #dpage.thread-page .thread-vow{
+    display:flex;flex-direction:column;align-items:center;
+    gap:clamp(11px,1.4vw,16px);margin-top:clamp(14px,1.8vw,22px)
+  }
+  #dpage.thread-page .thread-vow .a{
+    font-family:var(--dp-sans);font-weight:300;line-height:2;
+    font-size:clamp(13px,1.35vw,15px);letter-spacing:.2em;
+    color:rgba(249,246,242,.62)
+  }
+  #dpage.thread-page .thread-vow .mk{
+    display:flex;align-items:center;gap:clamp(10px,1.4vw,15px);
+    color:rgba(232,211,162,.66);line-height:0
+  }
+  #dpage.thread-page .thread-vow .mk i{
+    display:block;width:clamp(24px,4.4vw,52px);height:1px;
+    background:linear-gradient(90deg,rgba(232,211,162,0),rgba(232,211,162,.5))
+  }
+  #dpage.thread-page .thread-vow .mk i:last-child{
+    background:linear-gradient(270deg,rgba(232,211,162,0),rgba(232,211,162,.5))
+  }
+  #dpage.thread-page .thread-vow .b{
+    font-family:var(--dp-serif);font-weight:400;line-height:1.85;
+    font-size:clamp(17px,2vw,22px);letter-spacing:.1em;
+    color:#f8f4ec;text-shadow:0 1px 24px rgba(170,160,213,.4)
+  }
   #dpage.thread-page .dp-hero-art{
     position:absolute;right:clamp(-46px,-1vw,0px);top:50%;transform:translateY(-50%);
     width:clamp(146px,25vw,320px);opacity:.9;pointer-events:none;
@@ -1573,10 +1599,6 @@
     text-align:left;font-size:clamp(19px,2.4vw,27px);line-height:1.95;color:#232445
   }
   #dpage.thread-page .thread-open .dp-quote .q{font-size:44px;vertical-align:-14px}
-  #dpage.thread-page .dp-sec-label{
-    padding-left:calc(var(--th-col) + var(--th-gap));
-    letter-spacing:.28em;margin-bottom:clamp(22px,3vw,34px)
-  }
 
   /* —— 一章 = 章节号 + 正文 + 一张浮在右边的插画 —— */
   #dpage.thread-page .thread-ch{
@@ -1763,7 +1785,10 @@
       min-height:0;padding:clamp(18px,5vw,30px) 0 clamp(14px,4vw,22px)
     }
     #dpage.thread-page h1.dp-title{font-size:29px;line-height:1.45;margin-bottom:11px}
-    #dpage.thread-page .dp-sub{font-size:14px;line-height:1.9;max-width:22em}
+    #dpage.thread-page .thread-vow{gap:10px;margin-top:12px}
+    #dpage.thread-page .thread-vow .a{font-size:12.5px;letter-spacing:.16em}
+    #dpage.thread-page .thread-vow .b{font-size:17.5px;letter-spacing:.07em;line-height:1.8}
+    #dpage.thread-page .thread-vow .mk i{width:22px}
     /* 月亮缩到 26vw、压在右上角的天空里 —— 标题在它下方置中,不会重叠 */
     #dpage.thread-page .dp-hero-art{
       width:clamp(94px,26vw,138px);opacity:.6;
@@ -1776,7 +1801,6 @@
     #dpage.thread-page .thread-ch .dp-prose{font-size:15.5px;line-height:1.9}
     #dpage.thread-page .thread-ch .dp-prose p{margin-bottom:17px}
     #dpage.thread-page .thread-open .dp-quote{font-size:19.5px;line-height:1.9}
-    #dpage.thread-page .dp-sec-label{font-size:11.5px;letter-spacing:.22em}
     #dpage.thread-page .dp-step .ct .bd,
     #dpage.thread-page .dp-reflect .bd,
     #dpage.thread-page .dp-keep .q .bd{font-size:15px;line-height:1.9}
@@ -1789,8 +1813,8 @@
     #dpage.thread-page .ch-mark .nd svg{width:10px;height:10px}
     #dpage.thread-page .thread-line{bottom:clamp(30px,8vw,60px)}
     #dpage.thread-page .thread-ch{margin-bottom:clamp(56px,12vw,78px)}
-    #dpage.thread-page .thread-open,#dpage.thread-page .thread-tail,
-    #dpage.thread-page .dp-sec-label{padding-left:calc(var(--th-col) + var(--th-gap))}
+    #dpage.thread-page .thread-open,
+    #dpage.thread-page .thread-tail{padding-left:calc(var(--th-col) + var(--th-gap))}
 
     /* —— 插画:落到正文下方、置中、缩到 62%,不与文字重叠 —— */
     #dpage.thread-page .ch-art{
@@ -6484,7 +6508,6 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     if (data.tagline)
       h += '<div class="thread-open"><div class="dp-quote"><span class="q">“</span>' +
         esc0(data.tagline) + "</div></div>";
-    h += '<div class="dp-sec-label">' + dpT("详细解读", "READING") + "</div>";
     h += (data.sections || []).map(function (sc, si) {
       const k = favKey(favSource, sc.title || "", sc.body || "");
       const btn = '<button class="fav-btn' + (isFaved(k) ? " on" : "") + '" data-fav="' + esc0(k) +
@@ -7649,8 +7672,18 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     dpScaffold({
       // chip 原本就是标题本身,与 h1 一字不差 —— 这一页不再重复一次
       title: dpT("属于我的生命脉络", "The Pattern of Your Life"),
-      sub: dpT("九个主题读完之后，它们会收束成一条线。",
-               "When all nine have been read, they come together into one thread."),
+      /* 两行引导语走 lead 插槽(dpScaffold 既有的可选插槽)——
+         sub 是纯文字,做不出两行之间的层次;这里要一轻一重。 */
+      lead: '<div class="thread-vow">' +
+        '<span class="a">' + esc0(dpT("每一次阅读，都会留下一颗星",
+                                      "Every reading leaves a star")) + '</span>' +
+        '<span class="mk" aria-hidden="true"><i></i>' +
+        '<svg viewBox="0 0 16 16" width="9" height="9" focusable="false">' +
+        '<path fill="currentColor" d="M8 .6c.31 4.35 2.71 6.75 7.06 7.06-4.35.31-6.75 2.71-7.06 7.06-.31-4.35-2.71-6.75-7.06-7.06C5.29 7.35 7.69 4.95 8 .6Z"/>' +
+        '</svg><i></i></span>' +
+        '<span class="b">' + esc0(dpT("直到九颗星连成你的生命脉络",
+                                      "Until nine of them trace the pattern of your life")) + '</span>' +
+        '</div>',
       // 月亮走 art 插槽(dpScaffold 既有的),天空底与页脚底图交给 CSS
       art: "assets/life/moon.webp",
       body: body, foot: foot, backLabel: dpT("返回主页", "Back to home"), backHref: LANDING_URL, seed: 55
