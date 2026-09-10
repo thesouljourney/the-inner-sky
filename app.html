@@ -1555,17 +1555,11 @@
     display:block;width:min(340px,76vw);margin:clamp(24px,3vw,38px) 0 0
   }
   #dpage.thread-page .thread-vow .stars svg{display:block;width:100%;height:auto}
-  /* 九颗一起走同一种处理,才不会看起来像一张太阳系图:
-     还没读的是灰白、低透明;读过的换成柔和的暖金,再加一层非常轻的柔光。
-     柔光用 drop-shadow —— 它沿着星球本身的轮廓,不会在背后留下一块圆底。 */
+  /* 出现的那几颗用素材本身的颜色,不套滤镜。
+     只留一层很小的柔光把它从云层里托起来 —— 是「看得清楚」,不是「在发光」。
+     柔光用 drop-shadow,它沿着星球的轮廓走,背后不会留下一块圆底。 */
   #dpage.thread-page .thread-vow .stars .orb{
-    opacity:.3;
-    filter:grayscale(1) brightness(1.28) contrast(.88)
-  }
-  #dpage.thread-page .thread-vow .stars .orb.on{
-    opacity:1;
-    filter:grayscale(1) brightness(1.06) sepia(.82) saturate(1.45) hue-rotate(-6deg)
-           drop-shadow(0 0 4px rgba(232,211,162,.5))
+    filter:drop-shadow(0 1px 3px rgba(22,20,44,.45))
   }
   #dpage.thread-page .thread-vow .b{
     display:flex;flex-direction:column;align-items:center;gap:3px;
@@ -1987,8 +1981,6 @@
     #dpage.thread-page .thread-vow{margin-top:14px}
     #dpage.thread-page .thread-vow .a{font-size:12px;letter-spacing:.16em}
     #dpage.thread-page .thread-vow .stars{width:min(310px,86vw);margin-top:22px}
-    /* 手机上这一带正好压在云层最亮的地方 —— 还没读的那几颗要再亮一点才看得见 */
-    #dpage.thread-page .thread-vow .stars .orb{opacity:.46}
     #dpage.thread-page .thread-vow .b{margin-top:30px;gap:2px;letter-spacing:.08em}
     /* 手机上这两行正好压在最亮的云带上,靠一点暗色投影拉开对比,而不是把字调亮 */
     #dpage.thread-page .thread-vow .b1{
@@ -6772,8 +6764,10 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
      每一颗对应一个主题,行星的分配与落地页「我的星空」完全一致
      (self=太阳、emotion=金星、career=土星、family=月亮、love=带环行星、
       partner=火星、wealth=木星、study=水星、body=天王星)。
-     读过的那一颗亮起来并带一层极淡的光晕,还没读的压低亮度与彩度。
-     错位量写死在 VOW_DX / VOW_DY,不是乱数:每次渲染位置完全一样。 */
+     只有读过的主题才会画出来,用素材本身的颜色;没读的那几格就是留白 ——
+     不放灰色占位、不放半透明版本。要的是「读完一个,才浮出一颗」。
+     位置是写死的(VOW_DX / VOW_DY),所以后来出现的星球会落在自己那一格,
+     不会因为别人先出现就被挤到别的地方。 */
   const VOW_ORB = [
     ["self", "sun"], ["emotion", "venus"], ["career", "saturn"], ["family", "moon"],
     ["love", "ringed"], ["partner", "mars"], ["wealth", "jupiter"], ["study", "mercury"],
@@ -6784,26 +6778,37 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   function dpVowStars(done) {
     const read = themeReadStatus();
     const n = VOW_ORB.length, w = 340, pad = 28, r = 11.5;
-    const pts = [];
+    const on = [];
     for (let i = 0; i < n; i++) {
+      if (!read[VOW_ORB[i][0]]) continue;
       const t = n > 1 ? i / (n - 1) : .5;
       const dx = VOW_DX[i % VOW_DX.length], dy = VOW_DY[i % VOW_DY.length];
-      pts.push([+(pad + t * (w - pad * 2) + dx).toFixed(1),
-                +(30 - 9 * Math.sin(Math.PI * t) + dy).toFixed(1)]);
+      on.push({ i: i,
+        x: +(pad + t * (w - pad * 2) + dx).toFixed(1),
+        y: +(30 - 9 * Math.sin(Math.PI * t) + dy).toFixed(1) });
     }
-    // 星轨沿着星球本身走,所以它跟着那份不规则,不会又变回一条完美的弧
-    let g = '<path d="M' + pts.map(function (q) { return q[0] + " " + q[1]; }).join(" L") +
-      '" fill="none" stroke="#f9f6f2" stroke-width=".6" stroke-linecap="round" opacity=".1"/>';
-    let lit = 0;
-    pts.forEach(function (q, i) {
-      const on = !!read[VOW_ORB[i][0]];
-      if (on) lit++;
-      /* 已读的柔光用 drop-shadow 做 —— 它跟着星球的轮廓走,
-         不会像 <circle> 那样在背后留下一块看得见的半透明圆底 */
-      g += '<image class="orb' + (on ? " on" : "") + '" href="assets/planets/sm/' + VOW_ORB[i][1] +
-        '.webp" x="' + (q[0] - r).toFixed(1) + '" y="' + (q[1] - r).toFixed(1) +
+    /* 星轨只连「已经出现的」那几颗,所以它是跟着阅读一段一段长出来的,
+       而不是一条一开始就画满、等着被填的进度条。只有一颗时不画线。
+       每一段都在星球边缘外停住(留 gap),线不会压到星球上,
+       看起来是星与星之间的一道细痕,而不是一条穿过去的横线。 */
+    let g = "";
+    for (let k = 1; k < on.length; k++) {
+      const a = on[k - 1], b = on[k];
+      const vx = b.x - a.x, vy = b.y - a.y, len = Math.sqrt(vx * vx + vy * vy);
+      // 两颗挨得近的时候按比例收 gap,这样每一段都留得下,不会有的连、有的不连
+      const gap = Math.min(r + 3.5, len * 0.33);
+      const ux = vx / len, uy = vy / len;
+      g += '<path d="M' + (a.x + ux * gap).toFixed(1) + " " + (a.y + uy * gap).toFixed(1) +
+        " L" + (b.x - ux * gap).toFixed(1) + " " + (b.y - uy * gap).toFixed(1) +
+        '" fill="none" stroke="#f6f2ea" stroke-width=".5" stroke-linecap="round" opacity=".12"/>';
+    }
+    on.forEach(function (q) {
+      // 用素材本身的颜色,不套滤镜;只留一点点柔光把它从云层里托起来
+      g += '<image class="orb" href="assets/planets/sm/' + VOW_ORB[q.i][1] +
+        '.webp" x="' + (q.x - r).toFixed(1) + '" y="' + (q.y - r).toFixed(1) +
         '" width="' + (r * 2) + '" height="' + (r * 2) + '" preserveAspectRatio="xMidYMid meet"/>';
     });
+    const lit = on.length;
     return '<span class="stars" role="img" aria-label="' +
       esc0(dpT("九个主题已读 " + lit + " 个", lit + " of nine chapters read")) + '">' +
       '<svg viewBox="0 0 ' + w + ' 50" focusable="false">' + g + "</svg></span>";
