@@ -346,6 +346,72 @@ function testReadingPreview() {
   checkEq("[preview] 不是 JSON 也不会炸", be.parse("nothing here", srvItems), null);
 }
 
+/* ---------- 11. 生命脉络手机版:一条规则都不许外溢到桌机 ----------
+   这一轮只动手机(≤767px)。桌机是锁死的基准,所以这里守两件事:
+     1. 手机版新加的选择器,只能出现在 @media(max-width:767px) 里面
+     2. 手机专属的节点(.mob-only)在这一页的桌机样式里必须先被关掉
+   任何一条被搬到媒体查询外面,这里就会红。 */
+function testThreadMobileScope() {
+  const fs = require("fs");
+  const html = fs.readFileSync(path.join(__dirname, "..", "app.html"), "utf8");
+
+  /* 取出 .thread-page 那一段样式里的手机版区块。
+     全站有两个 @media(max-width:767px)(另一个是「我的星空」),
+     所以从生命脉络那一段的注解往下找,不会抓错人。 */
+  const mark = html.indexOf("手机版(≤767px)—— 自己一套版面");
+  checkEq("[mobile] 找得到生命脉络手机版区块的起点", mark > 0, true);
+  const i = mark < 0 ? -1 : html.indexOf("\n  @media(max-width:767px){", mark);
+  checkEq("[mobile] 找得到生命脉络的手机版区块", i > 0, true);
+  if (i < 0) return;
+  // 以缩排两格的 "}" 作为区块结尾
+  const end = html.indexOf("\n  }\n", i);
+  const inside = html.slice(i, end);
+  const outside = html.slice(0, i) + html.slice(end);
+
+  // 手机专属的选择器一律不得出现在区块外面
+  /* 这几个选择器是这一轮才出现的,桌机没有对应规则 —— 一旦被搬出媒体查询,
+     桌机就会跟着变,所以钉死在这里。
+     (像 .ch-card .gl 这种「桌机本来就有、手机只是覆写」的不列入:
+      覆写本身就是正确做法,它只要留在 ≤767px 里就好。) */
+  const MOBILE_ONLY = [
+    ".thread-map", ".ch-layer", "p.pq", ".thread-return", ".dp-h-row .fav-btn"
+  ];
+  MOBILE_ONLY.forEach(function (sel) {
+    checkEq("[mobile] " + sel + " 只写在 ≤767px 里",
+      inside.indexOf(sel) > 0 && outside.indexOf("#dpage.thread-page " + sel) < 0, true);
+  });
+
+  // .mob-only 的桌机预设必须是 display:none,而且写在媒体查询外面
+  checkEq("[mobile] 手机专属节点在桌机一律不显示",
+    outside.indexOf("#dpage.thread-page .mob-only{display:none}") > 0, true);
+  checkEq("[mobile] 手机版才把它打开", inside.indexOf(".mob-only{display:block}") > 0, true);
+
+  // 共用的返回区块:不传参数时产生的 HTML 不得带上任何手机节点
+  const foot = (function () {
+    const k = html.indexOf("function dpReturnFoot(");
+    return k < 0 ? "" : html.slice(k, html.indexOf("\n  }\n", k));
+  })();
+  checkEq("[mobile] dpReturnFoot 仍有「不传参数就和以前一样」的分支",
+    /threadTail\s*\?/.test(foot) && foot.indexOf(": label") > 0, true);
+  checkEq("[mobile] 只有生命脉络那一页传 true",
+    (html.match(/dpReturnFoot\(true\)/g) || []).length, 1);
+
+  // 展开的原文必须仍然长在自己那一章里(手机手风琴的位置保证)
+  const thread = (function () {
+    const k = html.indexOf("function dpThreadHtml(");
+    return k < 0 ? "" : html.slice(k, html.indexOf("\n  }\n", k));
+  })();
+  checkEq("[mobile] 完整原文仍写在各自的 .thread-ch 内",
+    thread.indexOf('<div class="ch-full" id="full-') > 0 &&
+    thread.indexOf('class="dp-prose" data-saveable') > 0, true);
+  // 引句只加 class,不得改写内容
+  const js = html.slice(html.indexOf("长文的呼吸(只在手机)"));
+  checkEq("[mobile] 引句只挂 class,不动文字",
+    js.indexOf('classList.add("pq")') > 0 &&
+    js.slice(0, js.indexOf('classList.add("pq")')).indexOf("textContent =") < 0 &&
+    js.slice(0, js.indexOf('classList.add("pq")')).indexOf("innerHTML =") < 0, true);
+}
+
 /* ---------- 跑 ---------- */
 function main() {
   testTimezones();
@@ -357,6 +423,7 @@ function main() {
   testAppBootOrder();
   testDeterminism();
   testReadingPreview();
+  testThreadMobileScope();
   return testPlaces().then(function () {
     console.log("\n对照来源:" + REF.reference);
     console.log("设置:" + JSON.stringify(REF.settings));
