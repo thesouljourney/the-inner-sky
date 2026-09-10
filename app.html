@@ -1552,9 +1552,12 @@
   /* 九颗星:读过的点亮,还没读的留一点微光。不是进度条,不显示数字。
      辅助文案下面不再放记号 —— 这段距离由星链自己接住。 */
   #dpage.thread-page .thread-vow .stars{
-    display:block;width:min(268px,64vw);margin:clamp(26px,3.2vw,42px) 0 0
+    display:block;width:min(320px,74vw);margin:clamp(24px,3vw,38px) 0 0
   }
   #dpage.thread-page .thread-vow .stars svg{display:block;width:100%;height:auto}
+  /* 还没读的那几颗:压低亮度与彩度,像还没被点亮的行星 */
+  #dpage.thread-page .thread-vow .stars .orb{opacity:.3;filter:saturate(.4) brightness(.9)}
+  #dpage.thread-page .thread-vow .stars .orb.on{opacity:1;filter:none}
   #dpage.thread-page .thread-vow .b{
     display:flex;flex-direction:column;align-items:center;gap:3px;
     font-family:var(--dp-serif);font-weight:400;line-height:1.6;
@@ -1974,7 +1977,9 @@
     }
     #dpage.thread-page .thread-vow{margin-top:14px}
     #dpage.thread-page .thread-vow .a{font-size:12px;letter-spacing:.16em}
-    #dpage.thread-page .thread-vow .stars{width:min(232px,72vw);margin-top:24px}
+    #dpage.thread-page .thread-vow .stars{width:min(300px,84vw);margin-top:22px}
+    /* 手机上这一带正好压在云层最亮的地方 —— 还没读的那几颗要再亮一点才看得见 */
+    #dpage.thread-page .thread-vow .stars .orb{opacity:.44;filter:saturate(.5) brightness(.94)}
     #dpage.thread-page .thread-vow .b{margin-top:30px;gap:2px;letter-spacing:.08em}
     #dpage.thread-page .thread-vow .b1{font-size:17px}
     #dpage.thread-page .thread-vow .b2{font-size:17.5px;letter-spacing:.12em}
@@ -6748,36 +6753,47 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   /* Hero 里的九颗星:沿着一条很浅的弧排开,像一小段星座,不是进度条。
      读过的点亮(香槟金 + 一层极淡的光晕),还没读的只留一点微光。
      done 来自 threadReadCount() —— 与落地页的星球是同一份状态。 */
-  /* 九颗星:一条轻微不规则的星链。基准是一道很浅的弧,每一颗再各自
-     上下错开 3–7px、左右错开几 px —— 刻意不整齐,才不像刻度。
-     错位量是写死的固定值,不是乱数:每次渲染的位置完全一样,不会跳。
-     星与星之间用一条极细、极淡的星轨线连起来。 */
+  /* 九个主题的星球:排成一条轻微不规则的星链。
+     每一颗对应一个主题,行星的分配与落地页「我的星空」完全一致
+     (self=太阳、emotion=金星、career=土星、family=月亮、love=带环行星、
+      partner=火星、wealth=木星、study=水星、body=天王星)。
+     读过的那一颗亮起来并带一层极淡的光晕,还没读的压低亮度与彩度。
+     错位量写死在 VOW_DX / VOW_DY,不是乱数:每次渲染位置完全一样。 */
+  const VOW_ORB = [
+    ["self", "sun"], ["emotion", "venus"], ["career", "saturn"], ["family", "moon"],
+    ["love", "ringed"], ["partner", "mars"], ["wealth", "jupiter"], ["study", "mercury"],
+    ["body", "uranus"]
+  ];
   const VOW_DY = [3.4, -5.2, 4.2, -3.4, 6.4, -4.6, 3.6, -6.8, 4.4];
   const VOW_DX = [0, 3.4, -2.6, 4.2, -3.2, 2.8, -4.0, 3.2, 0];
   function dpVowStars(done) {
-    const n = THREAD_GATE, w = 268, pad = 18;
-    const lit = Math.max(0, Math.min(n, done | 0));
+    const read = themeReadStatus();
+    const n = VOW_ORB.length, w = 320, pad = 26, r = 9.5;
     const pts = [];
     for (let i = 0; i < n; i++) {
       const t = n > 1 ? i / (n - 1) : .5;
       const dx = VOW_DX[i % VOW_DX.length], dy = VOW_DY[i % VOW_DY.length];
       pts.push([+(pad + t * (w - pad * 2) + dx).toFixed(1),
-                +(26 - 10 * Math.sin(Math.PI * t) + dy).toFixed(1)]);
+                +(28 - 10 * Math.sin(Math.PI * t) + dy).toFixed(1)]);
     }
-    // 星轨:沿着星点本身走,所以它跟着那份不规则,而不是一条完美的弧
+    // 星轨沿着星球本身走,所以它跟着那份不规则,不会又变回一条完美的弧
     let g = '<path d="M' + pts.map(function (q) { return q[0] + " " + q[1]; }).join(" L") +
       '" fill="none" stroke="#f9f6f2" stroke-width=".6" stroke-linecap="round" opacity=".1"/>';
+    let lit = 0;
     pts.forEach(function (q, i) {
-      if (i < lit) {
-        g += '<circle cx="' + q[0] + '" cy="' + q[1] + '" r="4.6" fill="#e8d3a2" opacity=".14"/>' +
-             '<circle cx="' + q[0] + '" cy="' + q[1] + '" r="2" fill="#f2e2be" opacity=".95"/>';
-      } else {
-        g += '<circle cx="' + q[0] + '" cy="' + q[1] + '" r="1.5" fill="#f9f6f2" opacity=".32"/>';
+      const on = !!read[VOW_ORB[i][0]];
+      if (on) {
+        lit++;
+        g += '<circle cx="' + q[0] + '" cy="' + q[1] + '" r="' + (r + 4).toFixed(1) +
+             '" fill="#e8d3a2" opacity=".13"/>';
       }
+      g += '<image class="orb' + (on ? " on" : "") + '" href="assets/planets/sm/' + VOW_ORB[i][1] +
+        '.webp" x="' + (q[0] - r).toFixed(1) + '" y="' + (q[1] - r).toFixed(1) +
+        '" width="' + (r * 2) + '" height="' + (r * 2) + '" preserveAspectRatio="xMidYMid meet"/>';
     });
     return '<span class="stars" role="img" aria-label="' +
       esc0(dpT("九个主题已读 " + lit + " 个", lit + " of nine chapters read")) + '">' +
-      '<svg viewBox="0 0 ' + w + ' 40" focusable="false">' + g + "</svg></span>";
+      '<svg viewBox="0 0 ' + w + ' 46" focusable="false">' + g + "</svg></span>";
   }
   function dpThreadLine() {
     return '<span class="thread-line" aria-hidden="true">' +
