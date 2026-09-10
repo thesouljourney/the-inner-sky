@@ -1521,8 +1521,15 @@
   /* 底缘化进正文的象牙色 —— hero 不设 overflow:hidden(账号选单会被切掉) */
   #dpage.thread-page .dp-hero::after{
     content:"";position:absolute;left:0;right:0;bottom:0;z-index:1;pointer-events:none;
-    height:clamp(60px,9vw,132px);
-    background:linear-gradient(180deg,rgba(247,243,239,0),rgba(247,243,239,.82) 68%,#f7f3ef)
+    height:clamp(104px,15vw,208px);
+    /* 多给几个停点,而且中段刻意走得慢 —— 天空是「化」进纸里的,不是被一条边切断 */
+    background:linear-gradient(180deg,
+      rgba(247,243,239,0) 0%,
+      rgba(247,243,239,.14) 26%,
+      rgba(247,243,239,.42) 50%,
+      rgba(247,243,239,.74) 70%,
+      rgba(247,243,239,.94) 86%,
+      #f7f3ef 100%)
   }
   /* 标题置中、月亮浮在右侧。overflow 只锁在 hero-grid —— 顶栏是它的兄弟,不受影响 */
   #dpage.thread-page .dp-hero-grid{
@@ -1582,13 +1589,20 @@
 
   /* —— 正文区:暖珍珠底 + 几片极淡的薰衣草 / 香槟辉光 —— */
   #dpage.thread-page .dp-body{
-    position:relative;
+    position:relative;background:none;
+    padding:clamp(34px,5vw,72px) clamp(18px,4vw,48px) clamp(84px,10vw,140px)
+  }
+  /* 那几片辉光原本画在正文区自己的底上 —— 正文区比视窗窄,所以左右会留下一道
+     看得见的直边。改成一层满版的底,光就化在纸上,而不是化在一个方框里。 */
+  #dpage.thread-page .dp-body::before{
+    content:"";position:absolute;top:0;bottom:0;left:calc(50% - 50vw);width:100vw;
+    z-index:0;pointer-events:none;
     background:
       radial-gradient(58% 26% at 10% 4%,rgba(170,160,213,.11),rgba(170,160,213,0) 72%),
       radial-gradient(50% 24% at 94% 34%,rgba(232,211,162,.11),rgba(232,211,162,0) 74%),
-      radial-gradient(60% 26% at 16% 74%,rgba(170,160,213,.09),rgba(170,160,213,0) 72%);
-    padding:clamp(34px,5vw,72px) clamp(18px,4vw,48px) clamp(84px,10vw,140px)
+      radial-gradient(60% 26% at 16% 74%,rgba(170,160,213,.09),rgba(170,160,213,0) 72%)
   }
+  #dpage.thread-page .dp-body > *{position:relative;z-index:1}
   /* 这一页不要一格一格的白卡片:等待 / 进度 / 错误那几种状态卡保持原样,
      只有读完之后的长文版面走开放式排版。 */
   #dpage.thread-page .thread-flow{position:relative}
@@ -1605,14 +1619,20 @@
 
   /* —— 开场引文:从卡片里拿出来,放大成这一页的第一句话 —— */
   #dpage.thread-page .thread-open{
-    padding-left:calc(var(--th-col) + var(--th-gap));
-    margin:0 0 clamp(40px,5vw,68px)
+    padding-left:0;text-align:center;
+    margin:clamp(8px,1.4vw,20px) 0 clamp(62px,8vw,104px)
   }
   #dpage.thread-page .thread-open .dp-quote{
-    max-width:min(100%,26em);margin:0;padding:clamp(16px,2.4vw,26px) 0;
-    text-align:left;font-size:clamp(19px,2.4vw,27px);line-height:1.95;color:#232445
+    max-width:min(100%,24em);margin:0 auto;padding:0;
+    text-align:center;font-size:clamp(20px,2.5vw,28px);line-height:2;color:#232445
   }
   #dpage.thread-page .thread-open .dp-quote .q{font-size:44px;vertical-align:-14px}
+  #dpage.thread-page .thread-open .st{
+    display:block;margin-top:clamp(26px,3.4vw,40px);
+    font-size:11px;line-height:1;color:rgba(154,106,52,.4)
+  }
+  /* 生命线只罩着底下那几段,开场那一句在它上面、自己站着 */
+  #dpage.thread-page .thread-trail{position:relative}
 
   /* —— 一章 = 章节号 + 正文 + 一张浮在右边的插画 —— */
   #dpage.thread-page .thread-ch{
@@ -1644,7 +1664,10 @@
     font-size:clamp(21px,2.4vw,29px);font-weight:600;line-height:1.55;
     letter-spacing:.012em;color:#22233a
   }
-  #dpage.thread-page .thread-ch .dp-prose{font-size:16.5px;line-height:1.95;color:#2c2d48}
+  /* 版心可以宽,读的那一栏要窄 —— 中文一行超过 ~34 个字就开始累 */
+  #dpage.thread-page .thread-ch .dp-prose{
+    font-size:16.5px;line-height:1.95;color:#2c2d48;max-width:min(100%,34em)
+  }
   #dpage.thread-page .thread-ch .dp-prose p{margin:0 0 20px}
   #dpage.thread-page .thread-ch .dp-prose p:last-child{margin-bottom:0}
 
@@ -1662,6 +1685,58 @@
   #dpage.thread-page .ch-art.a4 img{opacity:1}
   #dpage.thread-page .ch-art.a5 img{opacity:.86}
 
+  /* —— 转折:从「发生过什么」走到「它留下了什么」。
+        没有框、没有底、没有按钮,只有留白与一层薄雾。 —— */
+  #dpage.thread-page .thread-bridge{
+    position:relative;isolation:isolate;text-align:center;
+    margin:clamp(20px,3vw,44px) 0 clamp(46px,6vw,80px);
+    padding:clamp(36px,5vw,66px) clamp(16px,3vw,40px)
+  }
+  /* 罗盘:原本压在「进入尾段」那里,搬到这里当转折的中心 —— 同一张素材,
+     只是换了位置;这样版面上不会连着出现两个仪式感的记号。 */
+  #dpage.thread-page .thread-bridge .cp{
+    display:block;width:clamp(44px,5.4vw,68px);height:clamp(44px,5.4vw,68px);
+    margin:0 auto;
+    background:url(assets/life/compass.webp) center / contain no-repeat;opacity:.7
+  }
+  #dpage.thread-page .thread-bridge .mist{
+    position:absolute;inset:0;z-index:-1;pointer-events:none;
+    background:
+      radial-gradient(52% 56% at 50% 46%,rgba(170,160,213,.15),rgba(170,160,213,0) 72%),
+      radial-gradient(34% 40% at 74% 62%,rgba(232,211,162,.1),rgba(232,211,162,0) 74%)
+  }
+  #dpage.thread-page .thread-bridge .st{
+    display:block;font-size:11px;line-height:1;color:rgba(154,106,52,.42)
+  }
+  #dpage.thread-page .thread-bridge .lead{
+    font-family:var(--dp-serif);font-weight:400;
+    font-size:clamp(16.5px,1.9vw,20px);line-height:2.15;letter-spacing:.02em;
+    color:#3a3852;max-width:min(100%,27em);
+    margin:clamp(30px,3.8vw,46px) auto 0
+  }
+  /* 第二句压低半级 —— 它是把人推向下一段的那一句,不该跟第一句抢 */
+  #dpage.thread-page .thread-bridge .lead.lo{
+    font-size:clamp(15px,1.7vw,17.5px);color:rgba(58,56,82,.72)
+  }
+  #dpage.thread-page .thread-bridge .st + .lead{margin-top:clamp(24px,3vw,34px)}
+  #dpage.thread-page .thread-bridge .lead + .st{margin-top:clamp(30px,3.8vw,46px)}
+  /* 中间这几句是生成端的「值得记住」—— 版面上给它最大的字与最多的留白 */
+  #dpage.thread-page .thread-bridge .said{
+    max-width:min(100%,29em);margin:clamp(34px,4.4vw,56px) auto 0
+  }
+  #dpage.thread-page .thread-bridge .said .ln{
+    position:relative;font-family:var(--dp-serif);font-weight:400;
+    font-size:clamp(18px,2.2vw,24px);line-height:2.05;letter-spacing:.015em;
+    color:#22233a;margin:0;padding-bottom:clamp(22px,2.8vw,32px)
+  }
+  #dpage.thread-page .thread-bridge .said .ln + .ln{padding-top:clamp(22px,2.8vw,32px)}
+  #dpage.thread-page .thread-bridge .said .ln:not(:last-child)::after{
+    content:"·　·　·";position:absolute;left:50%;bottom:0;transform:translateX(-50%);
+    font-family:var(--dp-display);font-size:12px;letter-spacing:.1em;line-height:1;
+    color:rgba(154,106,52,.32)
+  }
+  #dpage.thread-page .thread-bridge .said .ln:last-child{padding-bottom:0}
+
   /* —— 中场:罗盘记号,标示从「解读」走进「留给你的」 —— */
   #dpage.thread-page .thread-tail{padding-left:calc(var(--th-col) + var(--th-gap))}
   /* 页面的最后一个记号:一枚很淡的月亮,读完之后自然落进深蓝的页脚 */
@@ -1670,12 +1745,7 @@
     margin:clamp(28px,3.6vw,46px) auto 0;
     font-size:15px;line-height:1;color:rgba(129,118,173,.44)
   }
-  #dpage.thread-page .thread-tail::before{
-    content:"";display:block;
-    width:clamp(46px,6vw,76px);height:clamp(46px,6vw,76px);
-    margin:0 auto clamp(30px,4.4vw,50px);
-    background:url(assets/life/compass.webp) center / contain no-repeat;opacity:.6
-  }
+  /* 罗盘已经搬进转折段,这里不再重复一次 —— 尾段直接从「从这里开始」进场 */
 
   /* —— 章节的引子:第一句 + 几个重点 + 一个安静的入口 —— */
   #dpage.thread-page .ch-peek .pv{
@@ -1758,23 +1828,44 @@
     font-size:clamp(25px,2.5vw,31px);letter-spacing:.12em;
     color:rgba(148,128,168,.62)
   }
-  #dpage.thread-page .ch-card .t{
-    font-family:var(--dp-serif);font-weight:600;font-size:17px;line-height:1.65;
-    color:#22233a;margin-top:15px
+  /* 卡片上的天体记号:用的是生命线上那三个手写 SVG(星芒 / 弦月 / 罗盘),
+     三张卡各一个 —— 不另外做一套图,也不重复载生命经验那几张插画 */
+  #dpage.thread-page .ch-card .gl{
+    display:block;margin-top:clamp(16px,2vw,22px);
+    color:rgba(129,118,173,.5);line-height:1
   }
-  /* 卡片上的引子只是入口,截到两行就够 —— 完整原文在阅读区里,一个字都没少。
-     line-clamp 只用在这里,长文正文一律不用(会切在句子中间)。 */
+  #dpage.thread-page .ch-card.on .gl{color:rgba(168,111,61,.6)}
+  #dpage.thread-page .ch-card .gl svg{display:block}
+  #dpage.thread-page .ch-card .t{
+    font-family:var(--dp-serif);font-weight:600;
+    font-size:clamp(17px,1.8vw,19px);line-height:1.65;
+    color:#22233a;margin-top:clamp(14px,1.7vw,18px)
+  }
+  /* 引子现在是完整的句子(不会切在半路),所以不再用 line-clamp 截行 ——
+     三张卡长短不一样是正常的,align-items:stretch 会把卡片拉齐。
+     完整原文一直在 .ch-src 里,一个字都没少。 */
   #dpage.thread-page .ch-card .pv{
-    font-size:13.5px;line-height:1.95;color:#615d53;font-weight:300;margin-top:9px;
-    display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden
+    font-size:clamp(13.5px,1.4vw,14.5px);line-height:2.05;color:#5b5749;
+    font-weight:300;margin-top:clamp(12px,1.4vw,15px)
+  }
+  /* 留给生成端未来可能补上的那一句问题:现在没有这个字段,所以不会出现 */
+  #dpage.thread-page .ch-card .qz{
+    font-family:var(--dp-serif);font-size:14px;line-height:1.95;color:#4a4760;
+    margin-top:clamp(14px,1.7vw,18px);padding-top:clamp(13px,1.6vw,16px);
+    border-top:1px solid rgba(154,106,52,.14)
   }
   #dpage.thread-page .ch-card .ch-keys{margin-top:14px;padding-top:13px;max-width:none}
   #dpage.thread-page .ch-card .ch-keys li{font-size:12.5px;line-height:1.8}
   #dpage.thread-page .ch-card .go{
-    margin-top:auto;padding-top:18px;
-    font-size:12.5px;letter-spacing:.14em;color:#7a6fa8
+    margin-top:auto;padding-top:clamp(20px,2.4vw,26px);
+    font-size:12.5px;letter-spacing:.14em;color:#7a6fa8;
+    transition:color .3s ease
   }
+  @media(hover:hover){#dpage.thread-page .ch-card:hover .go{color:#4c4470}}
+  #dpage.thread-page .ch-card.on .go{color:#96703e}
   #dpage.thread-page .ch-card .ch-src{display:none}
+  /* 手机版的展开位:桌机上完全不存在(连格子都不占) */
+  #dpage.thread-page .ch-slot{display:none}
 
   /* —— 单章阅读区:整排卡片下面,一次只开一章 —— */
   #dpage.thread-page .ch-reader{
@@ -1782,7 +1873,9 @@
     transition:max-height .55s cubic-bezier(.22,1,.36,1),opacity .4s ease
   }
   #dpage.thread-page .ch-reader.on{opacity:1}
-  @media (prefers-reduced-motion:reduce){#dpage.thread-page .ch-reader{transition:none}}
+  @media (prefers-reduced-motion:reduce){
+    #dpage.thread-page .ch-reader,#dpage.thread-page .ch-slot{transition:none}
+  }
   /* 书页,不是卡片:边几乎看不见、圆角收小、影子拿掉,靠留白与一条顶线分隔 */
   #dpage.thread-page .ch-reader .in{
     position:relative;
@@ -1838,7 +1931,12 @@
   #dpage.thread-page .ch-reader .clue .ch-keys{
     display:inline-block;text-align:left;margin-top:16px;padding-top:14px;max-width:none
   }
-  #dpage.thread-page .ch-reader .ch-shut{margin-top:clamp(26px,3vw,38px)}
+  /* 读完之后的一枚月亮 —— 收起之前的一次呼吸 */
+  #dpage.thread-page .ch-reader .moon,#dpage.thread-page .ch-slot .moon{
+    display:block;margin:clamp(30px,3.6vw,44px) auto 0;
+    font-size:15px;line-height:1;color:rgba(129,118,173,.44)
+  }
+  #dpage.thread-page .ch-reader .ch-shut{margin-top:clamp(14px,1.8vw,20px)}
 
   /* —— 值得记住:不再是三个盒子,是一段编辑式的停顿 —— */
   #dpage.thread-page .dp-keep{
@@ -1881,8 +1979,8 @@
     opacity:1
   }
   #dpage.thread-page .dp-reflect .bd{
-    max-width:min(100%,680px);margin:0 auto;text-align:left;
-    font-size:15.5px;line-height:1.95
+    max-width:min(100%,640px);margin:0 auto;text-align:left;
+    font-size:clamp(15.5px,1.65vw,17px);line-height:2.1
   }
   #dpage.thread-page .dp-reflect .bd .fold-btn{margin-left:0}
   /* 一层极淡的月光,只在「留给你的思考」那一段 */
@@ -1892,6 +1990,24 @@
   }
   #dpage.thread-page .dp-reflect .glow::after{content:none}
   #dpage.thread-page .thread-tail > .dp-reflect{isolation:isolate}
+
+  /* —— 落地:思考区前后各一句过场,靠留白把它托起来 —— */
+  #dpage.thread-page .thread-close{text-align:center}
+  #dpage.thread-page .thread-close .pre{
+    font-family:var(--dp-serif);font-weight:400;
+    font-size:clamp(15px,1.65vw,17px);line-height:2.1;letter-spacing:.02em;
+    color:rgba(58,56,82,.7);max-width:min(100%,27em);
+    margin:clamp(20px,2.6vw,34px) auto 0
+  }
+  #dpage.thread-page .thread-close .post{
+    font-family:var(--dp-serif);font-weight:300;
+    font-size:clamp(14.5px,1.55vw,16px);line-height:2.2;letter-spacing:.04em;
+    color:rgba(58,56,82,.58);margin:clamp(4px,1vw,12px) auto 0
+  }
+  #dpage.thread-page .thread-close .post .l2{display:block}
+  /* 前面已经有一句过场了,思考区自己那个小标不必再喊一次 */
+  #dpage.thread-page .thread-close .dp-reflect{padding-top:clamp(26px,3.4vw,44px)}
+  #dpage.thread-page .thread-close .dp-reflect .eb{opacity:.55}
 
   /* —— 渐进展开(思考区块用)—— */
   #dpage.thread-page .fold-rest{
@@ -1970,10 +2086,15 @@
     /* —— Hero:压低、云少一点、月亮小一圈,标题永远不被压到 —— */
     #dpage.thread-page .dp-hero{
       background:
-        linear-gradient(180deg,rgba(9,18,46,.6) 0%,rgba(9,18,46,.26) 46%,rgba(9,18,46,.46) 100%),
-        url(assets/life/hero-sky.webp) left 34% / 215% auto no-repeat,
+        /* 顶端压满,把底图的上缘接进顶栏的深蓝里,看不到那一道接缝 */
+        linear-gradient(180deg,rgba(9,18,46,.97) 0%,rgba(9,18,46,.62) 15%,
+                               rgba(9,18,46,.24) 46%,rgba(9,18,46,.3) 100%),
+        /* 底图铺不满手机版的 hero(1800×643,215% 宽 ≈ 300px 高),
+           所以把它贴着「底」放:留白落在上缘,跟顶栏的深蓝接得上;
+           下缘是云,再交给 ::after 化进象牙色 —— 中间不会出现一条硬边。 */
+        url(assets/life/hero-sky.webp) left bottom / 215% auto no-repeat,
         var(--dp-navy);
-      padding-bottom:clamp(34px,9vw,52px)
+      padding-bottom:clamp(52px,15vw,86px)
     }
     #dpage.thread-page .dp-hero-grid{
       min-height:0;padding:calc(clamp(18px,5vw,30px) + 12px) 0 clamp(14px,4vw,22px)
@@ -1996,7 +2117,7 @@
       width:clamp(94px,26vw,138px);opacity:.6;
       top:0;right:-16px;bottom:auto;transform:none
     }
-    #dpage.thread-page .dp-hero::after{height:clamp(40px,12vw,64px)}
+    #dpage.thread-page .dp-hero::after{height:clamp(88px,26vw,148px)}
 
     /* —— 字级:不缩小到要放大才读得到 —— */
     #dpage.thread-page .thread-ch h3.dp-h{font-size:21px;line-height:1.6}
@@ -2012,34 +2133,102 @@
     #dpage.thread-page .ch-mark .nd svg{width:10px;height:10px}
     #dpage.thread-page .thread-line{bottom:clamp(30px,8vw,60px)}
     #dpage.thread-page .thread-ch{margin-bottom:clamp(56px,12vw,78px)}
-    #dpage.thread-page .thread-open,
+    #dpage.thread-page .thread-open{
+      padding-left:0;margin:2px 0 clamp(40px,10vw,60px)
+    }
+    #dpage.thread-page .thread-open .dp-quote{font-size:19.5px;line-height:1.95}
+    #dpage.thread-page .thread-open .st{margin-top:22px}
     #dpage.thread-page .thread-tail{padding-left:calc(var(--th-col) + var(--th-gap))}
+    /* —— 转折段:手机上收紧一级,但留白仍然是它的主角 —— */
+    #dpage.thread-page .thread-bridge{
+      margin:clamp(18px,5vw,34px) 0 clamp(52px,13vw,76px);padding:34px 2px
+    }
+    #dpage.thread-page .thread-bridge .lead{font-size:16px;line-height:2.1;margin-top:26px}
+    #dpage.thread-page .thread-bridge .lead.lo{font-size:14.5px}
+    #dpage.thread-page .thread-bridge .said{margin-top:30px}
+    #dpage.thread-page .thread-bridge .said .ln{font-size:18px;line-height:2}
 
     /* —— 插画:落到正文下方、置中、缩到 62%,不与文字重叠 —— */
+    /* 插画托着文字,不该把文字挤下去 —— 手机上再收一级 */
     #dpage.thread-page .ch-art{
-      grid-column:2;justify-self:center;width:62%;max-width:230px;
-      margin-top:clamp(16px,4vw,26px)
+      grid-column:2;justify-self:center;width:54%;max-width:186px;
+      margin-top:clamp(14px,3.4vw,22px)
     }
-    #dpage.thread-page .ch-art.a2,#dpage.thread-page .ch-art.a4{width:72%;max-width:270px}
+    #dpage.thread-page .ch-art.a2,#dpage.thread-page .ch-art.a4{width:62%;max-width:212px}
 
-    /* —— 重要章节:三张卡直排,阅读区就接在整排卡片下面 —— */
-    #dpage.thread-page .ch-cards{grid-template-columns:1fr;gap:12px}
-    #dpage.thread-page .ch-card{padding:20px 18px;border-radius:18px}
+    /* —— 重要章节:一张卡一排;点开的那一章就长在「自己那张卡下面」——
+          共用阅读区(#chReader)在手机上整个不参与版面。 —— */
+    #dpage.thread-page .ch-cards{grid-template-columns:1fr;gap:14px}
+    #dpage.thread-page .ch-card{padding:22px 20px;border-radius:18px}
     #dpage.thread-page .ch-card .no{font-size:26px}
-    #dpage.thread-page .ch-card .t{font-size:16px}
-    #dpage.thread-page .ch-reader .in{padding:26px 18px;border-radius:20px}
-    #dpage.thread-page .ch-reader .t{font-size:19px}
-    #dpage.thread-page .ch-reader .pv{font-size:15px}
-    #dpage.thread-page .ch-reader .bd{font-size:15.5px;line-height:1.9}
-    #dpage.thread-page .ch-reader .bd p{margin-bottom:17px}
+    #dpage.thread-page .ch-card .gl{margin-top:14px}
+    #dpage.thread-page .ch-card .t{font-size:17px}
+    #dpage.thread-page .ch-card .pv{font-size:15px;line-height:2.05;margin-top:12px}
+    #dpage.thread-page .ch-card .qz{font-size:15px}
+    #dpage.thread-page .ch-card .go{font-size:13px;padding-top:20px}
+    #dpage.thread-page .ch-reader{display:none}
+    #dpage.thread-page .ch-slot{
+      display:block;grid-column:1/-1;margin-top:-2px;
+      overflow:hidden;max-height:0;opacity:0;
+      transition:max-height .55s cubic-bezier(.22,1,.36,1),opacity .4s ease
+    }
+    #dpage.thread-page .ch-slot.on{opacity:1}
+    #dpage.thread-page .ch-slot .in{
+      position:relative;margin-top:12px;
+      padding:26px 18px 24px;border-radius:18px;text-align:center;
+      background:
+        radial-gradient(72% 40% at 50% 0%,rgba(170,160,213,.12),rgba(170,160,213,0) 72%),
+        rgba(255,253,250,.62);
+      border:1px solid rgba(150,130,180,.07)
+    }
+    #dpage.thread-page .ch-slot .in::before{
+      content:"";position:absolute;left:50%;top:0;transform:translateX(-50%);
+      width:min(52%,180px);height:1px;
+      background:linear-gradient(90deg,rgba(154,106,52,0),rgba(154,106,52,.26),rgba(154,106,52,0))
+    }
+    #dpage.thread-page .ch-slot .no{
+      display:block;font-family:var(--dp-display);font-weight:300;line-height:1;
+      font-size:22px;letter-spacing:.24em;color:rgba(148,128,168,.6)
+    }
+    #dpage.thread-page .ch-slot .t{
+      font-family:var(--dp-serif);font-weight:600;font-size:19px;line-height:1.65;
+      color:#2b2925;margin:12px 0 0
+    }
+    #dpage.thread-page .ch-slot .st{display:block;margin-top:12px;font-size:10px;color:rgba(129,118,173,.7)}
+    #dpage.thread-page .ch-slot .pv{
+      font-family:var(--dp-serif);font-size:15px;line-height:1.95;color:#4a4760;
+      max-width:34em;margin:14px auto 0
+    }
+    #dpage.thread-page .ch-slot .rule,#dpage.thread-page .ch-slot .dots{
+      display:block;margin:28px auto;font-family:var(--dp-display);font-size:13px;
+      letter-spacing:.1em;color:rgba(154,106,52,.42);line-height:1;text-align:center
+    }
+    #dpage.thread-page .ch-slot .rule::before{content:"·　·　·"}
+    #dpage.thread-page .ch-slot .bd{
+      max-width:100%;margin:0 auto;text-align:left;
+      font-size:15.5px;line-height:1.9;color:#2c2d48;font-weight:300
+    }
+    #dpage.thread-page .ch-slot .bd p{margin:0 0 17px}
+    #dpage.thread-page .ch-slot .bd p:last-child{margin-bottom:0}
+    #dpage.thread-page .ch-slot .clue{max-width:100%;margin:0 auto}
+    #dpage.thread-page .ch-slot .clue .st{margin:0 0 12px}
+    #dpage.thread-page .ch-slot .clue .lb{
+      display:block;font-size:11px;letter-spacing:.28em;color:#8a7351
+    }
+    #dpage.thread-page .ch-slot .clue .ch-keys{
+      display:inline-block;text-align:left;margin-top:14px;padding-top:13px;max-width:none
+    }
+    #dpage.thread-page .ch-slot .ch-shut{margin-top:14px}
     /* —— 引子与思考:字级与点击区都留够 —— */
     #dpage.thread-page .ch-peek .pv{font-size:16px}
     #dpage.thread-page .ch-keys li{font-size:14px}
     #dpage.thread-page .ch-open,#dpage.thread-page .ch-shut{min-height:44px;font-size:14px}
     #dpage.thread-page .dp-keep{margin-top:clamp(44px,10vw,64px)}
     #dpage.thread-page .dp-keep .q .bd{font-size:16px;line-height:1.95}
-    #dpage.thread-page .dp-reflect{padding:36px 4px}
-    #dpage.thread-page .dp-reflect .bd{font-size:15px}
+    #dpage.thread-page .dp-reflect{padding:30px 4px}
+    #dpage.thread-page .dp-reflect .bd{font-size:15.5px;line-height:2}
+    #dpage.thread-page .thread-close .pre{font-size:15px;margin-top:18px}
+    #dpage.thread-page .thread-close .post{font-size:14px}
     #dpage.thread-page .thread-tail::before{width:52px;height:52px;margin-bottom:26px}
   }
   /* 极窄的萤幕:装饰插画让位给文字(内容本身永远不隐藏) */
@@ -6591,15 +6780,18 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   function dpDerive(body) {
     const paras = String(body || "").split(/\n\s*\n|\n/)
       .map(function (t) { return t.trim(); }).filter(Boolean);
-    /* 引子取到「读起来有一点收获」的长度为止:整句整句地加,
-       到 ~46 个字就停,最多三句 —— 不会切在句子中间,也不会又变成一整段。 */
+    /* 引子整句整句地取,不切在句子中间:落在 ~45–100 字之间、最多四句。
+       这是「摘录」,不是另外写的一段话 —— 一个字都不是新生成的。
+       (真正好的 insight teaser 需要生成端给字段,见 report;
+       在那之前,取到一个自然的停顿,是这份资料能给的最好结果。) */
     const first = dpSents(paras[0] || "");
+    const CJK = /[，。！？；：、（）「」“”\s]/g;
     let preview = "";
-    for (let i = 0; i < first.length && i < 3; i++) {
+    for (let i = 0; i < first.length && i < 4; i++) {
       const next = preview + first[i];
-      if (preview && next.replace(/[，。！？；：、（）「」“”\s]/g, "").length > 62) break;
+      if (preview && next.replace(CJK, "").length > 108) break;
       preview = next;
-      if (preview.replace(/[，。！？；：、（）「」“”\s]/g, "").length >= 46) break;
+      if (preview.replace(CJK, "").length >= 62) break;
     }
     if (!preview) preview = paras[0] || "";
     const keys = [];
@@ -6614,6 +6806,16 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       keys.push(s0);
     });
     return { preview: preview, keys: keys };
+  }
+  /* 卡片上那一段引子的来源。优先用生成端给的字段(目前的 API 还没有这两个,
+     所以实际上一定走 else)—— 哪一天同一次生成里补上了,这里不必再改。
+     绝对不在前端「写」出任何心理观察:没有字段就只做摘录。 */
+  function dpLead(o) {
+    const t = String((o && (o.insightTeaser || o.teaser)) || "").trim();
+    const q = String((o && (o.reflectionQuestion || o.prompt)) || "").trim();
+    if (t) return { preview: t, keys: [], q: q, authored: true };
+    const d = dpDerive(o && o.body);
+    return { preview: d.preview, keys: d.keys, q: q, authored: false };
   }
   function dpKeysHtml(keys) {
     if (!keys.length) return "";
@@ -6827,6 +7029,27 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   /* 「几个重要章节」:三张只放引子的卡 + 一个共用的阅读区。
      卡片永远不会自己长高 —— 点开的那一章是在整排卡片下面展开,一次只开一章。
      每张卡里都藏着完整原文(.ch-src),点开时原样搬进阅读区,不重新产生任何文字。 */
+  /* 从「发生过什么」走到「它留下了什么」中间的一次停顿。
+     中间那几句是生成端的 aha —— 原样呈现,一个字都没改;
+     前后两句是版面上的过场文案(所有人都一样),不是针对谁的观察。
+     aha 是空的时候只留过场文案,绝不在前端补一句心理解读。 */
+  function dpThreadBridge(aha) {
+    const lines = (aha || []).filter(Boolean);
+    return '<div class="thread-bridge"><span class="mist" aria-hidden="true"></span>' +
+      '<span class="cp" aria-hidden="true"></span>' +
+      '<p class="lead">' +
+      dpT("有些事情已经过去了，但它们没有完全离开。",
+          "Some of it is over. Not all of it has left.") + "</p>" +
+      (lines.length
+        ? '<div class="said">' + lines.map(function (q) {
+            return '<p class="ln">' + esc0(q) + "</p>";
+          }).join("") + "</div>"
+        : "") +
+      '<p class="lead lo">' +
+      dpT("而当这些片段放在一起，有几件事开始慢慢浮现。",
+          "Put side by side, a few things begin to surface.") + "</p>" +
+      '<span class="st" aria-hidden="true">✦</span></div>';
+  }
   function dpThreadChapters(steps) {
     return '<div class="dp-start thread-chapters"><div class="dp-start-hd">' +
       '<span class="ic" aria-hidden="true">✦</span>' +
@@ -6837,25 +7060,35 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
           "None of this needs doing at once. Pick the one you can start with today.") + "</p>" +
       '<div class="ch-cards">' +
       steps.map(function (st, i) {
-        const d = dpDerive(st.body);
+        const d = dpLead(st);
+        /* 每张卡后面都跟着一个空的展开位:手机上点开的那一章就长在自己这张卡下面,
+           桌机上这一格是 display:none,内容改放整排卡片下方那一个共用阅读区。
+           两边共用同一个 box,原文不会在 DOM 里存两份、图也不会载两次。 */
         return '<button type="button" class="ch-card" data-ch="' + i + '"' +
           ' aria-expanded="false" aria-controls="chReader">' +
           '<span class="no">' + ("0" + (i + 1)).slice(-2) + "</span>" +
+          '<span class="gl" aria-hidden="true">' + THREAD_NODE[i % THREAD_NODE.length] + "</span>" +
           '<b class="t">' + esc0(st.title) + "</b>" +
           (d.preview ? '<span class="pv">' + esc0(d.preview) + "</span>" : "") +
+          (d.q ? '<span class="qz">' + esc0(d.q) + "</span>" : "") +
           dpKeysHtml(d.keys.slice(0, 2)) +
-          '<span class="go">' + dpT("阅读这一章 →", "Read this one →") + "</span>" +
+          '<span class="go">' + dpT("沿着这条线索继续 →", "Follow this one →") + "</span>" +
           '<span class="ch-src" hidden>' + dpParaRich(st.body) + "</span>" +
-          "</button>";
+          "</button>" +
+          '<div class="ch-slot" id="chSlot' + i + '" aria-live="polite"></div>';
       }).join("") + "</div>" +
       '<div class="ch-reader" id="chReader" aria-live="polite"></div></div>';
   }
   function dpThreadHtml(data, favSource, tab, favType) {
     favType = favType || "";
-    let h = '<div class="thread-flow">' + dpThreadLine();
+    let h = '<div class="thread-flow">';
+    /* 开场:把 tagline 放到版心中间,底下一个很小的星记号 —— 像走进故事的第一句。
+       生命线从这里之后才开始,所以它移进 .thread-trail 里(原本罩着整页)。 */
     if (data.tagline)
       h += '<div class="thread-open"><div class="dp-quote"><span class="q">“</span>' +
-        esc0(data.tagline) + "</div></div>";
+        esc0(data.tagline) + "</div>" +
+        '<span class="st" aria-hidden="true">✦</span></div>';
+    h += '<div class="thread-trail">' + dpThreadLine();
     h += (data.sections || []).map(function (sc, si) {
       const k = favKey(favSource, sc.title || "", sc.body || "");
       const btn = '<button class="fav-btn' + (isFaved(k) ? " on" : "") + '" data-fav="' + esc0(k) +
@@ -6876,7 +7109,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
         (d.preview ? '<p class="pv">' + esc0(d.preview) + "</p>" : "") +
         dpKeysHtml(d.keys) +
         '<button type="button" class="ch-open" aria-expanded="false" aria-controls="full-' + si + '">' +
-        '<span class="tx">' + dpT("读这一段生命经验", "Read this passage") + '</span>' +
+        '<span class="tx">' + dpT("看看它留下了什么", "See what it left behind") + '</span>' +
         '<span class="cv" aria-hidden="true">↓</span></button></div>' +
         '<div class="ch-full" id="full-' + si + '">' +
         '<div class="dp-prose" data-saveable data-source="' + esc0(favSource) +
@@ -6895,11 +7128,21 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       '<span class="st" aria-hidden="true">✦</span><span class="ln"></span></div>';
     let t = "";
     if (data.steps && data.steps.length) t += dpThreadChapters(data.steps);
-    if (data.aha && data.aha.length) t += dpKeepHtml(data.aha);
     if (data.question || data.action) t += spark;
-    if (data.question) t += dpReflectHtml("q", data.question);
+    /* 思考区本身完全没动(还是同一个 component、同一段生成内容),
+       只在前后各加一句过场 —— 让它读起来像一次落地,不是又一个方框。 */
+    if (data.question)
+      t += '<div class="thread-close"><p class="pre">' +
+        dpT("在离开这一页以前，有一个问题，想留给现在的你。",
+            "Before you leave this page, one question, for the you of right now.") + "</p>" +
+        dpReflectHtml("q", data.question) +
+        '<p class="post">' + dpT("不需要马上回答。", "It doesn’t need an answer today.") +
+        '<span class="l2">' + dpT("有些答案，会慢慢长出来。",
+                                  "Some answers take their own time.") + "</span></p></div>";
     if (data.question && data.action) t += spark;
     if (data.action) t += dpReflectHtml("a", data.action);
+    h += "</div>";                                   // /.thread-trail
+    h += dpThreadBridge(data.aha);
     h += '<div class="thread-tail">' + t + "</div>";
     return h + "</div>";
   }
@@ -8077,10 +8320,13 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
         box.style.maxHeight = box.scrollHeight + "px";
         if (!on) { box.getBoundingClientRect(); box.style.maxHeight = "0px"; }
       };
-      host.querySelectorAll(".ch-full,.ch-reader").forEach(function (box) {
+      host.querySelectorAll(".ch-full,.ch-reader,.ch-slot").forEach(function (box) {
         box.addEventListener("transitionend", function (e) {
-          if (e.target === box && e.propertyName === "max-height" && box.classList.contains("on"))
-            box.style.maxHeight = "none";
+          if (e.target !== box || e.propertyName !== "max-height") return;
+          if (box.classList.contains("on")) { box.style.maxHeight = "none"; return; }
+          /* 收起动画走完之后把阅读区清空:收起来的那一份不该还留在无障碍树里
+             (生命经验那几段的 .ch-full 不清 —— 那是原文,本来就一直在 DOM 里) */
+          if (box.classList.contains("ch-reader") || box.classList.contains("ch-slot")) box.innerHTML = "";
         });
       });
 
@@ -8100,25 +8346,52 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
         if (shut) shut.addEventListener("click", function () { set(false); });
       });
 
-      // —— 几个重要章节:卡片只放引子,点开的那一章在整排卡片下面展开 ——
+      /* —— 几个重要章节 ——
+         桌机:三张卡一排,点开的那一章在整排卡片「下面」展开(共用一个阅读区)。
+         手机:点开的那一章就长在「自己那张卡下面」,不会跑到第三张卡后面去。
+         两边共用同一个 box:换版型时是把它搬过去,不是产生第二份内容。 */
       (function () {
         const reader = host.querySelector("#chReader");
         const cards = Array.prototype.slice.call(host.querySelectorAll(".ch-card"));
+        const slots = Array.prototype.slice.call(host.querySelectorAll(".ch-slot"));
         if (!reader || !cards.length) return;
-        let cur = -1;
+        const mq = window.matchMedia ? window.matchMedia("(max-width:767px)") : null;
+        const inline = function () { return !!(mq && mq.matches && slots.length === cards.length); };
+        const hostFor = function (i) { return inline() ? slots[i] : reader; };
+        let cur = -1, box = null;
+        const clear = function (el) { el.style.maxHeight = ""; el.classList.remove("on"); el.innerHTML = ""; };
+        // 关掉动态时没有 transitionend 可以等,收起就等于当场清空
+        const still = window.matchMedia && window.matchMedia("(prefers-reduced-motion:reduce)").matches;
         const close = function () {
           if (cur < 0) return;
+          const el = hostFor(cur);
           cards[cur].setAttribute("aria-expanded", "false");
           cards[cur].classList.remove("on");
           cur = -1;
-          grow(reader, false);
+          grow(el, false);
+          if (still) { el.innerHTML = ""; box = null; }
         };
+        /* 版型在开着的时候被切换(转屏、拉视窗):把同一个 box 搬到另一边,
+           而不是把它关掉 —— 使用者读到一半不会突然被收起来。 */
+        const remount = function () {
+          if (cur < 0 || !box) return;
+          const el = hostFor(cur);
+          if (box.parentNode === el) return;
+          [reader].concat(slots).forEach(function (n) { if (n !== el) clear(n); });
+          el.appendChild(box);
+          cards[cur].setAttribute("aria-controls", el.id);
+          el.classList.add("on");
+          el.style.maxHeight = "none";
+        };
+        if (mq && mq.addEventListener) mq.addEventListener("change", remount);
+        else if (mq && mq.addListener) mq.addListener(remount);
         const open = function (i) {
           const card = cards[i];
           const src = card.querySelector(".ch-src");
           const pv = card.querySelector(".pv");
-          reader.innerHTML = "";
-          const box = document.createElement("div");
+          const mount = hostFor(i);
+          [reader].concat(slots).forEach(clear);
+          box = document.createElement("div");
           box.className = "in";
           box.innerHTML =
             '<span class="no" aria-hidden="true"></span>' +
@@ -8130,12 +8403,24 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
             '<span class="dots" aria-hidden="true">·　·　·</span>' +
             '<div class="clue" hidden><span class="st" aria-hidden="true">✦</span>' +
             '<span class="lb"></span></div>' +
+            '<span class="moon" aria-hidden="true">☾</span>' +
             '<button type="button" class="ch-shut"><span class="tx"></span>' +
             '<span class="cv" aria-hidden="true">↑</span></button>';
           box.querySelector(".no").textContent = card.querySelector(".no").textContent;
           box.querySelector(".t").textContent = card.querySelector(".t").textContent;
+          /* 卡片上那段引子如果就是正文开头的摘录,阅读区里再放一次会变成
+             「同一句话连讲两遍」。只有当它是生成端另外给的一句(未来的
+             insightTeaser)时,才把它当成开场引句留着。 */
           const pvEl = box.querySelector(".pv");
-          if (pv) pvEl.textContent = pv.textContent; else pvEl.remove();
+          const head = src ? String(src.textContent || "").replace(/\s/g, "").slice(0, 24) : "";
+          const lead = pv ? String(pv.textContent || "").replace(/\s/g, "").slice(0, 24) : "";
+          if (pv && lead && head.indexOf(lead) !== 0) pvEl.textContent = pv.textContent;
+          else {
+            pvEl.remove();
+            // 没有开场引句就不需要那条分隔 —— 否则会连着出现两个记号
+            const rule = box.querySelector(".rule");
+            if (rule) rule.remove();
+          }
           // 完整原文原样搬过来,不重新产生任何文字
           box.querySelector(".bd").innerHTML = src ? src.innerHTML : "";
           /* 「这一章的线索」用的就是卡片上那几条 —— 同一份 dpDerive 的结果,
@@ -8152,12 +8437,15 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
             close();
             card.focus();
           });
-          reader.appendChild(box);
+          mount.appendChild(box);
           cards.forEach(function (c) { c.classList.remove("on"); c.setAttribute("aria-expanded", "false"); });
           card.classList.add("on");
           card.setAttribute("aria-expanded", "true");
+          card.setAttribute("aria-controls", mount.id);
           cur = i;
-          grow(reader, true);
+          grow(mount, true);
+          /* 刻意不做 scrollIntoView:内容就长在被点的那张卡下面,
+             使用者的视线本来就在那里,把页面拉走反而会迷路。 */
         };
         cards.forEach(function (card, i) {
           card.addEventListener("click", function () {
@@ -8178,7 +8466,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       if (!host.classList.contains("thread-page")) return;
       if (!("IntersectionObserver" in window)) return;
       if (window.matchMedia && window.matchMedia("(prefers-reduced-motion:reduce)").matches) return;
-      const els = host.querySelectorAll(".thread-open,.thread-ch,.thread-tail > *");
+      const els = host.querySelectorAll(".thread-open,.thread-ch,.thread-bridge,.thread-tail > *");
       if (!els.length) return;
       const io = new IntersectionObserver(function (list) {
         list.forEach(function (e) {
