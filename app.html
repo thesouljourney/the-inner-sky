@@ -38,7 +38,7 @@
 <!-- 解读详情页字体:与 Landing(index.html)同一套 -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&family=Noto+Serif+SC:wght@400;500;600;700&family=Noto+Sans+SC:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&family=Noto+Serif+SC:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
   :root{
     --night:#f2ead8;        /* 米色底 */
@@ -1496,6 +1496,756 @@
   }
   /* v3 的 600 段把章节容器的内距收成 18px —— 横向滑动的负 margin 要跟着收 */
   @media(max-width:600px){#dpage .sky-group{--sky-gx:18px}}
+  /* ============================================================
+     属于我的生命脉络(#/map)—— 编辑式的「一条线」版面
+     ------------------------------------------------------------
+     主题页与这一页共用同一份 component(dpAnswerHtml / dpTailBlocks),
+     所以底下每一条规则都必须带 .thread-page —— 一条都不能外溢到主题页。
+     内容、文案、资料绑定、fav 按钮、data-saveable、sec-<i> 锚点全部没动,
+     这一整段只负责呈现。
+     ============================================================ */
+  #dpage.thread-page{--dp-wide:min(1120px,calc(100vw - 96px));background:#f7f3ef}
+  @media(max-width:1024px){#dpage.thread-page{--dp-wide:100%}}
+
+  /* —— Hero:云天底 + 右侧大月亮,再柔和地化进象牙色的正文区 —— */
+  #dpage.thread-page .dp-hero{
+    background:
+      linear-gradient(180deg,rgba(9,18,46,.66) 0%,rgba(9,18,46,.24) 42%,rgba(9,18,46,.42) 100%),
+      /* 底图右上角自己带一颗月亮 —— 放大并靠左取景把它推出画面,
+         这一页只留 asset 02 那一颗,不要两颗月亮打架 */
+      url(assets/life/hero-sky.webp) left 56% / 142% auto no-repeat,
+      var(--dp-navy);
+    padding-bottom:clamp(66px,9vw,124px)
+  }
+  #dpage.thread-page .dp-hero .dp-stars i{opacity:calc(var(--o,.5) * .55)}
+  /* 底缘化进正文的象牙色 —— hero 不设 overflow:hidden(账号选单会被切掉) */
+  #dpage.thread-page .dp-hero::after{
+    content:"";position:absolute;left:0;right:0;bottom:0;z-index:1;pointer-events:none;
+    height:clamp(104px,15vw,208px);
+    /* 多给几个停点,而且中段刻意走得慢 —— 天空是「化」进纸里的,不是被一条边切断 */
+    background:linear-gradient(180deg,
+      rgba(247,243,239,0) 0%,
+      rgba(247,243,239,.14) 26%,
+      rgba(247,243,239,.42) 50%,
+      rgba(247,243,239,.74) 70%,
+      rgba(247,243,239,.94) 86%,
+      #f7f3ef 100%)
+  }
+  /* 标题置中、月亮浮在右侧。overflow 只锁在 hero-grid —— 顶栏是它的兄弟,不受影响 */
+  #dpage.thread-page .dp-hero-grid{
+    z-index:2;grid-template-columns:minmax(0,1fr);overflow:hidden;
+    text-align:center;justify-items:center;
+    padding:calc(clamp(26px,5vw,62px) + 20px) 0 clamp(18px,4vw,40px);
+    min-height:clamp(230px,30vw,400px);align-content:center
+  }
+  #dpage.thread-page .dp-hero-grid > div{max-width:min(100%,var(--dp-text))}
+  #dpage.thread-page .dp-sub{max-width:30em;margin:0 auto}
+  /* 标题缩约 12%、字重从 500 收到 300、字距拉开 —— 精致一点,不再是海报字 */
+  #dpage.thread-page h1.dp-title{
+    font-weight:300;font-size:clamp(25px,3.9vw,44px);
+    letter-spacing:.1em;line-height:1.45;margin-bottom:0
+  }
+  /* 辅助文案 → 一个很小的记号 → 九颗星 → 结语两行。
+     层与层之间的距离刻意不一样:记号贴着上一行,星链与结语各自留出呼吸。 */
+  #dpage.thread-page .thread-vow{
+    display:flex;flex-direction:column;align-items:center;
+    margin-top:clamp(18px,2.2vw,28px)
+  }
+  #dpage.thread-page .thread-vow .a{
+    font-family:var(--dp-sans);font-weight:300;line-height:2;
+    font-size:clamp(12.5px,1.3vw,14px);letter-spacing:.22em;
+    color:rgba(242,235,225,.84)
+  }
+  /* 九颗星:读过的点亮,还没读的留一点微光。不是进度条,不显示数字。
+     辅助文案下面不再放记号 —— 这段距离由星链自己接住。 */
+  #dpage.thread-page .thread-vow .stars{
+    display:block;width:min(340px,76vw);margin:clamp(24px,3vw,38px) 0 0
+  }
+  #dpage.thread-page .thread-vow .stars svg{display:block;width:100%;height:auto}
+  /* 出现的那几颗用素材本身的颜色,不套滤镜。
+     只留一层很小的柔光把它从云层里托起来 —— 是「看得清楚」,不是「在发光」。
+     柔光用 drop-shadow,它沿着星球的轮廓走,背后不会留下一块圆底。 */
+  #dpage.thread-page .thread-vow .stars .orb{
+    filter:drop-shadow(0 1px 3px rgba(22,20,44,.45))
+  }
+  #dpage.thread-page .thread-vow .b{
+    display:flex;flex-direction:column;align-items:center;gap:3px;
+    font-family:var(--dp-serif);font-weight:400;line-height:1.6;
+    letter-spacing:.12em;margin-top:clamp(38px,4.4vw,50px)
+  }
+  #dpage.thread-page .thread-vow .b1{
+    font-size:clamp(18px,2vw,21.5px);color:rgba(240,233,222,.6)
+  }
+  #dpage.thread-page .thread-vow .b2{
+    font-weight:300;font-size:clamp(16.5px,1.8vw,20px);
+    letter-spacing:.2em;color:rgba(240,231,217,.74);
+    text-shadow:0 1px 22px rgba(170,160,213,.16)
+  }
+  #dpage.thread-page .dp-hero-art{
+    position:absolute;right:clamp(-46px,-1vw,0px);top:50%;transform:translateY(-50%);
+    width:clamp(146px,25vw,320px);opacity:.9;pointer-events:none;
+    filter:drop-shadow(0 20px 64px rgba(120,105,175,.42))
+  }
+
+  /* —— 正文区:暖珍珠底 + 几片极淡的薰衣草 / 香槟辉光 —— */
+  #dpage.thread-page .dp-body{
+    position:relative;background:none;
+    padding:clamp(34px,5vw,72px) clamp(18px,4vw,48px) clamp(84px,10vw,140px)
+  }
+  /* 那几片辉光原本画在正文区自己的底上 —— 正文区比视窗窄,所以左右会留下一道
+     看得见的直边。改成一层满版的底,光就化在纸上,而不是化在一个方框里。 */
+  #dpage.thread-page .dp-body::before{
+    content:"";position:absolute;top:0;bottom:0;left:calc(50% - 50vw);width:100vw;
+    z-index:0;pointer-events:none;
+    background:
+      radial-gradient(58% 26% at 10% 4%,rgba(170,160,213,.11),rgba(170,160,213,0) 72%),
+      radial-gradient(50% 24% at 94% 34%,rgba(232,211,162,.11),rgba(232,211,162,0) 74%),
+      radial-gradient(60% 26% at 16% 74%,rgba(170,160,213,.09),rgba(170,160,213,0) 72%)
+  }
+  #dpage.thread-page .dp-body > *{position:relative;z-index:1}
+  /* 这一页不要一格一格的白卡片:等待 / 进度 / 错误那几种状态卡保持原样,
+     只有读完之后的长文版面走开放式排版。 */
+  #dpage.thread-page .thread-flow{position:relative}
+  #dpage.thread-page{--th-col:clamp(46px,4.6vw,66px);--th-gap:clamp(14px,2.2vw,30px)}
+
+  /* —— 生命线:一条极细、微微弯曲的路径,压在章节号那一栏的正中 —— */
+  #dpage.thread-page .thread-line{
+    position:absolute;left:0;top:6px;bottom:clamp(40px,6vw,90px);
+    width:var(--th-col);pointer-events:none;
+    -webkit-mask-image:linear-gradient(180deg,transparent,#000 5%,#000 90%,transparent);
+            mask-image:linear-gradient(180deg,transparent,#000 5%,#000 90%,transparent)
+  }
+  #dpage.thread-page .thread-line svg{display:block;width:100%;height:100%}
+
+  /* —— 开场引文:从卡片里拿出来,放大成这一页的第一句话 —— */
+  #dpage.thread-page .thread-open{
+    padding-left:0;text-align:center;
+    margin:clamp(8px,1.4vw,20px) 0 clamp(62px,8vw,104px)
+  }
+  #dpage.thread-page .thread-open .dp-quote{
+    max-width:min(100%,24em);margin:0 auto;padding:0;
+    text-align:center;font-size:clamp(20px,2.5vw,28px);line-height:2;color:#232445
+  }
+  #dpage.thread-page .thread-open .dp-quote .q{font-size:44px;vertical-align:-14px}
+  #dpage.thread-page .thread-open .st{
+    display:block;margin-top:clamp(26px,3.4vw,40px);
+    font-size:11px;line-height:1;color:rgba(154,106,52,.4)
+  }
+  /* 生命线只罩着底下那几段,开场那一句在它上面、自己站着 */
+  #dpage.thread-page .thread-trail{position:relative}
+
+  /* —— 一章 = 章节号 + 正文 + 一张浮在右边的插画 —— */
+  #dpage.thread-page .thread-ch{
+    position:relative;display:grid;align-items:start;
+    grid-template-columns:var(--th-col) minmax(0,1fr);
+    gap:var(--th-gap);
+    margin:0 0 clamp(58px,7vw,96px);border-radius:0
+  }
+  /* 进入「几个重要章节」之前,给一个比章与章之间更大的停顿 */
+  #dpage.thread-page .thread-ch:last-of-type{margin-bottom:clamp(84px,11vw,150px)}
+  #dpage.thread-page .ch-mark{
+    display:flex;flex-direction:column;align-items:center;gap:12px;padding-top:2px
+  }
+  /* 章节号是线上的一个记号,不是版面的主角 —— 主角是标题 */
+  #dpage.thread-page .ch-mark .no{
+    font-family:var(--dp-display);font-weight:400;line-height:1;
+    font-size:clamp(17px,1.7vw,21px);letter-spacing:.16em;
+    color:rgba(129,118,173,.72);font-variant-numeric:tabular-nums
+  }
+  /* 记号要盖住线,所以给它一个与页面同色的底 —— 线才像穿过它,而不是压在上面 */
+  #dpage.thread-page .ch-mark .nd{
+    display:inline-flex;align-items:center;justify-content:center;
+    width:30px;height:30px;border-radius:50%;
+    background:#f7f3ef;border:1px solid rgba(130,110,175,.26);
+    color:rgba(129,118,173,.82)
+  }
+  #dpage.thread-page .ch-body{min-width:0}
+  #dpage.thread-page .thread-ch h3.dp-h{
+    font-size:clamp(21px,2.4vw,29px);font-weight:600;line-height:1.55;
+    letter-spacing:.012em;color:#22233a
+  }
+  /* 版心可以宽,读的那一栏要窄 —— 中文一行超过 ~34 个字就开始累 */
+  #dpage.thread-page .thread-ch .dp-prose{
+    font-size:16.5px;line-height:1.95;color:#2c2d48;max-width:min(100%,34em)
+  }
+  #dpage.thread-page .thread-ch .dp-prose p{margin:0 0 20px}
+  #dpage.thread-page .thread-ch .dp-prose p:last-child{margin-bottom:0}
+
+  /* 插画:装饰层,不进卡片、不加边框;每一章的大小与位置刻意不同 */
+  #dpage.thread-page .ch-art{pointer-events:none;user-select:none}
+  #dpage.thread-page .ch-art img{display:block;width:100%;height:auto;object-fit:contain}
+  #dpage.thread-page .ch-art.a1 img{opacity:.96}
+  #dpage.thread-page .ch-art.a2 img{opacity:.88}
+  #dpage.thread-page .ch-art.a3 img{opacity:.92}
+  /* 这两张是满版的方形插画(不是去背素材):边缘化掉,才不会看起来像一张卡片 */
+  #dpage.thread-page .ch-art.a3 img,#dpage.thread-page .ch-art.a4 img{
+    -webkit-mask-image:radial-gradient(112% 112% at 50% 48%,#000 32%,rgba(0,0,0,.36) 66%,transparent 92%);
+            mask-image:radial-gradient(112% 112% at 50% 48%,#000 32%,rgba(0,0,0,.36) 66%,transparent 92%)
+  }
+  #dpage.thread-page .ch-art.a4 img{opacity:1}
+  #dpage.thread-page .ch-art.a5 img{opacity:.86}
+
+  /* —— 转折:从「发生过什么」走到「它留下了什么」。
+        没有框、没有底、没有按钮,只有留白与一层薄雾。 —— */
+  #dpage.thread-page .thread-bridge{
+    position:relative;isolation:isolate;text-align:center;
+    margin:clamp(20px,3vw,44px) 0 clamp(46px,6vw,80px);
+    padding:clamp(36px,5vw,66px) clamp(16px,3vw,40px)
+  }
+  /* 罗盘:原本压在「进入尾段」那里,搬到这里当转折的中心 —— 同一张素材,
+     只是换了位置;这样版面上不会连着出现两个仪式感的记号。 */
+  #dpage.thread-page .thread-bridge .cp{
+    display:block;width:clamp(44px,5.4vw,68px);height:clamp(44px,5.4vw,68px);
+    margin:0 auto;
+    background:url(assets/life/compass.webp) center / contain no-repeat;opacity:.7
+  }
+  #dpage.thread-page .thread-bridge .mist{
+    position:absolute;inset:0;z-index:-1;pointer-events:none;
+    background:
+      radial-gradient(52% 56% at 50% 46%,rgba(170,160,213,.15),rgba(170,160,213,0) 72%),
+      radial-gradient(34% 40% at 74% 62%,rgba(232,211,162,.1),rgba(232,211,162,0) 74%)
+  }
+  #dpage.thread-page .thread-bridge .st{
+    display:block;font-size:11px;line-height:1;color:rgba(154,106,52,.42)
+  }
+  #dpage.thread-page .thread-bridge .lead{
+    font-family:var(--dp-serif);font-weight:400;
+    font-size:clamp(16.5px,1.9vw,20px);line-height:2.15;letter-spacing:.02em;
+    color:#3a3852;max-width:min(100%,27em);
+    margin:clamp(30px,3.8vw,46px) auto 0
+  }
+  /* 第二句压低半级 —— 它是把人推向下一段的那一句,不该跟第一句抢 */
+  #dpage.thread-page .thread-bridge .lead.lo{
+    font-size:clamp(15px,1.7vw,17.5px);color:rgba(58,56,82,.72)
+  }
+  #dpage.thread-page .thread-bridge .st + .lead{margin-top:clamp(24px,3vw,34px)}
+  #dpage.thread-page .thread-bridge .lead + .st{margin-top:clamp(30px,3.8vw,46px)}
+  /* 中间这几句是生成端的「值得记住」—— 版面上给它最大的字与最多的留白 */
+  #dpage.thread-page .thread-bridge .said{
+    max-width:min(100%,29em);margin:clamp(34px,4.4vw,56px) auto 0
+  }
+  #dpage.thread-page .thread-bridge .said .ln{
+    position:relative;font-family:var(--dp-serif);font-weight:400;
+    font-size:clamp(18px,2.2vw,24px);line-height:2.05;letter-spacing:.015em;
+    color:#22233a;margin:0;padding-bottom:clamp(22px,2.8vw,32px)
+  }
+  #dpage.thread-page .thread-bridge .said .ln + .ln{padding-top:clamp(22px,2.8vw,32px)}
+  #dpage.thread-page .thread-bridge .said .ln:not(:last-child)::after{
+    content:"·　·　·";position:absolute;left:50%;bottom:0;transform:translateX(-50%);
+    font-family:var(--dp-display);font-size:12px;letter-spacing:.1em;line-height:1;
+    color:rgba(154,106,52,.32)
+  }
+  #dpage.thread-page .thread-bridge .said .ln:last-child{padding-bottom:0}
+
+  /* —— 中场:罗盘记号,标示从「解读」走进「留给你的」 —— */
+  #dpage.thread-page .thread-tail{padding-left:calc(var(--th-col) + var(--th-gap))}
+  /* 页面的最后一个记号:一枚很淡的月亮,读完之后自然落进深蓝的页脚 */
+  #dpage.thread-page .thread-tail::after{
+    content:"☾";display:block;text-align:center;
+    margin:clamp(28px,3.6vw,46px) auto 0;
+    font-size:15px;line-height:1;color:rgba(129,118,173,.44)
+  }
+  /* 罗盘已经搬进转折段,这里不再重复一次 —— 尾段直接从「从这里开始」进场 */
+
+  /* —— 章节的引子:第一句 + 几个重点 + 一个安静的入口 —— */
+  #dpage.thread-page .ch-peek .pv{
+    font-family:var(--dp-sans);font-weight:300;
+    font-size:clamp(15px,1.6vw,16.5px);line-height:2.05;
+    color:#4c4a5e;margin:0;max-width:34em
+  }
+  /* 线索:比引子小、字距拉开一点、上面一条极细的线 —— 一眼看得出是另一层 */
+  #dpage.thread-page .ch-keys{
+    list-style:none;margin:clamp(16px,2vw,22px) 0 0;padding:clamp(14px,1.8vw,18px) 0 0;
+    max-width:32em;border-top:1px solid rgba(154,106,52,.14)
+  }
+  #dpage.thread-page .ch-keys li{
+    display:flex;align-items:baseline;gap:10px;
+    font-size:13.5px;line-height:1.85;letter-spacing:.02em;
+    color:#6b6759;font-weight:300;margin-top:8px
+  }
+  #dpage.thread-page .ch-keys li:first-child{margin-top:0}
+  #dpage.thread-page .ch-keys li i{
+    flex:none;width:3px;height:3px;border-radius:50%;
+    background:rgba(154,106,52,.5);transform:translateY(-4px)
+  }
+  #dpage.thread-page .ch-open,#dpage.thread-page .ch-shut{
+    display:inline-flex;align-items:center;gap:9px;
+    margin-top:clamp(16px,2vw,22px);min-height:40px;padding:8px 2px;
+    background:none;border:none;cursor:pointer;
+    font-family:var(--dp-sans);font-size:13px;letter-spacing:.14em;
+    color:#7a6fa8;transition:color .3s ease
+  }
+  #dpage.thread-page .ch-open:hover,#dpage.thread-page .ch-shut:hover{color:#4c4470}
+  #dpage.thread-page .ch-open:focus-visible,#dpage.thread-page .ch-shut:focus-visible{
+    outline:1px solid rgba(129,118,173,.7);outline-offset:3px;border-radius:8px
+  }
+  #dpage.thread-page .ch-open .cv,#dpage.thread-page .ch-shut .cv{font-size:11px;line-height:1}
+  /* 展开的是完整原文;收起时引子在、原文高度为 0(内容仍在 DOM 里) */
+  #dpage.thread-page .ch-full{
+    overflow:hidden;max-height:0;opacity:0;
+    transition:max-height .55s cubic-bezier(.22,1,.36,1),opacity .4s ease
+  }
+  #dpage.thread-page .ch-full.on{opacity:1}
+  #dpage.thread-page .thread-ch.open .ch-peek{display:none}
+  @media (prefers-reduced-motion:reduce){#dpage.thread-page .ch-full{transition:none}}
+
+  /* —— 几个重要章节:只放引子的卡,永远不会自己长高 —— */
+  #dpage.thread-page .ch-cards{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,236px),1fr));
+    gap:clamp(14px,1.8vw,20px);align-items:stretch
+  }
+  #dpage.thread-page .ch-card{
+    display:flex;flex-direction:column;align-items:flex-start;gap:0;
+    text-align:left;cursor:pointer;font-family:var(--dp-sans);
+    background:linear-gradient(180deg,rgba(255,253,250,.82),rgba(252,249,245,.7));
+    border:1px solid rgba(150,130,180,.1);border-radius:18px;
+    padding:clamp(22px,2.6vw,30px);
+    box-shadow:0 8px 26px rgba(60,50,90,.028);
+    transition:border-color .4s ease,box-shadow .4s ease,transform .4s cubic-bezier(.22,1,.36,1)
+  }
+  @media(hover:hover){
+    #dpage.thread-page .ch-card:hover{
+      transform:translateY(-2px);border-color:rgba(154,106,52,.18);
+      box-shadow:0 12px 32px rgba(60,50,90,.05)
+    }
+  }
+  #dpage.thread-page .ch-card:focus-visible{outline:1px solid rgba(129,118,173,.7);outline-offset:3px}
+  /* 正在读的那一章:很淡的香槟底 + 一条细香槟线 + 右上一颗小星。
+     看得出来,但不喊。 */
+  #dpage.thread-page .ch-card.on{
+    position:relative;
+    border-color:rgba(190,160,110,.34);
+    background:linear-gradient(180deg,rgba(255,252,244,.9),rgba(253,249,241,.8));
+    box-shadow:0 10px 30px rgba(60,50,90,.045)
+  }
+  #dpage.thread-page .ch-card.on::after{
+    content:"✦";position:absolute;top:14px;right:16px;
+    font-size:10px;line-height:1;color:rgba(168,111,61,.5)
+  }
+  /* 卡片上的号码是这一栏的锚点,可以比章节里的大一点,但不到「巨大」 */
+  #dpage.thread-page .ch-card .no{
+    font-family:var(--dp-display);font-weight:300;line-height:1;
+    font-size:clamp(25px,2.5vw,31px);letter-spacing:.12em;
+    color:rgba(148,128,168,.62)
+  }
+  /* 卡片上的天体记号:用的是生命线上那三个手写 SVG(星芒 / 弦月 / 罗盘),
+     三张卡各一个 —— 不另外做一套图,也不重复载生命经验那几张插画 */
+  #dpage.thread-page .ch-card .gl{
+    display:block;margin-top:clamp(16px,2vw,22px);
+    color:rgba(129,118,173,.5);line-height:1
+  }
+  #dpage.thread-page .ch-card.on .gl{color:rgba(168,111,61,.6)}
+  #dpage.thread-page .ch-card .gl svg{display:block}
+  #dpage.thread-page .ch-card .t{
+    font-family:var(--dp-serif);font-weight:600;
+    font-size:clamp(17px,1.8vw,19px);line-height:1.65;
+    color:#22233a;margin-top:clamp(14px,1.7vw,18px)
+  }
+  /* 引子现在是完整的句子(不会切在半路),所以不再用 line-clamp 截行 ——
+     三张卡长短不一样是正常的,align-items:stretch 会把卡片拉齐。
+     完整原文一直在 .ch-src 里,一个字都没少。 */
+  #dpage.thread-page .ch-card .pv{
+    font-size:clamp(13.5px,1.4vw,14.5px);line-height:2.05;color:#5b5749;
+    font-weight:300;margin-top:clamp(12px,1.4vw,15px)
+  }
+  /* 留给生成端未来可能补上的那一句问题:现在没有这个字段,所以不会出现 */
+  #dpage.thread-page .ch-card .qz{
+    font-family:var(--dp-serif);font-size:14px;line-height:1.95;color:#4a4760;
+    margin-top:clamp(14px,1.7vw,18px);padding-top:clamp(13px,1.6vw,16px);
+    border-top:1px solid rgba(154,106,52,.14)
+  }
+  #dpage.thread-page .ch-card .ch-keys{margin-top:14px;padding-top:13px;max-width:none}
+  #dpage.thread-page .ch-card .ch-keys li{font-size:12.5px;line-height:1.8}
+  #dpage.thread-page .ch-card .go{
+    margin-top:auto;padding-top:clamp(20px,2.4vw,26px);
+    font-size:12.5px;letter-spacing:.14em;color:#7a6fa8;
+    transition:color .3s ease
+  }
+  @media(hover:hover){#dpage.thread-page .ch-card:hover .go{color:#4c4470}}
+  #dpage.thread-page .ch-card.on .go{color:#96703e}
+  #dpage.thread-page .ch-card .ch-src{display:none}
+  /* 手机版的展开位:桌机上完全不存在(连格子都不占) */
+  #dpage.thread-page .ch-slot{display:none}
+
+  /* —— 单章阅读区:整排卡片下面,一次只开一章 —— */
+  #dpage.thread-page .ch-reader{
+    overflow:hidden;max-height:0;opacity:0;
+    transition:max-height .55s cubic-bezier(.22,1,.36,1),opacity .4s ease
+  }
+  #dpage.thread-page .ch-reader.on{opacity:1}
+  @media (prefers-reduced-motion:reduce){
+    #dpage.thread-page .ch-reader,#dpage.thread-page .ch-slot{transition:none}
+  }
+  /* 书页,不是卡片:边几乎看不见、圆角收小、影子拿掉,靠留白与一条顶线分隔 */
+  #dpage.thread-page .ch-reader .in{
+    position:relative;
+    margin-top:clamp(22px,2.8vw,36px);
+    padding:clamp(40px,5vw,72px) clamp(20px,3vw,44px) clamp(34px,4vw,56px);
+    border-radius:10px;text-align:center;
+    background:
+      radial-gradient(72% 40% at 50% 0%,rgba(170,160,213,.11),rgba(170,160,213,0) 72%),
+      rgba(255,253,250,.5);
+    border:1px solid rgba(150,130,180,.055);
+    box-shadow:none
+  }
+  #dpage.thread-page .ch-reader .in::before{
+    content:"";position:absolute;left:50%;top:0;transform:translateX(-50%);
+    width:min(52%,220px);height:1px;
+    background:linear-gradient(90deg,rgba(154,106,52,0),rgba(154,106,52,.26),rgba(154,106,52,0))
+  }
+  #dpage.thread-page .ch-reader .no{
+    display:block;font-family:var(--dp-display);font-weight:300;line-height:1;
+    font-size:clamp(22px,2.2vw,27px);letter-spacing:.24em;color:rgba(148,128,168,.6)
+  }
+  #dpage.thread-page .ch-reader .t{
+    font-family:var(--dp-serif);font-weight:600;
+    font-size:clamp(19px,2.2vw,25px);line-height:1.65;color:#2b2925;
+    margin:clamp(12px,1.6vw,18px) 0 0
+  }
+  #dpage.thread-page .ch-reader .st{display:block;margin-top:13px;font-size:10px;color:rgba(129,118,173,.7)}
+  #dpage.thread-page .ch-reader .pv{
+    font-family:var(--dp-serif);font-size:clamp(15.5px,1.6vw,17.5px);line-height:1.95;
+    color:#4a4760;max-width:34em;margin:clamp(14px,1.8vw,20px) auto 0
+  }
+  /* 分隔用三颗点,不用实线 —— 编辑式的停顿 */
+  #dpage.thread-page .ch-reader .rule,#dpage.thread-page .ch-reader .dots{
+    display:block;margin:clamp(30px,3.6vw,46px) auto;
+    font-family:var(--dp-display);font-size:13px;letter-spacing:.1em;
+    color:rgba(154,106,52,.42);line-height:1;text-align:center
+  }
+  #dpage.thread-page .ch-reader .rule{width:auto;height:auto;background:none}
+  #dpage.thread-page .ch-reader .rule::before{content:"·　·　·"}
+  /* 中文长文的舒服行长:比外框窄一截 */
+  #dpage.thread-page .ch-reader .bd{
+    max-width:min(100%,680px);margin:0 auto;text-align:left;
+    font-size:16px;line-height:2.05;color:#2c2d48;font-weight:300
+  }
+  #dpage.thread-page .ch-reader .bd p{margin:0 0 22px}
+  #dpage.thread-page .ch-reader .bd p:last-child{margin-bottom:0}
+  /* 这一章的线索:读完之后再看一次,与卡片上那几条是同一份 */
+  #dpage.thread-page .ch-reader .clue{max-width:min(100%,560px);margin:0 auto}
+  #dpage.thread-page .ch-reader .clue .st{margin:0 0 12px}
+  #dpage.thread-page .ch-reader .clue .lb{
+    display:block;font-size:11px;letter-spacing:.28em;color:#8a7351
+  }
+  #dpage.thread-page .ch-reader .clue .ch-keys{
+    display:inline-block;text-align:left;margin-top:16px;padding-top:14px;max-width:none
+  }
+  /* 读完之后的一枚月亮 —— 收起之前的一次呼吸 */
+  #dpage.thread-page .ch-reader .moon,#dpage.thread-page .ch-slot .moon{
+    display:block;margin:clamp(30px,3.6vw,44px) auto 0;
+    font-size:15px;line-height:1;color:rgba(129,118,173,.44)
+  }
+  #dpage.thread-page .ch-reader .ch-shut{margin-top:clamp(14px,1.8vw,20px)}
+
+  /* —— 值得记住:不再是三个盒子,是一段编辑式的停顿 —— */
+  #dpage.thread-page .dp-keep{
+    background:none;border:none;box-shadow:none;padding:0;display:block;
+    margin:clamp(78px,10vw,132px) 0 0
+  }
+  #dpage.thread-page .dp-keep .hd{justify-content:center;margin-bottom:clamp(18px,2.2vw,26px)}
+  #dpage.thread-page .dp-keep .sp{display:none}
+  #dpage.thread-page .dp-keep .q{
+    display:block;background:none;border:none;box-shadow:none;padding:0;
+    max-width:min(100%,720px);margin:0 auto;text-align:center;
+    position:relative;
+    padding-bottom:clamp(20px,2.4vw,28px);margin-bottom:clamp(20px,2.4vw,28px)
+  }
+  #dpage.thread-page .dp-keep .q::after{
+    content:"·　·　·";position:absolute;left:50%;bottom:0;transform:translateX(-50%);
+    font-family:var(--dp-display);font-size:12px;letter-spacing:.1em;line-height:1;
+    color:rgba(154,106,52,.34)
+  }
+  #dpage.thread-page .dp-keep .q:last-child{padding-bottom:0;margin-bottom:0}
+  #dpage.thread-page .dp-keep .q:last-child::after{content:none}
+  #dpage.thread-page .dp-keep .q .mk{display:none}
+  #dpage.thread-page .dp-keep .q .bd{
+    font-family:var(--dp-serif);font-size:clamp(15.5px,1.7vw,18px);
+    line-height:1.95;color:#2b2c48
+  }
+
+  /* —— 留给你的思考:footer 之前的一次呼吸,不是又一张卡 —— */
+  #dpage.thread-page .dp-reflect{
+    position:relative;padding:clamp(46px,6vw,86px) clamp(18px,3vw,40px);
+    border:none;border-radius:0;background:none;box-shadow:none;
+    text-align:center;margin:0
+  }
+  #dpage.thread-page .dp-reflect.act{border-left:none;padding-left:clamp(18px,3vw,40px)}
+  #dpage.thread-page .dp-reflect .eb{justify-content:center;margin-bottom:15px}
+  #dpage.thread-page .dp-reflect h3.rt{margin:0}
+  #dpage.thread-page .dp-reflect .rule{
+    width:min(40%,150px);margin:clamp(20px,2.6vw,30px) auto;
+    background:linear-gradient(90deg,rgba(129,118,173,0),rgba(129,118,173,.42),rgba(129,118,173,0));
+    opacity:1
+  }
+  #dpage.thread-page .dp-reflect .bd{
+    max-width:min(100%,640px);margin:0 auto;text-align:left;
+    font-size:clamp(15.5px,1.65vw,17px);line-height:2.1
+  }
+  #dpage.thread-page .dp-reflect .bd .fold-btn{margin-left:0}
+  /* 一层极淡的月光,只在「留给你的思考」那一段 */
+  #dpage.thread-page .dp-reflect .glow{
+    display:block;position:absolute;inset:0;z-index:-1;pointer-events:none;
+    background:radial-gradient(58% 60% at 50% 42%,rgba(170,160,213,.14),rgba(170,160,213,0) 72%)
+  }
+  #dpage.thread-page .dp-reflect .glow::after{content:none}
+  #dpage.thread-page .thread-tail > .dp-reflect{isolation:isolate}
+
+  /* —— 落地:思考区前后各一句过场,靠留白把它托起来 —— */
+  #dpage.thread-page .thread-close{text-align:center}
+  #dpage.thread-page .thread-close .pre{
+    font-family:var(--dp-serif);font-weight:400;
+    font-size:clamp(15px,1.65vw,17px);line-height:2.1;letter-spacing:.02em;
+    color:rgba(58,56,82,.7);max-width:min(100%,27em);
+    margin:clamp(20px,2.6vw,34px) auto 0
+  }
+  #dpage.thread-page .thread-close .post{
+    font-family:var(--dp-serif);font-weight:300;
+    font-size:clamp(14.5px,1.55vw,16px);line-height:2.2;letter-spacing:.04em;
+    color:rgba(58,56,82,.58);margin:clamp(4px,1vw,12px) auto 0
+  }
+  #dpage.thread-page .thread-close .post .l2{display:block}
+  /* 前面已经有一句过场了,思考区自己那个小标不必再喊一次 */
+  #dpage.thread-page .thread-close .dp-reflect{padding-top:clamp(26px,3.4vw,44px)}
+  #dpage.thread-page .thread-close .dp-reflect .eb{opacity:.55}
+
+  /* —— 渐进展开(思考区块用)—— */
+  #dpage.thread-page .fold-rest{
+    overflow:hidden;max-height:0;opacity:0;
+    transition:max-height .5s cubic-bezier(.22,1,.36,1),opacity .38s ease
+  }
+  #dpage.thread-page .fold-rest.on{opacity:1}
+  @media (prefers-reduced-motion:reduce){#dpage.thread-page .fold-rest{transition:none}}
+  #dpage.thread-page .fold-btn{
+    display:inline-flex;align-items:center;gap:8px;
+    margin-top:12px;min-height:40px;padding:8px 2px;
+    background:none;border:none;cursor:pointer;
+    font-family:var(--dp-sans);font-size:13.5px;letter-spacing:.08em;
+    color:#7a6fa8;transition:color .3s ease
+  }
+  #dpage.thread-page .fold-btn .cv{font-size:11px;line-height:1;transition:transform .3s ease}
+  #dpage.thread-page .fold-btn:hover{color:#4c4470}
+  #dpage.thread-page .fold-btn:focus-visible{
+    outline:1px solid rgba(129,118,173,.7);outline-offset:3px;border-radius:8px
+  }
+
+  /* —— 页脚:同一片天空当底图,文字仍然是真的 HTML —— */
+  #dpage.thread-page .dp-foot{
+    background:
+      linear-gradient(180deg,rgba(9,18,46,.8),rgba(9,18,46,.9)),
+      url(assets/life/foot-sky.webp) center 34% / cover no-repeat,
+      var(--dp-navy)
+  }
+
+  /* —— 桌机:插画进第三栏,奇偶章错开高度,页面才有节奏 —— */
+  @media(min-width:1025px){
+    #dpage.thread-page .thread-ch{
+      grid-template-columns:var(--th-col) minmax(0,1fr) clamp(170px,19vw,252px)
+    }
+    #dpage.thread-page .ch-art{grid-column:3;align-self:start;position:relative}
+    /* 一层极淡的光晕,让插画像浮在纸上,而不是贴上去的一张图 */
+    #dpage.thread-page .ch-art::before{
+      content:"";position:absolute;inset:-14% -10%;z-index:-1;border-radius:50%;
+      background:radial-gradient(58% 54% at 50% 48%,rgba(170,160,213,.15),rgba(170,160,213,0) 72%)
+    }
+    /* 四种落点都不一样:有的贴着标题、有的沉下去、有的比标题还高一点、
+       有的往文字那一侧靠过来越过留白 —— 差别都很小,不做锯齿状的时间轴。
+       负 margin 只吃掉 dp-body 的内距,不会顶出画面。 */
+    #dpage.thread-page .ch-art.a1{margin-top:clamp(2px,.6vw,8px);margin-left:-18px}
+    #dpage.thread-page .ch-art.a2{
+      margin-top:clamp(30px,4.4vw,70px);margin-right:-22px;transform:scale(1.06)
+    }
+    #dpage.thread-page .ch-art.a3{
+      margin-top:clamp(-34px,-2.4vw,-14px);margin-left:-40px;transform:scale(.92)
+    }
+    #dpage.thread-page .ch-art.a4{
+      margin-top:clamp(16px,2.4vw,34px);margin-left:-30px;transform:scale(1.06)
+    }
+    #dpage.thread-page .ch-art.a5{
+      margin-top:clamp(22px,3.2vw,48px);margin-right:-16px;transform:scale(.88)
+    }
+  }
+  /* —— 平板 / 手机:插画落到正文下方靠右,生命线收窄贴着章节号 —— */
+  @media(max-width:1024px){
+    /* 桌机的偏移 / 出血在这里全部归零 —— 一栏版面,插画落在正文下方 */
+    #dpage.thread-page .ch-art{
+      grid-column:2;justify-self:end;width:min(62%,260px);
+      margin:clamp(14px,3vw,24px) 0 0;transform:none
+    }
+    #dpage.thread-page .ch-art::before{content:none}
+    #dpage.thread-page .ch-art.a2,#dpage.thread-page .ch-art.a4{width:min(72%,300px)}
+  }
+  /* ============================================================
+     手机版(≤767px)—— 自己一套版面,不是把桌机缩小
+     ============================================================ */
+  @media(max-width:767px){
+    #dpage.thread-page{--th-col:34px;--th-gap:12px}
+    /* 左右留白 20px,内容满版一栏 */
+    #dpage.thread-page .dp-body{padding:26px 20px 72px}
+
+    /* —— Hero:压低、云少一点、月亮小一圈,标题永远不被压到 —— */
+    #dpage.thread-page .dp-hero{
+      background:
+        /* 顶端压满,把底图的上缘接进顶栏的深蓝里,看不到那一道接缝 */
+        linear-gradient(180deg,rgba(9,18,46,.97) 0%,rgba(9,18,46,.62) 15%,
+                               rgba(9,18,46,.24) 46%,rgba(9,18,46,.3) 100%),
+        /* 底图铺不满手机版的 hero(1800×643,215% 宽 ≈ 300px 高),
+           所以把它贴着「底」放:留白落在上缘,跟顶栏的深蓝接得上;
+           下缘是云,再交给 ::after 化进象牙色 —— 中间不会出现一条硬边。 */
+        url(assets/life/hero-sky.webp) left bottom / 215% auto no-repeat,
+        var(--dp-navy);
+      padding-bottom:clamp(52px,15vw,86px)
+    }
+    #dpage.thread-page .dp-hero-grid{
+      min-height:0;padding:calc(clamp(18px,5vw,30px) + 12px) 0 clamp(14px,4vw,22px)
+    }
+    #dpage.thread-page .thread-vow{margin-top:14px}
+    #dpage.thread-page .thread-vow .a{font-size:12px;letter-spacing:.16em}
+    #dpage.thread-page .thread-vow .stars{width:min(310px,86vw);margin-top:22px}
+    #dpage.thread-page .thread-vow .b{margin-top:30px;gap:2px;letter-spacing:.08em}
+    /* 手机上这两行正好压在最亮的云带上,靠一点暗色投影拉开对比,而不是把字调亮 */
+    #dpage.thread-page .thread-vow .b1{
+      font-size:16px;text-shadow:0 1px 10px rgba(26,24,48,.5)
+    }
+    #dpage.thread-page .thread-vow .b2{
+      font-size:15px;letter-spacing:.15em;
+      text-shadow:0 1px 12px rgba(26,24,48,.5)
+    }
+    #dpage.thread-page h1.dp-title{font-size:26px;letter-spacing:.08em;line-height:1.5}
+    /* 月亮缩到 26vw、压在右上角的天空里 —— 标题在它下方置中,不会重叠 */
+    #dpage.thread-page .dp-hero-art{
+      width:clamp(94px,26vw,138px);opacity:.6;
+      top:0;right:-16px;bottom:auto;transform:none
+    }
+    #dpage.thread-page .dp-hero::after{height:clamp(88px,26vw,148px)}
+
+    /* —— 字级:不缩小到要放大才读得到 —— */
+    #dpage.thread-page .thread-ch h3.dp-h{font-size:21px;line-height:1.6}
+    #dpage.thread-page .thread-ch .dp-prose{font-size:15.5px;line-height:1.9}
+    #dpage.thread-page .thread-ch .dp-prose p{margin-bottom:17px}
+    #dpage.thread-page .thread-open .dp-quote{font-size:19.5px;line-height:1.9}
+    /* 手指点得到:继续查看 / 收起至少 44px 高 */
+    #dpage.thread-page .fold-btn{min-height:44px;font-size:14px}
+
+    /* —— 生命线:收窄贴着章节号,记号缩小,不占走内容宽度 —— */
+    #dpage.thread-page .ch-mark .no{font-size:23px}
+    #dpage.thread-page .ch-mark .nd{width:22px;height:22px}
+    #dpage.thread-page .ch-mark .nd svg{width:10px;height:10px}
+    #dpage.thread-page .thread-line{bottom:clamp(30px,8vw,60px)}
+    #dpage.thread-page .thread-ch{margin-bottom:clamp(56px,12vw,78px)}
+    #dpage.thread-page .thread-open{
+      padding-left:0;margin:2px 0 clamp(40px,10vw,60px)
+    }
+    #dpage.thread-page .thread-open .dp-quote{font-size:19.5px;line-height:1.95}
+    #dpage.thread-page .thread-open .st{margin-top:22px}
+    #dpage.thread-page .thread-tail{padding-left:calc(var(--th-col) + var(--th-gap))}
+    /* —— 转折段:手机上收紧一级,但留白仍然是它的主角 —— */
+    #dpage.thread-page .thread-bridge{
+      margin:clamp(18px,5vw,34px) 0 clamp(52px,13vw,76px);padding:34px 2px
+    }
+    #dpage.thread-page .thread-bridge .lead{font-size:16px;line-height:2.1;margin-top:26px}
+    #dpage.thread-page .thread-bridge .lead.lo{font-size:14.5px}
+    #dpage.thread-page .thread-bridge .said{margin-top:30px}
+    #dpage.thread-page .thread-bridge .said .ln{font-size:18px;line-height:2}
+
+    /* —— 插画:落到正文下方、置中、缩到 62%,不与文字重叠 —— */
+    /* 插画托着文字,不该把文字挤下去 —— 手机上再收一级 */
+    #dpage.thread-page .ch-art{
+      grid-column:2;justify-self:center;width:54%;max-width:186px;
+      margin-top:clamp(14px,3.4vw,22px)
+    }
+    #dpage.thread-page .ch-art.a2,#dpage.thread-page .ch-art.a4{width:62%;max-width:212px}
+
+    /* —— 重要章节:一张卡一排;点开的那一章就长在「自己那张卡下面」——
+          共用阅读区(#chReader)在手机上整个不参与版面。 —— */
+    #dpage.thread-page .ch-cards{grid-template-columns:1fr;gap:14px}
+    #dpage.thread-page .ch-card{padding:22px 20px;border-radius:18px}
+    #dpage.thread-page .ch-card .no{font-size:26px}
+    #dpage.thread-page .ch-card .gl{margin-top:14px}
+    #dpage.thread-page .ch-card .t{font-size:17px}
+    #dpage.thread-page .ch-card .pv{font-size:15px;line-height:2.05;margin-top:12px}
+    #dpage.thread-page .ch-card .qz{font-size:15px}
+    #dpage.thread-page .ch-card .go{font-size:13px;padding-top:20px}
+    #dpage.thread-page .ch-reader{display:none}
+    #dpage.thread-page .ch-slot{
+      display:block;grid-column:1/-1;margin-top:-2px;
+      overflow:hidden;max-height:0;opacity:0;
+      transition:max-height .55s cubic-bezier(.22,1,.36,1),opacity .4s ease
+    }
+    #dpage.thread-page .ch-slot.on{opacity:1}
+    #dpage.thread-page .ch-slot .in{
+      position:relative;margin-top:12px;
+      padding:26px 18px 24px;border-radius:18px;text-align:center;
+      background:
+        radial-gradient(72% 40% at 50% 0%,rgba(170,160,213,.12),rgba(170,160,213,0) 72%),
+        rgba(255,253,250,.62);
+      border:1px solid rgba(150,130,180,.07)
+    }
+    #dpage.thread-page .ch-slot .in::before{
+      content:"";position:absolute;left:50%;top:0;transform:translateX(-50%);
+      width:min(52%,180px);height:1px;
+      background:linear-gradient(90deg,rgba(154,106,52,0),rgba(154,106,52,.26),rgba(154,106,52,0))
+    }
+    #dpage.thread-page .ch-slot .no{
+      display:block;font-family:var(--dp-display);font-weight:300;line-height:1;
+      font-size:22px;letter-spacing:.24em;color:rgba(148,128,168,.6)
+    }
+    #dpage.thread-page .ch-slot .t{
+      font-family:var(--dp-serif);font-weight:600;font-size:19px;line-height:1.65;
+      color:#2b2925;margin:12px 0 0
+    }
+    #dpage.thread-page .ch-slot .st{display:block;margin-top:12px;font-size:10px;color:rgba(129,118,173,.7)}
+    #dpage.thread-page .ch-slot .pv{
+      font-family:var(--dp-serif);font-size:15px;line-height:1.95;color:#4a4760;
+      max-width:34em;margin:14px auto 0
+    }
+    #dpage.thread-page .ch-slot .rule,#dpage.thread-page .ch-slot .dots{
+      display:block;margin:28px auto;font-family:var(--dp-display);font-size:13px;
+      letter-spacing:.1em;color:rgba(154,106,52,.42);line-height:1;text-align:center
+    }
+    #dpage.thread-page .ch-slot .rule::before{content:"·　·　·"}
+    #dpage.thread-page .ch-slot .bd{
+      max-width:100%;margin:0 auto;text-align:left;
+      font-size:15.5px;line-height:1.9;color:#2c2d48;font-weight:300
+    }
+    #dpage.thread-page .ch-slot .bd p{margin:0 0 17px}
+    #dpage.thread-page .ch-slot .bd p:last-child{margin-bottom:0}
+    #dpage.thread-page .ch-slot .clue{max-width:100%;margin:0 auto}
+    #dpage.thread-page .ch-slot .clue .st{margin:0 0 12px}
+    #dpage.thread-page .ch-slot .clue .lb{
+      display:block;font-size:11px;letter-spacing:.28em;color:#8a7351
+    }
+    #dpage.thread-page .ch-slot .clue .ch-keys{
+      display:inline-block;text-align:left;margin-top:14px;padding-top:13px;max-width:none
+    }
+    #dpage.thread-page .ch-slot .ch-shut{margin-top:14px}
+    /* —— 引子与思考:字级与点击区都留够 —— */
+    #dpage.thread-page .ch-peek .pv{font-size:16px}
+    #dpage.thread-page .ch-keys li{font-size:14px}
+    #dpage.thread-page .ch-open,#dpage.thread-page .ch-shut{min-height:44px;font-size:14px}
+    #dpage.thread-page .dp-keep{margin-top:clamp(44px,10vw,64px)}
+    #dpage.thread-page .dp-keep .q .bd{font-size:16px;line-height:1.95}
+    #dpage.thread-page .dp-reflect{padding:30px 4px}
+    #dpage.thread-page .dp-reflect .bd{font-size:15.5px;line-height:2}
+    #dpage.thread-page .thread-close .pre{font-size:15px;margin-top:18px}
+    #dpage.thread-page .thread-close .post{font-size:14px}
+    #dpage.thread-page .thread-tail::before{width:52px;height:52px;margin-bottom:26px}
+  }
+  /* 极窄的萤幕:装饰插画让位给文字(内容本身永远不隐藏) */
+  @media(max-width:359px){
+    #dpage.thread-page .ch-art{display:none}
+  }
+
+  /* —— 进场:只有 12px 的位移与淡入。JS 只在允许动态时才挂 .rise —— */
+  #dpage.thread-page .rise{
+    opacity:0;transform:translateY(12px);
+    transition:opacity .7s ease,transform .7s cubic-bezier(.22,1,.36,1)
+  }
+  #dpage.thread-page .rise.in{opacity:1;transform:none}
+  @media (prefers-reduced-motion:reduce){
+    #dpage.thread-page .rise{opacity:1;transform:none;transition:none}
+  }
+
   /* 划词收藏:轻盈的浮动动作,不打断阅读 */
   #dpSaveTip{position:absolute;z-index:90;display:none;align-items:center;gap:6px;
     font-family:"Noto Sans SC","Helvetica Neue",Arial,sans-serif;font-size:12.5px;color:#fff;background:rgba(26,22,52,.94);
@@ -2651,6 +3401,8 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     worthKeeping:     ["值 得 记 住 的 话", "Worth coming back to"],
     tryThis:          ["\u2192 试试看:", "\u2192 If you feel like trying something:"],
     readMore:         ["展开阅读 \u2228", "Keep reading \u2228"],
+    keepReading:      ["继续查看", "Keep reading"],
+    foldUp:           ["收起", "Close"],
     readLess:         ["收起 \u2227", "Close \u2227"],
     openRead:         ["展开阅读 \u2192", "Open \u2192"],
     collapseUp:       ["收起 \u25B2", "Close \u25B2"],
@@ -2892,6 +3644,12 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   const BLUEPRINT_VER = 11;
   // read-chart v11 的 BLUEPRINT_STYLE 版本号;服务端会在回应里回报同一个字串
   const BLUEPRINT_STYLE_ID = "blueprint-writing-1.0";
+
+  /* 阅读预览层版本。与上面两个版本号一样刻意分开:
+     preview 的写法改了,只要重新生成 preview —— 正文(fullContent)不受任何影响,
+     也不会被重新生成。read-chart v12 的 PREVIEW_STYLE_VERSION 与这里同名同值。 */
+  const PREVIEW_VER = 1;
+  const PREVIEW_STYLE_ID = "preview-writing-1.0";
   function blueprintOutdated(saved) {
     return !!saved && (saved.bpVer || 0) < BLUEPRINT_VER;
   }
@@ -2900,17 +3658,24 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
      函式的 GET 不会呼叫模型、也不花钱,一次工作阶段只问一次。
      没升级就完全不动手 —— 不会拿旧 Prompt 生成一份、再盖上新版号,
      也不会每次进页面都白花一次生成费用。函式部署好之后自动生效。 */
-  let bpStylePromise = null;
-  function serverBlueprintStyle() {
-    if (bpStylePromise) return bpStylePromise;
-    if (!SUPABASE_FUNC_URL) return (bpStylePromise = Promise.resolve(""));
-    bpStylePromise = netFetch(SUPABASE_FUNC_URL, {
+  let srvInfoPromise = null;
+  function serverInfo() {
+    if (srvInfoPromise) return srvInfoPromise;
+    if (!SUPABASE_FUNC_URL) return (srvInfoPromise = Promise.resolve(null));
+    srvInfoPromise = netFetch(SUPABASE_FUNC_URL, {
       method: "GET",
       headers: { "Authorization": "Bearer " + SUPABASE_ANON_KEY, "apikey": SUPABASE_ANON_KEY }
     }, PROBE_TIMEOUT).then(function (r) { return r.ok ? r.json() : null; })
-      .then(function (j) { return (j && j.blueprint_style_version) || ""; })
-      .catch(function () { return ""; });
-    return bpStylePromise;
+      .catch(function () { return null; });
+    return srvInfoPromise;
+  }
+  function serverBlueprintStyle() {
+    return serverInfo().then(function (j) { return (j && j.blueprint_style_version) || ""; });
+  }
+  /* 阅读预览层是否已经部署。没部署就完全不呼叫 —— 页面照常显示本地摘录,
+     不会因为服务端还是旧版而反覆送出一定失败的请求。 */
+  function serverPreviewStyle() {
+    return serverInfo().then(function (j) { return (j && j.preview_style_version) || ""; });
   }
 
   // ---------- 九个主题(仅 UI 文案;写作规则与资料调用都在服务端) ----------
@@ -3178,6 +3943,39 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   function fetchQuestion(res, qid, fpSeed, blueprint, topics, answered, chart, forceLang) {
     return askServer("question", withSource({ qid: qid, blueprint: blueprint, topics: topics, answered: answered }, chart, "question", qid, forceLang), res, fpSeed, parseTopic, forceLang);
   }
+
+  /* ---------- 阅读预览:读完正文之后重新写的引子 ----------
+     · 送出的是【已经生成好的整段正文】,不是第一段、不是标题、不是摘要
+     · 服务端不会回写、也不会改动正文;这里拿到的只有 preview 与 keyInsights
+     · 不走 askServer:那一条路会附上星盘与九步定调资料,预览层一概不需要
+     · 指纹 = 正文内容本身的杂凑 → 正文没变就命中服务端快取,不重复呼叫模型 */
+  function previewSeed(items, lang) {
+    return items.map(function (x) {
+      return x.id + "\u0001" + String(x.title || "") + "\u0001" + String(x.body || "");
+    }).join("\u0002") + "\u0003" + lang + "\u0003" + PREVIEW_STYLE_ID + "\u0003v" + PREVIEW_VER;
+  }
+  function fetchPreviews(items, forceLang) {
+    const lang = (forceLang === "zh" || forceLang === "en") ? forceLang : curLang();
+    const list = (items || []).filter(function (x) { return x && x.id && String(x.body || "").length >= 40; });
+    if (!list.length) return Promise.resolve({});
+    // 服务端还没升级到 v12 → 直接放弃,让画面留在本地摘录,不送出注定失败的请求
+    return serverPreviewStyle().then(function (sid) {
+      if (!sid) return {};
+      return fingerprint(previewSeed(list, lang)).then(function (fp) {
+        return callFunc({ kind: "preview", fingerprint: fp, lang: lang, items: list });
+      }).then(function (d) {
+        const out = {};
+        (d && d.previews || []).forEach(function (x) {
+          if (!x || !x.id || !x.preview) return;
+          out[x.id] = {
+            preview: String(x.preview),
+            keyInsights: (Array.isArray(x.keyInsights) ? x.keyInsights : []).map(String).slice(0, 3)
+          };
+        });
+        return out;
+      });
+    });
+  }
   // 只有「这一次要产出英文」时才附上中文源本;中文生成一律原样返回
   function withSource(extra, chart, kind, key, forceLang) {
     const target = (forceLang === "zh" || forceLang === "en") ? forceLang : curLang();
@@ -3331,6 +4129,8 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     TOPICS9: TOPICS9, findTopic: findTopic, DOMAINS: DOMAINS, findQ: findQ,
     parseChapters: parseChapters, parseTopic: parseTopic,
     fetchReading: fetchReading, fetchTopic: fetchTopic, fetchMap: fetchMap, fetchQuestion: fetchQuestion,
+    PREVIEW_VER: PREVIEW_VER, PREVIEW_STYLE_ID: PREVIEW_STYLE_ID,
+    fetchPreviews: fetchPreviews, previewSeed: previewSeed, serverPreviewStyle: serverPreviewStyle,
     chineseSource: chineseSource, hasChinese: hasChinese, guardWriteZh: guardWriteZh,
     renderChapters: renderChapters,
     reviveReading: reviveReading, reviveTopic: reviveTopic, cleanupLegacy: cleanupLegacy,
@@ -5802,6 +6602,8 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     if (!r) return;
     // 完整星盘比其他内页宽(四张核心卡要并排),这个 class 只挂在这一页上
     $("dpage").classList.toggle("sky-page", r.k === "mysky");
+    // 生命脉络是编辑式长文版面(生命线 / 章节号 / 插画位),同样只挂在这一页
+    $("dpage").classList.toggle("thread-page", r.k === "map");
     if (r.k === "topic") renderTopicPage(r.id);
     else if (r.k === "q") renderQPage(r.id);
     else if (r.k === "reading") { readingTab = r.tab || 0; renderReadingPage(); }
@@ -5828,6 +6630,70 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   let readingNavJump = false;   // 上 / 下一章点击后,下一次渲染要卷到「详细解读」顶端
   let favFilter = "all", favSortNew = true, favConfirmKey = null;
   let saveTipEl = null, toastEl = null, pendingSel = null;
+
+
+  /* ↓ 以下几组常数原本写在下面的渲染函式旁边,但 render*Page 在冷启动那一刻就会用到它们,
+     写在 applyRoute() 之后会踩进 TDZ、让内页一片空白 —— 所以一起搬到这里宣告。
+     内容一个字元都没有改,只是位置提前。 */
+  const DP_LEADIN = /^(而|但|不过|所以|因此|也就是说|换句话说|同时|另外|其实|这|那|它|他们|如果|当)/;
+
+  let dpFoldSeq = 0;
+
+  /* 每一章右侧那张插画:大小、位置、浓度刻意不一样,页面才有节奏。
+     插画一律是装饰(aria-hidden + 空 alt),不承载任何内容。 */
+  const THREAD_ART = [
+    { src: "assets/life/ch-gate.webp",    cls: "a1" },
+    { src: "assets/life/ch-planets.webp", cls: "a2" },
+    { src: "assets/life/ch-sky.webp",     cls: "a3" },
+    { src: "assets/life/ch-road.webp",    cls: "a4" },
+    { src: "assets/life/ch-clouds.webp",  cls: "a5" }
+  ];
+
+  /* 生命线上的记号:星芒 / 弦月 / 罗盘轮流出现。手写 inline SVG,不进图档。 */
+  const THREAD_NODE = [
+    '<svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true" focusable="false">' +
+      '<path fill="currentColor" d="M8 .6c.31 4.35 2.71 6.75 7.06 7.06-4.35.31-6.75 2.71-7.06 7.06-.31-4.35-2.71-6.75-7.06-7.06C5.29 7.35 7.69 4.95 8 .6Z"/></svg>',
+    '<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false">' +
+      '<path fill="currentColor" d="M6.27 1.32A6.9 6.9 0 1 0 14.46 10.42 6.5 6.5 0 0 1 6.27 1.32Z"/></svg>',
+    '<svg viewBox="0 0 18 18" width="15" height="15" aria-hidden="true" focusable="false">' +
+      '<circle cx="9" cy="9" r="7.2" fill="none" stroke="currentColor" stroke-width=".8" opacity=".5"/>' +
+      '<path fill="currentColor" d="M9 1.6 10.2 7.8 16.4 9l-6.2 1.2L9 16.4 7.8 10.2 1.6 9l6.2-1.2Z"/></svg>'
+  ];
+
+  const VOW_ORB = [
+    ["self", "sun"], ["emotion", "venus"], ["career", "saturn"], ["family", "moon"],
+    ["love", "ringed"], ["partner", "mars"], ["wealth", "jupiter"], ["study", "mercury"],
+    ["body", "uranus"]
+  ];
+  const VOW_DY = [3.2, -5.0, 4.0, -3.2, 5.8, -4.4, 3.4, -5.6, 4.2];
+  const VOW_DX = [0, 3.4, -2.6, 4.2, -3.2, 2.8, -4.0, 3.2, 0];
+
+  // 星座 index(0=白羊)→ 水印插画。用 lonToSign 回传的 idx 取,
+  // 不靠中文字串比对,英文介面切换时同样有效。
+  const SKY_ART = ["aries", "taurus", "gemini", "cancer", "leo", "virgo",
+                   "libra", "scorpio", "sagittarius", "capricorn", "aquarius", "pisces"];
+
+  /* 十二宫的领域名。纯粹是给宫位一个可读的标签,
+     不参与任何计算,也不产生新的占星结论。 */
+  const SKY_FIELD = [
+    ["面对世界的方式", "How you meet the world"],
+    ["价值与安全感", "Value and security"],
+    ["理解与表达", "Understanding and expression"],
+    ["根基与归属", "Roots and belonging"],
+    ["喜欢、创造与表达", "Delight, making and play"],
+    ["日常、责任与照顾", "Daily life, duty and care"],
+    ["与他人建立关系", "Relating to others"],
+    ["深层连接与改变", "Deep bonds and change"],
+    ["视野、信念与探索", "Horizons, belief and search"],
+    ["走向世界与被看见", "Going out and being seen"],
+    ["群体、连接与未来", "Community, connection and what's ahead"],
+    ["内在、独处与潜意识", "Inwardness, solitude and the unseen"]
+  ];
+
+  /* 阅读预览:同一时间只跑一次;这一轮工作阶段试过而没有结果的星盘记在 pvSkip,
+     不重试 —— 否则每一次重画页面都会再送一次生成请求。 */
+  let pvBusy = false;
+  const pvSkip = {};
 
   window.addEventListener("hashchange", applyRoute);
   applyRoute();   // 冷启动带路由 hash 时立即渲染(登录后 applyDeepLink 会再刷新一次)
@@ -5995,6 +6861,137 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     return esc0(x).split(/\n\s*\n|\n/).filter(function (y) { return y.trim(); })
       .map(function (y) { return "<p>" + y.trim() + "</p>"; }).join("");
   }
+  /* ============================================================
+     渐进展开(段落感知)—— 一个地方写,好几处共用
+     ------------------------------------------------------------
+     不用 line-clamp:它会切在句子中间。这里是把已经渲染好的 <p> 依段落
+     切成「先看得到的」与「继续查看之后才出现的」两段,两段都留在 DOM 里,
+     文字一个字都没有改。收起状态由 max-height:0 决定,展开时的高度由 JS
+     按实际内容量给,不写死上限 —— 再长的段落也不会被截断。
+     ============================================================ */
+  /* ============================================================
+     预览与重点:读完整段正文之后【重新写】的阅读入口
+     ------------------------------------------------------------
+     正式来源是服务端的阅读预览层(read-chart kind="preview"):
+       它拿到的是这个人自己那一段【完整】正文,读懂之后重新写成
+         preview     = 2–4 句、让人先感受到一点自己的引子
+         keyInsights = 1–3 条真正重要的洞察点
+       所以 preview 既不是截断、也不是摘要、更不是抽出来的原句。
+     它只在正文没有预览时才需要生成一次,之后随星盘资料一起存下来。
+
+     下面的 dpDerive 只是【回落】:服务端还没部署、这次生成失败、
+     或使用者正在等待时,先摘录原文里一个自然的停顿,不让版面开天窗。
+     完整原文永远原样保留在 .ch-full / .ch-src 里,一个字都没有被换掉。
+     ============================================================ */
+  function dpSents(t) {
+    const out = [];
+    let cur = "";
+    for (let i = 0; i < t.length; i++) {
+      cur += t[i];
+      if ("。！？；!?;".indexOf(t[i]) >= 0) { out.push(cur.trim()); cur = ""; }
+    }
+    if (cur.trim()) out.push(cur.trim());
+    return out.filter(Boolean);
+  }
+  function dpDerive(body) {
+    const paras = String(body || "").split(/\n\s*\n|\n/)
+      .map(function (t) { return t.trim(); }).filter(Boolean);
+    /* 引子整句整句地取,不切在句子中间:落在 ~45–100 字之间、最多四句。
+       这是「摘录」,不是另外写的一段话 —— 一个字都不是新生成的。
+       (真正好的 insight teaser 需要生成端给字段,见 report;
+       在那之前,取到一个自然的停顿,是这份资料能给的最好结果。) */
+    const first = dpSents(paras[0] || "");
+    const CJK = /[，。！？；：、（）「」“”\s]/g;
+    let preview = "";
+    for (let i = 0; i < first.length && i < 4; i++) {
+      const next = preview + first[i];
+      if (preview && next.replace(CJK, "").length > 108) break;
+      preview = next;
+      if (preview.replace(CJK, "").length >= 62) break;
+    }
+    if (!preview) preview = paras[0] || "";
+    const keys = [];
+    paras.forEach(function (par, i) {
+      if (keys.length >= 3) return;
+      const s0 = dpSents(par)[0];
+      if (!s0 || preview.indexOf(s0) >= 0) return;
+      // 以「字」计长度,标点不算 —— 太短没有讯息,太长就不是一句可以扫过去的话
+      const n = s0.replace(/[，。！？；：、（）「」“”\s]/g, "").length;
+      if (n < 8 || n > 34) return;
+      if (i > 0 && DP_LEADIN.test(s0)) return;
+      keys.push(s0);
+    });
+    return { preview: preview, keys: keys };
+  }
+  /* 卡片与章节上那一段引子的来源,依序:
+       1. gen —— 阅读预览层读完整段正文之后写的 preview / keyInsights(正式来源)
+       2. 生成端在同一次生成里顺手给的字段(有就用,没有也不勉强)
+       3. dpDerive —— 本地摘录(回落,只在前两者都没有时出现)
+     前端绝对不会自己「写」出任何心理观察:没有生成结果就只做摘录。 */
+  function dpLead(o, gen) {
+    const q = String((o && (o.reflectionQuestion || o.prompt)) || "").trim();
+    const g = String((gen && gen.preview) || "").trim();
+    if (g) return {
+      preview: g,
+      keys: (gen && Array.isArray(gen.keyInsights) ? gen.keyInsights : []).slice(0, 3),
+      q: q, authored: true
+    };
+    const t = String((o && (o.insightTeaser || o.teaser)) || "").trim();
+    if (t) return { preview: t, keys: [], q: q, authored: true };
+    const d = dpDerive(o && o.body);
+    return { preview: d.preview, keys: d.keys, q: q, authored: false };
+  }
+  /* 这一份解读自己带着的预览。ver 对不上就当作没有(回落到摘录),
+     不会拿旧写法的 preview 硬套在新的写法上。 */
+  function dpPvMap(data) {
+    const p = data && data.previews;
+    return (p && p.ver === window.Reading.PREVIEW_VER && p.map) ? p.map : {};
+  }
+  function dpKeysHtml(keys) {
+    if (!keys.length) return "";
+    return '<ul class="ch-keys">' + keys.map(function (k) {
+      return '<li><i aria-hidden="true"></i><span>' + esc0(k) + "</span></li>";
+    }).join("") + "</ul>";
+  }
+
+  function dpMakeFoldable(host, keep) {
+    if (!host || host.dataset.folded) return;
+    const ps = Array.prototype.filter.call(host.children, function (n) { return n.tagName === "P"; });
+    // 只多出一段就不值得折
+    if (ps.length <= keep + 1) return;
+    host.dataset.folded = "1";
+    const id = "fold" + (++dpFoldSeq);
+    const rest = document.createElement("div");
+    rest.className = "fold-rest";
+    rest.id = id;
+    ps.slice(keep).forEach(function (n) { rest.appendChild(n); });
+    host.appendChild(rest);
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "fold-btn";
+    btn.setAttribute("aria-expanded", "false");
+    btn.setAttribute("aria-controls", id);
+    btn.innerHTML = '<span class="tx"></span><span class="cv" aria-hidden="true">↓</span>';
+    btn.querySelector(".tx").textContent = T("keepReading");
+    host.appendChild(btn);
+    /* 展开完成后把上限拿掉:之后换行、换字体或转屏都不会再被截断 */
+    rest.addEventListener("transitionend", function (e) {
+      if (e.target === rest && e.propertyName === "max-height" && rest.classList.contains("on"))
+        rest.style.maxHeight = "none";
+    });
+    btn.addEventListener("click", function () {
+      const on = !rest.classList.contains("on");
+      rest.classList.toggle("on", on);
+      btn.setAttribute("aria-expanded", on ? "true" : "false");
+      btn.classList.toggle("open", on);
+      btn.querySelector(".tx").textContent = on ? T("foldUp") : T("keepReading");
+      btn.querySelector(".cv").textContent = on ? "↑" : "↓";
+      // 收起时要先回到当前实际高度再归零,否则从 none 直接跳 0 不会有过渡
+      rest.style.maxHeight = rest.scrollHeight + "px";
+      if (!on) { rest.getBoundingClientRect(); rest.style.maxHeight = "0px"; }
+    });
+  }
+
   // 属于我的生命脉络:章节以分页签呈现,一次只读一段
   /* 段落排版(纯呈现层,一个字都不改动):
      · 段首很短的前导标签(例如「原因是:」)以淡紫色标出
@@ -6070,8 +7067,188 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
      排,内容宽度 / 标题字级 / 分隔线 / 段距 / 值得记住 / 留给你的思考
      全部是同一份 component 与同一套 CSS,手机版自然也跟着一致。
      tab 只用来决定进页后卷到哪一段(#/map/<i> 的深链仍然有效)。 */
+  /* 生命线本体:一条极细、微微弯曲的路径。viewBox 被拉伸(preserveAspectRatio=none),
+     所以不管页面多长都只是一条柔和的线,不会变成硬邦邦的时间轴。 */
+  /* Hero 里的九颗星:沿着一条很浅的弧排开,像一小段星座,不是进度条。
+     读过的点亮(香槟金 + 一层极淡的光晕),还没读的只留一点微光。
+     done 来自 threadReadCount() —— 与落地页的星球是同一份状态。 */
+  /* 九个主题的星球:排成一条轻微不规则的星链。
+     每一颗对应一个主题,行星的分配与落地页「我的星空」完全一致
+     (self=太阳、emotion=金星、career=土星、family=月亮、love=带环行星、
+      partner=火星、wealth=木星、study=水星、body=天王星)。
+     只有读过的主题才会画出来,用素材本身的颜色;没读的那几格就是留白 ——
+     不放灰色占位、不放半透明版本。要的是「读完一个,才浮出一颗」。
+     位置是写死的(VOW_DX / VOW_DY),所以后来出现的星球会落在自己那一格,
+     不会因为别人先出现就被挤到别的地方。 */
+  function dpVowStars(done) {
+    const read = themeReadStatus();
+    const n = VOW_ORB.length, w = 340, pad = 28, r = 11.5;
+    const on = [];
+    for (let i = 0; i < n; i++) {
+      if (!read[VOW_ORB[i][0]]) continue;
+      const t = n > 1 ? i / (n - 1) : .5;
+      const dx = VOW_DX[i % VOW_DX.length], dy = VOW_DY[i % VOW_DY.length];
+      on.push({ i: i,
+        x: +(pad + t * (w - pad * 2) + dx).toFixed(1),
+        y: +(30 - 9 * Math.sin(Math.PI * t) + dy).toFixed(1) });
+    }
+    /* 星轨只连「已经出现的」那几颗,所以它是跟着阅读一段一段长出来的,
+       而不是一条一开始就画满、等着被填的进度条。只有一颗时不画线。
+       每一段都在星球边缘外停住(留 gap),线不会压到星球上,
+       看起来是星与星之间的一道细痕,而不是一条穿过去的横线。 */
+    let g = "";
+    for (let k = 1; k < on.length; k++) {
+      const a = on[k - 1], b = on[k];
+      const vx = b.x - a.x, vy = b.y - a.y, len = Math.sqrt(vx * vx + vy * vy);
+      // 两颗挨得近的时候按比例收 gap,这样每一段都留得下,不会有的连、有的不连
+      const gap = Math.min(r + 3.5, len * 0.33);
+      const ux = vx / len, uy = vy / len;
+      g += '<path d="M' + (a.x + ux * gap).toFixed(1) + " " + (a.y + uy * gap).toFixed(1) +
+        " L" + (b.x - ux * gap).toFixed(1) + " " + (b.y - uy * gap).toFixed(1) +
+        '" fill="none" stroke="#f6f2ea" stroke-width=".5" stroke-linecap="round" opacity=".12"/>';
+    }
+    on.forEach(function (q) {
+      // 用素材本身的颜色,不套滤镜;只留一点点柔光把它从云层里托起来
+      g += '<image class="orb" href="assets/planets/sm/' + VOW_ORB[q.i][1] +
+        '.webp" x="' + (q.x - r).toFixed(1) + '" y="' + (q.y - r).toFixed(1) +
+        '" width="' + (r * 2) + '" height="' + (r * 2) + '" preserveAspectRatio="xMidYMid meet"/>';
+    });
+    const lit = on.length;
+    return '<span class="stars" role="img" aria-label="' +
+      esc0(dpT("九个主题已读 " + lit + " 个", lit + " of nine chapters read")) + '">' +
+      '<svg viewBox="0 0 ' + w + ' 50" focusable="false">' + g + "</svg></span>";
+  }
+  function dpThreadLine() {
+    return '<span class="thread-line" aria-hidden="true">' +
+      '<svg viewBox="0 0 40 1000" preserveAspectRatio="none" focusable="false">' +
+      '<path d="M20 0 C 27 140, 13 260, 20 400 S 28 640, 20 780 S 14 920, 20 1000" ' +
+      'fill="none" stroke="rgba(130,110,175,.25)" stroke-width="1.2" vector-effect="non-scaling-stroke"/>' +
+      "</svg></span>";
+  }
+  /* 「属于我的生命脉络」的呈现层。
+     资料、fav 按钮、data-saveable 的挂点、sec-<i> 的锚点、dpTailBlocks
+     全部沿用主题页那一份 —— 这里只多包一层编辑式版面(章节号 / 生命线 / 插画位),
+     而且样式全锁在 #dpage.thread-page 底下,主题页一个像素都不受影响。 */
+  /* 「几个重要章节」:三张只放引子的卡 + 一个共用的阅读区。
+     卡片永远不会自己长高 —— 点开的那一章是在整排卡片下面展开,一次只开一章。
+     每张卡里都藏着完整原文(.ch-src),点开时原样搬进阅读区,不重新产生任何文字。 */
+  /* 从「发生过什么」走到「它留下了什么」中间的一次停顿。
+     中间那几句是生成端的 aha —— 原样呈现,一个字都没改;
+     前后两句是版面上的过场文案(所有人都一样),不是针对谁的观察。
+     aha 是空的时候只留过场文案,绝不在前端补一句心理解读。 */
+  function dpThreadBridge(aha) {
+    const lines = (aha || []).filter(Boolean);
+    return '<div class="thread-bridge"><span class="mist" aria-hidden="true"></span>' +
+      '<span class="cp" aria-hidden="true"></span>' +
+      '<p class="lead">' +
+      dpT("有些事情已经过去了，但它们没有完全离开。",
+          "Some of it is over. Not all of it has left.") + "</p>" +
+      (lines.length
+        ? '<div class="said">' + lines.map(function (q) {
+            return '<p class="ln">' + esc0(q) + "</p>";
+          }).join("") + "</div>"
+        : "") +
+      '<p class="lead lo">' +
+      dpT("而当这些片段放在一起，有几件事开始慢慢浮现。",
+          "Put side by side, a few things begin to surface.") + "</p>" +
+      '<span class="st" aria-hidden="true">✦</span></div>';
+  }
+  function dpThreadChapters(steps, pv) {
+    return '<div class="dp-start thread-chapters"><div class="dp-start-hd">' +
+      '<span class="ic" aria-hidden="true">✦</span>' +
+      '<span class="tx">' + dpT("从这里开始", "Where To Start") + '</span>' +
+      '<span class="ln"></span><span class="en" aria-hidden="true">✦</span></div>' +
+      '<p class="dp-start-lead">' +
+      dpT("不必全部做完。挑一件现在做得到的，从那里开始就好。",
+          "None of this needs doing at once. Pick the one you can start with today.") + "</p>" +
+      '<div class="ch-cards">' +
+      steps.map(function (st, i) {
+        const d = dpLead(st, pv && pv["a" + i]);
+        /* 每张卡后面都跟着一个空的展开位:手机上点开的那一章就长在自己这张卡下面,
+           桌机上这一格是 display:none,内容改放整排卡片下方那一个共用阅读区。
+           两边共用同一个 box,原文不会在 DOM 里存两份、图也不会载两次。 */
+        return '<button type="button" class="ch-card" data-ch="' + i + '"' +
+          ' aria-expanded="false" aria-controls="chReader">' +
+          '<span class="no">' + ("0" + (i + 1)).slice(-2) + "</span>" +
+          '<span class="gl" aria-hidden="true">' + THREAD_NODE[i % THREAD_NODE.length] + "</span>" +
+          '<b class="t">' + esc0(st.title) + "</b>" +
+          (d.preview ? '<span class="pv">' + esc0(d.preview) + "</span>" : "") +
+          (d.q ? '<span class="qz">' + esc0(d.q) + "</span>" : "") +
+          dpKeysHtml(d.keys.slice(0, 2)) +
+          '<span class="go">' + dpT("沿着这条线索继续 →", "Follow this one →") + "</span>" +
+          '<span class="ch-src" hidden>' + dpParaRich(st.body) + "</span>" +
+          "</button>" +
+          '<div class="ch-slot" id="chSlot' + i + '" aria-live="polite"></div>';
+      }).join("") + "</div>" +
+      '<div class="ch-reader" id="chReader" aria-live="polite"></div></div>';
+  }
   function dpThreadHtml(data, favSource, tab, favType) {
-    return dpAnswerHtml(data, favSource, favType);
+    favType = favType || "";
+    const PV = dpPvMap(data);
+    let h = '<div class="thread-flow">';
+    /* 开场:把 tagline 放到版心中间,底下一个很小的星记号 —— 像走进故事的第一句。
+       生命线从这里之后才开始,所以它移进 .thread-trail 里(原本罩着整页)。 */
+    if (data.tagline)
+      h += '<div class="thread-open"><div class="dp-quote"><span class="q">“</span>' +
+        esc0(data.tagline) + "</div>" +
+        '<span class="st" aria-hidden="true">✦</span></div>';
+    h += '<div class="thread-trail">' + dpThreadLine();
+    h += (data.sections || []).map(function (sc, si) {
+      const k = favKey(favSource, sc.title || "", sc.body || "");
+      const btn = '<button class="fav-btn' + (isFaved(k) ? " on" : "") + '" data-fav="' + esc0(k) +
+        '" data-text="' + esc0(String(sc.body || "").slice(0, 300)) + '" data-source="' + esc0(favSource) +
+        '" data-source-type="' + esc0(favType) +
+        '" data-section="' + esc0(sc.title || "") + '" title="' + esc0(T("saveIt")) + '">' + (isFaved(k) ? "★" : "☆") + "</button>";
+      const art = THREAD_ART[si % THREAD_ART.length];
+      const d = dpLead(sc, PV["s" + si]);
+      /* 收起时读到的是引子(第一句 + 几个重点),展开时读到的是完整原文。
+         两块永远都在 DOM 里,原文一个字都没有被换掉。 */
+      return '<section class="dp-sec thread-ch" id="sec-' + si + '">' +
+        '<div class="ch-mark" aria-hidden="true"><span class="no">' + ("0" + (si + 1)).slice(-2) + "</span>" +
+        '<span class="nd">' + THREAD_NODE[si % THREAD_NODE.length] + "</span></div>" +
+        '<div class="ch-body"><div class="dp-h-row">' +
+        (sc.title ? '<h3 class="dp-h">' + esc0(sc.title) + "</h3>" : "<span></span>") + btn + "</div>" +
+        (sc.title ? '<div class="dp-div"><span class="st">✦</span><span class="ln"></span></div>' : "") +
+        '<div class="ch-peek">' +
+        (d.preview ? '<p class="pv">' + esc0(d.preview) + "</p>" : "") +
+        dpKeysHtml(d.keys) +
+        '<button type="button" class="ch-open" aria-expanded="false" aria-controls="full-' + si + '">' +
+        '<span class="tx">' + dpT("看看它留下了什么", "See what it left behind") + '</span>' +
+        '<span class="cv" aria-hidden="true">↓</span></button></div>' +
+        '<div class="ch-full" id="full-' + si + '">' +
+        '<div class="dp-prose" data-saveable data-source="' + esc0(favSource) +
+        '" data-source-type="' + esc0(favType) +
+        '" data-section="' + esc0(sc.title || "") + '">' + dpPara(sc.body) + "</div>" +
+        '<button type="button" class="ch-shut"><span class="tx">' + dpT("收起", "Close") + '</span>' +
+        '<span class="cv" aria-hidden="true">↑</span></button></div>' +
+        "</div>" +
+        '<div class="ch-art ' + art.cls + '" aria-hidden="true">' +
+        '<img src="' + art.src + '" alt="" loading="lazy" decoding="async"></div>' +
+        "</section>";
+    }).join("");
+    /* 尾段自己组,不走 dpTailBlocks —— 三张练习卡要换成 preview 卡 + 共用阅读区,
+       但「值得记住 / 留给你的思考 / 试试看」仍然用主题页那几个共用 component。 */
+    const spark = '<div class="dp-sparkdiv"><span class="ln"></span>' +
+      '<span class="st" aria-hidden="true">✦</span><span class="ln"></span></div>';
+    let t = "";
+    if (data.steps && data.steps.length) t += dpThreadChapters(data.steps, PV);
+    if (data.question || data.action) t += spark;
+    /* 思考区本身完全没动(还是同一个 component、同一段生成内容),
+       只在前后各加一句过场 —— 让它读起来像一次落地,不是又一个方框。 */
+    if (data.question)
+      t += '<div class="thread-close"><p class="pre">' +
+        dpT("在离开这一页以前，有一个问题，想留给现在的你。",
+            "Before you leave this page, one question, for the you of right now.") + "</p>" +
+        dpReflectHtml("q", data.question) +
+        '<p class="post">' + dpT("不需要马上回答。", "It doesn’t need an answer today.") +
+        '<span class="l2">' + dpT("有些答案，会慢慢长出来。",
+                                  "Some answers take their own time.") + "</span></p></div>";
+    if (data.question && data.action) t += spark;
+    if (data.action) t += dpReflectHtml("a", data.action);
+    h += "</div>";                                   // /.thread-trail
+    h += dpThreadBridge(data.aha);
+    h += '<div class="thread-tail">' + t + "</div>";
+    return h + "</div>";
   }
   function dpAnswerHtml(data, favSource, favType) {
     favType = favType || "";
@@ -6764,28 +7941,8 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
      使用者点开才展开,而不是一次把整份报告摊在眼前。
      星座插画只是水印,真正的主角始终是读数本身。 */
 
-  // 星座 index(0=白羊)→ 水印插画。用 lonToSign 回传的 idx 取,
-  // 不靠中文字串比对,英文介面切换时同样有效。
-  const SKY_ART = ["aries", "taurus", "gemini", "cancer", "leo", "virgo",
-                   "libra", "scorpio", "sagittarius", "capricorn", "aquarius", "pisces"];
   function skyArtSrc(idx) { return "assets/signs/art/" + SKY_ART[((idx % 12) + 12) % 12] + ".webp"; }
 
-  /* 十二宫的领域名。纯粹是给宫位一个可读的标签,
-     不参与任何计算,也不产生新的占星结论。 */
-  const SKY_FIELD = [
-    ["面对世界的方式", "How you meet the world"],
-    ["价值与安全感", "Value and security"],
-    ["理解与表达", "Understanding and expression"],
-    ["根基与归属", "Roots and belonging"],
-    ["喜欢、创造与表达", "Delight, making and play"],
-    ["日常、责任与照顾", "Daily life, duty and care"],
-    ["与他人建立关系", "Relating to others"],
-    ["深层连接与改变", "Deep bonds and change"],
-    ["视野、信念与探索", "Horizons, belief and search"],
-    ["走向世界与被看见", "Going out and being seen"],
-    ["群体、连接与未来", "Community, connection and what's ahead"],
-    ["内在、独处与潜意识", "Inwardness, solitude and the unseen"]
-  ];
 
   // 收起 / 展开的按钮:同一个区段里长出来,不开 modal、不换页
   function skyExpandBtn(boxId, openTx, closeTx) {
@@ -7176,6 +8333,53 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     if (fw && curResult) drawInnerSkyWheel(fw, curResult);
   }
 
+  /* ---------- 阅读预览:读完正文之后重新生成一次,之后就一直用存下来的 ----------
+     · 只在这一份解读还没有预览(或预览版本过期)时呼叫一次
+     · 生成结果存进 lifemap 物件本身 → 随既有的 Cloud.updateChart 一起落库,
+       重新整理、换装置都不会再呼叫一次
+     · 正文重新生成时整个 lifemap 物件会被换掉,预览自然跟着消失并重生成,
+       不会出现「预览讲的是旧正文」这种事
+     · 失败 / 服务端还没部署 → 什么都不做,画面维持本地摘录 */
+  function threadPvItems(lm) {
+    const items = [];
+    (lm.sections || []).forEach(function (sc, i) {
+      items.push({ id: "s" + i, kind: "section", title: sc.title || "", body: String(sc.body || "") });
+    });
+    (lm.steps || []).forEach(function (st, i) {
+      items.push({ id: "a" + i, kind: "step", title: st.title || "", body: String(st.body || "") });
+    });
+    return items;
+  }
+  function ensureThreadPreviews(c, lm) {
+    if (!c || !lm || pvBusy) return;
+    if (!window.Reading.hasSupabase()) return;
+    const skipKey = c.id + "|" + window.Reading.LK("lifemap");
+    if (pvSkip[skipKey]) return;
+    const cur = lm.previews;
+    if (cur && cur.ver === window.Reading.PREVIEW_VER && cur.map && Object.keys(cur.map).length) return;
+    const items = threadPvItems(lm);
+    if (!items.length) return;
+    pvBusy = true;
+    window.Reading.fetchPreviews(items).then(function (map) {
+      pvBusy = false;
+      if (!map || !Object.keys(map).length) { pvSkip[skipKey] = true; return; }
+      const live = activeChart();
+      if (!live || live.id !== c.id) return;
+      const saved = window.Reading.reviveTopic(live[window.Reading.LK("lifemap")]);
+      // 这段时间正文被重新生成过 → 这批预览已经不是它的了,丢掉
+      if (!saved || String((saved.sections || [])[0] && saved.sections[0].body || "") !==
+                    String((lm.sections || [])[0] && lm.sections[0].body || "")) return;
+      saved.previews = {
+        ver: window.Reading.PREVIEW_VER,
+        styleId: window.Reading.PREVIEW_STYLE_ID,
+        ts: new Date().toISOString().slice(0, 10),
+        map: map
+      };
+      window.Cloud.updateChart(live).catch(function () { });
+      if (location.hash.indexOf("#/map") === 0) routeRefresh();
+    }).catch(function () { pvBusy = false; pvSkip[skipKey] = true; });
+  }
+
   // ---------- 页面:人生探索地图 ----------
   function renderMapPage() {
     const c = activeChart();
@@ -7184,7 +8388,11 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     else {
       const saved = window.Reading.reviveTopic(c[window.Reading.LK("lifemap")]);
       const done = threadReadCount();
-      if (saved) { body = dpThreadHtml(saved, dpT("属于我的生命脉络", "The Pattern of Your Life"), mapTab, "life_thread"); foot = dpReturnFoot(); }
+      if (saved) {
+        body = dpThreadHtml(saved, dpT("属于我的生命脉络", "The Pattern of Your Life"), mapTab, "life_thread");
+        foot = dpReturnFoot();
+        ensureThreadPreviews(c, saved);
+      }
       else if (mapBusy) body = dpLoading(dpT("正在把九个主题收束成一条线…", "Drawing the nine together…"));
       else if (mapErr) body = dpError(mapErr, "dpRetryM");
       else if (done < THREAD_GATE) {
@@ -7212,16 +8420,199 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     }
 
     dpScaffold({
-      chip: dpT("属于我的生命脉络", "THE PATTERN OF YOUR LIFE"),
+      // chip 原本就是标题本身,与 h1 一字不差 —— 这一页不再重复一次
       title: dpT("属于我的生命脉络", "The Pattern of Your Life"),
-      sub: dpT("九个主题读完之后，它们会收束成一条线。",
-               "When all nine have been read, they come together into one thread."),
+      /* 引导语走 lead 插槽(dpScaffold 既有的可选插槽)——
+         sub 是纯文字,做不出这几层的层次。
+         中间那串星点是「读了几个主题」的视觉暗示,不是进度条:
+         读过的点亮,还没读的留一点微光,数字本身不出现。 */
+      lead: '<div class="thread-vow">' +
+        '<span class="a">' + esc0(dpT("每一次阅读，都会留下一颗星",
+                                      "Every reading leaves a star")) + '</span>' +
+        dpVowStars(threadReadCount()) +
+        '<span class="b">' +
+        '<span class="b1">' + esc0(dpT("直到九颗星", "Until nine stars")) + '</span>' +
+        '<span class="b2">' + esc0(dpT("连成只属于你的生命脉络",
+                                       "trace a pattern that is only yours")) + '</span>' +
+        '</span></div>',
+      // 月亮走 art 插槽(dpScaffold 既有的),天空底与页脚底图交给 CSS
+      art: "assets/life/moon.webp",
       body: body, foot: foot, backLabel: dpT("返回主页", "Back to home"), backHref: LANDING_URL, seed: 55
     });
     const rm = document.getElementById("dpRetryM");
     if (rm) rm.addEventListener("click", function () { mapErr = null; toggleMap(); });
     const gm = document.getElementById("dpGenMap");
     if (gm) gm.addEventListener("click", function () { toggleMap(); });
+    /* 阅读节奏:先看引子 → 想读再展开 → 读到的是完整原文。
+       所有原文都一直在 DOM 里,展开只是把高度放开,没有任何文字被替换。 */
+    (function () {
+      const host = $("dpage");
+      if (!host.classList.contains("thread-page")) return;
+
+      // —— 高度过渡的共用做法:量 scrollHeight,展开完成後把上限拿掉 ——
+      const grow = function (box, on) {
+        box.classList.toggle("on", on);
+        box.style.maxHeight = box.scrollHeight + "px";
+        if (!on) { box.getBoundingClientRect(); box.style.maxHeight = "0px"; }
+      };
+      host.querySelectorAll(".ch-full,.ch-reader,.ch-slot").forEach(function (box) {
+        box.addEventListener("transitionend", function (e) {
+          if (e.target !== box || e.propertyName !== "max-height") return;
+          if (box.classList.contains("on")) { box.style.maxHeight = "none"; return; }
+          /* 收起动画走完之后把阅读区清空:收起来的那一份不该还留在无障碍树里
+             (生命经验那几段的 .ch-full 不清 —— 那是原文,本来就一直在 DOM 里) */
+          if (box.classList.contains("ch-reader") || box.classList.contains("ch-slot")) box.innerHTML = "";
+        });
+      });
+
+      // —— 01–04:引子 ↔ 完整原文 ——
+      host.querySelectorAll(".thread-ch").forEach(function (sec) {
+        const open = sec.querySelector(".ch-open");
+        const shut = sec.querySelector(".ch-shut");
+        const full = sec.querySelector(".ch-full");
+        if (!open || !full) return;
+        const set = function (on) {
+          sec.classList.toggle("open", on);
+          open.setAttribute("aria-expanded", on ? "true" : "false");
+          grow(full, on);
+          if (!on) open.focus();
+        };
+        open.addEventListener("click", function () { set(true); });
+        if (shut) shut.addEventListener("click", function () { set(false); });
+      });
+
+      /* —— 几个重要章节 ——
+         桌机:三张卡一排,点开的那一章在整排卡片「下面」展开(共用一个阅读区)。
+         手机:点开的那一章就长在「自己那张卡下面」,不会跑到第三张卡后面去。
+         两边共用同一个 box:换版型时是把它搬过去,不是产生第二份内容。 */
+      (function () {
+        const reader = host.querySelector("#chReader");
+        const cards = Array.prototype.slice.call(host.querySelectorAll(".ch-card"));
+        const slots = Array.prototype.slice.call(host.querySelectorAll(".ch-slot"));
+        if (!reader || !cards.length) return;
+        const mq = window.matchMedia ? window.matchMedia("(max-width:767px)") : null;
+        const inline = function () { return !!(mq && mq.matches && slots.length === cards.length); };
+        const hostFor = function (i) { return inline() ? slots[i] : reader; };
+        let cur = -1, box = null;
+        const clear = function (el) { el.style.maxHeight = ""; el.classList.remove("on"); el.innerHTML = ""; };
+        // 关掉动态时没有 transitionend 可以等,收起就等于当场清空
+        const still = window.matchMedia && window.matchMedia("(prefers-reduced-motion:reduce)").matches;
+        const close = function () {
+          if (cur < 0) return;
+          const el = hostFor(cur);
+          cards[cur].setAttribute("aria-expanded", "false");
+          cards[cur].classList.remove("on");
+          cur = -1;
+          grow(el, false);
+          if (still) { el.innerHTML = ""; box = null; }
+        };
+        /* 版型在开着的时候被切换(转屏、拉视窗):把同一个 box 搬到另一边,
+           而不是把它关掉 —— 使用者读到一半不会突然被收起来。 */
+        const remount = function () {
+          if (cur < 0 || !box) return;
+          const el = hostFor(cur);
+          if (box.parentNode === el) return;
+          [reader].concat(slots).forEach(function (n) { if (n !== el) clear(n); });
+          el.appendChild(box);
+          cards[cur].setAttribute("aria-controls", el.id);
+          el.classList.add("on");
+          el.style.maxHeight = "none";
+        };
+        if (mq && mq.addEventListener) mq.addEventListener("change", remount);
+        else if (mq && mq.addListener) mq.addListener(remount);
+        const open = function (i) {
+          const card = cards[i];
+          const src = card.querySelector(".ch-src");
+          const pv = card.querySelector(".pv");
+          const mount = hostFor(i);
+          [reader].concat(slots).forEach(clear);
+          box = document.createElement("div");
+          box.className = "in";
+          box.innerHTML =
+            '<span class="no" aria-hidden="true"></span>' +
+            '<h4 class="t"></h4>' +
+            '<span class="st" aria-hidden="true">✦</span>' +
+            '<p class="pv"></p>' +
+            '<span class="rule" aria-hidden="true"></span>' +
+            '<div class="bd dp-rich"></div>' +
+            '<span class="dots" aria-hidden="true">·　·　·</span>' +
+            '<div class="clue" hidden><span class="st" aria-hidden="true">✦</span>' +
+            '<span class="lb"></span></div>' +
+            '<span class="moon" aria-hidden="true">☾</span>' +
+            '<button type="button" class="ch-shut"><span class="tx"></span>' +
+            '<span class="cv" aria-hidden="true">↑</span></button>';
+          box.querySelector(".no").textContent = card.querySelector(".no").textContent;
+          box.querySelector(".t").textContent = card.querySelector(".t").textContent;
+          /* 卡片上那段引子如果就是正文开头的摘录,阅读区里再放一次会变成
+             「同一句话连讲两遍」。只有当它是生成端另外给的一句(未来的
+             insightTeaser)时,才把它当成开场引句留着。 */
+          const pvEl = box.querySelector(".pv");
+          const head = src ? String(src.textContent || "").replace(/\s/g, "").slice(0, 24) : "";
+          const lead = pv ? String(pv.textContent || "").replace(/\s/g, "").slice(0, 24) : "";
+          if (pv && lead && head.indexOf(lead) !== 0) pvEl.textContent = pv.textContent;
+          else {
+            pvEl.remove();
+            // 没有开场引句就不需要那条分隔 —— 否则会连着出现两个记号
+            const rule = box.querySelector(".rule");
+            if (rule) rule.remove();
+          }
+          // 完整原文原样搬过来,不重新产生任何文字
+          box.querySelector(".bd").innerHTML = src ? src.innerHTML : "";
+          /* 「这一章的线索」用的就是卡片上那几条 —— 同一份 dpDerive 的结果,
+             不是另外产生的文字 */
+          const keys = card.querySelector(".ch-keys");
+          if (keys) {
+            const clue = box.querySelector(".clue");
+            clue.hidden = false;
+            clue.querySelector(".lb").textContent = dpT("这一章的线索", "Threads in this chapter");
+            clue.appendChild(keys.cloneNode(true));
+          }
+          box.querySelector(".ch-shut .tx").textContent = dpT("收起", "Close");
+          box.querySelector(".ch-shut").addEventListener("click", function () {
+            close();
+            card.focus();
+          });
+          mount.appendChild(box);
+          cards.forEach(function (c) { c.classList.remove("on"); c.setAttribute("aria-expanded", "false"); });
+          card.classList.add("on");
+          card.setAttribute("aria-expanded", "true");
+          card.setAttribute("aria-controls", mount.id);
+          cur = i;
+          grow(mount, true);
+          /* 刻意不做 scrollIntoView:内容就长在被点的那张卡下面,
+             使用者的视线本来就在那里,把页面拉走反而会迷路。 */
+        };
+        cards.forEach(function (card, i) {
+          card.addEventListener("click", function () {
+            if (cur === i) close(); else open(i);
+          });
+        });
+      })();
+
+      // 思考区块比较短,沿用段落感知的渐进展开就够了
+      host.querySelectorAll(".dp-reflect .bd").forEach(function (el) { dpMakeFoldable(el, 1); });
+    })();
+
+    /* 进场:只有 12px 的位移与淡入,没有缩放、没有视差。
+       使用者要求减少动态、或浏览器没有 IntersectionObserver 时完全不挂 ——
+       内容一律以最终状态呈现,绝不会因为 JS 没跑而看不见。 */
+    (function () {
+      const host = $("dpage");
+      if (!host.classList.contains("thread-page")) return;
+      if (!("IntersectionObserver" in window)) return;
+      if (window.matchMedia && window.matchMedia("(prefers-reduced-motion:reduce)").matches) return;
+      const els = host.querySelectorAll(".thread-open,.thread-ch,.thread-bridge,.thread-tail > *");
+      if (!els.length) return;
+      const io = new IntersectionObserver(function (list) {
+        list.forEach(function (e) {
+          if (!e.isIntersecting) return;
+          e.target.classList.add("in");
+          io.unobserve(e.target);
+        });
+      }, { rootMargin: "0px 0px -6% 0px", threshold: .06 });
+      els.forEach(function (el) { el.classList.add("rise"); io.observe(el); });
+    })();
+
     /* 详细解读现在跟主题页一样整篇往下排,不再有分页签。
        #/map/<i> 这种深链仍然有效 —— 进页后卷到那一段就好。 */
     if (mapTab) {
