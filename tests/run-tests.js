@@ -275,6 +275,77 @@ function testDeterminism() {
   checkEq("[determinism] 两次结果一致", strip(a) === strip(b), true);
 }
 
+/* ---------- 10. 阅读预览:必须是「读完正文之后重新写的」,不是截断 ----------
+   这一层的价值全在「preview 不是原文的前几句」。所以两端都要守:
+     · 前端 dpLead:有生成结果就一定用它,没有才回落到本地摘录
+     · 服务端 parsePreviewJson:模型把原文开头抄回来 / 太短 / 少一段,整批作废
+   直接把两边的函式原始码抓出来执行,不是比对字串,改坏了会真的红。 */
+function testReadingPreview() {
+  const fs = require("fs");
+  const vm = require("vm");
+  const html = fs.readFileSync(path.join(__dirname, "..", "app.html"), "utf8");
+
+  function grabFn(src, name, indent) {
+    const head = "\n" + indent + "function " + name + "(";
+    const i = src.indexOf(head);
+    if (i < 0) return "";
+    const j = src.indexOf("\n" + indent + "}\n", i);
+    return j < 0 ? "" : src.slice(i, j + indent.length + 3);
+  }
+
+  // —— 前端 ——
+  const feSrc = ["dpSents", "dpDerive", "dpLead", "dpPvMap", "threadPvItems"]
+    .map(function (n) { return grabFn(html, n, "  "); }).join("\n");
+  checkEq("[preview] 前端四个函式都还在", feSrc.indexOf("function dpLead") > 0 &&
+    feSrc.indexOf("function dpPvMap") > 0 && feSrc.indexOf("function threadPvItems") > 0, true);
+  const fe = { window: { Reading: { PREVIEW_VER: 1 } }, DP_LEADIN: /^(而|但)/ };
+  vm.createContext(fe);
+  vm.runInContext(feSrc + "\nthis.dpLead=dpLead;this.dpPvMap=dpPvMap;this.threadPvItems=threadPvItems;", fe);
+
+  const body = "把这几个月读过的东西摆在一起,你会看到一张奇怪的图:一个在感情里靠近得很慢的人。\n\n" +
+               "表面上这是五个不同的问题,但退远一步会发现它们其实是同一个动作的五种表现。";
+  const gen = { preview: "你在感情、工作、家庭里的很多反应,看起来不一样,底下却来自同一个习惯。", keyInsights: ["a", "b", "c", "d"] };
+
+  const withGen = fe.dpLead({ body: body }, gen);
+  checkEq("[preview] 有生成结果就用生成的", withGen.preview, gen.preview);
+  checkEq("[preview] 生成的 preview 不是正文开头", withGen.preview.slice(0, 8) !== body.slice(0, 8), true);
+  checkEq("[preview] keyInsights 最多三条", withGen.keys.length, 3);
+  checkEq("[preview] 没有生成结果才回落摘录", fe.dpLead({ body: body }).authored, false);
+  checkEq("[preview] 版本对不上就当作没有", Object.keys(fe.dpPvMap({ previews: { ver: 0, map: { s0: gen } } })).length, 0);
+  checkEq("[preview] 版本对得上就取用", Object.keys(fe.dpPvMap({ previews: { ver: 1, map: { s0: gen } } })).length, 1);
+
+  const items = fe.threadPvItems({ sections: [{ title: "t", body: body }], steps: [{ title: "s", body: body }] });
+  checkEq("[preview] 章节与行动卡都送去生成", items.map(function (x) { return x.id + ":" + x.kind; }).join(","), "s0:section,a0:step");
+  checkEq("[preview] 送出的是完整正文,不是第一段", items[0].body, body);
+
+  // 章节引子必须走 dpLead(接得到生成结果),不能直接呼叫 dpDerive
+  const threadFn = grabFn(html, "dpThreadHtml", "  ");
+  checkEq("[preview] 生命脉络章节改用 dpLead", /dpLead\(sc,\s*PV\["s"\s*\+\s*si\]\)/.test(threadFn), true);
+
+  // —— 服务端 ——
+  const ts = fs.readFileSync(path.join(__dirname, "..", "docs", "edge", "read-chart.ts"), "utf8");
+  checkEq("[preview] 服务端有 kind=preview 这一层", ts.indexOf('kind === "preview"') > 0, true);
+  checkEq("[preview] 预览层禁止截取原文", ts.indexOf("不要截取原文") > 0, true);
+  const pi = ts.indexOf("function parsePreviewJson");
+  const pj = ts.indexOf("\n}\n", pi);
+  const parseSrc = ts.slice(pi, pj + 3)
+    .replace(/:\s*Any\[\]/g, "").replace(/:\s*Any/g, "").replace(/:\s*string/g, "")
+    .replace(/\((\w+):\s*\w+\)/g, "($1)");
+  const be = {};
+  vm.createContext(be);
+  vm.runInContext(parseSrc + "\nthis.parse=parsePreviewJson;", be);
+  const srvItems = [{ id: "s0", body: body }];
+  const ok = be.parse(JSON.stringify({ previews: [{ id: "s0", preview: gen.preview, keyInsights: ["a"] }] }), srvItems);
+  checkEq("[preview] 合格的输出收下", ok && ok[0].preview, gen.preview);
+  checkEq("[preview] 抄原文开头的一律作废",
+    be.parse(JSON.stringify({ previews: [{ id: "s0", preview: body.slice(0, 60) }] }), srvItems), null);
+  checkEq("[preview] 太短的一律作废",
+    be.parse(JSON.stringify({ previews: [{ id: "s0", preview: "太短了" }] }), srvItems), null);
+  checkEq("[preview] 少一段就整批作废",
+    be.parse(JSON.stringify({ previews: [{ id: "zz", preview: gen.preview }] }), srvItems), null);
+  checkEq("[preview] 不是 JSON 也不会炸", be.parse("nothing here", srvItems), null);
+}
+
 /* ---------- 跑 ---------- */
 function main() {
   testTimezones();
@@ -285,6 +356,7 @@ function main() {
   testUnknownTime();
   testAppBootOrder();
   testDeterminism();
+  testReadingPreview();
   return testPlaces().then(function () {
     console.log("\n对照来源:" + REF.reference);
     console.log("设置:" + JSON.stringify(REF.settings));

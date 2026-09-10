@@ -1,6 +1,19 @@
 // ============================================================
-// INNER SKY · Edge Function  read-chart  (v11)
-// 变更(相对 v10):
+// INNER SKY · Edge Function  read-chart  (v12)
+// 变更(相对 v11):
+//   ★ 本次唯一的改动:新增第五种内容 kind="preview"(阅读预览层)。
+//     1. 它【不生成任何解读】。输入是「已经生成好的正文」,输出只有
+//        preview(2–4 句的阅读入口)与 keyInsights(1–3 条洞察点)。
+//     2. 正文 100% 原样保留 —— 这一层永远不会改写、覆盖或重述 fullContent。
+//     3. 独立的 system 区块 PREVIEW_SYSTEM,与 MASTER_SYSTEM 完全分开,
+//        所以 blueprint / topic / map / question 的行为与 v11 逐字相同。
+//     4. 快取自成命名空间(指纹后缀 PREVIEW_STYLE_VERSION),
+//        正文没变就一定命中,不会重复呼叫模型。
+//     5. GET 增加回报 preview_style_version,供前端判断服务端是否已经上线这一层。
+//   ⚠ 未改动:占星计算、九步定调演算、TOPIC_SPEC、QUESTION_SPEC、mapMsg、
+//     资料抽取、既有快取键、落库、身分验证、英文写作系统、MASTER_SYSTEM。
+//
+// 变更(v11 相对 v10):
 //   ★ 本次唯一的改动:「我的生命蓝图」的表达层(Writing Layer)。
 //     1. 新增独立常数 BLUEPRINT_STYLE —— 只在 kind === "blueprint" 时
 //        作为额外的 system 区块送出。MASTER_SYSTEM 一个字都没改,
@@ -1122,6 +1135,95 @@ function mapMsg(ns:Any, chart:Any, blueprint:Any, topics:Any) {
 }
 
 // ══════════════════════════════════════════════════════════
+//  阅读预览层(kind === "preview")· v12 新增
+//  ------------------------------------------------------------
+//  这一层【不生成任何解读】。它只做一件事:
+//    读完一段【已经生成好的】完整正文 → 重新写一段进入这段正文的引子。
+//  所以:
+//    · 正文(fullContent)永远原样保留,这一层一个字都不会改写它
+//    · preview 不是截断、不是摘要、不是抽句子,而是读懂之后重新写的
+//    · 内容仍然 100% 个人化 —— 来源就是这个人自己那份解读
+//  system 区块独立成常数,与 MASTER_SYSTEM 分开,方便 prompt caching。
+// ══════════════════════════════════════════════════════════
+const PREVIEW_STYLE_VERSION = "preview-writing-1.0";
+
+const PREVIEW_SYSTEM = `你正在为 The Inner Sky 生成个人生命解读的「阅读预览」。
+
+你会收到一段或多段【已经写好的】个人化星盘解读全文。你的工作不是解读星盘,
+也不是补充分析,而是替每一段全文写一段让人愿意读下去的引子。
+
+【最重要的原则】
+先把整段全文读完、读懂,再重新写。不要截取原文,不要复制第一句话,
+不要逐句摘要,不要把小标题拿来当引子,不要拼接原文句子。
+
+【preview 要做到什么】
+不是告诉他「这一段讲了什么」,而是让他先感受到一点自己。
+读到的人应该会想:「这个好像真的在说我。」「为什么我会这样?」「我想继续看。」
+
+优先呈现:
+1. 他反复出现的内在模式
+2. 他可能还没有意识到的矛盾
+3. 一个让他觉得「原来我是这样」的观察
+
+不要把答案讲完,留一点继续读下去的空间。但不要故意制造悬念,也不要标题党。
+
+【写法】
+· 2–4 个短句,中文约 55–110 字(英文约 35–70 词)。不要只有一句,也不要写成完整长段落。
+· 语气:温柔、有洞察、不评判、不贴标签、不命令、不宿命、不制造焦虑。
+· 像有人真的理解这个人,像陪他慢慢看见自己 —— 不是心理诊断,不是星座运势,不是 AI 摘要。
+· 洞察可以深,但语言必须容易进入。不要写成太抽象的灵性语言,也不要文青到难懂。
+· 不使用「你的核心问题是」「你需要学会」这类报告式或指令式句型。
+· 不出现任何占星术语(星座、宫位、行星、相位)。
+
+【keyInsights】
+在读懂整段之后,提炼 1–3 条真正重要的洞察点。每条一句话(中文 10–28 字),
+必须是理解之后的说法,不是原文句子的复制,也不是段落主题句的搬运。
+没有真正值得单独列出的,就给比较少的条数,甚至空数组。
+
+【安全边界】
+所有内容必须完全来自提供的全文。不得加入全文没有支持的新结论、新判断、新预言。
+不得改写、覆盖或重述全文本身。
+
+【输出】
+只输出 JSON,不要任何解释文字。`;
+
+const PREVIEW_KIND_CN: Record<string,string> = {
+  section: "一段人生解读的正文",
+  step:    "一件建议他可以着手去做的事(行动建议的完整说明)"
+};
+
+/* items:[{ id, kind:"section"|"step", title, body }]
+   body 就是那一段已经生成好的完整正文 —— 整段送进去,不截断、不只送第一段。 */
+function previewMsg(items:Any[], lang:string) {
+  const en = lang === "en";
+  const blocks = items.map((it:Any, i:number) => [
+    "──── 第 " + (i+1) + " 段 ────",
+    "id: " + it.id,
+    "类型: " + (PREVIEW_KIND_CN[String(it.kind)] || PREVIEW_KIND_CN.section),
+    "标题: " + String(it.title || "(无标题)"),
+    "全文:",
+    String(it.body || "")
+  ].join("\n")).join("\n\n");
+  return [
+    "以下是同一个人的解读里的 " + items.length + " 段全文。",
+    "请逐段读完,再各写一段 preview 与 1–3 条 keyInsights。",
+    "",
+    "行动建议(类型为「一件建议他可以着手去做的事」)的 preview,",
+    "要写成一个很容易走进去的入口:让他知道这件事为什么值得做、从哪里可以开始,",
+    "但不要在 preview 阶段把「为什么是这件事 / 怎么开始 / 可能遇到什么」讲完。",
+    "",
+    blocks,
+    "",
+    en ? "【输出语言】English。用与全文同一种语气写,不是翻译。"
+       : "【输出语言】简体中文。",
+    "",
+    "【输出 JSON】",
+    '{"previews":[{"id":"与上面完全相同的 id","preview":"2-4 个短句的引子","keyInsights":["1-3 条,每条一句话"]}]}',
+    "每一段都必须有一条对应的输出,id 不可更改、不可遗漏。"
+  ].join("\n");
+}
+
+// ══════════════════════════════════════════════════════════
 //  人生探索地图 · 6 领域 × 5 题(核心资产 · 只存在于服务端)
 //  ⚠ 这一整段永远不会传给浏览器。前端只送 { kind:"question", qid:"q07" }。
 //  ⚠ v11 未改动。
@@ -1899,6 +2001,93 @@ function json(obj:unknown, status=200, cors:Record<string,string>={}) {
   return new Response(JSON.stringify(obj), { status, headers:{ ...cors, "Content-Type":"application/json" } });
 }
 
+/* ── kind === "preview" 的完整处理 ──────────────────────────────
+   输入:{ kind:"preview", fingerprint, lang, items:[{id,kind,title,body}] }
+   输出:{ previews:[{id,preview,keyInsights}], cached, valid, preview_style_version }
+   · 不需要星盘,也不会读写任何解读内容 —— 正文只进不出,原样保留。
+   · 快取沿用 readings 表,但指纹自成命名空间(后缀 preview 写作层版本),
+     与解读本身的快取永远不会互相覆盖。
+   · 前端送来的 fingerprint 已经包含正文内容的杂凑:正文没变就一定命中快取,
+     所以正常阅读一页不会重复呼叫模型。 */
+async function handlePreviewKind(body:Any, fp:string, apiKey:string, sbUrl:string, srk:string,
+                                 dbHeaders:Record<string,string>, cors:Record<string,string>) {
+  const lang = String(body.lang||"") === "en" ? "en" : "zh";
+  const rawItems = Array.isArray(body.items) ? body.items : [];
+  const items = rawItems.map((x:Any) => ({
+    id: String((x && x.id) || "").slice(0,64),
+    kind: String((x && x.kind) || "section") === "step" ? "step" : "section",
+    title: String((x && x.title) || "").slice(0,120),
+    body: String((x && x.body) || "")
+  })).filter((x:Any) => x.id && x.body.length >= 40).slice(0, 12);
+  if (!items.length) return json({ error:"invalid payload:preview 需要 items[{id,body}]" }, 400, cors);
+
+  const cacheFp = fp ? (fp + "-" + PREVIEW_STYLE_VERSION) : "";
+  if (cacheFp && sbUrl && srk) {
+    try {
+      const q = await fetch(sbUrl+"/rest/v1/readings?fingerprint=eq."+cacheFp+"&select=analysis", { headers: dbHeaders });
+      if (q.ok) {
+        const rows = await q.json();
+        if (rows.length && rows[0].analysis) {
+          const hit = parsePreviewJson(rows[0].analysis, items);
+          if (hit) return json({ previews:hit, cached:true, valid:true, lang,
+                                preview_style_version:PREVIEW_STYLE_VERSION }, 200, cors);
+        }
+      }
+    } catch(_e) { /* 快取不可用不阻断 */ }
+  }
+
+  const resp = await fetch("https://api.anthropic.com/v1/messages", {
+    method:"POST",
+    headers:{ "Content-Type":"application/json", "x-api-key":apiKey, "anthropic-version":"2023-06-01" },
+    body: JSON.stringify({
+      model:"claude-sonnet-4-6",
+      max_tokens:4000,
+      system:[{ type:"text", text:PREVIEW_SYSTEM, cache_control:{ type:"ephemeral" } }],
+      messages:[{ role:"user", content: previewMsg(items, lang) }]
+    })
+  });
+  if (!resp.ok) { const err = await resp.text(); return json({ error:"claude "+resp.status, detail:err.slice(0,300) }, 502, cors); }
+  const data = await resp.json();
+  const text = (data.content ?? []).map((b:Any)=>(b.type==="text"?b.text:"")).join("\n");
+  const previews = parsePreviewJson(text, items);
+
+  if (previews && cacheFp && sbUrl && srk) {
+    try {
+      await fetch(sbUrl+"/rest/v1/readings", { method:"POST", headers:{ ...dbHeaders, Prefer:"resolution=merge-duplicates" },
+        body: JSON.stringify({ fingerprint:cacheFp, analysis:JSON.stringify({ previews }) }) });
+    } catch(_e) { /* ignore */ }
+  }
+  return json({ previews: previews || [], cached:false, valid: !!previews, lang,
+                preview_style_version:PREVIEW_STYLE_VERSION }, 200, cors);
+}
+
+/* 解析并验收模型输出。任何一段缺席、太短、或把原文抄回来,都判定整批无效 ——
+   宁可让前端回落到本地摘录,也不要把一段读起来像截断的文字当成 preview 存起来。 */
+function parsePreviewJson(text:string, items:Any[]) {
+  let o:Any = null;
+  try {
+    const m = String(text||"").match(/\{[\s\S]*\}/);
+    if (!m) return null;
+    o = JSON.parse(m[0]);
+  } catch(_e) { return null; }
+  const list = Array.isArray(o && o.previews) ? o.previews : null;
+  if (!list) return null;
+  const byId:Any = {};
+  list.forEach((x:Any) => { if (x && x.id) byId[String(x.id)] = x; });
+  const out:Any[] = [];
+  for (const it of items) {
+    const got = byId[it.id];
+    const pv = String((got && got.preview) || "").trim();
+    if (pv.length < 20) return null;
+    // 直接抄原文开头 = 又变回截断,退回前端的本地摘录反而更诚实
+    if (it.body.trim().slice(0, 24) && pv.slice(0, 24) === it.body.trim().slice(0, 24)) return null;
+    const keys = (Array.isArray(got.keyInsights) ? got.keyInsights : [])
+      .map((k:Any)=>String(k||"").trim()).filter(Boolean).slice(0,3);
+    out.push({ id: it.id, preview: pv, keyInsights: keys });
+  }
+  return out;
+}
+
 Deno.serve(async (req: Request) => {
   const cors = { "Access-Control-Allow-Origin":"*", "Access-Control-Allow-Headers":"authorization, apikey, content-type", "Access-Control-Allow-Methods":"GET, POST, OPTIONS" };
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
@@ -1909,10 +2098,11 @@ Deno.serve(async (req: Request) => {
   const dbHeaders = { apikey:srk, Authorization:"Bearer "+srk, "Content-Type":"application/json" };
 
   if (req.method === "GET")
-    return json({ ok:true, function:"read-chart v11 (narrative + exploration map + blueprint writing layer)",
+    return json({ ok:true, function:"read-chart v12 (narrative + exploration map + blueprint writing layer + reading previews)",
       anthropic_key_set:apiKey.length>0, db_available:!!(sbUrl&&srk),
       topics:Object.keys(TOPIC_SPEC), explorationQuestions:Object.keys(QUESTION_SPEC).length,
       prompt_version:PROMPT_VERSION, blueprint_style_version:BLUEPRINT_STYLE_VERSION,
+      preview_style_version:PREVIEW_STYLE_VERSION,
       languages:["zh","en"] }, 200, cors);
 
   try {
@@ -1923,6 +2113,13 @@ Deno.serve(async (req: Request) => {
     const chart = body.chart;
 
     if (!apiKey) return json({ error:"missing ANTHROPIC_API_KEY — 请在 Edge Functions → Secrets 添加" }, 500, cors);
+
+    /* ── 阅读预览层 ────────────────────────────────────────────
+       只吃「已经生成好的正文」,不碰星盘、不跑九步定调、不写任何解读,
+       所以在星盘验证之前就先分流出去。 */
+    if (kind === "preview")
+      return await handlePreviewKind(body, fp, apiKey, sbUrl, srk, dbHeaders, cors);
+
     if (!chart || !chart.planets || !chart.cusps || !chart.ang)
       return json({ error:"invalid payload:缺少星盘资料" }, 400, cors);
 
