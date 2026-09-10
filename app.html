@@ -1652,69 +1652,181 @@
     background:url(assets/life/compass.webp) center / contain no-repeat;opacity:.6
   }
 
-  /* —— 从这里开始:改成一组问句卡,大号码、清爽的字 —— */
-  #dpage.thread-page .dp-start-list{
-    grid-template-columns:repeat(auto-fit,minmax(min(100%,248px),1fr));
-    gap:clamp(14px,1.8vw,20px)
+  /* —— 章节的引子:第一句 + 几个重点 + 一个安静的入口 —— */
+  #dpage.thread-page .ch-peek .pv{
+    font-family:var(--dp-serif);font-weight:400;
+    font-size:clamp(16px,1.75vw,19px);line-height:1.95;
+    color:#2b2c48;margin:0
   }
-  #dpage.thread-page .dp-step{
-    grid-template-columns:1fr;gap:12px;align-content:start;
-    background:rgba(255,255,255,.62);border:1px solid rgba(150,130,180,.16);
-    border-radius:20px;padding:clamp(20px,2.4vw,28px);
-    box-shadow:0 1px 2px rgba(60,50,90,.02),0 10px 30px rgba(60,50,90,.045);
+  #dpage.thread-page .ch-keys{list-style:none;margin:clamp(14px,1.8vw,20px) 0 0;padding:0}
+  #dpage.thread-page .ch-keys li{
+    display:flex;align-items:baseline;gap:11px;
+    font-size:14px;line-height:1.9;color:#615d53;font-weight:300;margin-top:7px
+  }
+  #dpage.thread-page .ch-keys li:first-child{margin-top:0}
+  #dpage.thread-page .ch-keys li i{
+    flex:none;width:4px;height:4px;border-radius:50%;
+    background:rgba(129,118,173,.5);transform:translateY(-3px)
+  }
+  #dpage.thread-page .ch-open,#dpage.thread-page .ch-shut{
+    display:inline-flex;align-items:center;gap:9px;
+    margin-top:clamp(16px,2vw,22px);min-height:40px;padding:8px 2px;
+    background:none;border:none;cursor:pointer;
+    font-family:var(--dp-sans);font-size:13.5px;letter-spacing:.1em;
+    color:#7a6fa8;transition:color .3s ease
+  }
+  #dpage.thread-page .ch-open:hover,#dpage.thread-page .ch-shut:hover{color:#4c4470}
+  #dpage.thread-page .ch-open:focus-visible,#dpage.thread-page .ch-shut:focus-visible{
+    outline:1px solid rgba(129,118,173,.7);outline-offset:3px;border-radius:8px
+  }
+  #dpage.thread-page .ch-open .cv,#dpage.thread-page .ch-shut .cv{font-size:11px;line-height:1}
+  /* 展开的是完整原文;收起时引子在、原文高度为 0(内容仍在 DOM 里) */
+  #dpage.thread-page .ch-full{
+    overflow:hidden;max-height:0;opacity:0;
+    transition:max-height .55s cubic-bezier(.22,1,.36,1),opacity .4s ease
+  }
+  #dpage.thread-page .ch-full.on{opacity:1}
+  #dpage.thread-page .thread-ch.open .ch-peek{display:none}
+  @media (prefers-reduced-motion:reduce){#dpage.thread-page .ch-full{transition:none}}
+
+  /* —— 几个重要章节:只放引子的卡,永远不会自己长高 —— */
+  #dpage.thread-page .ch-cards{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,236px),1fr));
+    gap:clamp(14px,1.8vw,20px);align-items:stretch
+  }
+  #dpage.thread-page .ch-card{
+    display:flex;flex-direction:column;align-items:flex-start;gap:0;
+    text-align:left;cursor:pointer;font-family:var(--dp-sans);
+    background:rgba(255,255,255,.6);border:1px solid rgba(150,130,180,.16);
+    border-radius:20px;padding:clamp(20px,2.4vw,26px);
+    box-shadow:0 1px 2px rgba(60,50,90,.02),0 10px 28px rgba(60,50,90,.04);
     transition:border-color .4s ease,box-shadow .4s ease,transform .4s cubic-bezier(.22,1,.36,1)
   }
   @media(hover:hover){
-    #dpage.thread-page .dp-step:hover{
-      transform:translateY(-3px);border-color:rgba(130,110,175,.34);
-      box-shadow:0 1px 2px rgba(60,50,90,.03),0 16px 38px rgba(60,50,90,.075)
+    #dpage.thread-page .ch-card:hover{
+      transform:translateY(-3px);border-color:rgba(130,110,175,.3);
+      box-shadow:0 1px 2px rgba(60,50,90,.03),0 16px 36px rgba(60,50,90,.07)
     }
   }
-  #dpage.thread-page .dp-step .no{place-items:start;padding:0}
-  #dpage.thread-page .dp-step .no i{display:none}
-  #dpage.thread-page .dp-step .no b{
-    font-family:var(--dp-display);font-weight:300;font-size:clamp(30px,3.2vw,40px);
-    line-height:1;color:rgba(129,118,173,.6)
+  #dpage.thread-page .ch-card:focus-visible{outline:1px solid rgba(129,118,173,.7);outline-offset:3px}
+  #dpage.thread-page .ch-card.on{
+    border-color:rgba(154,106,52,.26);background:rgba(255,253,249,.86);
+    box-shadow:0 1px 3px rgba(60,50,90,.03),0 14px 34px rgba(60,50,90,.06)
   }
-  #dpage.thread-page .dp-step .ct{border-left:none;padding-left:0}
-  #dpage.thread-page .dp-step .ct .bd{font-size:14.5px;line-height:1.95}
+  #dpage.thread-page .ch-card .no{
+    font-family:var(--dp-display);font-weight:300;line-height:1;
+    font-size:clamp(28px,3vw,38px);color:rgba(129,118,173,.58)
+  }
+  #dpage.thread-page .ch-card .t{
+    font-family:var(--dp-serif);font-weight:600;font-size:16.5px;line-height:1.7;
+    color:#2b2925;margin-top:13px
+  }
+  /* 卡片上的引子只是入口,截到两行就够 —— 完整原文在阅读区里,一个字都没少。
+     line-clamp 只用在这里,长文正文一律不用(会切在句子中间)。 */
+  #dpage.thread-page .ch-card .pv{
+    font-size:13.5px;line-height:1.95;color:#615d53;font-weight:300;margin-top:9px;
+    display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden
+  }
+  #dpage.thread-page .ch-card .ch-keys{margin-top:12px}
+  #dpage.thread-page .ch-card .ch-keys li{font-size:13px;line-height:1.85}
+  #dpage.thread-page .ch-card .go{
+    margin-top:auto;padding-top:16px;
+    font-size:13px;letter-spacing:.1em;color:#7a6fa8
+  }
+  #dpage.thread-page .ch-card .ch-src{display:none}
 
-  /* —— 值得记住:一组轻盈的象牙卡,分隔用的小星就不需要了 —— */
-  #dpage.thread-page .dp-keep{
-    background:none;border:none;box-shadow:none;padding:0;
-    display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));
-    gap:clamp(14px,1.8vw,20px)
+  /* —— 单章阅读区:整排卡片下面,一次只开一章 —— */
+  #dpage.thread-page .ch-reader{
+    overflow:hidden;max-height:0;opacity:0;
+    transition:max-height .55s cubic-bezier(.22,1,.36,1),opacity .4s ease
   }
-  #dpage.thread-page .dp-keep .hd{grid-column:1/-1;margin-bottom:4px}
+  #dpage.thread-page .ch-reader.on{opacity:1}
+  @media (prefers-reduced-motion:reduce){#dpage.thread-page .ch-reader{transition:none}}
+  #dpage.thread-page .ch-reader .in{
+    margin-top:clamp(16px,2vw,24px);
+    padding:clamp(30px,4vw,54px) clamp(20px,3vw,40px);
+    border-radius:26px;text-align:center;
+    background:
+      radial-gradient(80% 46% at 50% 0%,rgba(170,160,213,.1),rgba(170,160,213,0) 70%),
+      rgba(255,253,250,.72);
+    border:1px solid rgba(150,130,180,.14);
+    box-shadow:0 1px 2px rgba(60,50,90,.02),0 18px 46px rgba(60,50,90,.05)
+  }
+  #dpage.thread-page .ch-reader .no{
+    display:block;font-family:var(--dp-display);font-weight:300;line-height:1;
+    font-size:clamp(26px,2.8vw,34px);letter-spacing:.14em;color:rgba(129,118,173,.55)
+  }
+  #dpage.thread-page .ch-reader .t{
+    font-family:var(--dp-serif);font-weight:600;
+    font-size:clamp(19px,2.2vw,25px);line-height:1.65;color:#2b2925;
+    margin:clamp(12px,1.6vw,18px) 0 0
+  }
+  #dpage.thread-page .ch-reader .st{display:block;margin-top:14px;font-size:11px;color:var(--dp-lav)}
+  #dpage.thread-page .ch-reader .pv{
+    font-family:var(--dp-serif);font-size:clamp(15.5px,1.6vw,17.5px);line-height:1.95;
+    color:#4a4760;max-width:34em;margin:clamp(14px,1.8vw,20px) auto 0
+  }
+  #dpage.thread-page .ch-reader .rule{
+    display:block;width:min(46%,180px);height:1px;margin:clamp(24px,3vw,36px) auto;
+    background:linear-gradient(90deg,rgba(154,106,52,0),rgba(154,106,52,.28),rgba(154,106,52,0))
+  }
+  /* 中文长文的舒服行长:比外框窄一截 */
+  #dpage.thread-page .ch-reader .bd{
+    max-width:min(100%,720px);margin:0 auto;text-align:left;
+    font-size:16px;line-height:1.95;color:#2c2d48;font-weight:300
+  }
+  #dpage.thread-page .ch-reader .bd p{margin:0 0 20px}
+  #dpage.thread-page .ch-reader .bd p:last-child{margin-bottom:0}
+  #dpage.thread-page .ch-reader .ch-shut{margin-top:0}
+
+  /* —— 值得记住:不再是三个盒子,是一段编辑式的停顿 —— */
+  #dpage.thread-page .dp-keep{
+    background:none;border:none;box-shadow:none;padding:0;display:block;
+    margin:clamp(44px,5.4vw,72px) 0 0
+  }
+  #dpage.thread-page .dp-keep .hd{justify-content:center;margin-bottom:clamp(18px,2.2vw,26px)}
   #dpage.thread-page .dp-keep .sp{display:none}
   #dpage.thread-page .dp-keep .q{
-    background:rgba(255,255,255,.6);border:1px solid rgba(150,130,180,.15);
-    border-radius:20px;padding:clamp(20px,2.4vw,26px);
-    box-shadow:0 1px 2px rgba(60,50,90,.02),0 10px 28px rgba(60,50,90,.04)
+    display:block;background:none;border:none;box-shadow:none;padding:0;
+    max-width:min(100%,720px);margin:0 auto;text-align:center;
+    padding-bottom:clamp(15px,1.9vw,21px);margin-bottom:clamp(15px,1.9vw,21px);
+    border-bottom:1px solid rgba(154,106,52,.14)
+  }
+  #dpage.thread-page .dp-keep .q:last-child{border-bottom:none;padding-bottom:0;margin-bottom:0}
+  #dpage.thread-page .dp-keep .q .mk{display:none}
+  #dpage.thread-page .dp-keep .q .bd{
+    font-family:var(--dp-serif);font-size:clamp(15.5px,1.7vw,18px);
+    line-height:1.95;color:#2b2c48
   }
 
-  /* —— 留给你的思考:一条横过页面的静谧长条,左标题 / 右内文 —— */
+  /* —— 留给你的思考:footer 之前的一次呼吸,不是又一张卡 —— */
   #dpage.thread-page .dp-reflect{
-    padding:clamp(26px,3.4vw,42px) clamp(22px,3vw,40px);
-    border-radius:24px;background:rgba(255,255,255,.55);
-    border:1px solid rgba(150,130,180,.16);
-    box-shadow:0 1px 2px rgba(60,50,90,.02),0 14px 40px rgba(60,50,90,.05)
+    position:relative;padding:clamp(34px,4.2vw,58px) clamp(18px,3vw,40px);
+    border:none;border-radius:0;background:none;box-shadow:none;
+    text-align:center;margin:0
   }
-  #dpage.thread-page .dp-reflect.act{border-left:1px solid rgba(150,130,180,.16)}
-  #dpage.thread-page .dp-reflect .bd{font-size:15.5px;line-height:1.95;max-width:none}
-  @media(min-width:901px){
-    #dpage.thread-page .dp-reflect{
-      display:grid;grid-template-columns:minmax(200px,290px) minmax(0,1fr);
-      column-gap:clamp(26px,3.4vw,52px);align-items:start
-    }
-    #dpage.thread-page .dp-reflect .eb{grid-column:1;grid-row:1;margin-bottom:11px}
-    #dpage.thread-page .dp-reflect h3.rt{grid-column:1;grid-row:2}
-    #dpage.thread-page .dp-reflect .rule{grid-column:1;grid-row:3;margin:14px 0 0}
-    #dpage.thread-page .dp-reflect .bd{grid-column:2;grid-row:1/4}
+  #dpage.thread-page .dp-reflect.act{border-left:none;padding-left:clamp(18px,3vw,40px)}
+  #dpage.thread-page .dp-reflect .eb{justify-content:center;margin-bottom:15px}
+  #dpage.thread-page .dp-reflect h3.rt{margin:0}
+  #dpage.thread-page .dp-reflect .rule{
+    width:min(40%,150px);margin:clamp(20px,2.6vw,30px) auto;
+    background:linear-gradient(90deg,rgba(129,118,173,0),rgba(129,118,173,.42),rgba(129,118,173,0));
+    opacity:1
   }
+  #dpage.thread-page .dp-reflect .bd{
+    max-width:min(100%,680px);margin:0 auto;text-align:left;
+    font-size:15.5px;line-height:1.95
+  }
+  #dpage.thread-page .dp-reflect .bd .fold-btn{margin-left:0}
+  /* 一层极淡的月光,只在「留给你的思考」那一段 */
+  #dpage.thread-page .dp-reflect .glow{
+    display:block;position:absolute;inset:0;z-index:-1;pointer-events:none;
+    background:radial-gradient(58% 60% at 50% 42%,rgba(170,160,213,.14),rgba(170,160,213,0) 72%)
+  }
+  #dpage.thread-page .dp-reflect .glow::after{content:none}
+  #dpage.thread-page .thread-tail > .dp-reflect{isolation:isolate}
 
-  /* —— 渐进展开:先露前面几段,其余收在「继续查看」后面 ——
-     收起是 max-height:0,不是 line-clamp;文字完整留在 DOM 里。 */
+  /* —— 渐进展开(思考区块用)—— */
   #dpage.thread-page .fold-rest{
     overflow:hidden;max-height:0;opacity:0;
     transition:max-height .5s cubic-bezier(.22,1,.36,1),opacity .38s ease
@@ -1733,10 +1845,6 @@
   #dpage.thread-page .fold-btn:focus-visible{
     outline:1px solid rgba(129,118,173,.7);outline-offset:3px;border-radius:8px
   }
-  /* 卡片里的按钮沉到底,收起状态下三张卡的高度才对得齐 */
-  #dpage.thread-page .dp-step .ct{display:flex;flex-direction:column;height:100%}
-  #dpage.thread-page .dp-step .ct .bd{display:flex;flex-direction:column}
-  #dpage.thread-page .dp-step .ct .bd .fold-btn{margin-top:auto;padding-top:12px}
 
   /* —— 页脚:同一片天空当底图,文字仍然是真的 HTML —— */
   #dpage.thread-page .dp-foot{
@@ -1757,6 +1865,12 @@
     #dpage.thread-page .ch-art.a3{margin-top:clamp(10px,2vw,30px);transform:scale(.92)}
     #dpage.thread-page .ch-art.a4{margin-top:clamp(30px,4.4vw,70px);transform:scale(1.1)}
     #dpage.thread-page .ch-art.a5{margin-top:clamp(16px,2.6vw,40px);transform:scale(.88)}
+    /* 第四章:插画不在右栏,而是落到正文下方置中 —— 走过三段之后,节奏回到安静 */
+    #dpage.thread-page .thread-ch:nth-of-type(4){grid-template-columns:var(--th-col) minmax(0,1fr)}
+    #dpage.thread-page .thread-ch:nth-of-type(4) .ch-art{
+      grid-column:2;justify-self:center;width:min(46%,300px);
+      margin-top:clamp(22px,3vw,38px);transform:none
+    }
   }
   /* —— 平板 / 手机:插画落到正文下方靠右,生命线收窄贴着章节号 —— */
   @media(max-width:1024px){
@@ -1801,9 +1915,6 @@
     #dpage.thread-page .thread-ch .dp-prose{font-size:15.5px;line-height:1.9}
     #dpage.thread-page .thread-ch .dp-prose p{margin-bottom:17px}
     #dpage.thread-page .thread-open .dp-quote{font-size:19.5px;line-height:1.9}
-    #dpage.thread-page .dp-step .ct .bd,
-    #dpage.thread-page .dp-reflect .bd,
-    #dpage.thread-page .dp-keep .q .bd{font-size:15px;line-height:1.9}
     /* 手指点得到:继续查看 / 收起至少 44px 高 */
     #dpage.thread-page .fold-btn{min-height:44px;font-size:14px}
 
@@ -1823,11 +1934,24 @@
     }
     #dpage.thread-page .ch-art.a2,#dpage.thread-page .ch-art.a4{width:72%;max-width:270px}
 
-    /* —— 卡片一律单栏 —— */
-    #dpage.thread-page .dp-start-list,#dpage.thread-page .dp-keep{grid-template-columns:1fr}
-    #dpage.thread-page .dp-step{padding:20px 18px}
-    #dpage.thread-page .dp-keep .q{padding:20px 18px}
-    #dpage.thread-page .dp-reflect{padding:24px 20px;border-radius:20px}
+    /* —— 重要章节:三张卡直排,阅读区就接在整排卡片下面 —— */
+    #dpage.thread-page .ch-cards{grid-template-columns:1fr;gap:12px}
+    #dpage.thread-page .ch-card{padding:20px 18px;border-radius:18px}
+    #dpage.thread-page .ch-card .no{font-size:26px}
+    #dpage.thread-page .ch-card .t{font-size:16px}
+    #dpage.thread-page .ch-reader .in{padding:26px 18px;border-radius:20px}
+    #dpage.thread-page .ch-reader .t{font-size:19px}
+    #dpage.thread-page .ch-reader .pv{font-size:15px}
+    #dpage.thread-page .ch-reader .bd{font-size:15.5px;line-height:1.9}
+    #dpage.thread-page .ch-reader .bd p{margin-bottom:17px}
+    /* —— 引子与思考:字级与点击区都留够 —— */
+    #dpage.thread-page .ch-peek .pv{font-size:16px}
+    #dpage.thread-page .ch-keys li{font-size:14px}
+    #dpage.thread-page .ch-open,#dpage.thread-page .ch-shut{min-height:44px;font-size:14px}
+    #dpage.thread-page .dp-keep{margin-top:clamp(44px,10vw,64px)}
+    #dpage.thread-page .dp-keep .q .bd{font-size:16px;line-height:1.95}
+    #dpage.thread-page .dp-reflect{padding:36px 4px}
+    #dpage.thread-page .dp-reflect .bd{font-size:15px}
     #dpage.thread-page .thread-tail::before{width:52px;height:52px;margin-bottom:26px}
   }
   /* 极窄的萤幕:装饰插画让位给文字(内容本身永远不隐藏) */
@@ -6356,6 +6480,51 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
      文字一个字都没有改。收起状态由 max-height:0 决定,展开时的高度由 JS
      按实际内容量给,不写死上限 —— 再长的段落也不会被截断。
      ============================================================ */
+  /* ============================================================
+     预览与重点:从使用者自己那份解读里「取」出来的,不是另外生成的摘要
+     ------------------------------------------------------------
+     一个字都不会新写,也不会写回资料库 ——
+       preview   = 这一段的第一句
+       keys      = 之后每一段的第一句(段落的主题句),
+                   太短 / 太长 / 以连接词开头的跳过
+     完整原文永远原样保留在 .ch-full / .ch-src 里,展开就读得到。
+     ============================================================ */
+  function dpSents(t) {
+    const out = [];
+    let cur = "";
+    for (let i = 0; i < t.length; i++) {
+      cur += t[i];
+      if ("。！？；!?;".indexOf(t[i]) >= 0) { out.push(cur.trim()); cur = ""; }
+    }
+    if (cur.trim()) out.push(cur.trim());
+    return out.filter(Boolean);
+  }
+  const DP_LEADIN = /^(而|但|不过|所以|因此|也就是说|换句话说|同时|另外|其实|这|那|它|他们|如果|当)/;
+  function dpDerive(body) {
+    const paras = String(body || "").split(/\n\s*\n|\n/)
+      .map(function (t) { return t.trim(); }).filter(Boolean);
+    const first = dpSents(paras[0] || "");
+    const preview = first[0] || paras[0] || "";
+    const keys = [];
+    paras.forEach(function (par, i) {
+      if (keys.length >= 2) return;
+      const s0 = dpSents(par)[0];
+      if (!s0 || s0 === preview) return;
+      // 以「字」计长度,标点不算 —— 太短没有讯息,太长就不是一句可以扫过去的话
+      const n = s0.replace(/[，。！？；：、（）「」“”\s]/g, "").length;
+      if (n < 8 || n > 34) return;
+      if (i > 0 && DP_LEADIN.test(s0)) return;
+      keys.push(s0);
+    });
+    return { preview: preview, keys: keys };
+  }
+  function dpKeysHtml(keys) {
+    if (!keys.length) return "";
+    return '<ul class="ch-keys">' + keys.map(function (k) {
+      return '<li><i aria-hidden="true"></i><span>' + esc0(k) + "</span></li>";
+    }).join("") + "</ul>";
+  }
+
   let dpFoldSeq = 0;
   function dpMakeFoldable(host, keep) {
     if (!host || host.dataset.folded) return;
@@ -6502,6 +6671,32 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
      资料、fav 按钮、data-saveable 的挂点、sec-<i> 的锚点、dpTailBlocks
      全部沿用主题页那一份 —— 这里只多包一层编辑式版面(章节号 / 生命线 / 插画位),
      而且样式全锁在 #dpage.thread-page 底下,主题页一个像素都不受影响。 */
+  /* 「几个重要章节」:三张只放引子的卡 + 一个共用的阅读区。
+     卡片永远不会自己长高 —— 点开的那一章是在整排卡片下面展开,一次只开一章。
+     每张卡里都藏着完整原文(.ch-src),点开时原样搬进阅读区,不重新产生任何文字。 */
+  function dpThreadChapters(steps) {
+    return '<div class="dp-start thread-chapters"><div class="dp-start-hd">' +
+      '<span class="ic" aria-hidden="true">✦</span>' +
+      '<span class="tx">' + dpT("从这里开始", "Where To Start") + '</span>' +
+      '<span class="ln"></span><span class="en" aria-hidden="true">✦</span></div>' +
+      '<p class="dp-start-lead">' +
+      dpT("不必全部做完。挑一件现在做得到的，从那里开始就好。",
+          "None of this needs doing at once. Pick the one you can start with today.") + "</p>" +
+      '<div class="ch-cards">' +
+      steps.map(function (st, i) {
+        const d = dpDerive(st.body);
+        return '<button type="button" class="ch-card" data-ch="' + i + '"' +
+          ' aria-expanded="false" aria-controls="chReader">' +
+          '<span class="no">' + ("0" + (i + 1)).slice(-2) + "</span>" +
+          '<b class="t">' + esc0(st.title) + "</b>" +
+          (d.preview ? '<span class="pv">' + esc0(d.preview) + "</span>" : "") +
+          dpKeysHtml(d.keys.slice(0, 2)) +
+          '<span class="go">' + dpT("阅读这一章 →", "Read this one →") + "</span>" +
+          '<span class="ch-src" hidden>' + dpParaRich(st.body) + "</span>" +
+          "</button>";
+      }).join("") + "</div>" +
+      '<div class="ch-reader" id="chReader" aria-live="polite"></div></div>';
+  }
   function dpThreadHtml(data, favSource, tab, favType) {
     favType = favType || "";
     let h = '<div class="thread-flow">' + dpThreadLine();
@@ -6515,20 +6710,44 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
         '" data-source-type="' + esc0(favType) +
         '" data-section="' + esc0(sc.title || "") + '" title="' + esc0(T("saveIt")) + '">' + (isFaved(k) ? "★" : "☆") + "</button>";
       const art = THREAD_ART[si % THREAD_ART.length];
+      const d = dpDerive(sc.body);
+      /* 收起时读到的是引子(第一句 + 几个重点),展开时读到的是完整原文。
+         两块永远都在 DOM 里,原文一个字都没有被换掉。 */
       return '<section class="dp-sec thread-ch" id="sec-' + si + '">' +
         '<div class="ch-mark" aria-hidden="true"><span class="no">' + ("0" + (si + 1)).slice(-2) + "</span>" +
         '<span class="nd">' + THREAD_NODE[si % THREAD_NODE.length] + "</span></div>" +
         '<div class="ch-body"><div class="dp-h-row">' +
         (sc.title ? '<h3 class="dp-h">' + esc0(sc.title) + "</h3>" : "<span></span>") + btn + "</div>" +
         (sc.title ? '<div class="dp-div"><span class="st">✦</span><span class="ln"></span></div>' : "") +
+        '<div class="ch-peek">' +
+        (d.preview ? '<p class="pv">' + esc0(d.preview) + "</p>" : "") +
+        dpKeysHtml(d.keys) +
+        '<button type="button" class="ch-open" aria-expanded="false" aria-controls="full-' + si + '">' +
+        '<span class="tx">' + dpT("读这一段生命经验", "Read this passage") + '</span>' +
+        '<span class="cv" aria-hidden="true">↓</span></button></div>' +
+        '<div class="ch-full" id="full-' + si + '">' +
         '<div class="dp-prose" data-saveable data-source="' + esc0(favSource) +
         '" data-source-type="' + esc0(favType) +
-        '" data-section="' + esc0(sc.title || "") + '">' + dpPara(sc.body) + "</div></div>" +
+        '" data-section="' + esc0(sc.title || "") + '">' + dpPara(sc.body) + "</div>" +
+        '<button type="button" class="ch-shut"><span class="tx">' + dpT("收起", "Close") + '</span>' +
+        '<span class="cv" aria-hidden="true">↑</span></button></div>' +
+        "</div>" +
         '<div class="ch-art ' + art.cls + '" aria-hidden="true">' +
         '<img src="' + art.src + '" alt="" loading="lazy" decoding="async"></div>' +
         "</section>";
     }).join("");
-    h += '<div class="thread-tail">' + dpTailBlocks(data) + "</div>";
+    /* 尾段自己组,不走 dpTailBlocks —— 三张练习卡要换成 preview 卡 + 共用阅读区,
+       但「值得记住 / 留给你的思考 / 试试看」仍然用主题页那几个共用 component。 */
+    const spark = '<div class="dp-sparkdiv"><span class="ln"></span>' +
+      '<span class="st" aria-hidden="true">✦</span><span class="ln"></span></div>';
+    let t = "";
+    if (data.steps && data.steps.length) t += dpThreadChapters(data.steps);
+    if (data.aha && data.aha.length) t += dpKeepHtml(data.aha);
+    if (data.question || data.action) t += spark;
+    if (data.question) t += dpReflectHtml("q", data.question);
+    if (data.question && data.action) t += spark;
+    if (data.action) t += dpReflectHtml("a", data.action);
+    h += '<div class="thread-tail">' + t + "</div>";
     return h + "</div>";
   }
   function dpAnswerHtml(data, favSource, favType) {
@@ -7692,16 +7911,97 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     if (rm) rm.addEventListener("click", function () { mapErr = null; toggleMap(); });
     const gm = document.getElementById("dpGenMap");
     if (gm) gm.addEventListener("click", function () { toggleMap(); });
-    /* 渐进展开:章节正文、练习卡、思考区块各自先露出前面几段,
-       其余收在「继续查看」后面。段落切分在 DOM 上做 —— 共用的
-       dpStartHtml / dpReflectHtml 一个字都没动,主题页也就不受影响。 */
+    /* 阅读节奏:先看引子 → 想读再展开 → 读到的是完整原文。
+       所有原文都一直在 DOM 里,展开只是把高度放开,没有任何文字被替换。 */
     (function () {
       const host = $("dpage");
       if (!host.classList.contains("thread-page")) return;
-      // brief 给的范围:桌机 2–3 段、手机 1–2 段。取偏短的一端,首屏才真的变轻。
-      const keep = 2;
-      host.querySelectorAll(".thread-ch .dp-prose").forEach(function (el) { dpMakeFoldable(el, keep); });
-      host.querySelectorAll(".dp-step .ct .bd").forEach(function (el) { dpMakeFoldable(el, 1); });
+
+      // —— 高度过渡的共用做法:量 scrollHeight,展开完成後把上限拿掉 ——
+      const grow = function (box, on) {
+        box.classList.toggle("on", on);
+        box.style.maxHeight = box.scrollHeight + "px";
+        if (!on) { box.getBoundingClientRect(); box.style.maxHeight = "0px"; }
+      };
+      host.querySelectorAll(".ch-full,.ch-reader").forEach(function (box) {
+        box.addEventListener("transitionend", function (e) {
+          if (e.target === box && e.propertyName === "max-height" && box.classList.contains("on"))
+            box.style.maxHeight = "none";
+        });
+      });
+
+      // —— 01–04:引子 ↔ 完整原文 ——
+      host.querySelectorAll(".thread-ch").forEach(function (sec) {
+        const open = sec.querySelector(".ch-open");
+        const shut = sec.querySelector(".ch-shut");
+        const full = sec.querySelector(".ch-full");
+        if (!open || !full) return;
+        const set = function (on) {
+          sec.classList.toggle("open", on);
+          open.setAttribute("aria-expanded", on ? "true" : "false");
+          grow(full, on);
+          if (!on) open.focus();
+        };
+        open.addEventListener("click", function () { set(true); });
+        if (shut) shut.addEventListener("click", function () { set(false); });
+      });
+
+      // —— 几个重要章节:卡片只放引子,点开的那一章在整排卡片下面展开 ——
+      (function () {
+        const reader = host.querySelector("#chReader");
+        const cards = Array.prototype.slice.call(host.querySelectorAll(".ch-card"));
+        if (!reader || !cards.length) return;
+        let cur = -1;
+        const close = function () {
+          if (cur < 0) return;
+          cards[cur].setAttribute("aria-expanded", "false");
+          cards[cur].classList.remove("on");
+          cur = -1;
+          grow(reader, false);
+        };
+        const open = function (i) {
+          const card = cards[i];
+          const src = card.querySelector(".ch-src");
+          const pv = card.querySelector(".pv");
+          reader.innerHTML = "";
+          const box = document.createElement("div");
+          box.className = "in";
+          box.innerHTML =
+            '<span class="no" aria-hidden="true"></span>' +
+            '<h4 class="t"></h4>' +
+            '<span class="st" aria-hidden="true">✦</span>' +
+            '<p class="pv"></p>' +
+            '<span class="rule" aria-hidden="true"></span>' +
+            '<div class="bd dp-rich"></div>' +
+            '<span class="rule" aria-hidden="true"></span>' +
+            '<button type="button" class="ch-shut"><span class="tx"></span>' +
+            '<span class="cv" aria-hidden="true">↑</span></button>';
+          box.querySelector(".no").textContent = card.querySelector(".no").textContent;
+          box.querySelector(".t").textContent = card.querySelector(".t").textContent;
+          const pvEl = box.querySelector(".pv");
+          if (pv) pvEl.textContent = pv.textContent; else pvEl.remove();
+          // 完整原文原样搬过来,不重新产生任何文字
+          box.querySelector(".bd").innerHTML = src ? src.innerHTML : "";
+          box.querySelector(".ch-shut .tx").textContent = dpT("收起", "Close");
+          box.querySelector(".ch-shut").addEventListener("click", function () {
+            close();
+            card.focus();
+          });
+          reader.appendChild(box);
+          cards.forEach(function (c) { c.classList.remove("on"); c.setAttribute("aria-expanded", "false"); });
+          card.classList.add("on");
+          card.setAttribute("aria-expanded", "true");
+          cur = i;
+          grow(reader, true);
+        };
+        cards.forEach(function (card, i) {
+          card.addEventListener("click", function () {
+            if (cur === i) close(); else open(i);
+          });
+        });
+      })();
+
+      // 思考区块比较短,沿用段落感知的渐进展开就够了
       host.querySelectorAll(".dp-reflect .bd").forEach(function (el) { dpMakeFoldable(el, 1); });
     })();
 
