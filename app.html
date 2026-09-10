@@ -1506,6 +1506,9 @@
      ============================================================ */
   #dpage.thread-page{--dp-wide:min(1120px,calc(100vw - 96px));background:#f7f3ef}
   @media(max-width:1024px){#dpage.thread-page{--dp-wide:100%}}
+  /* 手机版才存在的节点(旅程记号、展开层标记、另一组 CTA 文案)。
+     ≥768px 一律不显示 —— 桌机的版面与修改前完全一样。 */
+  #dpage.thread-page .mob-only{display:none}
 
   /* —— Hero:云天底 + 右侧大月亮,再柔和地化进象牙色的正文区 —— */
   #dpage.thread-page .dp-hero{
@@ -2230,6 +2233,144 @@
     #dpage.thread-page .thread-close .pre{font-size:15px;margin-top:18px}
     #dpage.thread-page .thread-close .post{font-size:14px}
     #dpage.thread-page .thread-tail::before{width:52px;height:52px;margin-bottom:26px}
+
+    /* ══════════════════════════════════════════════════════════
+       手机版阅读节奏(本次新增)—— 只调呈现:层级、留白、字级、密度。
+       内容、素材、桌机版面、路由、资料一律没有碰。
+       ══════════════════════════════════════════════════════════ */
+    #dpage.thread-page .mob-only{display:block}
+    #dpage.thread-page .ch-open .mob-only,
+    #dpage.thread-page .dp-cta .mob-only{display:inline}
+
+    /* —— 1. 旅程记号:一条极细的线 + 几个小点,告诉他这一次会经过几段 —— */
+    #dpage.thread-page .thread-map{
+      text-align:center;margin:0 0 clamp(38px,9vw,54px)
+    }
+    #dpage.thread-page .thread-map .tx{
+      display:block;font-family:var(--dp-sans);font-weight:300;
+      font-size:11.5px;letter-spacing:.2em;color:rgba(129,118,173,.72)
+    }
+    #dpage.thread-page .thread-map .row{
+      display:flex;align-items:center;justify-content:center;
+      gap:0;margin-top:15px
+    }
+    #dpage.thread-page .thread-map .ln{
+      width:clamp(20px,7vw,34px);height:1px;
+      background:linear-gradient(90deg,rgba(154,140,205,.1),rgba(154,140,205,.32),rgba(154,140,205,.1))
+    }
+    #dpage.thread-page .thread-map .dot{
+      width:5px;height:5px;border-radius:50%;
+      background:rgba(154,140,205,.32);flex:none
+    }
+    /* 第一颗是星芒 —— 起点,不是「已完成」 */
+    #dpage.thread-page .thread-map .dot.on{
+      width:auto;height:auto;border-radius:0;background:none;
+      font-size:10px;line-height:1;color:rgba(154,106,52,.5)
+    }
+
+    /* —— 2. 收起状态:引子要短、要好进,入口安静但看得到 —— */
+    #dpage.thread-page .ch-peek .pv{
+      font-size:15.5px;line-height:1.95;color:#4a4859;max-width:none
+    }
+    #dpage.thread-page .ch-keys{margin-top:16px;padding-top:13px}
+    #dpage.thread-page .ch-keys li{font-size:13.5px;line-height:1.8;margin-top:7px}
+    #dpage.thread-page .ch-open{margin-top:16px}
+    /* 收藏星在手机上只有 21px 高,手指不好点。这里只把「点得到的范围」撑到 44px,
+       星号本身的字级、颜色、位置一律没变 —— 等量的负 margin 把版面拉回原位,
+       所以标题可用的宽度、以及它跟星号的间距都跟改动前一样。 */
+    #dpage.thread-page .dp-h-row .fav-btn{
+      padding:12px 10px;margin:-12px -10px -12px 0
+    }
+
+    /* —— 3. 展开 = 打开另一层,不是打开一个面板 ——
+          左边一条极淡的薰衣草竖线 + 往内缩一点 + 一点点暖调,没有框、没有阴影。 */
+    #dpage.thread-page .ch-full > .dp-prose{
+      margin-top:14px;padding:20px 0 4px 16px;
+      border-left:1px solid rgba(154,140,205,.26);
+      background:linear-gradient(90deg,rgba(247,243,238,0),rgba(250,247,242,0) 100%)
+    }
+    #dpage.thread-page .ch-layer{
+      display:block;margin-top:18px;
+      font-family:var(--dp-sans);font-weight:300;
+      font-size:10.5px;letter-spacing:.28em;color:rgba(154,106,52,.5)
+    }
+    /* 展开后正文本身也松一级 —— 它现在是「在读」,不是「在扫」 */
+    #dpage.thread-page .ch-full .dp-prose{font-size:16px;line-height:1.98}
+    #dpage.thread-page .ch-full .dp-prose p{margin-bottom:19px}
+
+    /* —— 4. 长文的呼吸:本来就自成一句的短段落,给它引句的排法 ——
+          文字一个字都没改、没搬、没删,只是这一段的字级与留白不一样。
+          由 JS 依内容判断挂上 .pq,每一章最多一句;没有合适的就不会出现。 */
+    #dpage.thread-page .ch-full .dp-prose p.pq{
+      position:relative;margin:26px 0 26px;padding:22px 4px 0;
+      font-family:var(--dp-serif);font-weight:400;
+      font-size:18.5px;line-height:1.95;letter-spacing:.015em;color:#22233a
+    }
+    #dpage.thread-page .ch-full .dp-prose p.pq::before{
+      content:"·　·　·";position:absolute;left:50%;top:0;transform:translateX(-50%);
+      font-family:var(--dp-display);font-size:12px;letter-spacing:.1em;
+      line-height:1;color:rgba(154,106,52,.34)
+    }
+
+    /* —— 5. 插画:四张的大小与落点刻意不一样,不再是四次一样的置中 ——
+          只改显示宽度与对齐,素材、路径、比例一律没有动。 */
+    #dpage.thread-page .ch-art{margin-top:clamp(12px,3vw,18px)}
+    #dpage.thread-page .ch-art.a1{width:48%;max-width:158px;justify-self:center}
+    #dpage.thread-page .ch-art.a2{width:64%;max-width:224px;justify-self:end;margin-right:-6px}
+    #dpage.thread-page .ch-art.a3{width:78%;max-width:270px;justify-self:start;margin-left:-8px}
+    #dpage.thread-page .ch-art.a4{width:72%;max-width:250px;justify-self:end;margin-right:-6px}
+    #dpage.thread-page .ch-art.a5{width:52%;max-width:176px;justify-self:center}
+
+    /* —— 6. 收掉多余的垂直空白:留白仍然在,但不再把旅程拉得比它实际长 —— */
+    #dpage.thread-page .thread-ch{margin-bottom:clamp(44px,9.5vw,60px)}
+    #dpage.thread-page .thread-ch:last-of-type{margin-bottom:clamp(56px,13vw,84px)}
+    #dpage.thread-page .thread-open{margin-bottom:clamp(30px,7vw,44px)}
+    #dpage.thread-page .thread-bridge{
+      margin:clamp(12px,3.5vw,24px) 0 clamp(40px,10vw,58px);padding:30px 2px
+    }
+
+    /* —— 7. 从这里开始:进入「行动」之前,给标题足够的停顿 —— */
+    #dpage.thread-page .thread-chapters .dp-start-hd{margin-bottom:16px}
+    #dpage.thread-page .thread-chapters .dp-start-lead{margin-bottom:22px}
+
+    /* —— 8. 三张行动卡:更紧、更好扫 —— 号码与记号并排,不再各占一行。
+          不裁字、不设 overflow:hidden;内容多的卡片仍然完整显示。 */
+    #dpage.thread-page .ch-card{padding:22px 19px 20px;gap:0}
+    #dpage.thread-page .ch-card .no{
+      font-size:21px;letter-spacing:.18em;line-height:1
+    }
+    /* 记号紧跟在号码下面(01 → 记号 → 标题),间距收紧一级 */
+    #dpage.thread-page .ch-card .gl{margin:7px 0 0}
+    #dpage.thread-page .ch-card .t{font-size:16.5px;line-height:1.62;margin-top:14px}
+    #dpage.thread-page .ch-card .pv{
+      font-size:14.5px;line-height:1.92;margin-top:11px;color:#55536a
+    }
+    #dpage.thread-page .ch-card .go{font-size:12.5px;padding-top:18px}
+
+    /* —— 9. 留给你的思考:整页最安静的一刻,留白比别处多一级 —— */
+    #dpage.thread-page .thread-close{margin-top:clamp(10px,3vw,20px)}
+    #dpage.thread-page .dp-reflect{padding:36px 4px 34px}
+    #dpage.thread-page .dp-reflect .bd{font-size:16px;line-height:2.05}
+    /* 最后那个问题是这一段的视觉重心 */
+    #dpage.thread-page .thread-close .dp-reflect .bd p:first-child{
+      font-family:var(--dp-serif);font-size:19px;line-height:1.9;color:#22233a
+    }
+    #dpage.thread-page .thread-close .post{margin-top:26px}
+
+    /* —— 10. 最后的出口:直排,不再把长按钮挤在右边 —— */
+    #dpage.thread-page .thread-return{
+      display:block;text-align:center;padding-top:8px
+    }
+    #dpage.thread-page .thread-return .say{display:block;margin-bottom:22px}
+    #dpage.thread-page .thread-return .lb-d{display:none}
+    #dpage.thread-page .thread-return .dp-cta{
+      display:inline-flex;white-space:nowrap;min-height:44px;align-items:center
+    }
+    #dpage.thread-page .thread-return .say-m{
+      display:block;margin-top:18px;
+      font-family:var(--dp-sans);font-weight:300;
+      font-size:12.5px;line-height:1.9;letter-spacing:.06em;color:rgba(129,118,173,.8)
+    }
   }
   /* 极窄的萤幕:装饰插画让位给文字(内容本身永远不隐藏) */
   @media(max-width:359px){
@@ -7153,6 +7294,19 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
           "Put side by side, a few things begin to surface.") + "</p>" +
       '<span class="st" aria-hidden="true">✦</span></div>';
   }
+  /* —— 手机版的「这一次会经过几段」——————————————————————
+     只是一个很小的编辑式记号:不吸顶、不可点、不随卷动变化,也不是进度条。
+     段数取自这份解读自己有几段,不写死。桌机完全不显示(.mob-only)。 */
+  function dpThreadMap(n) {
+    if (!n) return "";
+    let row = "";
+    for (let i = 0; i < n; i++)
+      row += (i ? '<span class="ln"></span>' : "") +
+        '<span class="dot' + (i ? "" : " on") + '">' + (i ? "" : "✦") + "</span>";
+    return '<div class="thread-map mob-only"><span class="tx">' +
+      esc0(dpT("这一次，我们会经过 " + n + " 个片段", "This thread has " + n + " parts")) +
+      '</span><span class="row" aria-hidden="true">' + row + "</span></div>";
+  }
   function dpThreadChapters(steps, pv) {
     return '<div class="dp-start thread-chapters"><div class="dp-start-hd">' +
       '<span class="ic" aria-hidden="true">✦</span>' +
@@ -7192,6 +7346,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       h += '<div class="thread-open"><div class="dp-quote"><span class="q">“</span>' +
         esc0(data.tagline) + "</div>" +
         '<span class="st" aria-hidden="true">✦</span></div>';
+    h += dpThreadMap((data.sections || []).length);
     h += '<div class="thread-trail">' + dpThreadLine();
     h += (data.sections || []).map(function (sc, si) {
       const k = favKey(favSource, sc.title || "", sc.body || "");
@@ -7216,6 +7371,8 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
         '<span class="tx">' + dpT("看看它留下了什么", "See what it left behind") + '</span>' +
         '<span class="cv" aria-hidden="true">↓</span></button></div>' +
         '<div class="ch-full" id="full-' + si + '">' +
+        '<span class="ch-layer mob-only" aria-hidden="true">✦ ' +
+        esc0(dpT("更深一点", "A little deeper")) + '</span>' +
         '<div class="dp-prose" data-saveable data-source="' + esc0(favSource) +
         '" data-source-type="' + esc0(favType) +
         '" data-section="' + esc0(sc.title || "") + '">' + dpPara(sc.body) + "</div>" +
@@ -7304,10 +7461,24 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       dpT("这只是连线问题，不需要重新输入任何资料。", "This is only a connection issue; nothing needs to be re-entered.") + "</span><br>" +
       '<button class="dp-cta" style="margin-top:16px" id="' + retryId + '">' + dpT("再试一次", "Try again") + "</button></div>";
   }
-  function dpReturnFoot() {
-    return '<div class="dp-return"><span class="say">' +
+  /* threadTail:只有「属于我的生命脉络」这一页会传 true。
+     不传时产生的 HTML 与修改前逐字相同 —— 九个主题页与三十道探索题一个字元都没变。
+     传 true 时只是多挂两个 .mob-only 的节点:桌机 display:none,手机才换上另一组文案。
+     连结与目的地(LANDING_TOPICS)两边完全一样,没有任何路由改动。 */
+  function dpReturnFoot(threadTail) {
+    const label = dpT("返回主题列表", "Back to topics");
+    const cta = threadTail
+      ? '<span class="lb-d">' + label + '</span><span class="lb-m mob-only">' +
+        esc0(dpT("回到九个主题 ✦", "Back to the nine ✦")) + "</span>"
+      : label;
+    const hint = threadTail
+      ? '<span class="say-m mob-only">' +
+        esc0(dpT("看看还有哪些部分，正在等待你发现。",
+                 "See which parts are still waiting to be found.")) + "</span>"
+      : "";
+    return '<div class="dp-return' + (threadTail ? " thread-return" : "") + '"><span class="say">' +
       dpT("你不是来寻找答案,\n而是来重新看见自己。", "You are not here for answers —\nyou are here to see yourself again.").replace(/\n/g, "<br>") +
-      '</span><a class="dp-cta" href="' + LANDING_TOPICS + '">' + dpT("返回主题列表", "Back to topics") + "</a></div>";
+      '</span><a class="dp-cta" href="' + LANDING_TOPICS + '">' + cta + "</a>" + hint + "</div>";
   }
 
   // ---------- 页面:九大主题 ----------
@@ -8390,7 +8561,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       const done = threadReadCount();
       if (saved) {
         body = dpThreadHtml(saved, dpT("属于我的生命脉络", "The Pattern of Your Life"), mapTab, "life_thread");
-        foot = dpReturnFoot();
+        foot = dpReturnFoot(true);   // 只有这一页:手机版换一组文案(桌机与其他页不受影响)
         ensureThreadPreviews(c, saved);
       }
       else if (mapBusy) body = dpLoading(dpT("正在把九个主题收束成一条线…", "Drawing the nine together…"));
@@ -8586,6 +8757,28 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
           card.addEventListener("click", function () {
             if (cur === i) close(); else open(i);
           });
+        });
+      })();
+
+      /* —— 长文的呼吸(只在手机)——————————————————————————
+         把「本来就自成一句的短段落」标成引句,让展开后的正文不是五段一样密的字。
+         这里只做一件事:挂一个 class。
+           · 不改写、不搬动、不隐藏、不缩短任何一个字
+           · 判断依据是这一段自己的形状(整段被「」包起来,或本来就是一句短句),
+             不是「我觉得哪一句重要」—— 没有合乎条件的段落就什么都不做
+           · 每一章最多一句;第一段与最后一段不选(那两段要留在原本的节奏里)
+         桌机没有对应的样式,所以就算 class 留着也不会有任何视觉变化。 */
+      (function () {
+        const mq = window.matchMedia && window.matchMedia("(max-width:767px)");
+        if (!mq || !mq.matches) return;
+        host.querySelectorAll(".thread-ch .ch-full .dp-prose").forEach(function (prose) {
+          const ps = Array.prototype.slice.call(prose.querySelectorAll("p"));
+          if (ps.length < 3) return;
+          for (let i = 1; i < ps.length - 1; i++) {
+            const t = (ps[i].textContent || "").trim();
+            const n = t.replace(/[，。！？；：、（）「」“”\s]/g, "").length;
+            if (/^[「“]/.test(t) || (n >= 8 && n <= 30)) { ps[i].classList.add("pq"); break; }
+          }
         });
       })();
 
