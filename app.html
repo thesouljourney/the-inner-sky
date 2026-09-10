@@ -1549,21 +1549,10 @@
     font-size:clamp(12.5px,1.3vw,14px);letter-spacing:.22em;
     color:rgba(242,235,225,.84)
   }
-  /* 一颗细小的金星点 + 两条非常短的细线 —— 长横线的海报感拿掉 */
-  #dpage.thread-page .thread-vow .mk{
-    display:flex;align-items:center;gap:9px;line-height:0;
-    color:rgba(232,211,162,.8);margin-top:clamp(11px,1.3vw,15px)
-  }
-  #dpage.thread-page .thread-vow .mk i{
-    display:block;width:14px;height:1px;
-    background:linear-gradient(90deg,rgba(232,211,162,0),rgba(232,211,162,.55))
-  }
-  #dpage.thread-page .thread-vow .mk i:last-child{
-    background:linear-gradient(270deg,rgba(232,211,162,0),rgba(232,211,162,.55))
-  }
-  /* 九颗星:读过的点亮,还没读的留一点微光。不是进度条,不显示数字。 */
+  /* 九颗星:读过的点亮,还没读的留一点微光。不是进度条,不显示数字。
+     辅助文案下面不再放记号 —— 这段距离由星链自己接住。 */
   #dpage.thread-page .thread-vow .stars{
-    display:block;width:min(268px,64vw);margin:clamp(20px,2.6vw,32px) 0 0
+    display:block;width:min(268px,64vw);margin:clamp(26px,3.2vw,42px) 0 0
   }
   #dpage.thread-page .thread-vow .stars svg{display:block;width:100%;height:auto}
   #dpage.thread-page .thread-vow .b{
@@ -1985,9 +1974,7 @@
     }
     #dpage.thread-page .thread-vow{margin-top:14px}
     #dpage.thread-page .thread-vow .a{font-size:12px;letter-spacing:.16em}
-    #dpage.thread-page .thread-vow .mk{margin-top:10px}
-    #dpage.thread-page .thread-vow .mk i{width:12px}
-    #dpage.thread-page .thread-vow .stars{width:min(232px,72vw);margin-top:16px}
+    #dpage.thread-page .thread-vow .stars{width:min(232px,72vw);margin-top:24px}
     #dpage.thread-page .thread-vow .b{margin-top:30px;gap:2px;letter-spacing:.08em}
     #dpage.thread-page .thread-vow .b1{font-size:17px}
     #dpage.thread-page .thread-vow .b2{font-size:17.5px;letter-spacing:.12em}
@@ -8030,10 +8017,6 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       lead: '<div class="thread-vow">' +
         '<span class="a">' + esc0(dpT("每一次阅读，都会留下一颗星",
                                       "Every reading leaves a star")) + '</span>' +
-        '<span class="mk" aria-hidden="true"><i></i>' +
-        '<svg viewBox="0 0 16 16" width="7" height="7" focusable="false">' +
-        '<path fill="currentColor" d="M8 .6c.31 4.35 2.71 6.75 7.06 7.06-4.35.31-6.75 2.71-7.06 7.06-.31-4.35-2.71-6.75-7.06-7.06C5.29 7.35 7.69 4.95 8 .6Z"/>' +
-        '</svg><i></i></span>' +
         dpVowStars(threadReadCount()) +
         '<span class="b">' +
         '<span class="b1">' + esc0(dpT("直到九颗星", "Until nine stars")) + '</span>' +
