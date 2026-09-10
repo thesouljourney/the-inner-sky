@@ -3644,6 +3644,12 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   const BLUEPRINT_VER = 11;
   // read-chart v11 的 BLUEPRINT_STYLE 版本号;服务端会在回应里回报同一个字串
   const BLUEPRINT_STYLE_ID = "blueprint-writing-1.0";
+
+  /* 阅读预览层版本。与上面两个版本号一样刻意分开:
+     preview 的写法改了,只要重新生成 preview —— 正文(fullContent)不受任何影响,
+     也不会被重新生成。read-chart v12 的 PREVIEW_STYLE_VERSION 与这里同名同值。 */
+  const PREVIEW_VER = 1;
+  const PREVIEW_STYLE_ID = "preview-writing-1.0";
   function blueprintOutdated(saved) {
     return !!saved && (saved.bpVer || 0) < BLUEPRINT_VER;
   }
@@ -3652,17 +3658,24 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
      函式的 GET 不会呼叫模型、也不花钱,一次工作阶段只问一次。
      没升级就完全不动手 —— 不会拿旧 Prompt 生成一份、再盖上新版号,
      也不会每次进页面都白花一次生成费用。函式部署好之后自动生效。 */
-  let bpStylePromise = null;
-  function serverBlueprintStyle() {
-    if (bpStylePromise) return bpStylePromise;
-    if (!SUPABASE_FUNC_URL) return (bpStylePromise = Promise.resolve(""));
-    bpStylePromise = netFetch(SUPABASE_FUNC_URL, {
+  let srvInfoPromise = null;
+  function serverInfo() {
+    if (srvInfoPromise) return srvInfoPromise;
+    if (!SUPABASE_FUNC_URL) return (srvInfoPromise = Promise.resolve(null));
+    srvInfoPromise = netFetch(SUPABASE_FUNC_URL, {
       method: "GET",
       headers: { "Authorization": "Bearer " + SUPABASE_ANON_KEY, "apikey": SUPABASE_ANON_KEY }
     }, PROBE_TIMEOUT).then(function (r) { return r.ok ? r.json() : null; })
-      .then(function (j) { return (j && j.blueprint_style_version) || ""; })
-      .catch(function () { return ""; });
-    return bpStylePromise;
+      .catch(function () { return null; });
+    return srvInfoPromise;
+  }
+  function serverBlueprintStyle() {
+    return serverInfo().then(function (j) { return (j && j.blueprint_style_version) || ""; });
+  }
+  /* 阅读预览层是否已经部署。没部署就完全不呼叫 —— 页面照常显示本地摘录,
+     不会因为服务端还是旧版而反覆送出一定失败的请求。 */
+  function serverPreviewStyle() {
+    return serverInfo().then(function (j) { return (j && j.preview_style_version) || ""; });
   }
 
   // ---------- 九个主题(仅 UI 文案;写作规则与资料调用都在服务端) ----------
@@ -3930,6 +3943,39 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   function fetchQuestion(res, qid, fpSeed, blueprint, topics, answered, chart, forceLang) {
     return askServer("question", withSource({ qid: qid, blueprint: blueprint, topics: topics, answered: answered }, chart, "question", qid, forceLang), res, fpSeed, parseTopic, forceLang);
   }
+
+  /* ---------- 阅读预览:读完正文之后重新写的引子 ----------
+     · 送出的是【已经生成好的整段正文】,不是第一段、不是标题、不是摘要
+     · 服务端不会回写、也不会改动正文;这里拿到的只有 preview 与 keyInsights
+     · 不走 askServer:那一条路会附上星盘与九步定调资料,预览层一概不需要
+     · 指纹 = 正文内容本身的杂凑 → 正文没变就命中服务端快取,不重复呼叫模型 */
+  function previewSeed(items, lang) {
+    return items.map(function (x) {
+      return x.id + "\u0001" + String(x.title || "") + "\u0001" + String(x.body || "");
+    }).join("\u0002") + "\u0003" + lang + "\u0003" + PREVIEW_STYLE_ID + "\u0003v" + PREVIEW_VER;
+  }
+  function fetchPreviews(items, forceLang) {
+    const lang = (forceLang === "zh" || forceLang === "en") ? forceLang : curLang();
+    const list = (items || []).filter(function (x) { return x && x.id && String(x.body || "").length >= 40; });
+    if (!list.length) return Promise.resolve({});
+    // 服务端还没升级到 v12 → 直接放弃,让画面留在本地摘录,不送出注定失败的请求
+    return serverPreviewStyle().then(function (sid) {
+      if (!sid) return {};
+      return fingerprint(previewSeed(list, lang)).then(function (fp) {
+        return callFunc({ kind: "preview", fingerprint: fp, lang: lang, items: list });
+      }).then(function (d) {
+        const out = {};
+        (d && d.previews || []).forEach(function (x) {
+          if (!x || !x.id || !x.preview) return;
+          out[x.id] = {
+            preview: String(x.preview),
+            keyInsights: (Array.isArray(x.keyInsights) ? x.keyInsights : []).map(String).slice(0, 3)
+          };
+        });
+        return out;
+      });
+    });
+  }
   // 只有「这一次要产出英文」时才附上中文源本;中文生成一律原样返回
   function withSource(extra, chart, kind, key, forceLang) {
     const target = (forceLang === "zh" || forceLang === "en") ? forceLang : curLang();
@@ -4083,6 +4129,8 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     TOPICS9: TOPICS9, findTopic: findTopic, DOMAINS: DOMAINS, findQ: findQ,
     parseChapters: parseChapters, parseTopic: parseTopic,
     fetchReading: fetchReading, fetchTopic: fetchTopic, fetchMap: fetchMap, fetchQuestion: fetchQuestion,
+    PREVIEW_VER: PREVIEW_VER, PREVIEW_STYLE_ID: PREVIEW_STYLE_ID,
+    fetchPreviews: fetchPreviews, previewSeed: previewSeed, serverPreviewStyle: serverPreviewStyle,
     chineseSource: chineseSource, hasChinese: hasChinese, guardWriteZh: guardWriteZh,
     renderChapters: renderChapters,
     reviveReading: reviveReading, reviveTopic: reviveTopic, cleanupLegacy: cleanupLegacy,
@@ -6583,6 +6631,70 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   let favFilter = "all", favSortNew = true, favConfirmKey = null;
   let saveTipEl = null, toastEl = null, pendingSel = null;
 
+
+  /* ↓ 以下几组常数原本写在下面的渲染函式旁边,但 render*Page 在冷启动那一刻就会用到它们,
+     写在 applyRoute() 之后会踩进 TDZ、让内页一片空白 —— 所以一起搬到这里宣告。
+     内容一个字元都没有改,只是位置提前。 */
+  const DP_LEADIN = /^(而|但|不过|所以|因此|也就是说|换句话说|同时|另外|其实|这|那|它|他们|如果|当)/;
+
+  let dpFoldSeq = 0;
+
+  /* 每一章右侧那张插画:大小、位置、浓度刻意不一样,页面才有节奏。
+     插画一律是装饰(aria-hidden + 空 alt),不承载任何内容。 */
+  const THREAD_ART = [
+    { src: "assets/life/ch-gate.webp",    cls: "a1" },
+    { src: "assets/life/ch-planets.webp", cls: "a2" },
+    { src: "assets/life/ch-sky.webp",     cls: "a3" },
+    { src: "assets/life/ch-road.webp",    cls: "a4" },
+    { src: "assets/life/ch-clouds.webp",  cls: "a5" }
+  ];
+
+  /* 生命线上的记号:星芒 / 弦月 / 罗盘轮流出现。手写 inline SVG,不进图档。 */
+  const THREAD_NODE = [
+    '<svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true" focusable="false">' +
+      '<path fill="currentColor" d="M8 .6c.31 4.35 2.71 6.75 7.06 7.06-4.35.31-6.75 2.71-7.06 7.06-.31-4.35-2.71-6.75-7.06-7.06C5.29 7.35 7.69 4.95 8 .6Z"/></svg>',
+    '<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false">' +
+      '<path fill="currentColor" d="M6.27 1.32A6.9 6.9 0 1 0 14.46 10.42 6.5 6.5 0 0 1 6.27 1.32Z"/></svg>',
+    '<svg viewBox="0 0 18 18" width="15" height="15" aria-hidden="true" focusable="false">' +
+      '<circle cx="9" cy="9" r="7.2" fill="none" stroke="currentColor" stroke-width=".8" opacity=".5"/>' +
+      '<path fill="currentColor" d="M9 1.6 10.2 7.8 16.4 9l-6.2 1.2L9 16.4 7.8 10.2 1.6 9l6.2-1.2Z"/></svg>'
+  ];
+
+  const VOW_ORB = [
+    ["self", "sun"], ["emotion", "venus"], ["career", "saturn"], ["family", "moon"],
+    ["love", "ringed"], ["partner", "mars"], ["wealth", "jupiter"], ["study", "mercury"],
+    ["body", "uranus"]
+  ];
+  const VOW_DY = [3.2, -5.0, 4.0, -3.2, 5.8, -4.4, 3.4, -5.6, 4.2];
+  const VOW_DX = [0, 3.4, -2.6, 4.2, -3.2, 2.8, -4.0, 3.2, 0];
+
+  // 星座 index(0=白羊)→ 水印插画。用 lonToSign 回传的 idx 取,
+  // 不靠中文字串比对,英文介面切换时同样有效。
+  const SKY_ART = ["aries", "taurus", "gemini", "cancer", "leo", "virgo",
+                   "libra", "scorpio", "sagittarius", "capricorn", "aquarius", "pisces"];
+
+  /* 十二宫的领域名。纯粹是给宫位一个可读的标签,
+     不参与任何计算,也不产生新的占星结论。 */
+  const SKY_FIELD = [
+    ["面对世界的方式", "How you meet the world"],
+    ["价值与安全感", "Value and security"],
+    ["理解与表达", "Understanding and expression"],
+    ["根基与归属", "Roots and belonging"],
+    ["喜欢、创造与表达", "Delight, making and play"],
+    ["日常、责任与照顾", "Daily life, duty and care"],
+    ["与他人建立关系", "Relating to others"],
+    ["深层连接与改变", "Deep bonds and change"],
+    ["视野、信念与探索", "Horizons, belief and search"],
+    ["走向世界与被看见", "Going out and being seen"],
+    ["群体、连接与未来", "Community, connection and what's ahead"],
+    ["内在、独处与潜意识", "Inwardness, solitude and the unseen"]
+  ];
+
+  /* 阅读预览:同一时间只跑一次;这一轮工作阶段试过而没有结果的星盘记在 pvSkip,
+     不重试 —— 否则每一次重画页面都会再送一次生成请求。 */
+  let pvBusy = false;
+  const pvSkip = {};
+
   window.addEventListener("hashchange", applyRoute);
   applyRoute();   // 冷启动带路由 hash 时立即渲染(登录后 applyDeepLink 会再刷新一次)
 
@@ -6758,13 +6870,18 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
      按实际内容量给,不写死上限 —— 再长的段落也不会被截断。
      ============================================================ */
   /* ============================================================
-     预览与重点:从使用者自己那份解读里「取」出来的,不是另外生成的摘要
+     预览与重点:读完整段正文之后【重新写】的阅读入口
      ------------------------------------------------------------
-     一个字都不会新写,也不会写回资料库 ——
-       preview   = 这一段的第一句
-       keys      = 之后每一段的第一句(段落的主题句),
-                   太短 / 太长 / 以连接词开头的跳过
-     完整原文永远原样保留在 .ch-full / .ch-src 里,展开就读得到。
+     正式来源是服务端的阅读预览层(read-chart kind="preview"):
+       它拿到的是这个人自己那一段【完整】正文,读懂之后重新写成
+         preview     = 2–4 句、让人先感受到一点自己的引子
+         keyInsights = 1–3 条真正重要的洞察点
+       所以 preview 既不是截断、也不是摘要、更不是抽出来的原句。
+     它只在正文没有预览时才需要生成一次,之后随星盘资料一起存下来。
+
+     下面的 dpDerive 只是【回落】:服务端还没部署、这次生成失败、
+     或使用者正在等待时,先摘录原文里一个自然的停顿,不让版面开天窗。
+     完整原文永远原样保留在 .ch-full / .ch-src 里,一个字都没有被换掉。
      ============================================================ */
   function dpSents(t) {
     const out = [];
@@ -6776,7 +6893,6 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     if (cur.trim()) out.push(cur.trim());
     return out.filter(Boolean);
   }
-  const DP_LEADIN = /^(而|但|不过|所以|因此|也就是说|换句话说|同时|另外|其实|这|那|它|他们|如果|当)/;
   function dpDerive(body) {
     const paras = String(body || "").split(/\n\s*\n|\n/)
       .map(function (t) { return t.trim(); }).filter(Boolean);
@@ -6807,15 +6923,29 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     });
     return { preview: preview, keys: keys };
   }
-  /* 卡片上那一段引子的来源。优先用生成端给的字段(目前的 API 还没有这两个,
-     所以实际上一定走 else)—— 哪一天同一次生成里补上了,这里不必再改。
-     绝对不在前端「写」出任何心理观察:没有字段就只做摘录。 */
-  function dpLead(o) {
-    const t = String((o && (o.insightTeaser || o.teaser)) || "").trim();
+  /* 卡片与章节上那一段引子的来源,依序:
+       1. gen —— 阅读预览层读完整段正文之后写的 preview / keyInsights(正式来源)
+       2. 生成端在同一次生成里顺手给的字段(有就用,没有也不勉强)
+       3. dpDerive —— 本地摘录(回落,只在前两者都没有时出现)
+     前端绝对不会自己「写」出任何心理观察:没有生成结果就只做摘录。 */
+  function dpLead(o, gen) {
     const q = String((o && (o.reflectionQuestion || o.prompt)) || "").trim();
+    const g = String((gen && gen.preview) || "").trim();
+    if (g) return {
+      preview: g,
+      keys: (gen && Array.isArray(gen.keyInsights) ? gen.keyInsights : []).slice(0, 3),
+      q: q, authored: true
+    };
+    const t = String((o && (o.insightTeaser || o.teaser)) || "").trim();
     if (t) return { preview: t, keys: [], q: q, authored: true };
     const d = dpDerive(o && o.body);
     return { preview: d.preview, keys: d.keys, q: q, authored: false };
+  }
+  /* 这一份解读自己带着的预览。ver 对不上就当作没有(回落到摘录),
+     不会拿旧写法的 preview 硬套在新的写法上。 */
+  function dpPvMap(data) {
+    const p = data && data.previews;
+    return (p && p.ver === window.Reading.PREVIEW_VER && p.map) ? p.map : {};
   }
   function dpKeysHtml(keys) {
     if (!keys.length) return "";
@@ -6824,7 +6954,6 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     }).join("") + "</ul>";
   }
 
-  let dpFoldSeq = 0;
   function dpMakeFoldable(host, keep) {
     if (!host || host.dataset.folded) return;
     const ps = Array.prototype.filter.call(host.children, function (n) { return n.tagName === "P"; });
@@ -6938,25 +7067,6 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
      排,内容宽度 / 标题字级 / 分隔线 / 段距 / 值得记住 / 留给你的思考
      全部是同一份 component 与同一套 CSS,手机版自然也跟着一致。
      tab 只用来决定进页后卷到哪一段(#/map/<i> 的深链仍然有效)。 */
-  /* 每一章右侧那张插画:大小、位置、浓度刻意不一样,页面才有节奏。
-     插画一律是装饰(aria-hidden + 空 alt),不承载任何内容。 */
-  const THREAD_ART = [
-    { src: "assets/life/ch-gate.webp",    cls: "a1" },
-    { src: "assets/life/ch-planets.webp", cls: "a2" },
-    { src: "assets/life/ch-sky.webp",     cls: "a3" },
-    { src: "assets/life/ch-road.webp",    cls: "a4" },
-    { src: "assets/life/ch-clouds.webp",  cls: "a5" }
-  ];
-  /* 生命线上的记号:星芒 / 弦月 / 罗盘轮流出现。手写 inline SVG,不进图档。 */
-  const THREAD_NODE = [
-    '<svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true" focusable="false">' +
-      '<path fill="currentColor" d="M8 .6c.31 4.35 2.71 6.75 7.06 7.06-4.35.31-6.75 2.71-7.06 7.06-.31-4.35-2.71-6.75-7.06-7.06C5.29 7.35 7.69 4.95 8 .6Z"/></svg>',
-    '<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false">' +
-      '<path fill="currentColor" d="M6.27 1.32A6.9 6.9 0 1 0 14.46 10.42 6.5 6.5 0 0 1 6.27 1.32Z"/></svg>',
-    '<svg viewBox="0 0 18 18" width="15" height="15" aria-hidden="true" focusable="false">' +
-      '<circle cx="9" cy="9" r="7.2" fill="none" stroke="currentColor" stroke-width=".8" opacity=".5"/>' +
-      '<path fill="currentColor" d="M9 1.6 10.2 7.8 16.4 9l-6.2 1.2L9 16.4 7.8 10.2 1.6 9l6.2-1.2Z"/></svg>'
-  ];
   /* 生命线本体:一条极细、微微弯曲的路径。viewBox 被拉伸(preserveAspectRatio=none),
      所以不管页面多长都只是一条柔和的线,不会变成硬邦邦的时间轴。 */
   /* Hero 里的九颗星:沿着一条很浅的弧排开,像一小段星座,不是进度条。
@@ -6970,13 +7080,6 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
      不放灰色占位、不放半透明版本。要的是「读完一个,才浮出一颗」。
      位置是写死的(VOW_DX / VOW_DY),所以后来出现的星球会落在自己那一格,
      不会因为别人先出现就被挤到别的地方。 */
-  const VOW_ORB = [
-    ["self", "sun"], ["emotion", "venus"], ["career", "saturn"], ["family", "moon"],
-    ["love", "ringed"], ["partner", "mars"], ["wealth", "jupiter"], ["study", "mercury"],
-    ["body", "uranus"]
-  ];
-  const VOW_DY = [3.2, -5.0, 4.0, -3.2, 5.8, -4.4, 3.4, -5.6, 4.2];
-  const VOW_DX = [0, 3.4, -2.6, 4.2, -3.2, 2.8, -4.0, 3.2, 0];
   function dpVowStars(done) {
     const read = themeReadStatus();
     const n = VOW_ORB.length, w = 340, pad = 28, r = 11.5;
@@ -7050,7 +7153,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
           "Put side by side, a few things begin to surface.") + "</p>" +
       '<span class="st" aria-hidden="true">✦</span></div>';
   }
-  function dpThreadChapters(steps) {
+  function dpThreadChapters(steps, pv) {
     return '<div class="dp-start thread-chapters"><div class="dp-start-hd">' +
       '<span class="ic" aria-hidden="true">✦</span>' +
       '<span class="tx">' + dpT("从这里开始", "Where To Start") + '</span>' +
@@ -7060,7 +7163,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
           "None of this needs doing at once. Pick the one you can start with today.") + "</p>" +
       '<div class="ch-cards">' +
       steps.map(function (st, i) {
-        const d = dpLead(st);
+        const d = dpLead(st, pv && pv["a" + i]);
         /* 每张卡后面都跟着一个空的展开位:手机上点开的那一章就长在自己这张卡下面,
            桌机上这一格是 display:none,内容改放整排卡片下方那一个共用阅读区。
            两边共用同一个 box,原文不会在 DOM 里存两份、图也不会载两次。 */
@@ -7081,6 +7184,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   }
   function dpThreadHtml(data, favSource, tab, favType) {
     favType = favType || "";
+    const PV = dpPvMap(data);
     let h = '<div class="thread-flow">';
     /* 开场:把 tagline 放到版心中间,底下一个很小的星记号 —— 像走进故事的第一句。
        生命线从这里之后才开始,所以它移进 .thread-trail 里(原本罩着整页)。 */
@@ -7096,7 +7200,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
         '" data-source-type="' + esc0(favType) +
         '" data-section="' + esc0(sc.title || "") + '" title="' + esc0(T("saveIt")) + '">' + (isFaved(k) ? "★" : "☆") + "</button>";
       const art = THREAD_ART[si % THREAD_ART.length];
-      const d = dpDerive(sc.body);
+      const d = dpLead(sc, PV["s" + si]);
       /* 收起时读到的是引子(第一句 + 几个重点),展开时读到的是完整原文。
          两块永远都在 DOM 里,原文一个字都没有被换掉。 */
       return '<section class="dp-sec thread-ch" id="sec-' + si + '">' +
@@ -7127,7 +7231,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     const spark = '<div class="dp-sparkdiv"><span class="ln"></span>' +
       '<span class="st" aria-hidden="true">✦</span><span class="ln"></span></div>';
     let t = "";
-    if (data.steps && data.steps.length) t += dpThreadChapters(data.steps);
+    if (data.steps && data.steps.length) t += dpThreadChapters(data.steps, PV);
     if (data.question || data.action) t += spark;
     /* 思考区本身完全没动(还是同一个 component、同一段生成内容),
        只在前后各加一句过场 —— 让它读起来像一次落地,不是又一个方框。 */
@@ -7837,28 +7941,8 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
      使用者点开才展开,而不是一次把整份报告摊在眼前。
      星座插画只是水印,真正的主角始终是读数本身。 */
 
-  // 星座 index(0=白羊)→ 水印插画。用 lonToSign 回传的 idx 取,
-  // 不靠中文字串比对,英文介面切换时同样有效。
-  const SKY_ART = ["aries", "taurus", "gemini", "cancer", "leo", "virgo",
-                   "libra", "scorpio", "sagittarius", "capricorn", "aquarius", "pisces"];
   function skyArtSrc(idx) { return "assets/signs/art/" + SKY_ART[((idx % 12) + 12) % 12] + ".webp"; }
 
-  /* 十二宫的领域名。纯粹是给宫位一个可读的标签,
-     不参与任何计算,也不产生新的占星结论。 */
-  const SKY_FIELD = [
-    ["面对世界的方式", "How you meet the world"],
-    ["价值与安全感", "Value and security"],
-    ["理解与表达", "Understanding and expression"],
-    ["根基与归属", "Roots and belonging"],
-    ["喜欢、创造与表达", "Delight, making and play"],
-    ["日常、责任与照顾", "Daily life, duty and care"],
-    ["与他人建立关系", "Relating to others"],
-    ["深层连接与改变", "Deep bonds and change"],
-    ["视野、信念与探索", "Horizons, belief and search"],
-    ["走向世界与被看见", "Going out and being seen"],
-    ["群体、连接与未来", "Community, connection and what's ahead"],
-    ["内在、独处与潜意识", "Inwardness, solitude and the unseen"]
-  ];
 
   // 收起 / 展开的按钮:同一个区段里长出来,不开 modal、不换页
   function skyExpandBtn(boxId, openTx, closeTx) {
@@ -8249,6 +8333,53 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     if (fw && curResult) drawInnerSkyWheel(fw, curResult);
   }
 
+  /* ---------- 阅读预览:读完正文之后重新生成一次,之后就一直用存下来的 ----------
+     · 只在这一份解读还没有预览(或预览版本过期)时呼叫一次
+     · 生成结果存进 lifemap 物件本身 → 随既有的 Cloud.updateChart 一起落库,
+       重新整理、换装置都不会再呼叫一次
+     · 正文重新生成时整个 lifemap 物件会被换掉,预览自然跟着消失并重生成,
+       不会出现「预览讲的是旧正文」这种事
+     · 失败 / 服务端还没部署 → 什么都不做,画面维持本地摘录 */
+  function threadPvItems(lm) {
+    const items = [];
+    (lm.sections || []).forEach(function (sc, i) {
+      items.push({ id: "s" + i, kind: "section", title: sc.title || "", body: String(sc.body || "") });
+    });
+    (lm.steps || []).forEach(function (st, i) {
+      items.push({ id: "a" + i, kind: "step", title: st.title || "", body: String(st.body || "") });
+    });
+    return items;
+  }
+  function ensureThreadPreviews(c, lm) {
+    if (!c || !lm || pvBusy) return;
+    if (!window.Reading.hasSupabase()) return;
+    const skipKey = c.id + "|" + window.Reading.LK("lifemap");
+    if (pvSkip[skipKey]) return;
+    const cur = lm.previews;
+    if (cur && cur.ver === window.Reading.PREVIEW_VER && cur.map && Object.keys(cur.map).length) return;
+    const items = threadPvItems(lm);
+    if (!items.length) return;
+    pvBusy = true;
+    window.Reading.fetchPreviews(items).then(function (map) {
+      pvBusy = false;
+      if (!map || !Object.keys(map).length) { pvSkip[skipKey] = true; return; }
+      const live = activeChart();
+      if (!live || live.id !== c.id) return;
+      const saved = window.Reading.reviveTopic(live[window.Reading.LK("lifemap")]);
+      // 这段时间正文被重新生成过 → 这批预览已经不是它的了,丢掉
+      if (!saved || String((saved.sections || [])[0] && saved.sections[0].body || "") !==
+                    String((lm.sections || [])[0] && lm.sections[0].body || "")) return;
+      saved.previews = {
+        ver: window.Reading.PREVIEW_VER,
+        styleId: window.Reading.PREVIEW_STYLE_ID,
+        ts: new Date().toISOString().slice(0, 10),
+        map: map
+      };
+      window.Cloud.updateChart(live).catch(function () { });
+      if (location.hash.indexOf("#/map") === 0) routeRefresh();
+    }).catch(function () { pvBusy = false; pvSkip[skipKey] = true; });
+  }
+
   // ---------- 页面:人生探索地图 ----------
   function renderMapPage() {
     const c = activeChart();
@@ -8257,7 +8388,11 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     else {
       const saved = window.Reading.reviveTopic(c[window.Reading.LK("lifemap")]);
       const done = threadReadCount();
-      if (saved) { body = dpThreadHtml(saved, dpT("属于我的生命脉络", "The Pattern of Your Life"), mapTab, "life_thread"); foot = dpReturnFoot(); }
+      if (saved) {
+        body = dpThreadHtml(saved, dpT("属于我的生命脉络", "The Pattern of Your Life"), mapTab, "life_thread");
+        foot = dpReturnFoot();
+        ensureThreadPreviews(c, saved);
+      }
       else if (mapBusy) body = dpLoading(dpT("正在把九个主题收束成一条线…", "Drawing the nine together…"));
       else if (mapErr) body = dpError(mapErr, "dpRetryM");
       else if (done < THREAD_GATE) {
