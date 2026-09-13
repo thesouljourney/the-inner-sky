@@ -412,6 +412,95 @@ function testThreadMobileScope() {
     js.slice(0, js.indexOf('classList.add("pq")')).indexOf("innerHTML =") < 0, true);
 }
 
+/* ---------- 12. 我的内在指南:只准新增,不准动到既有的东西 ----------
+   这一轮是纯增量。守四件事:
+     1. 下拉选单的顺序与位置正确,而且既有五项一个字都没改
+     2. 新页面的样式全部锁在 .compass-page 底下,不外溢
+     3. 页面上不准写死任何「属于某个人的答案」—— 一律走 window.Compass
+     4. 路由只是多一条,既有路由的写法没有被动过 */
+function testInnerCompass() {
+  const fs = require("fs");
+  const html = fs.readFileSync(path.join(__dirname, "..", "app.html"), "utf8");
+
+  // —— 1. 下拉选单 ——
+  const nav = (function () {
+    const i = html.indexOf("function dpNavItems()");
+    return i < 0 ? "" : html.slice(i, html.indexOf("\n  }\n", i));
+  })();
+  const order = (nav.match(/dpT\("([^"]+)"/g) || []).map(function (x) { return x.slice(5, -1); });
+  checkEq("[compass] 选单顺序正确",
+    order.join(" / "),
+    "首页 / 探索主题 / 我的生命蓝图 / 我的星空 / 属于我的生命脉络 / 我的内在指南 / 我的收藏");
+  // 既有五项的 href 与出现位置一个字都不能变
+  [["我的生命蓝图", "#/reading", "both"], ["我的星空", "#/my-sky", "both"],
+   ["属于我的生命脉络", "#/map", "both"], ["我的收藏", "#/favorites", "both"]].forEach(function (row) {
+    const re = new RegExp('dpT\\("' + row[0] + '"[^\\]]*"' + row[1].replace("/", "\\/") + '"[^\\]]*"' + row[2] + '"');
+    checkEq("[compass] 既有项目未被改动:" + row[0], re.test(nav), true);
+  });
+  // 新项目只进下拉选单(menu),不进 Desktop 横向导航列
+  checkEq("[compass] 新项目只进下拉选单,不动横向导航列",
+    /dpT\("我的内在指南"[^\]]*"#\/compass"[^\]]*"menu"/.test(nav), true);
+
+  // —— 2. 路由 ——
+  checkEq("[compass] 路由已登记", html.indexOf('if (h === "#/compass") return { k: "compass" };') > 0, true);
+  checkEq("[compass] 分派已登记", html.indexOf('else if (r.k === "compass") renderCompassPage();') > 0, true);
+  // 既有路由一条都没被动过
+  ['if (h === "#/my-sky") return { k: "mysky" };',
+   'if (h === "#/favorites") return { k: "favorites" };',
+   'if (h === "#/settings") return { k: "settings" };',
+   'if (h === "#/map") return { k: "map" };'].forEach(function (line) {
+    checkEq("[compass] 既有路由未被改动:" + line.slice(13, 24), html.indexOf(line) > 0, true);
+  });
+
+  // —— 3. 样式作用域 ——
+  const css = (function () {
+    const i = html.indexOf("我的内在指南(#/compass)—— 新增页面的样式");
+    const j = html.indexOf("/* 划词收藏:轻盈的浮动动作", i);
+    return i < 0 || j < 0 ? "" : html.slice(i, j);
+  })();
+  checkEq("[compass] 找得到这一页的样式区块", css.length > 2000, true);
+  const leaks = [];
+  (css.match(/^\s*#dpage(?!\.compass-page)[^{]*\{/gm) || []).forEach(function (sel) {
+    leaks.push(sel.trim());
+  });
+  checkEq("[compass] 每一条规则都带 .compass-page" + (leaks.length ? ":" + leaks.slice(0, 3).join(" ") : ""),
+    leaks.length, 0);
+
+  // —— 4. 内容边界:页面不得写死任何「属于某个人的答案」——
+  const page = (function () {
+    const i = html.indexOf("页面:我的内在指南(#/compass)");
+    const j = html.indexOf("function renderFavoritesPage()", i);
+    return i < 0 || j < 0 ? "" : html.slice(i, j);
+  })();
+  checkEq("[compass] 找得到页面实作", page.length > 2000, true);
+  checkEq("[compass] 四个方向的内容来自 Compass 模组,不是写死在页面里",
+    /window\.Compass\.directions\(/.test(page) && /window\.Compass\.reminders\(/.test(page) &&
+    /window\.Compass\.question\(/.test(page), true);
+  checkEq("[compass] 还没接上生成逻辑时会标示「示例」",
+    /compassStub\(/.test(page) && /示例 · 尚未接上你的星盘/.test(page), true);
+
+  // Compass 模组本身:placeholder 边界要说得出自己是 placeholder
+  const mod = (function () {
+    const i = html.indexOf("我的内在指南 · 资料层与储存层(Compass)");
+    const j = html.indexOf("window.Compass = {", i);
+    return i < 0 || j < 0 ? "" : html.slice(i, j);
+  })();
+  checkEq("[compass] 生成接点存在且目前回传 null",
+    /function buildFromChart\(_chart\)\s*\{\s*return null;/.test(mod), true);
+  checkEq("[compass] 没有生成结果时一律标为 placeholder",
+    (mod.match(/source:\s*"placeholder"/g) || []).length >= 3, true);
+  checkEq("[compass] 储存层是可替换的三个方法",
+    /list:\s*function/.test(mod) && /add:\s*function/.test(mod) && /remove:\s*function/.test(mod), true);
+
+  // —— 5. 这一轮不准新增任何生成请求 ——
+  checkEq("[compass] 页面没有呼叫 Edge Function / Claude",
+    !/callFunc\(|read-chart|anthropic/.test(page + mod), true);
+
+  // —— 6. 下一阶段要什么,必须写下来 ——
+  const doc = path.join(__dirname, "..", "docs", "COMPASS-NEXT-STEPS.md");
+  checkEq("[compass] 下一阶段的资料库说明存在", fs.existsSync(doc), true);
+}
+
 /* ---------- 跑 ---------- */
 function main() {
   testTimezones();
@@ -424,6 +513,7 @@ function main() {
   testDeterminism();
   testReadingPreview();
   testThreadMobileScope();
+  testInnerCompass();
   return testPlaces().then(function () {
     console.log("\n对照来源:" + REF.reference);
     console.log("设置:" + JSON.stringify(REF.settings));

@@ -2387,6 +2387,335 @@
     #dpage.thread-page .rise{opacity:1;transform:none;transition:none}
   }
 
+  /* ============================================================
+     我的内在指南(#/compass)—— 新增页面的样式
+     ------------------------------------------------------------
+     每一条规则都带 .compass-page:这一页与其他页共用 dpScaffold /
+     dp-cta / dp-foot,所以一条都不能外溢。
+     颜色、字体、断点全部沿用 #dpage 既有的 --dp-* 与既有写法。
+     ============================================================ */
+  #dpage.compass-page{--dp-wide:min(1120px,calc(100vw - 96px));background:var(--dp-cream)}
+  @media(max-width:1024px){#dpage.compass-page{--dp-wide:100%}}
+
+  /* —— Hero:沿用既有云天底,只是换一段引导语 —— */
+  #dpage.compass-page .dp-hero{
+    background:
+      linear-gradient(180deg,rgba(9,18,46,.72) 0%,rgba(9,18,46,.3) 44%,rgba(9,18,46,.44) 100%),
+      url(assets/life/hero-sky.webp) left 62% / 148% auto no-repeat,
+      var(--dp-navy);
+    padding-bottom:clamp(60px,8vw,112px)
+  }
+  #dpage.compass-page .dp-hero .dp-stars i{opacity:calc(var(--o,.5) * .6)}
+  #dpage.compass-page .dp-hero::after{
+    content:"";position:absolute;left:0;right:0;bottom:0;height:clamp(70px,10vw,130px);
+    background:linear-gradient(180deg,rgba(248,242,237,0),var(--dp-cream));pointer-events:none
+  }
+  /* Hero 置中(与生命脉络那一页同一个做法),文字在云上要读得清楚 */
+  #dpage.compass-page .dp-hero-grid{text-align:center;justify-items:center}
+  #dpage.compass-page .dp-hero-grid > div{max-width:min(100%,var(--dp-text))}
+  #dpage.compass-page h1.dp-title{
+    letter-spacing:.06em;text-shadow:0 2px 18px rgba(9,18,46,.55)
+  }
+  #dpage.compass-page .dp-sub{
+    font-family:var(--dp-display);font-style:italic;letter-spacing:.06em;
+    color:rgba(232,211,162,.94);max-width:none;margin:0 auto;
+    text-shadow:0 1px 14px rgba(9,18,46,.5)
+  }
+  #dpage.compass-page .cp-intro{
+    margin:clamp(22px,3vw,34px) auto 0;max-width:min(100%,30em);text-align:center;
+    font-family:var(--dp-serif);font-weight:300;color:rgba(250,246,242,.96);
+    font-size:clamp(15px,1.7vw,17px);line-height:2.15;letter-spacing:.02em;
+    text-shadow:0 1px 16px rgba(9,18,46,.6)
+  }
+  #dpage.compass-page .cp-intro .p2{display:block;margin-top:18px;color:rgba(250,246,242,.82)}
+
+  /* —— 版心与章节节奏 —— */
+  #dpage.compass-page .dp-body{padding-top:clamp(30px,4vw,54px)}
+  #dpage.compass-page .cp-flow{max-width:min(100%,var(--dp-wide));margin:0 auto}
+  #dpage.compass-page .cp-sec{margin:0 0 clamp(64px,8vw,110px);position:relative}
+  #dpage.compass-page .cp-sec:last-child{margin-bottom:clamp(30px,4vw,50px)}
+  #dpage.compass-page .cp-eyebrow{
+    display:flex;align-items:center;gap:10px;justify-content:center
+  }
+  #dpage.compass-page .cp-eyebrow .ic{font-size:11px;color:rgba(154,106,52,.5);line-height:1}
+  #dpage.compass-page .cp-eyebrow .en{
+    font-family:var(--dp-sans);font-weight:300;font-size:11px;
+    letter-spacing:.3em;color:rgba(129,118,173,.8)
+  }
+  #dpage.compass-page .cp-h{
+    margin:14px 0 0;text-align:center;
+    font-family:var(--dp-serif);font-weight:600;
+    font-size:clamp(20px,2.3vw,27px);line-height:1.6;letter-spacing:.02em;color:var(--dp-ink)
+  }
+  /* 示例标记:说清楚这一段还不是按你的星盘生成的 */
+  #dpage.compass-page .cp-stub{
+    display:block;width:fit-content;margin:14px auto 0;
+    padding:5px 13px;border-radius:20px;
+    border:1px dashed rgba(154,140,205,.4);background:rgba(170,160,213,.06);
+    font-family:var(--dp-sans);font-weight:300;font-size:11px;
+    letter-spacing:.14em;color:rgba(119,119,138,.95)
+  }
+
+  /* —— B. 指南盘:桌机四个方向围着盘面,手机改成一列 —— */
+  #dpage.compass-page .cp-rose-wrap{
+    position:relative;margin:clamp(30px,4vw,48px) auto 0;
+    max-width:min(100%,940px)
+  }
+  #dpage.compass-page .cp-rose{
+    display:block;width:clamp(180px,22vw,250px);height:auto;margin:0 auto;opacity:.95
+  }
+  #dpage.compass-page .cp-dirs{display:grid;gap:clamp(18px,2.4vw,28px)}
+  #dpage.compass-page .cp-dir .no{
+    font-family:var(--dp-display);font-weight:400;font-size:20px;line-height:1;
+    letter-spacing:.2em;color:rgba(129,118,173,.62)
+  }
+  #dpage.compass-page .cp-dir .en{
+    display:block;margin-top:10px;
+    font-family:var(--dp-sans);font-weight:300;font-size:10.5px;
+    letter-spacing:.26em;color:rgba(154,106,52,.6)
+  }
+  #dpage.compass-page .cp-dir .zh{
+    display:block;margin-top:7px;
+    font-family:var(--dp-serif);font-weight:600;font-size:clamp(16px,1.8vw,18.5px);
+    line-height:1.6;color:var(--dp-ink)
+  }
+  #dpage.compass-page .cp-dir .tx{
+    margin:10px 0 0;font-family:var(--dp-sans);font-weight:300;
+    font-size:14px;line-height:1.95;color:#5b596e;max-width:26em
+  }
+  #dpage.compass-page .cp-dir.stub .tx{color:rgba(119,119,138,.8);font-style:italic}
+
+  /* —— C. 想留给自己的几句话 —— */
+  #dpage.compass-page .cp-keep-grid{
+    display:grid;gap:clamp(14px,1.8vw,20px);margin-top:clamp(26px,3.4vw,40px);
+    grid-template-columns:repeat(auto-fit,minmax(min(100%,232px),1fr))
+  }
+  #dpage.compass-page .cp-keep-card{
+    background:linear-gradient(180deg,rgba(255,253,250,.86),rgba(252,249,245,.72));
+    border:1px solid rgba(150,130,180,.1);border-radius:18px;
+    padding:clamp(20px,2.4vw,26px);box-shadow:0 8px 26px rgba(60,50,90,.025)
+  }
+  #dpage.compass-page .cp-keep-card .st{font-size:11px;color:rgba(154,106,52,.5);line-height:1}
+  #dpage.compass-page .cp-keep-card .when{
+    display:block;margin-top:13px;
+    font-family:var(--dp-serif);font-weight:600;font-size:15.5px;line-height:1.65;color:var(--dp-ink)
+  }
+  #dpage.compass-page .cp-keep-card .line{
+    margin:11px 0 0;font-family:var(--dp-sans);font-weight:300;
+    font-size:13.5px;line-height:1.95;color:#5b596e
+  }
+  #dpage.compass-page .cp-keep-card.stub .line{color:rgba(119,119,138,.78);font-style:italic}
+
+  /* —— D. 此刻的我 —— */
+  #dpage.compass-page .cp-q{
+    margin:clamp(26px,3.4vw,38px) auto 0;text-align:center;max-width:min(100%,28em);
+    font-family:var(--dp-serif);font-weight:400;
+    font-size:clamp(16px,1.8vw,18.5px);line-height:1.9;color:#33324a
+  }
+  #dpage.compass-page .cp-q2{margin-top:clamp(30px,3.8vw,44px)}
+  #dpage.compass-page .cp-moods{
+    display:flex;flex-wrap:wrap;justify-content:center;gap:9px;
+    margin:clamp(18px,2.2vw,24px) auto 0;max-width:min(100%,640px)
+  }
+  #dpage.compass-page .cp-mood{
+    font-family:var(--dp-sans);font-weight:300;font-size:13px;letter-spacing:.04em;
+    color:#5b596e;cursor:pointer;
+    padding:9px 16px;min-height:38px;border-radius:20px;
+    background:rgba(255,253,250,.7);border:1px solid rgba(150,130,180,.16);
+    transition:border-color .3s ease,color .3s ease,background .3s ease
+  }
+  @media(hover:hover){
+    #dpage.compass-page .cp-mood:hover{border-color:rgba(154,106,52,.3);color:#3d3b55}
+  }
+  #dpage.compass-page .cp-mood.on{
+    color:#3a3455;border-color:rgba(154,140,205,.55);background:rgba(170,160,213,.12)
+  }
+  #dpage.compass-page .cp-mood:focus-visible,
+  #dpage.compass-page .cp-skip:focus-visible{
+    outline:1px solid rgba(129,118,173,.7);outline-offset:3px
+  }
+  #dpage.compass-page .cp-ta{
+    display:block;width:100%;max-width:min(100%,640px);
+    margin:clamp(16px,2vw,22px) auto 0;box-sizing:border-box;
+    padding:16px 18px;border-radius:16px;resize:vertical;
+    background:rgba(255,253,250,.78);border:1px solid rgba(150,130,180,.16);
+    font-family:var(--dp-sans);font-weight:300;font-size:14.5px;line-height:1.95;color:var(--dp-ink)
+  }
+  #dpage.compass-page .cp-ta::placeholder{color:rgba(119,119,138,.7)}
+  #dpage.compass-page .cp-ta:focus{
+    outline:none;border-color:rgba(154,140,205,.5);background:rgba(255,253,250,.95)
+  }
+  #dpage.compass-page .cp-act{
+    display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;
+    margin-top:clamp(18px,2.2vw,24px)
+  }
+  #dpage.compass-page .cp-hint{
+    font-family:var(--dp-sans);font-weight:300;font-size:12.5px;color:rgba(119,119,138,.95)
+  }
+  #dpage.compass-page .cp-skip{
+    background:none;border:none;cursor:pointer;
+    font-family:var(--dp-sans);font-weight:300;font-size:13px;letter-spacing:.1em;
+    color:#7a6fa8;min-height:40px;padding:8px 2px;transition:color .3s ease
+  }
+  #dpage.compass-page .cp-skip:hover{color:#4c4470}
+
+  /* —— E. 今天的问题 —— */
+  #dpage.compass-page .cp-ask-card{
+    position:relative;margin:clamp(26px,3.4vw,40px) auto 0;
+    max-width:min(100%,720px);text-align:center;
+    padding:clamp(30px,4vw,46px) clamp(20px,3vw,40px);border-radius:22px;
+    background:
+      radial-gradient(70% 50% at 50% 0%,rgba(170,160,213,.14),rgba(170,160,213,0) 72%),
+      linear-gradient(180deg,rgba(255,253,250,.9),rgba(252,249,245,.76));
+    border:1px solid rgba(150,130,180,.12)
+  }
+  #dpage.compass-page .cp-ask-card .mk{font-size:12px;color:rgba(154,106,52,.5);line-height:1}
+  #dpage.compass-page .cp-ask-card .qt{
+    margin:16px 0 0;font-family:var(--dp-serif);font-weight:400;
+    font-size:clamp(17px,2.1vw,22px);line-height:2;letter-spacing:.015em;color:var(--dp-ink)
+  }
+  #dpage.compass-page .cp-ask-card.skipped .cp-ta,
+  #dpage.compass-page .cp-ask-card.skipped .cp-act{display:none}
+  #dpage.compass-page .cp-ask-card.skipped::after{
+    content:"☾";display:block;margin-top:22px;font-size:15px;line-height:1;color:rgba(129,118,173,.44)
+  }
+
+  /* —— F. 我的星空记录 —— */
+  #dpage.compass-page .cp-local{
+    margin:14px auto 0;text-align:center;
+    font-family:var(--dp-sans);font-weight:300;font-size:12px;
+    letter-spacing:.06em;color:rgba(119,119,138,.9)
+  }
+  #dpage.compass-page .cp-sky-grid{
+    display:grid;gap:clamp(14px,1.8vw,20px);margin-top:clamp(26px,3.4vw,38px);
+    grid-template-columns:repeat(auto-fit,minmax(min(100%,258px),1fr))
+  }
+  #dpage.compass-page .cp-sky-card{
+    background:rgba(255,253,250,.8);border:1px solid rgba(150,130,180,.1);
+    border-radius:16px;padding:18px 20px 20px
+  }
+  #dpage.compass-page .cp-sky-card .hd{
+    display:flex;align-items:baseline;gap:10px;flex-wrap:wrap
+  }
+  #dpage.compass-page .cp-sky-card .dt{
+    font-family:var(--dp-display);font-size:14px;letter-spacing:.12em;color:rgba(129,118,173,.85)
+  }
+  #dpage.compass-page .cp-sky-card .md{
+    font-family:var(--dp-sans);font-weight:300;font-size:11.5px;letter-spacing:.1em;
+    color:rgba(154,106,52,.75);padding:3px 10px;border-radius:14px;
+    background:rgba(232,211,162,.16)
+  }
+  #dpage.compass-page .cp-sky-card .bd{
+    margin:12px 0 0;font-family:var(--dp-sans);font-weight:300;
+    font-size:13.5px;line-height:1.95;color:#4a4859;
+    display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden
+  }
+  #dpage.compass-page .cp-sky-card .kd{
+    display:block;margin-top:12px;font-family:var(--dp-sans);font-weight:300;
+    font-size:11px;letter-spacing:.14em;color:rgba(129,118,173,.75)
+  }
+  #dpage.compass-page .cp-more{text-align:center;margin-top:clamp(18px,2.2vw,26px)}
+  #dpage.compass-page .cp-empty{
+    text-align:center;margin:clamp(28px,3.6vw,44px) auto 0;max-width:min(100%,30em);
+    padding:clamp(34px,4.4vw,52px) 20px;border-radius:20px;
+    background:radial-gradient(60% 50% at 50% 40%,rgba(170,160,213,.1),rgba(170,160,213,0) 72%)
+  }
+  #dpage.compass-page .cp-empty .st{font-size:14px;color:rgba(154,106,52,.45);line-height:1}
+  #dpage.compass-page .cp-empty p{
+    margin:16px 0 0;font-family:var(--dp-serif);font-weight:400;
+    font-size:clamp(15.5px,1.8vw,17.5px);line-height:1.95;color:#3f3d58
+  }
+  #dpage.compass-page .cp-empty .sub{
+    display:block;margin-top:12px;font-family:var(--dp-sans);font-weight:300;
+    font-size:12.5px;letter-spacing:.06em;color:rgba(119,119,138,.95)
+  }
+
+  /* ============================================================
+     ≥1025px:四个方向围着指南盘。手机与平板走下面那一段,互不影响。
+     ============================================================ */
+  @media(min-width:1025px){
+    #dpage.compass-page .cp-rose-wrap{
+      display:grid;align-items:center;justify-items:center;
+      grid-template-columns:1fr auto 1fr;gap:clamp(24px,3vw,46px)
+    }
+    #dpage.compass-page .cp-rose{grid-column:2;grid-row:1}
+    #dpage.compass-page .cp-dirs{display:contents}
+    #dpage.compass-page .cp-dir{max-width:300px}
+    #dpage.compass-page .cp-dir.d1{grid-column:1;grid-row:1;text-align:right;justify-self:end}
+    #dpage.compass-page .cp-dir.d1 .tx{margin-left:auto}
+    #dpage.compass-page .cp-dir.d3{grid-column:1;grid-row:2;text-align:right;justify-self:end}
+    #dpage.compass-page .cp-dir.d3 .tx{margin-left:auto}
+    #dpage.compass-page .cp-dir.d2{grid-column:3;grid-row:1}
+    #dpage.compass-page .cp-dir.d4{grid-column:3;grid-row:2}
+    #dpage.compass-page .cp-rose-wrap{grid-template-rows:auto auto}
+    #dpage.compass-page .cp-rose{grid-row:1/3}
+  }
+
+  /* ============================================================
+     ≤1024px:一栏。指南盘收在上方,四个方向依序往下排。
+     ============================================================ */
+  @media(max-width:1024px){
+    #dpage.compass-page .cp-dirs{
+      grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));
+      margin-top:clamp(22px,3vw,32px)
+    }
+    #dpage.compass-page .cp-dir{
+      padding-left:16px;border-left:1px solid rgba(154,140,205,.24)
+    }
+  }
+
+  /* ============================================================
+     ≤767px 手机版:不是把桌机缩小 —— 自己一套间距与字级
+     ============================================================ */
+  @media(max-width:767px){
+    #dpage.compass-page .dp-body{padding-left:20px;padding-right:20px}
+    /* 手机上这段引导语正好压在最亮的云带上 —— 中段的遮罩再深一点,
+       字才读得清楚(调的是遮罩,不是把字调亮,云本身没有被盖掉) */
+    #dpage.compass-page .dp-hero{
+      background:
+        linear-gradient(180deg,rgba(9,18,46,.97) 0%,rgba(9,18,46,.72) 18%,
+                               rgba(9,18,46,.5) 52%,rgba(9,18,46,.46) 100%),
+        url(assets/life/hero-sky.webp) left bottom / 215% auto no-repeat,
+        var(--dp-navy);
+      padding-bottom:clamp(48px,14vw,80px)
+    }
+    /* 页尾的返回区块在窄萤幕会把长按钮挤到折行 —— 这一页改成直排置中。
+       .dp-return 是共用元件,所以这条规则锁在 .compass-page 底下,
+       其他页面的页尾一个像素都不受影响。 */
+    #dpage.compass-page .dp-return{display:block;text-align:center}
+    #dpage.compass-page .dp-return .say{display:block;margin-bottom:20px}
+    #dpage.compass-page .dp-return .dp-cta{
+      display:inline-flex;align-items:center;white-space:nowrap;min-height:44px
+    }
+    #dpage.compass-page h1.dp-title{font-size:26px;line-height:1.5}
+    #dpage.compass-page .cp-intro{font-size:15px;line-height:2.1}
+    #dpage.compass-page .cp-sec{margin-bottom:clamp(48px,12vw,72px)}
+    #dpage.compass-page .cp-h{font-size:19.5px}
+    #dpage.compass-page .cp-rose{width:min(58vw,190px)}
+    #dpage.compass-page .cp-dirs{grid-template-columns:1fr;gap:18px}
+    #dpage.compass-page .cp-dir .tx{font-size:14px;line-height:1.92;max-width:none}
+    #dpage.compass-page .cp-keep-grid{grid-template-columns:1fr;gap:12px}
+    #dpage.compass-page .cp-keep-card{padding:20px 18px}
+    /* 心情:窄萤幕上横向滑动,不硬挤成好几行 */
+    #dpage.compass-page .cp-moods{
+      flex-wrap:nowrap;overflow-x:auto;justify-content:flex-start;
+      scrollbar-width:none;-webkit-overflow-scrolling:touch;
+      padding:2px 20px 6px;margin-left:-20px;margin-right:-20px;
+      max-width:none;width:calc(100% + 40px)
+    }
+    #dpage.compass-page .cp-moods::-webkit-scrollbar{display:none}
+    #dpage.compass-page .cp-mood{flex:none;min-height:40px}
+    #dpage.compass-page .cp-ta{max-width:none;font-size:15px;padding:15px 16px}
+    #dpage.compass-page .cp-act{gap:12px}
+    #dpage.compass-page .cp-act .dp-cta{min-height:44px;display:inline-flex;align-items:center}
+    #dpage.compass-page .cp-ask-card{padding:28px 18px;border-radius:20px}
+    #dpage.compass-page .cp-ask-card .qt{font-size:17px;line-height:1.95}
+    /* 记录:手机一定是单栏、由新到旧 */
+    #dpage.compass-page .cp-sky-grid{grid-template-columns:1fr;gap:12px}
+    #dpage.compass-page .cp-sky-card{padding:16px 18px 18px}
+    #dpage.compass-page .cp-empty{padding:34px 16px}
+  }
+
   /* 划词收藏:轻盈的浮动动作,不打断阅读 */
   #dpSaveTip{position:absolute;z-index:90;display:none;align-items:center;gap:6px;
     font-family:"Noto Sans SC","Helvetica Neue",Arial,sans-serif;font-size:12.5px;color:#fff;background:rgba(26,22,52,.94);
@@ -4276,6 +4605,198 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     renderChapters: renderChapters,
     reviveReading: reviveReading, reviveTopic: reviveTopic, cleanupLegacy: cleanupLegacy,
     hasSupabase: function () { return !!(SUPABASE_FUNC_URL && SUPABASE_ANON_KEY); }
+  };
+})();
+</script>
+<script>
+/* ============================================================
+   我的内在指南 · 资料层与储存层(Compass)
+   ------------------------------------------------------------
+   这一支完全独立,不碰任何既有模组:
+     · 不呼叫 Claude、不呼叫 Edge Function、不改星盘计算
+     · 不改 Supabase schema、不写任何既有资料表
+     · 既有的 Reading / Cloud / I18N 一个字都没有动
+
+   它只做两件事:
+
+   1) 内容边界(content boundary)
+      四个方向、几句想留给自己的话、今天的问题 —— 这些未来要按每一位
+      使用者自己的星盘 / 九个主题 / 生命脉络生成。现在还没有生成逻辑,
+      所以这里一律回传 { source:"placeholder", … },画面上会明确标示
+      「示例」。等生成端接上之后,只要让 buildFromChart() 回传
+      { source:"generated", … },版面一个字都不用改。
+
+   2) 储存层(persistence)
+      目前预设存在这台装置的 localStorage,不进资料库 ——
+      production 的资料表还没有 journal schema,这一版刻意不去动它。
+      下一阶段要接资料库时,只需要实作 CompassStore 的同一组方法
+      (list / add / remove)并换掉 Compass.store,页面完全不必改。
+      需要哪些资料表改动,见 docs/COMPASS-NEXT-STEPS.md。
+   ============================================================ */
+(function () {
+  "use strict";
+
+  const T = function (zh, en) {
+    return (window.I18N && window.I18N.lang === "en") ? en : zh;
+  };
+
+  /* ---------- 1. 内容边界 ----------------------------------------
+     四个方向的「问题」本身是版面的一部分(固定不变);
+     每个方向的「答案」才是要按人生成的,现在一律是 placeholder。 */
+  const DIRECTIONS = [
+    { key: "ground", no: "01", en: "What grounds me",  zh: "什么让我安定" },
+    { key: "move",   no: "02", en: "What moves me",    zh: "什么让我前进" },
+    { key: "drain",  no: "03", en: "What drains me",   zh: "什么正在消耗我" },
+    { key: "call",   no: "04", en: "What calls me",    zh: "我正在被什么吸引" }
+  ];
+
+  /* 想留给自己的话:category 是版面,line 是要按人生成的内容 */
+  const REMINDER_KEYS = [
+    { key: "doubt", zh: "当你开始怀疑自己的时候", en: "When you start doubting yourself" },
+    { key: "tired", zh: "当你觉得很累的时候",     en: "When you are tired" },
+    { key: "choose", zh: "当你面对重要选择的时候", en: "When a choice is in front of you" },
+    { key: "lost",  zh: "当你感到迷失的时候",     en: "When you feel lost" }
+  ];
+
+  /* 今天的问题:设计成可轮换。现在是一组示例题库,未来换成按人生成 ——
+     rotate() 只负责「今天给哪一题」,换成生成内容时这段逻辑不用动。 */
+  const QUESTION_POOL = [
+    { zh: "最近有什么事情，\n你其实已经知道答案，\n只是还没有准备好承认？",
+      en: "What have you already answered for yourself,\nand not yet been ready to admit?" },
+    { zh: "如果今天没有人需要你的解释，\n你会先做哪一件事？",
+      en: "If no one needed an explanation from you today,\nwhat would you do first?" },
+    { zh: "有什么是你一直在等，\n但其实可以自己开始的？",
+      en: "What are you waiting for\nthat you could quietly begin yourself?" },
+    { zh: "最近哪一次「算了」，\n其实是你不想再解释了？",
+      en: "Which recent “never mind”\nwas really you deciding not to explain again?" }
+  ];
+
+  /* 今天的第几题:跟着「使用者 + 日期」走,所以同一天回来是同一题,
+     不同的人不会永远看到同一题。未来改成生成内容时,这里就只剩下选题。 */
+  function rotateIndex(len, seedStr) {
+    let h = 5381;
+    const s = String(seedStr || "");
+    for (let i = 0; i < s.length; i++) h = ((h * 33) ^ s.charCodeAt(i)) >>> 0;
+    return len ? h % len : 0;
+  }
+
+  /* 未来的接点:拿这个人的星盘 / 九个主题 / 生命脉络,产出属于他自己的内容。
+     现在什么都还没有 → 一律回传 placeholder,画面据此标示「示例」。 */
+  function buildFromChart(_chart) {
+    return null;   // 还没有生成逻辑
+  }
+
+  function directions(chart) {
+    const gen = buildFromChart(chart);
+    if (gen && gen.directions) return { source: "generated", items: gen.directions };
+    return {
+      source: "placeholder",
+      items: DIRECTIONS.map(function (d) {
+        return {
+          key: d.key, no: d.no, en: d.en, label: T(d.zh, d.en),
+          text: T("这一格会放上属于你自己的答案，来自你的星盘、九个主题与生命脉络。",
+                  "Your own answer will live here, drawn from your chart, your nine themes and your thread.")
+        };
+      })
+    };
+  }
+
+  function reminders(chart) {
+    const gen = buildFromChart(chart);
+    if (gen && gen.reminders) return { source: "generated", items: gen.reminders };
+    return {
+      source: "placeholder",
+      items: REMINDER_KEYS.map(function (r) {
+        return {
+          key: r.key, when: T(r.zh, r.en),
+          line: T("这里会放一句只写给你的话。",
+                  "A line written only for you will live here.")
+        };
+      })
+    };
+  }
+
+  function question(chart, seed) {
+    const gen = buildFromChart(chart);
+    if (gen && gen.question) return { source: "generated", text: gen.question };
+    const i = rotateIndex(QUESTION_POOL.length, seed);
+    const q = QUESTION_POOL[i];
+    return { source: "placeholder", text: T(q.zh, q.en), index: i, total: QUESTION_POOL.length };
+  }
+
+  /* ---------- 2. 储存层 -------------------------------------------
+     CompassStore 的介面(下一阶段接资料库时照这三个方法实作即可):
+       list(ownerId)          → Promise<Array<Entry>>   由新到旧
+       add(ownerId, entry)    → Promise<Entry>
+       remove(ownerId, id)    → Promise<void>
+     Entry = { id, ts, mood, text, kind }
+       kind: "note"(此刻的我) | "answer"(回答今天的问题)
+
+     目前的实作:localStorage,只在这台装置上。
+     ⚠ 这一版刻意不写进资料库 —— production 还没有 journal schema,
+       需要哪些改动写在 docs/COMPASS-NEXT-STEPS.md,接上之后换掉这一个物件就好。 */
+  const LS_KEY = "inner_sky_compass_v1";
+
+  function readAll() {
+    try { return JSON.parse(localStorage.getItem(LS_KEY) || "{}") || {}; }
+    catch (e) { return {}; }
+  }
+  function writeAll(o) {
+    try { localStorage.setItem(LS_KEY, JSON.stringify(o)); return true; }
+    catch (e) { return false; }
+  }
+  function uid() {
+    if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+    return "c" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  }
+
+  const localStore = {
+    name: "local",
+    list: function (owner) {
+      const all = readAll();
+      const rows = (all[owner || "anon"] || []).slice();
+      rows.sort(function (a, b) { return String(b.ts).localeCompare(String(a.ts)); });
+      return Promise.resolve(rows);
+    },
+    add: function (owner, entry) {
+      const all = readAll();
+      const k = owner || "anon";
+      const row = {
+        id: uid(),
+        ts: new Date().toISOString(),
+        mood: String(entry && entry.mood || ""),
+        text: String(entry && entry.text || ""),
+        kind: (entry && entry.kind) === "answer" ? "answer" : "note"
+      };
+      all[k] = [row].concat(all[k] || []).slice(0, 500);
+      if (!writeAll(all)) return Promise.reject(new Error("storage unavailable"));
+      return Promise.resolve(row);
+    },
+    remove: function (owner, id) {
+      const all = readAll(), k = owner || "anon";
+      all[k] = (all[k] || []).filter(function (r) { return r.id !== id; });
+      writeAll(all);
+      return Promise.resolve();
+    }
+  };
+
+  /* 今天的心情选项(版面的一部分,不是生成内容) */
+  const MOODS = [
+    ["平静", "Calm"], ["有点沉", "Heavy"], ["情绪很多", "A lot of feeling"],
+    ["有点迷失", "A little lost"], ["很有动力", "Driven"], ["正在重新开始", "Starting over"],
+    ["有些期待", "Quietly hopeful"], ["想一个人待着", "Wanting to be alone"]
+  ];
+
+  window.Compass = {
+    DIRECTIONS: DIRECTIONS,
+    MOODS: MOODS,
+    directions: directions,
+    reminders: reminders,
+    question: question,
+    rotateIndex: rotateIndex,
+    buildFromChart: buildFromChart,   // 未来接生成逻辑的唯一入口
+    store: localStore,                // 换成资料库实作时只换这一个
+    storeIsLocalOnly: function () { return window.Compass.store.name === "local"; }
   };
 })();
 </script>
@@ -6529,6 +7050,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     if (h === "#/map") return { k: "map" };
     if ((m = h.match(/^#\/map\/(\d{1,2})$/))) return { k: "map", tab: +m[1] };
     if (h === "#/my-sky") return { k: "mysky" };
+    if (h === "#/compass") return { k: "compass" };
     if (h === "#/favorites") return { k: "favorites" };
     if (h === "#/onboarding") return { k: "onboarding" };
     if (h === "#/settings") return { k: "settings" };
@@ -6745,11 +7267,14 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     $("dpage").classList.toggle("sky-page", r.k === "mysky");
     // 生命脉络是编辑式长文版面(生命线 / 章节号 / 插画位),同样只挂在这一页
     $("dpage").classList.toggle("thread-page", r.k === "map");
+    // 内在指南同样自己一套版面,样式全锁在这个 class 底下
+    $("dpage").classList.toggle("compass-page", r.k === "compass");
     if (r.k === "topic") renderTopicPage(r.id);
     else if (r.k === "q") renderQPage(r.id);
     else if (r.k === "reading") { readingTab = r.tab || 0; renderReadingPage(); }
     else if (r.k === "map") { mapTab = r.tab || 0; renderMapPage(); }
     else if (r.k === "mysky") renderMySkyPage();
+    else if (r.k === "compass") renderCompassPage();
     else if (r.k === "favorites") renderFavoritesPage();
     else if (r.k === "onboarding") renderOnboardingPage();
     else if (r.k === "settings") renderSettingsPage();
@@ -6831,6 +7356,13 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     ["内在、独处与潜意识", "Inwardness, solitude and the unseen"]
   ];
 
+  /* 我的内在指南:页面的 UI 状态。跟其他模块级宣告一样必须写在首次渲染之前,
+     否则冷启动直接带 #/compass 进来会踩进 TDZ。 */
+  let compassMood = "";          // 此刻选中的心情
+  let compassEntries = null;     // 已载入的记录;null = 还没载到
+  let compassAll = false;        // 「查看全部」是否展开
+  let compassBusy = false;
+
   /* 阅读预览:同一时间只跑一次;这一轮工作阶段试过而没有结果的星盘记在 pvSkip,
      不重试 —— 否则每一次重画页面都会再送一次生成请求。 */
   let pvBusy = false;
@@ -6868,6 +7400,8 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       [dpT("我的生命蓝图", "My Blueprint"), "#/reading", "reading", "both"],
       [dpT("我的星空", "My Sky"), "#/my-sky", "mysky", "both"],
       [dpT("属于我的生命脉络", "The Pattern"), "#/map", "map", "both"],
+      /* 只进下拉选单("menu"):Desktop 横向导航列维持原本四项,一个字都没动 */
+      [dpT("我的内在指南", "Inner Compass"), "#/compass", "compass", "menu"],
       [dpT("我的收藏", "Saved"), "#/favorites", "favorites", "both"]
     ];
   }
@@ -7776,6 +8310,271 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   window.addEventListener("scroll", hideSaveTip, { passive: true });
 
   // ---------- 页面:我的收藏(句子星空)----------
+
+  /* ============================================================
+     页面:我的内在指南(#/compass)
+     ------------------------------------------------------------
+     新增页面,不动任何既有页面。沿用既有的:
+       dpScaffold / dpTopbarHtml / dpFooterHtml / dpStars / dp-cta / dp-card
+       与 #dpage 既有的 --dp-* 设计变数、既有的断点写法。
+     内容分两种,画面上分得很清楚:
+       · 版面文字(标题、问句、心情选项)—— 固定
+       · 属于这个人的答案 —— 走 window.Compass,现在还没有生成逻辑,
+         一律标示「示例」,不会被误认成已经生成好的内容。
+     ============================================================ */
+  function compassOwner() {
+    return window.Cloud.userId() || "anon";
+  }
+  /* 今天的问题:跟着「使用者 + 日期」轮换 —— 同一天回来是同一题,
+     不同的人不会永远看到同一题。 */
+  function compassSeed() {
+    return compassOwner() + "|" + new Date().toISOString().slice(0, 10);
+  }
+  function compassDate(iso) {
+    const d = new Date(iso);
+    if (isNaN(d)) return String(iso || "").slice(0, 10);
+    const mm = ["01","02","03","04","05","06","07","08","09","10","11","12"][d.getMonth()];
+    return window.I18N.isEN()
+      ? d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+      : d.getFullYear() + "." + mm + "." + ("0" + d.getDate()).slice(-2);
+  }
+  /* 示例标记:这一段还不是按你的星盘生成的 —— 说清楚,不假装 */
+  function compassStub(on) {
+    if (!on) return "";
+    return '<span class="cp-stub">' +
+      esc0(dpT("示例 · 尚未接上你的星盘", "Sample · not yet drawn from your chart")) + "</span>";
+  }
+  function compassEyebrow(zh, en) {
+    return '<div class="cp-eyebrow"><span class="ic" aria-hidden="true">✦</span>' +
+      '<span class="en">' + esc0(en) + "</span></div>" +
+      '<h2 class="cp-h">' + esc0(zh) + "</h2>";
+  }
+
+  // 指南盘:细线、香槟与薰衣草,不是仪表板
+  function compassRoseSvg() {
+    return '<svg class="cp-rose" viewBox="0 0 240 240" aria-hidden="true" focusable="false">' +
+      '<defs><radialGradient id="cpGlow" cx="50%" cy="50%" r="50%">' +
+      '<stop offset="0%" stop-color="#aaa0d5" stop-opacity=".16"/>' +
+      '<stop offset="100%" stop-color="#aaa0d5" stop-opacity="0"/></radialGradient></defs>' +
+      '<circle cx="120" cy="120" r="118" fill="url(#cpGlow)"/>' +
+      '<circle cx="120" cy="120" r="92" fill="none" stroke="rgba(154,140,205,.28)" stroke-width=".9"/>' +
+      '<circle cx="120" cy="120" r="70" fill="none" stroke="rgba(154,106,52,.2)" stroke-width=".7"/>' +
+      '<circle cx="120" cy="120" r="30" fill="none" stroke="rgba(154,140,205,.22)" stroke-width=".7"/>' +
+      '<path d="M120 14v36M120 190v36M14 120h36M190 120h36" stroke="rgba(154,140,205,.34)" stroke-width=".9"/>' +
+      '<path d="M120 52 128 112 120 188 112 112Z" fill="rgba(129,118,173,.42)"/>' +
+      '<path d="M52 120 112 128 188 120 112 112Z" fill="rgba(154,106,52,.26)"/>' +
+      '<circle cx="120" cy="120" r="4.2" fill="rgba(154,106,52,.55)"/>' +
+      '<path fill="rgba(232,211,162,.85)" d="M120 6c.2 3 1.9 4.7 4.9 4.9-3 .2-4.7 1.9-4.9 4.9-.2-3-1.9-4.7-4.9-4.9 3-.2 4.7-1.9 4.9-4.9Z"/>' +
+      "</svg>";
+  }
+
+  function compassDirectionsHtml(chart) {
+    const d = window.Compass.directions(chart);
+    const stub = d.source === "placeholder";
+    return '<section class="cp-sec cp-compass">' +
+      compassEyebrow(dpT("你的内在指南", "Your Inner Compass"), "YOUR INNER COMPASS") +
+      compassStub(stub) +
+      '<div class="cp-rose-wrap">' + compassRoseSvg() +
+      '<div class="cp-dirs">' +
+      d.items.map(function (it, i) {
+        return '<div class="cp-dir d' + (i + 1) + (stub ? " stub" : "") + '">' +
+          '<span class="no">' + esc0(it.no) + "</span>" +
+          '<span class="en">' + esc0(it.en) + "</span>" +
+          '<b class="zh">' + esc0(it.label) + "</b>" +
+          '<p class="tx">' + esc0(it.text) + "</p></div>";
+      }).join("") +
+      "</div></div></section>";
+  }
+
+  function compassRemindersHtml(chart) {
+    const r = window.Compass.reminders(chart);
+    const stub = r.source === "placeholder";
+    return '<section class="cp-sec cp-keep">' +
+      compassEyebrow(dpT("想留给自己的几句话", "Things To Remember"), "THINGS TO REMEMBER") +
+      compassStub(stub) +
+      '<div class="cp-keep-grid">' +
+      r.items.map(function (it) {
+        return '<div class="cp-keep-card' + (stub ? " stub" : "") + '">' +
+          '<span class="st" aria-hidden="true">✦</span>' +
+          '<b class="when">' + esc0(it.when) + "</b>" +
+          '<p class="line">' + esc0(it.line) + "</p></div>";
+      }).join("") + "</div></section>";
+  }
+
+  function compassNowHtml() {
+    return '<section class="cp-sec cp-now">' +
+      compassEyebrow(dpT("此刻的我", "Right Now"), "RIGHT NOW") +
+      '<p class="cp-q">' + esc0(dpT("今天的天空怎么样？", "How is your sky today?")) + "</p>" +
+      '<div class="cp-moods" role="group" aria-label="' +
+      esc0(dpT("今天的心情", "Today’s weather")) + '">' +
+      window.Compass.MOODS.map(function (m) {
+        const label = dpT(m[0], m[1]);
+        return '<button type="button" class="cp-mood' + (compassMood === label ? " on" : "") +
+          '" data-mood="' + esc0(label) + '" aria-pressed="' +
+          (compassMood === label ? "true" : "false") + '">' + esc0(label) + "</button>";
+      }).join("") + "</div>" +
+      '<p class="cp-q cp-q2">' +
+      esc0(dpT("今天有什么事情，一直停留在你心里？",
+               "What has been staying with you today?")) + "</p>" +
+      '<textarea id="cpNote" class="cp-ta" rows="4" placeholder="' +
+      esc0(dpT("写一点也可以，不需要把它整理得很好。",
+               "A few words is enough. It doesn’t need to be tidy.")) + '"></textarea>' +
+      '<div class="cp-act"><button type="button" class="dp-cta" id="cpSave">' +
+      esc0(dpT("写下此刻的想法", "Keep this moment")) + "</button>" +
+      '<span class="cp-hint" id="cpHint" aria-live="polite"></span></div>' +
+      "</section>";
+  }
+
+  function compassQuestionHtml(chart) {
+    const q = window.Compass.question(chart, compassSeed());
+    return '<section class="cp-sec cp-ask">' +
+      compassEyebrow(dpT("今天想问自己的一个问题", "A Question For You"), "A QUESTION FOR YOU") +
+      compassStub(q.source === "placeholder") +
+      '<div class="cp-ask-card"><span class="mk" aria-hidden="true">✦</span>' +
+      '<p class="qt">' + esc0(q.text).replace(/\n/g, "<br>") + "</p>" +
+      '<textarea id="cpAnswer" class="cp-ta" rows="3" placeholder="' +
+      esc0(dpT("写下你的回答……", "Write your answer…")) + '"></textarea>' +
+      '<div class="cp-act"><button type="button" class="dp-cta" id="cpSaveAnswer">' +
+      esc0(dpT("留下这个回答", "Keep this answer")) + "</button>" +
+      '<button type="button" class="cp-skip" id="cpSkip">' +
+      esc0(dpT("今天先不回答 →", "Not today →")) + "</button></div></div></section>";
+  }
+
+  function compassSkyHtml() {
+    const rows = compassEntries;
+    let inner;
+    if (rows === null) {
+      inner = '<div class="cp-empty"><span class="st" aria-hidden="true">✦</span><p>' +
+        esc0(dpT("正在读取…", "Loading…")) + "</p></div>";
+    } else if (!rows.length) {
+      inner = '<div class="cp-empty"><span class="st" aria-hidden="true">✦</span>' +
+        '<p>' + esc0(dpT("这里会慢慢留下属于你的天空。",
+                         "Your own sky will gather here, slowly.")) + "</p>" +
+        '<span class="sub">' + esc0(dpT("从上面写下第一个此刻开始。",
+                                        "Start with the moment above.")) + "</span></div>";
+    } else {
+      const shown = compassAll ? rows : rows.slice(0, 6);
+      inner = '<div class="cp-sky-grid">' + shown.map(function (r) {
+        const t = String(r.text || "");
+        return '<article class="cp-sky-card"><div class="hd">' +
+          '<span class="dt">' + esc0(compassDate(r.ts)) + "</span>" +
+          (r.mood ? '<span class="md">' + esc0(r.mood) + "</span>" : "") + "</div>" +
+          (t ? '<p class="bd">' + esc0(t) + "</p>" : "") +
+          (r.kind === "answer"
+            ? '<span class="kd">' + esc0(dpT("回答了今天的问题", "Answered today’s question")) + "</span>"
+            : "") + "</article>";
+      }).join("") + "</div>" +
+      (rows.length > 6
+        ? '<div class="cp-more"><button type="button" class="cp-skip" id="cpAll">' +
+          esc0(compassAll ? dpT("收起", "Show less")
+                          : dpT("查看全部 (" + rows.length + ") →", "View all (" + rows.length + ") →")) +
+          "</button></div>"
+        : "");
+    }
+    return '<section class="cp-sec cp-sky">' +
+      compassEyebrow(dpT("我的星空记录", "My Sky"), "MY SKY") +
+      (window.Compass.storeIsLocalOnly()
+        ? '<p class="cp-local">' + esc0(dpT("目前这些记录只存在这台装置上。",
+                                            "For now these stay on this device only.")) + "</p>"
+        : "") +
+      inner + "</section>";
+  }
+
+  function renderCompassPage() {
+    const c = activeChart();
+    let body;
+    if (!c || !curResult) body = dpNeedChart();
+    else {
+      body = '<div class="cp-flow">' +
+        compassDirectionsHtml(c) +
+        compassRemindersHtml(c) +
+        compassNowHtml() +
+        compassQuestionHtml(c) +
+        compassSkyHtml() +
+        "</div>";
+    }
+    dpScaffold({
+      title: dpT("我的内在指南", "My Inner Compass"),
+      sub: "A gentler way forward.",
+      lead: '<div class="cp-intro">' +
+        dpT("你不需要一次把人生想清楚。", "You don’t have to work your whole life out at once.") +
+        '<span class="p2">' +
+        dpT("这不是关于你应该成为谁，\n而是把你的生命重新放回你手里，\n陪你在每一个当下，\n走向更靠近自己的生活。",
+            "This isn’t about who you should become.\nIt is about putting your life back in your own hands,\nand walking with you, moment by moment,\ntoward a life that sits closer to you.")
+          .split("\n").map(function (x) { return esc0(x); }).join("<br>") +
+        "</span></div>",
+      body: body,
+      foot: dpReturnFoot(),
+      backLabel: dpT("返回主页", "Back to home"),
+      backHref: LANDING_URL,
+      seed: 71
+    });
+    if (!c || !curResult) return;
+
+    // 第一次进来才去读记录;之后重画沿用已经载到的那一份
+    if (compassEntries === null && !compassBusy) {
+      compassBusy = true;
+      window.Compass.store.list(compassOwner()).then(function (rows) {
+        compassBusy = false;
+        compassEntries = rows || [];
+        if (curRoute && curRoute.k === "compass") routeRefresh();
+      }).catch(function () { compassBusy = false; compassEntries = []; });
+    }
+
+    const host = $("dpage");
+    // 心情:单选,再点一次取消
+    host.querySelectorAll(".cp-mood").forEach(function (b) {
+      b.addEventListener("click", function () {
+        const v = b.getAttribute("data-mood");
+        compassMood = (compassMood === v) ? "" : v;
+        host.querySelectorAll(".cp-mood").forEach(function (x) {
+          const on = x.getAttribute("data-mood") === compassMood;
+          x.classList.toggle("on", on);
+          x.setAttribute("aria-pressed", on ? "true" : "false");
+        });
+      });
+    });
+
+    function keep(kind, taId, btnId) {
+      const btn = document.getElementById(btnId), ta = document.getElementById(taId);
+      if (!btn || !ta) return;
+      btn.addEventListener("click", function () {
+        const text = ta.value.trim();
+        const mood = kind === "note" ? compassMood : "";
+        if (!text && !mood) {
+          const h = document.getElementById("cpHint");
+          if (h) h.textContent = dpT("写一点，或先选一个今天的天空。",
+                                     "Add a few words, or pick today’s weather.");
+          return;
+        }
+        btn.disabled = true;
+        window.Compass.store.add(compassOwner(), { mood: mood, text: text, kind: kind })
+          .then(function (row) {
+            compassEntries = [row].concat(compassEntries || []);
+            compassMood = "";
+            if (curRoute && curRoute.k === "compass") routeRefresh();
+          })
+          .catch(function () {
+            btn.disabled = false;
+            const h = document.getElementById("cpHint");
+            if (h) h.textContent = dpT("这次没有存成功，再试一次。", "That didn’t save — try once more.");
+          });
+      });
+    }
+    keep("note", "cpNote", "cpSave");
+    keep("answer", "cpAnswer", "cpSaveAnswer");
+
+    const skip = document.getElementById("cpSkip");
+    if (skip) skip.addEventListener("click", function () {
+      const card = skip.closest(".cp-ask-card");
+      if (card) card.classList.add("skipped");
+    });
+    const all = document.getElementById("cpAll");
+    if (all) all.addEventListener("click", function () {
+      compassAll = !compassAll;
+      if (curRoute && curRoute.k === "compass") routeRefresh();
+    });
+  }
 
   function renderFavoritesPage() {
     const c = activeChart();
