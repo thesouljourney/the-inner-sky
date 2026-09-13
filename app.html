@@ -4680,10 +4680,29 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     return len ? h % len : 0;
   }
 
-  /* 未来的接点:拿这个人的星盘 / 九个主题 / 生命脉络,产出属于他自己的内容。
-     现在什么都还没有 → 一律回传 placeholder,画面据此标示「示例」。 */
-  function buildFromChart(_chart) {
-    return null;   // 还没有生成逻辑
+  /* ── 个人化内容的唯一接点 ──────────────────────────────────
+     拿这个人的星盘 / 九个主题 / 生命脉络,产出属于他自己的内容。
+     现在还没有生成逻辑 → generator 是 null → 一律 placeholder。
+
+     契约写在 GENERATION_CONTRACT 里,给未来接生成的人看:
+     回传物件里缺哪一项,那一项就继续走 placeholder ——
+     可以先只接四个方向,想留给自己的话与今天的问题维持示例,互不影响。 */
+  const GENERATION_CONTRACT = {
+    version: "compass-1.0",
+    shape: {
+      directions: "Array<{ key, no, en, label, text }>  四项,对应 DIRECTIONS 的 key",
+      reminders:  "Array<{ key, when, line }>           三到四项",
+      question:   "string                               一段话,可含换行"
+    },
+    inputs: "chart.reading(生命蓝图) / chart.topics(九个主题) / chart.lifemap(生命脉络)",
+    note: "只读这三层,不得改写它们"
+  };
+  let generator = null;
+  function setGenerator(fn) { generator = (typeof fn === "function") ? fn : null; }
+  function buildFromChart(chart) {
+    if (!generator) return null;
+    try { return generator(chart) || null; }
+    catch (e) { return null; }   // 生成出问题绝不让页面开天窗,退回示例
   }
 
   function directions(chart) {
@@ -4732,10 +4751,32 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
      Entry = { id, ts, mood, text, kind }
        kind: "note"(此刻的我) | "answer"(回答今天的问题)
 
-     目前的实作:localStorage,只在这台装置上。
-     ⚠ 这一版刻意不写进资料库 —— production 还没有 journal schema,
-       需要哪些改动写在 docs/COMPASS-NEXT-STEPS.md,接上之后换掉这一个物件就好。 */
+     ── 这一层怎么决定东西存到哪里 ──────────────────────────────
+     两个实作,同一组方法:
+
+       tableStore —— Supabase 的 compass_entries 表(RLS:只读写自己)
+       localStore —— 这台装置的 localStorage
+
+     开机时探测一次 compass_entries 在不在(一次很小的 GET,limit=1)。
+       在  → 走 tableStore,并且把这台装置上还没上云的记录一次搬上去
+       不在 → 走 localStore,页面上如实写「只存在这台装置上」
+
+     所以这支代码不需要你先去建表也能跑;
+     等你把 docs/COMPASS-NEXT-STEPS.md 里那段 SQL 跑过之后,
+     下一次开页面会自己切换过去,前端一行都不用改。
+
+     ⚠ 这里【不会】自己去建表、改表、或写任何既有资料表。
+       探测失败一律安静回落到本机,绝不阻断页面。 */
   const LS_KEY = "inner_sky_compass_v1";
+  const LS_MIGRATED = "inner_sky_compass_migrated_v1";
+  const TABLE = "compass_entries";
+
+  /* 单则记录的上限。不是为了省空间,是为了让一则「此刻」永远是一则「此刻」,
+     不会变成贴一整篇文章进来;也让本机那一份不会把 localStorage 塞爆。 */
+  const MAX_TEXT = 4000;
+  const MAX_MOOD = 40;
+  const MAX_ROWS_LOCAL = 500;
+  const PAGE_SIZE = 200;
 
   function readAll() {
     try { return JSON.parse(localStorage.getItem(LS_KEY) || "{}") || {}; }
@@ -4749,26 +4790,35 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
     return "c" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
   }
+  /* 进出这一层的资料一律走这里整形:
+     形状固定、长度有上限、kind 只会是两个值其中之一。 */
+  function shape(entry, keep) {
+    const e = entry || {};
+    return {
+      id: (keep && e.id) || uid(),
+      ts: (keep && e.ts) || new Date().toISOString(),
+      /* 先去掉头尾空白再截断:只打了几个空格不算一则记录,
+         段落之间的换行照原样留着。 */
+      mood: String(e.mood == null ? "" : e.mood).trim().slice(0, MAX_MOOD),
+      text: String(e.text == null ? "" : e.text).trim().slice(0, MAX_TEXT),
+      kind: e.kind === "answer" ? "answer" : "note"
+    };
+  }
+  function isEmpty(e) { return !e.mood && !e.text; }
+  function byNewest(a, b) { return String(b.ts).localeCompare(String(a.ts)); }
 
   const localStore = {
     name: "local",
     list: function (owner) {
-      const all = readAll();
-      const rows = (all[owner || "anon"] || []).slice();
-      rows.sort(function (a, b) { return String(b.ts).localeCompare(String(a.ts)); });
+      const rows = (readAll()[owner || "anon"] || []).slice();
+      rows.sort(byNewest);
       return Promise.resolve(rows);
     },
     add: function (owner, entry) {
-      const all = readAll();
-      const k = owner || "anon";
-      const row = {
-        id: uid(),
-        ts: new Date().toISOString(),
-        mood: String(entry && entry.mood || ""),
-        text: String(entry && entry.text || ""),
-        kind: (entry && entry.kind) === "answer" ? "answer" : "note"
-      };
-      all[k] = [row].concat(all[k] || []).slice(0, 500);
+      const all = readAll(), k = owner || "anon";
+      const row = shape(entry);
+      if (isEmpty(row)) return Promise.reject(new Error("empty entry"));
+      all[k] = [row].concat(all[k] || []).slice(0, MAX_ROWS_LOCAL);
       if (!writeAll(all)) return Promise.reject(new Error("storage unavailable"));
       return Promise.resolve(row);
     },
@@ -4778,6 +4828,143 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       writeAll(all);
       return Promise.resolve();
     }
+  };
+
+  /* ---- Supabase 表实作 --------------------------------------------
+     用的是既有的那把 anon key 与登入者自己的 access token,
+     所以读写一律受 RLS 限制:只碰得到自己的资料。
+     owner 参数在这里只是签名一致 —— user_id 由资料库从 token 取,
+     前端送什么都越不过 RLS。 */
+  const cfg = function () { return window.CloudCfg || {}; };
+  const nf = function (u, o, ms) {
+    const f = cfg().fetch || function (a, b) { return fetch(a, b); };
+    return f(u, o, ms);
+  };
+  function authHeaders() {
+    const tok = (window.Cloud && window.Cloud.token && window.Cloud.token()) || cfg().anon || "";
+    return {
+      "apikey": cfg().anon || "",
+      "Authorization": "Bearer " + tok,
+      "Content-Type": "application/json"
+    };
+  }
+  function restUrl(q) { return (cfg().url || "") + "/rest/v1/" + TABLE + (q || ""); }
+
+  function rowIn(r) {
+    return {
+      id: r.id,
+      ts: r.created_at || r.ts || new Date().toISOString(),
+      mood: r.mood || "",
+      text: r.body || "",
+      kind: r.kind === "answer" ? "answer" : "note"
+    };
+  }
+
+  const tableStore = {
+    name: "table",
+    list: function () {
+      return nf(restUrl("?select=id,created_at,mood,body,kind&order=created_at.desc&limit=" + PAGE_SIZE),
+        { headers: authHeaders() })
+        .then(function (r) {
+          if (!r.ok) throw new Error("DB " + r.status);
+          return r.json();
+        })
+        .then(function (rows) { return (rows || []).map(rowIn); });
+    },
+    add: function (owner, entry) {
+      const row = shape(entry);
+      if (isEmpty(row)) return Promise.reject(new Error("empty entry"));
+      const uidNow = (window.Cloud && window.Cloud.userId && window.Cloud.userId()) || "";
+      if (!uidNow) return Promise.reject(new Error("no session"));
+      return nf(restUrl(""), {
+        method: "POST",
+        headers: Object.assign({ "Prefer": "return=representation" }, authHeaders()),
+        body: JSON.stringify({
+          user_id: uidNow, mood: row.mood, body: row.text, kind: row.kind,
+          created_at: row.ts
+        })
+      }).then(function (r) {
+        if (!r.ok) throw new Error("DB " + r.status);
+        return r.json();
+      }).then(function (rows) {
+        return rows && rows[0] ? rowIn(rows[0]) : row;
+      });
+    },
+    remove: function (owner, id) {
+      return nf(restUrl("?id=eq." + encodeURIComponent(id)), {
+        method: "DELETE", headers: authHeaders()
+      }).then(function (r) {
+        if (!r.ok) throw new Error("DB " + r.status);
+      });
+    }
+  };
+
+  /* ---- 决定这一次用哪一个 -----------------------------------------
+     一次工作阶段只探测一次。探不到表 / 没登入 / 网路不通 → 本机,
+     页面据此显示「只存在这台装置上」,不会假装已经上云。 */
+  let probe = null;
+  function pickStore() {
+    if (probe) return probe;
+    const hasSession = !!(window.Cloud && window.Cloud.hasSession && window.Cloud.hasSession());
+    if (!cfg().url || !hasSession) return (probe = Promise.resolve(localStore));
+    probe = nf(restUrl("?select=id&limit=1"), { headers: authHeaders() }, 8000)
+      .then(function (r) {
+        // 404 / 401 / 42P01 都当成「这张表还没准备好」,安静回落
+        return r.ok ? tableStore : localStore;
+      })
+      .catch(function () { return localStore; })
+      .then(function (st) {
+        if (st !== tableStore) return st;
+        return migrateLocalUp().then(function () { return st; }, function () { return st; });
+      });
+    return probe;
+  }
+
+  /* 表已经在了 → 把这台装置上还没上云的记录搬上去,搬完清掉本机那一份。
+     只做一次(用一个旗标记住),失败就维持原状、下次再试,不会重复上传。 */
+  function migrateLocalUp() {
+    let done = {};
+    try { done = JSON.parse(localStorage.getItem(LS_MIGRATED) || "{}") || {}; } catch (e) { }
+    const owner = (window.Cloud && window.Cloud.userId && window.Cloud.userId()) || "anon";
+    if (done[owner]) return Promise.resolve();
+    const all = readAll();
+    const rows = (all[owner] || []).concat(all.anon || []);
+    if (!rows.length) {
+      done[owner] = 1;
+      try { localStorage.setItem(LS_MIGRATED, JSON.stringify(done)); } catch (e) { }
+      return Promise.resolve();
+    }
+    // 由旧到新逐一送上去,保持原本的时间
+    return rows.slice().sort(function (a, b) { return String(a.ts).localeCompare(String(b.ts)); })
+      .reduce(function (chain, r) {
+        return chain.then(function () { return tableStore.add(owner, r).catch(function () { }); });
+      }, Promise.resolve())
+      .then(function () {
+        delete all[owner]; delete all.anon;
+        writeAll(all);
+        done[owner] = 1;
+        try { localStorage.setItem(LS_MIGRATED, JSON.stringify(done)); } catch (e) { }
+      });
+  }
+
+  /* 页面看到的就是这一个。它自己去问「这次该用哪一个」,
+     所以页面完全不需要知道底下是资料库还是本机。 */
+  let activeName = "unknown";
+  const store = {
+    get name() { return activeName; },
+    list: function (owner) {
+      return pickStore().then(function (st) { activeName = st.name; return st.list(owner); });
+    },
+    add: function (owner, entry) {
+      return pickStore().then(function (st) { activeName = st.name; return st.add(owner, entry); });
+    },
+    remove: function (owner, id) {
+      return pickStore().then(function (st) { activeName = st.name; return st.remove(owner, id); });
+    },
+    /* 测试与除错用:强制指定这次用哪一个实作 */
+    _use: function (st) { probe = Promise.resolve(st); activeName = st.name; },
+    _local: localStore,
+    _table: tableStore
   };
 
   /* 今天的心情选项(版面的一部分,不是生成内容) */
@@ -4794,9 +4981,39 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     reminders: reminders,
     question: question,
     rotateIndex: rotateIndex,
-    buildFromChart: buildFromChart,   // 未来接生成逻辑的唯一入口
-    store: localStore,                // 换成资料库实作时只换这一个
-    storeIsLocalOnly: function () { return window.Compass.store.name === "local"; }
+
+    /* ── 个人化内容的接口 ──────────────────────────────────────
+       未来要接生成逻辑时,只需要呼叫一次:
+
+         Compass.setGenerator(function (chart) {
+           // 回传这个人自己的内容;缺哪一项就不给哪一项,
+           // 没给的那一项会继续走 placeholder(画面上照常标示「示例」)
+           return {
+             version: "compass-1.0",              // 选填,用来判断要不要重生成
+             directions: [ { key, no, en, label, text }, … ],   // 四项
+             reminders:  [ { key, when, line }, … ],            // 三到四项
+             question:   "一段话"
+           };
+         });
+
+       接上之后:
+         · 版面一行都不用改
+         · 示例标记会自动消失
+         · directions() / reminders() / question() 回传的 source 会变成 "generated"
+       在那之前 generator 是 null,这三个函式一律回传 placeholder。 */
+    setGenerator: setGenerator,
+    getGenerator: function () { return generator; },
+    GENERATION_CONTRACT: GENERATION_CONTRACT,
+    buildFromChart: buildFromChart,
+
+    /* ── 储存 ────────────────────────────────────────────────
+       store 自己决定这次走资料库还是本机(见上面 pickStore)。
+       页面只用 list / add / remove 三个方法,不需要知道底下是哪一个。 */
+    store: store,
+    storeMode: function () { return store.name; },          // "table" | "local" | "unknown"
+    storeIsLocalOnly: function () { return store.name !== "table"; },
+    TABLE: TABLE,
+    LIMITS: { text: MAX_TEXT, mood: MAX_MOOD, localRows: MAX_ROWS_LOCAL, page: PAGE_SIZE }
   };
 })();
 </script>
@@ -8440,6 +8657,16 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       esc0(dpT("今天先不回答 →", "Not today →")) + "</button></div></div></section>";
   }
 
+  /* 这些记录到底存在哪里 —— 如实说,不让人误会。
+     store 自己会去探测:资料表在就上云,不在就留在这台装置上。 */
+  function compassStoreNote() {
+    const mode = window.Compass.storeMode();
+    if (mode === "table") return "";           // 已经跟着帐号走,不需要特别说明
+    if (mode === "unknown") return "";         // 还没探测完,先不写,免得话说反了
+    return '<p class="cp-local">' +
+      esc0(dpT("目前这些记录只存在这台装置上。", "For now these stay on this device only.")) +
+      "</p>";
+  }
   function compassSkyHtml() {
     const rows = compassEntries;
     let inner;
@@ -8473,10 +8700,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     }
     return '<section class="cp-sec cp-sky">' +
       compassEyebrow(dpT("我的星空记录", "My Sky"), "MY SKY") +
-      (window.Compass.storeIsLocalOnly()
-        ? '<p class="cp-local">' + esc0(dpT("目前这些记录只存在这台装置上。",
-                                            "For now these stay on this device only.")) + "</p>"
-        : "") +
+      compassStoreNote() +
       inner + "</section>";
   }
 

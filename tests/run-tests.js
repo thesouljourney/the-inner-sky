@@ -485,12 +485,25 @@ function testInnerCompass() {
     const j = html.indexOf("window.Compass = {", i);
     return i < 0 || j < 0 ? "" : html.slice(i, j);
   })();
-  checkEq("[compass] 生成接点存在且目前回传 null",
-    /function buildFromChart\(_chart\)\s*\{\s*return null;/.test(mod), true);
+  checkEq("[compass] 生成接口存在,且还没有注册生成器时回传 null",
+    /let generator = null;/.test(mod) &&
+    /function setGenerator\(fn\)/.test(mod) &&
+    /if \(!generator\) return null;/.test(mod), true);
+  checkEq("[compass] 生成器丢错不会让页面开天窗",
+    /catch \(e\) \{ return null; \}/.test(mod), true);
+  checkEq("[compass] 生成契约有写下来", /GENERATION_CONTRACT/.test(mod), true);
   checkEq("[compass] 没有生成结果时一律标为 placeholder",
     (mod.match(/source:\s*"placeholder"/g) || []).length >= 3, true);
   checkEq("[compass] 储存层是可替换的三个方法",
     /list:\s*function/.test(mod) && /add:\s*function/.test(mod) && /remove:\s*function/.test(mod), true);
+  checkEq("[compass] 两个实作都在(资料库 / 本机)",
+    /const localStore = \{/.test(mod) && /const tableStore = \{/.test(mod), true);
+  checkEq("[compass] 探测不到表时安静回落到本机",
+    /return r\.ok \? tableStore : localStore;/.test(mod) &&
+    /\.catch\(function \(\) \{ return localStore; \}\)/.test(mod), true);
+  checkEq("[compass] 不会自己去建表 / 改表",
+    !/create table|alter table|drop table/i.test(mod), true);
+  checkEq("[compass] 单则记录有长度上限", /MAX_TEXT/.test(mod) && /\.slice\(0, MAX_TEXT\)/.test(mod), true);
 
   // —— 5. 这一轮不准新增任何生成请求 ——
   checkEq("[compass] 页面没有呼叫 Edge Function / Claude",
