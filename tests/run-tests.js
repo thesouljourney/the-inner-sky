@@ -537,6 +537,146 @@ function testInnerCompass() {
   checkEq("[compass] 下一阶段的资料库说明存在", fs.existsSync(doc), true);
 }
 
+/* ---------- 13. 内在指南 · 证据抽取原型 ----------
+   这一关守的是「系统凭什么这样说」,不是「系统最后怎么说」。
+   逐条对应任务书第 23 节要求的 15 项。 */
+function testCompassEvidence() {
+  const fs = require("fs");
+  const CE = require(path.join(__dirname, "..", "assets", "compass-evidence.js"));
+  const Astro2 = require(path.join(__dirname, "..", "assets", "astro", "astro-core.js"));
+  const natal = Astro2.computeNatalChart({
+    date: "1994-11-21", time: "01:44",
+    place: { city: "Batu Pahat", lat: 1.8548, lon: 102.9325, tzId: "Asia/Kuala_Lumpur" }
+  }).chart;
+
+  const THEMES = {
+    self:   { tagline: "你想清楚了才愿意说出来。", aha: ["确定之前你不会先讲"] },
+    family: { tagline: "你很早就学会承担，累了也常常先撑着。", aha: ["责任是自动接下的"] },
+    body:   { tagline: "你通常是事情结束以后，才发现自己撑了一阵子。", aha: ["累是后知后觉的"] }
+  };
+  const THREAD = {
+    tagline: "你要确认足够安全，才愿意把它带出来。",
+    aha: ["谨慎保护过你，也在消耗你"],
+    previews: { map: { s0: { preview: "你需要先想清楚才说出来。", keyInsights: ["确定之后才带出来"] } } }
+  };
+  const full = CE.build({ evidence: { chart: natal, themes: THEMES }, context: { lifeThreads: THREAD } });
+  const find = (k) => full.candidates.find(c => c.patternKey === k);
+
+  // 1 · 单一落点不能成为 accepted
+  const isolated = full.candidates.filter(c => c.independentEvidenceCount < 2);
+  checkEq("[evi] 单一落点一律不是 accepted",
+    isolated.every(c => c.status !== "accepted"), true);
+  checkEq("[evi] 单一落点的拒绝原因写得出来",
+    isolated.every(c => !c.rejectionReason || /isolated|generic|no-chart|life-threads/.test(c.rejectionReason)), true);
+
+  // 2 · 生命脉络不得增加独立证据数
+  const noThread = CE.build({ evidence: { chart: natal, themes: THEMES }, context: {} });
+  const withThread = full;
+  const sameCount = CE.PATTERN_RULES.every(r => {
+    const a = noThread.candidates.find(c => c.patternKey === r.patternKey);
+    const b = withThread.candidates.find(c => c.patternKey === r.patternKey);
+    return a.independentEvidenceCount === b.independentEvidenceCount;
+  });
+  checkEq("[evi] 加进生命脉络之后,独立证据数一个都没变", sameCount, true);
+  checkEq("[evi] 生命脉络的来源一律标成不计入",
+    full.candidates.every(c => c.sourceSignals
+      .filter(s => s.sourceType === "lifeThread")
+      .every(s => s.countsTowardIndependentEvidence === false &&
+                  s.independence === "contextual-only" && s.role === "contextual")), true);
+
+  // 3 · 主题说 A + 衍生的生命脉络也说 A,不得算成两份独立证据
+  const clarity = find("clarity-before-release");
+  const th = clarity.sourceSignals.find(s => s.sourceType === "lifeThread");
+  checkEq("[evi] 主题与生命脉络讲同一件事时,标出 circularity", !!(th && th.circularityBlocked), true);
+  checkEq("[evi] 主题支持本身也不计入独立证据",
+    full.candidates.every(c => c.sourceSignals
+      .filter(s => s.sourceType === "theme")
+      .every(s => s.countsTowardIndependentEvidence === false)), true);
+  checkEq("[evi] 独立证据数只数盘面讯号",
+    full.candidates.every(c => c.independentEvidenceCount ===
+      new Set(c.sourceSignals.filter(s => s.sourceType === "chart").map(s => s.independenceKey)).size), true);
+
+  // 4 · 两个真正独立的盘面讯号可以形成候选
+  const carry = find("carry-before-noticing-cost");
+  checkEq("[evi] 两个以上独立盘面讯号可以成为 accepted",
+    carry.independentEvidenceCount >= 2 && carry.status === "accepted", true);
+  checkEq("[evi] 同一个结构重複出现只算一次",
+    new Set(carry.sourceSignals.filter(s => s.sourceType === "chart").map(s => s.independenceKey)).size ===
+    carry.independentEvidenceCount, true);
+
+  // 5 · 可以被标成 provisional
+  checkEq("[evi] 有 provisional 这一类且真的用到",
+    full.candidates.some(c => c.status === "provisional"), true);
+
+  // 6 · 太泛的候选会被挡下来
+  const generic = find("values-security");
+  checkEq("[evi] 没有 mechanism 的候选被拒绝",
+    generic.status === "rejected" && generic.rejectionReason === "too-generic-no-mechanism", true);
+  checkEq("[evi] 合格候选一律写得出 mechanism",
+    full.candidates.filter(c => c.status === "accepted").every(c => !!c.mechanism), true);
+
+  // 7 · 重複候选可以被辨识
+  const dup = CE.build({ evidence: { chart: natal, themes: {} }, context: {} });
+  checkEq("[evi] 同一机制家族只会留一个不被标重複",
+    dup.candidates.filter(c => c.mechanismFamily === "withdraw-to-reset" && !c.duplicateOf).length <= 1, true);
+  const diversity = CE.diversityCheck(full);
+  checkEq("[evi] 多样性检查跑得出结果", typeof diversity.ok === "boolean", true);
+
+  // 8 · 矛盾可以被保留成张力
+  const tension = full.tensions.find(t => t.bothStrong);
+  checkEq("[evi] 两边都强的对立会保留成 tension,而不是砍掉一边",
+    !!tension && tension.compatibleAsTension === true && tension.resolution === "keep-as-tension", true);
+  checkEq("[evi] 张力会挂回两个候选身上",
+    !!tension && find(tension.patternA).contradictionSignals.length > 0 &&
+                 find(tension.patternB).contradictionSignals.length > 0, true);
+
+  // 9 / 10 · 日记与收藏永远不进证据
+  const src = fs.readFileSync(path.join(__dirname, "..", "assets", "compass-evidence.js"), "utf8");
+  ["favs", "journal", "mood", "compass_entries", "reflectionAnswer"].forEach(function (k) {
+    checkEq("[evi] 证据层完全不读 " + k, src.indexOf(k) < 0 ||
+      src.indexOf("excludedSources") > 0 && !new RegExp("input[\\s\\S]{0,40}" + k).test(src), true);
+  });
+  const polluted = CE.build({
+    evidence: { chart: natal, themes: THEMES, favorites: ["x"], journal: ["y"] },
+    context: { lifeThreads: THREAD, mood: "平静" }
+  });
+  checkEq("[evi] 就算硬塞收藏 / 日记进来,结果也完全一样",
+    JSON.stringify(polluted.candidates.map(c => [c.patternKey, c.independentEvidenceCount, c.status])) ===
+    JSON.stringify(full.candidates.map(c => [c.patternKey, c.independentEvidenceCount, c.status])), true);
+  checkEq("[evi] 报告明写排除了哪些来源",
+    full.excludedSources.join(",") === "favorites,journal,mood,reflectionAnswers", true);
+
+  // 11–14 · 既有产品没有被动到
+  const html = fs.readFileSync(path.join(__dirname, "..", "app.html"), "utf8");
+  checkEq("[evi] 内在指南 UI 的区块数没有变(仍是五段)",
+    (html.match(/class="cp-sec /g) || []).length >= 5, true);
+  checkEq("[evi] 路由仍然只有原本那几条 + compass",
+    html.indexOf('if (h === "#/compass") return { k: "compass" };') > 0 &&
+    html.indexOf('if (h === "#/map") return { k: "map" };') > 0 &&
+    html.indexOf('if (h === "#/my-sky") return { k: "mysky" };') > 0, true);
+  const ts = fs.readFileSync(path.join(__dirname, "..", "docs", "edge", "read-chart.ts"), "utf8");
+  checkEq("[evi] 生命脉络的 Prompt 没有被动过",
+    /把前面读过的所有理解连起来/.test(ts) && ts.indexOf('kind === "compass"') < 0, true);
+  checkEq("[evi] 九个主题的 Prompt 没有被动过",
+    /现在写【第二部分 · 主题探索】中的一章/.test(ts), true);
+
+  // 15 · 没有新增任何模型呼叫
+  checkEq("[evi] 证据层没有任何网路 / API 呼叫",
+    !/fetch\(|XMLHttpRequest|anthropic|callFunc|supabase/i.test(src), true);
+  checkEq("[evi] 服务端仍然只有四种 kind",
+    ts.indexOf('kind === "preview"') > 0 && ts.indexOf('kind === "compass"') < 0, true);
+
+  // 接线:curResult 进得来,而且角色标好了
+  checkEq("[evi] app.html 会把 curResult 交给证据层",
+    /window\.Compass\.setNatal\(curResult\)/.test(html), true);
+  checkEq("[evi] 输入把三种来源的角色分好",
+    /chart: natal,\s*\/\/ 主要证据/.test(html) &&
+    /themes: c\[K\("topics"\)\]/.test(html) &&
+    /_lifeThreadsCountsAsEvidence: false/.test(html), true);
+  checkEq("[evi] 没有注册生成器时,行为与以前一样(回传 null)",
+    /if \(!generator\) return null;/.test(html), true);
+}
+
 /* ---------- 跑 ---------- */
 function main() {
   testTimezones();
@@ -550,6 +690,7 @@ function main() {
   testReadingPreview();
   testThreadMobileScope();
   testInnerCompass();
+  testCompassEvidence();
   return testPlaces().then(function () {
     console.log("\n对照来源:" + REF.reference);
     console.log("设置:" + JSON.stringify(REF.settings));

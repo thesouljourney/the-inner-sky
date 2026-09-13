@@ -4699,10 +4699,39 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   };
   let generator = null;
   function setGenerator(fn) { generator = (typeof fn === "function") ? fn : null; }
+
+  /* 算好的盘面(app.html 的 curResult)。证据抽取要的「主要证据」就是它。
+     页面进入 #/compass 时存一份参照进来 —— 不重算、不复制、不发请求。
+     没有注册 generator 的时候这个值完全没有作用,画面行为与修改前一模一样。 */
+  let natal = null;
+  function setNatal(res) { natal = (res && res.planets) ? res : null; }
   function buildFromChart(chart) {
     if (!generator) return null;
-    try { return generator(chart) || null; }
+    try {
+      /* 三种来源的角色在这里就分好,不让呼叫端自己决定:
+           chart(盘面)  = 主要证据
+           themes(九个主题) = 次级诠释证据
+           lifeThreads(生命脉络) = 只当综合脉络,永不计为独立证据
+         收藏 / 日记 / 心情 / 反思答案一律不放进来。 */
+      return generator(chart, buildEvidenceInput(chart)) || null;
+    }
     catch (e) { return null; }   // 生成出问题绝不让页面开天窗,退回示例
+  }
+  /* 把三种来源整理成有角色标记的输入。纯资料整理,不做任何判断、不呼叫任何东西。 */
+  function buildEvidenceInput(chart) {
+    const c = chart || {};
+    const en = (window.I18N && window.I18N.lang === "en");
+    const K = function (base) { return en ? base + "_en" : base; };
+    return {
+      evidence: {
+        chart: natal,                 // 主要证据
+        themes: c[K("topics")] || {}  // 次级诠释证据
+      },
+      context: {
+        lifeThreads: c[K("lifemap")] || null,   // 只当脉络
+        _lifeThreadsCountsAsEvidence: false     // 明写:永远不计为独立证据
+      }
+    };
   }
 
   function directions(chart) {
@@ -5003,6 +5032,9 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
        在那之前 generator 是 null,这三个函式一律回传 placeholder。 */
     setGenerator: setGenerator,
     getGenerator: function () { return generator; },
+    setNatal: setNatal,                       // 由 renderCompassPage 在进页时传入 curResult
+    getNatal: function () { return natal; },
+    buildEvidenceInput: buildEvidenceInput,   // 证据层的输入(角色已标好)
     GENERATION_CONTRACT: GENERATION_CONTRACT,
     buildFromChart: buildFromChart,
 
@@ -8709,6 +8741,9 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     let body;
     if (!c || !curResult) body = dpNeedChart();
     else {
+      /* 把已经算好的盘面交给内在指南的资料层。只是传参照,不重算、不发请求。
+         目前没有注册 generator,所以这一行不改变画面上的任何东西。 */
+      window.Compass.setNatal(curResult);
       body = '<div class="cp-flow">' +
         compassDirectionsHtml(c) +
         compassRemindersHtml(c) +
