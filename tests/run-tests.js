@@ -509,7 +509,30 @@ function testInnerCompass() {
   checkEq("[compass] 页面没有呼叫 Edge Function / Claude",
     !/callFunc\(|read-chart|anthropic/.test(page + mod), true);
 
-  // —— 6. 下一阶段要什么,必须写下来 ——
+  /* —— 6. 落地页那份选单 ——
+     index.html 有自己一份已登入选单(#navUserMenu),与 app.html 的 dpNavItems()
+     是两段各自写死的清单。这一条盯住「两边不要再走散」:
+     app 的下拉选单里有的内页项目,落地页那一份也要有,顺序一致。
+     (顶部横向导航列 探索 / 我的星空 / 收藏 / 关于我们 不在此列,本来就不同。) */
+  const landing = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
+  const lmenu = (function () {
+    const i = landing.indexOf('id="navUserMenu"');
+    return i < 0 ? "" : landing.slice(i, landing.indexOf("</div>", landing.indexOf('id="navLogout"', i)));
+  })();
+  checkEq("[compass] 找得到落地页的已登入选单", lmenu.length > 200, true);
+  const lApp = (lmenu.match(/data-app-hash="(#\/[a-z-]+)"/g) || [])
+    .map(function (x) { return x.slice(15, -1); });
+  checkEq("[compass] 落地页选单的内页项目与顺序",
+    lApp.join(" "), "#/reading #/my-sky #/map #/compass #/favorites #/settings");
+  checkEq("[compass] 落地页也有我的内在指南这一项",
+    /data-app-hash="#\/compass"[^>]*>我的内在指南</.test(lmenu), true);
+  // 顶部横向导航列不准被动到
+  ["探索", "我的星空", "收藏", "关于我们"].forEach(function (t) {
+    checkEq("[compass] 落地页顶部导航列仍有:" + t,
+      new RegExp('<a[^>]*>' + t + '</a>').test(landing), true);
+  });
+
+  // —— 7. 下一阶段要什么,必须写下来 ——
   const doc = path.join(__dirname, "..", "docs", "COMPASS-NEXT-STEPS.md");
   checkEq("[compass] 下一阶段的资料库说明存在", fs.existsSync(doc), true);
 }
