@@ -2846,10 +2846,27 @@
   #dpage.compass-page .cp-devdt .kv{display:block}
 
   #dpage.compass-page .cp-mode{letter-spacing:.02em}
-  #dpage.compass-page .cp-gen{
-    margin-left:6px;background:var(--dp-navy);border-color:var(--dp-navy);color:var(--dp-light)
+  /* 生成按钮刻意【不】长得像模式按钮 —— 它是动作,不是选项 */
+  #dpage.compass-page .cp-genrow{
+    margin-top:12px;padding-top:12px;border-top:1px dashed rgba(34,35,58,.16)
   }
-  #dpage.compass-page .cp-gen[disabled]{opacity:.55;cursor:default}
+  #dpage.compass-page .cp-gen{
+    font-family:var(--dp-sans);font-size:13px;font-weight:500;letter-spacing:.04em;
+    min-height:38px;padding:0 20px;border-radius:19px;cursor:pointer;
+    color:#fff;border:none;background:linear-gradient(135deg,#8176ad 0%,#b58ea8 100%);
+    box-shadow:0 6px 18px -8px rgba(129,118,173,.9);
+    transition:transform .14s,box-shadow .14s
+  }
+  @media(hover:hover){
+    #dpage.compass-page .cp-gen:hover{transform:translateY(-1px);box-shadow:0 10px 22px -8px rgba(129,118,173,.95)}
+  }
+  #dpage.compass-page .cp-gen:active{transform:translateY(0)}
+  #dpage.compass-page .cp-gen[disabled]{opacity:.5;cursor:default;transform:none;box-shadow:none}
+  #dpage.compass-page .cp-gen:focus-visible{outline:2px solid rgba(154,140,205,.9);outline-offset:3px}
+  #dpage.compass-page .cp-genhint{
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+    font-size:10.5px;color:var(--dp-mut);margin-left:2px
+  }
   #dpage.compass-page .cp-warn{
     margin-top:10px;padding:8px 10px;border-radius:6px;
     background:rgba(154,106,52,.09);border:1px solid rgba(154,106,52,.2);
@@ -9204,12 +9221,16 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
           '" data-mode="' + m[0] + '" aria-pressed="' + (m[0] === cpPvMode ? "true" : "false") +
           '">' + esc0(m[1]) + "</button>";
       }).join("") +
-      (cpPvMode === "deterministic" ? "" :
-        '<button type="button" class="cp-case cp-gen" id="cpPvGenBtn"' + (cpPvGenBusy ? " disabled" : "") + ">" +
-        esc0(cpPvGenBusy ? dpT("生成中…", "Generating…")
-                         : (cpPvGenResult() ? dpT("重新生成一次", "Generate again")
-                                            : dpT("用 Claude 生成", "Generate with Claude"))) + "</button>") +
       "</div>" +
+      (cpPvMode === "deterministic" ? "" :
+        '<div class="bar-row cp-genrow"><span class="bar-lb">RUN</span>' +
+        '<button type="button" class="cp-gen" id="cpPvGenBtn"' + (cpPvGenBusy ? " disabled" : "") + ">" +
+        esc0(cpPvGenBusy ? dpT("生成中…", "Generating…")
+                         : (cpPvGenResult() ? dpT("↻  重新生成一次", "↻  Generate again")
+                                            : dpT("▶  用 Claude 生成", "▶  Generate with Claude"))) + "</button>" +
+        '<span class="cp-genhint">' + esc0(cpPvGenBusy
+          ? dpT("正在等服务端回应…", "waiting for the server…")
+          : dpT("← 按这里才会真的送出一次请求", "← nothing is sent until you press this")) + "</span></div>") +
       (cpPvMode === "deterministic" ? "" :
         '<div class="cp-warn">' + esc0(cpPvMode === "live"
           ? dpT("DEV ONLY · 按下按钮才会真的呼叫一次 API。切换测试盘、重画页面都不会自动呼叫。",
