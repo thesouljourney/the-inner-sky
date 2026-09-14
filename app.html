@@ -2438,6 +2438,8 @@
     display:flex;align-items:center;gap:10px;justify-content:center
   }
   #dpage.compass-page .cp-eyebrow .ic{font-size:11px;color:rgba(154,106,52,.5);line-height:1}
+  /* 中文模式没有英文小标,那一行只剩一颗星 —— 收掉多余的横向间距 */
+  #dpage.compass-page .cp-eyebrow.zh-only{gap:0}
   #dpage.compass-page .cp-eyebrow .en{
     font-family:var(--dp-sans);font-weight:300;font-size:11px;
     letter-spacing:.3em;color:rgba(129,118,173,.8)
@@ -7820,6 +7822,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   /* Phase 6:生成模式。预设永远是确定性模板 —— 不按按钮就不会有任何请求。 */
   let cpPvMode = "deterministic";   // "deterministic" | "live" | "recorded"
   let cpPvBlind = false;            // 盲读:盖掉 case id / patternKey / 机制 / 分数
+  let cpPvPromptVer = "";           // "" = 用生成层的预设(v1.1);可切回 v1 做 A/B
   let cpPvGenBusy = false;
   let cpPvGenInput = null;   // live transport 要送的 payload(只在按下按钮那一刻建立)
   let cpPvLastServer = null; // 最近一次 Edge Function 回报的 model / promptVersion(不含任何凭证)
@@ -8822,10 +8825,15 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     return '<span class="cp-stub">' +
       esc0(dpT("示例 · 尚未接上你的星盘", "Sample · not yet drawn from your chart")) + "</span>";
   }
+  /* §6.2-1:中文模式只显示中文。英文小标是英文版才有的东西 ——
+     中文使用者读到 "YOUR INNER COMPASS" 只是噪音。
+     英文模式行为完全不变(zh 与 en 本来就是同一句话的两种语言)。 */
   function compassEyebrow(zh, en) {
-    return '<div class="cp-eyebrow"><span class="ic" aria-hidden="true">✦</span>' +
-      '<span class="en">' + esc0(en) + "</span></div>" +
-      '<h2 class="cp-h">' + esc0(zh) + "</h2>";
+    const head = window.I18N.isEN()
+      ? '<div class="cp-eyebrow"><span class="ic" aria-hidden="true">✦</span>' +
+        '<span class="en">' + esc0(en) + "</span></div>"
+      : '<div class="cp-eyebrow zh-only"><span class="ic" aria-hidden="true">✦</span></div>';
+    return head + '<h2 class="cp-h">' + esc0(zh) + "</h2>";
   }
 
   // 指南盘:细线、香槟与薰衣草,不是仪表板
@@ -8857,7 +8865,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       d.items.map(function (it, i) {
         return '<div class="cp-dir d' + (i + 1) + (stub ? " stub" : "") + '">' +
           '<span class="no">' + esc0(it.no) + "</span>" +
-          '<span class="en">' + esc0(it.en) + "</span>" +
+          (window.I18N.isEN() ? '<span class="en">' + esc0(it.en) + "</span>" : "") +
           '<b class="zh">' + esc0(it.label) + "</b>" +
           '<p class="tx">' + esc0(it.text) + "</p></div>";
       }).join("") +
@@ -9022,9 +9030,13 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
      · insufficient_evidence 的方向不会进入 generation input,自然不会被生成。
      · 验证不过就是 generation_failed —— 不退回通用文案,也不偷偷用模板顶替。
      ──────────────────────────────────────────────────────── */
+  function cpPvVersion() {
+    const G = window.CompassGeneration;
+    if (!G) return cpPvPromptVer || "?";
+    return (cpPvPromptVer && G.SYSTEMS[cpPvPromptVer]) ? cpPvPromptVer : G.DEFAULT_PROMPT_VERSION;
+  }
   function cpGenKey(caseId) {
-    const v = (window.CompassGeneration && window.CompassGeneration.COMPASS_PROMPT_VERSION) || "?";
-    return caseId + "|" + cpPvMode + "|" + v;
+    return caseId + "|" + cpPvMode + "|" + cpPvVersion();
   }
   /* 真的打到 Edge Function。函式没部署 / 出错 → generation_failed,不 fallback。 */
   function cpLiveTransport() {
@@ -9108,7 +9120,8 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     cpPvPaint();
     /* buildInput 在 generate 里会再跑一次,这里先算一份给 live transport 当 payload */
     cpPvGenInput = G.buildInput(vm);
-    G.generate(vm, transport, { model: cpPvMode === "recorded" ? (RC && RC.MODEL) : null })
+    G.generate(vm, transport, { promptVersion: cpPvVersion(),
+                                model: cpPvMode === "recorded" ? (RC && RC.MODEL) : null })
       .then(function (r) { cpPvGenCache[cpGenKey(caseId)] = r; })
       .catch(function (e) {
         cpPvGenCache[cpGenKey(caseId)] = { status: "generation_failed",
@@ -9223,6 +9236,16 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       }).join("") +
       "</div>" +
       (cpPvMode === "deterministic" ? "" :
+        '<div class="bar-row"><span class="bar-lb">PROMPT</span>' +
+        ((window.CompassGeneration && window.CompassGeneration.PROMPT_VERSIONS) || []).map(function (v) {
+          return '<button type="button" class="cp-case cp-pver' + (v === cpPvVersion() ? " on" : "") +
+            '" data-pver="' + esc0(v) + '" aria-pressed="' + (v === cpPvVersion() ? "true" : "false") +
+            '">' + esc0(v.replace("compass-", "")) + "</button>";
+        }).join("") +
+        '<span class="cp-genhint">' +
+        esc0(dpT("v1.1 = 写作校准版(Recognition → 关联 → 轻轻的方向)",
+                 "v1.1 = calibrated voice")) + "</span></div>") +
+      (cpPvMode === "deterministic" ? "" :
         '<div class="bar-row cp-genrow"><span class="bar-lb">RUN</span>' +
         '<button type="button" class="cp-gen" id="cpPvGenBtn"' + (cpPvGenBusy ? " disabled" : "") + ">" +
         esc0(cpPvGenBusy ? dpT("生成中…", "Generating…")
@@ -9259,7 +9282,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
         "  ·  not_translated " + c.notTranslated +
         "  ·  insufficient_evidence " + c.insufficient;
     const g = cpPvGenResult();
-    if (!g) return who + "  ·  " + cpPvMode + "  ·  尚未生成(按按钮才会送)";
+    if (!g) return who + "  ·  " + cpPvMode + "  ·  " + cpPvVersion() + "  ·  尚未生成(按按钮才会送)";
     if (g.status === "pending") return who + "  ·  " + cpPvMode + "  ·  生成中…";
     const m = g.meta || {};
     return who + "  ·  " + cpPvMode + "  ·  " + g.status +
@@ -9330,7 +9353,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   function cpPvCardHtml(d0) {
     const d = cpPvResolve(d0);
     const head = '<span class="no">' + esc0(d.no) + "</span>" +
-      '<span class="en">' + esc0(d.en) + "</span>" +
+      (window.I18N.isEN() ? '<span class="en">' + esc0(d.en) + "</span>" : "") +
       '<b class="zh">' + esc0(d.zh) + '</b><span class="rule" aria-hidden="true"></span>';
 
     if (d.state === "ok") {
@@ -9418,6 +9441,12 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       b2.addEventListener("click", function () {
         cpPvMode = b2.getAttribute("data-mode");
         cpPvPaint();                       // 切模式本身不送任何请求
+      });
+    });
+    bar.querySelectorAll(".cp-pver").forEach(function (b3) {
+      b3.addEventListener("click", function () {
+        cpPvPromptVer = b3.getAttribute("data-pver");
+        cpPvPaint();                       // 切版本一样不送任何请求
       });
     });
     const gen = document.getElementById("cpPvGenBtn");

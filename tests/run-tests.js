@@ -1522,7 +1522,7 @@ function testCompassGenerationAsync(K) {
       rows.filter(x => x.r.meta.requests !== 1).map(x => x.id).join(","), "");
     // 27 · promptVersion 有记下来
     checkEq("[gen] 每次生成都记录 promptVersion",
-      rows.every(x => x.r.meta.promptVersion === G.COMPASS_PROMPT_VERSION), true);
+      rows.every(x => x.r.meta.promptVersion === G.DEFAULT_PROMPT_VERSION), true);
     checkEq("[gen] 每次生成都记录 input contract 版本",
       rows.every(x => x.r.meta.inputContractVersion === G.INPUT_CONTRACT_VERSION), true);
     // 生成轨迹能回答「这句话从哪条机制来」
@@ -1565,7 +1565,7 @@ function testCompassGenerationAsync(K) {
   checkEq("[gen] 确定性模式下不会送任何请求",
     /if \(cpPvGenBusy \|\| cpPvMode === "deterministic"\) return;/.test(pvBlock), true);
   checkEq("[gen] 同一 case + 模式 + promptVersion 会被快取",
-    /cpPvGenCache\[cpGenKey\(/.test(pvBlock) && /caseId \+ "\|" \+ cpPvMode \+ "\|" \+ v/.test(pvBlock), true);
+    /cpPvGenCache\[cpGenKey\(/.test(pvBlock) && /caseId \+ "\|" \+ cpPvMode \+ "\|" \+ cpPvVersion\(\)/.test(pvBlock), true);
   checkEq("[gen] 正式 #\/compass 不会碰到生成层",
     /\(dev \? cpPvSectionHtml\(\) : compassDirectionsHtml\(c\)\)/.test(html), true);
   checkEq("[gen] read-chart 仍然没有 kind=compass", rc.indexOf('kind === "compass"') < 0, true);
@@ -1735,7 +1735,7 @@ function testCompassLivePathAsync(K) {
           checkEq("[live] 正常请求回 200", r.http, 200);
           checkEq("[live] 回传 status=ok", r.o.status, "ok");
           checkEq("[live] 回传的是可解析的结构化 JSON", !!G.parseOutput(r.o.text), true);
-          checkEq("[live] 回传带 promptVersion", r.o.promptVersion, G.COMPASS_PROMPT_VERSION);
+          checkEq("[live] 回传带 promptVersion", r.o.promptVersion, G.DEFAULT_PROMPT_VERSION);
           checkEq("[live] 回传里没有金钥", /test-only-not-a-real-key/.test(JSON.stringify(r.o)), false);
           const copies = G.parseOutput(r.o.text);
           const v = G.validate(copies, inp);
@@ -1793,6 +1793,127 @@ function testCompassLivePathAsync(K) {
     });
 }
 
+/* ---------- 20. 内在指南 Phase 6.2 · 写作校准 v1.1 ----------
+   只动表达。证据层 / 选择层 / 机制 / 隐私契约一律没动(仍由前面的 sha256 钉着)。 */
+function testCompassVoiceV11() {
+  const fs = require("fs");
+  const G = require(path.join(__dirname, "..", "assets", "compass-generation.js"));
+  const PV = require(path.join(__dirname, "..", "assets", "compass-preview.js"));
+  const RC = require(path.join(__dirname, "..", "assets", "compass-recorded.js"));
+  const html = fs.readFileSync(path.join(__dirname, "..", "app.html"), "utf8");
+  const edge = fs.readFileSync(path.join(__dirname, "..", "docs", "edge", "compass-generate.ts"), "utf8");
+
+  // 1 · v1 一个字都没被改掉
+  checkEq("[v11] compass-v1 仍然存在且未被覆盖", G.SYSTEMS["compass-v1"] === G.SYSTEM, true);
+  checkEq("[v11] v1 的写作指令内容没有变",
+    require("crypto").createHash("sha256").update(G.SYSTEM).digest("hex").slice(0, 16), "df3b0a8385d86155");
+  checkEq("[v11] 两个版本都在", G.PROMPT_VERSIONS.join(","), "compass-v1,compass-v1.1");
+  checkEq("[v11] 预设走 v1.1", G.DEFAULT_PROMPT_VERSION, "compass-v1.1");
+  checkEq("[v11] v1 与 v1.1 不是同一份", G.SYSTEM === G.SYSTEM_V11, false);
+
+  // 2 · v1.1 里写进了这一阶段的三件事
+  checkEq("[v11] v1.1 要求三段结构", /认出来[\s\S]{0,80}是什么[\s\S]{0,80}轻轻一步/.test(G.SYSTEM_V11), true);
+  checkEq("[v11] v1.1 禁止命令句", /不写「你应该」|不是建议、不是命令/.test(G.SYSTEM_V11), true);
+  checkEq("[v11] v1.1 点名要少用分析腔", /机制、成本、登记/.test(G.SYSTEM_V11), true);
+  checkEq("[v11] v1.1 要求四个方向各司其职",
+    /grounds 回答[\s\S]{0,400}calls   回答/.test(G.SYSTEM_V11), true);
+  checkEq("[v11] v1.1 仍然保留全部占星 / 玄学 / 诊断 / 编造原因的禁令",
+    ["绝对禁止:占星语言", "绝对禁止:玄学语言", "绝对禁止:心理诊断", "绝对禁止:编造原因"]
+      .filter(x => G.SYSTEM_V11.indexOf(x) < 0).join(","), "");
+
+  // 3 · 服务端两个版本都收,而且各自逐字核对
+  const m1 = edge.match(/const COMPASS_SYSTEM = `([\s\S]*?)`;/);
+  const m2 = edge.match(/const COMPASS_SYSTEM_V11 = `([\s\S]*?)`;/);
+  checkEq("[v11] 服务端的 v1 与前端逐字相同", m1 ? m1[1] : "", G.SYSTEM);
+  checkEq("[v11] 服务端的 v1.1 与前端逐字相同", m2 ? m2[1] : "", G.SYSTEM_V11);
+  checkEq("[v11] 服务端依 promptVersion 选版本核对",
+    /system !== SYSTEMS\[wantVersion\]/.test(edge), true);
+
+  // 4 · 命令句是硬性拒收,但否定形不算命令
+  const base = RC.RAW_V11.C1.grounds;
+  checkEq("[v11] 「你不一定要…」不算命令",
+    G.toneCheck(base).commandingTerms.join(","), "");
+  checkEq("[v11] 「你一定要…」算命令",
+    G.toneCheck({ coreInsight: "", explanation: "你一定要先说清楚。", reflectionPrompt: "" })
+      .commandingTerms.join(","), "一定要");
+  const di = G.buildInput(PV.buildCase("C1")).directions.grounds;
+  checkEq("[v11] 命令句会被验证挡下",
+    (G.validateOne(Object.assign({}, base, { explanation: base.explanation.replace("你不一定要先解释", "你应该先解释清楚") }), di).fails || [])
+      .map(f => f.rule).indexOf("commandingTone") >= 0, true);
+
+  // 5 · 分析腔与轻方向是【量测】,不是硬挡
+  const analytical = G.toneCheck({ coreInsight: "", reflectionPrompt: "",
+    explanation: "成本要等结束之后才会完整地登记进来，这是你的处理方式。" });
+  checkEq("[v11] 分析腔量得出来", analytical.analyticalTone, "high");
+  checkEq("[v11] 分析腔不会让验证直接失败",
+    (G.validateOne(Object.assign({}, base, { explanation: base.explanation }), di).fails || [])
+      .filter(f => f.rule === "analyticalTone").length, 0);
+
+  // 6 · v1.1 的四张卡:轻方向都在,而且没有放松任何既有护栏
+  return Promise.all(["compass-v1", "compass-v1.1"].map(v =>
+    G.generate(PV.buildCase("C1"), RC.transportFor("C1"), { promptVersion: v }).then(r => ({ v, r }))
+  )).then(rows => {
+    const by = {};
+    rows.forEach(x => { by[x.v] = x.r; });
+    checkEq("[v11] v1 与 v1.1 都通过验证",
+      rows.filter(x => x.r.status !== "ok").map(x => x.v).join(","), "");
+    checkEq("[v11] 生成结果记录的是被要求的那个版本",
+      rows.map(x => x.r.meta.promptVersion).join(","), "compass-v1,compass-v1.1");
+
+    const v1 = by["compass-v1"], v11 = by["compass-v1.1"];
+    const tone = (r, k) => r.validation.perDirection[k].checks.tone;
+    const dirs = ["grounds", "moves", "drains", "calls"];
+    checkEq("[v11] v1.1 四个方向都有「轻轻一步」",
+      dirs.filter(k => !tone(v11, k).gentleDirection).join(","), "");
+    checkEq("[v11] v1 本来一个都没有(这正是这一阶段要补的)",
+      dirs.filter(k => tone(v1, k).gentleDirection).join(","), "");
+    checkEq("[v11] v1.1 没有任何命令句",
+      dirs.filter(k => tone(v11, k).commandingTerms.length).join(","), "");
+    checkEq("[v11] v1.1 没有分析腔",
+      dirs.filter(k => tone(v11, k).analyticalTone === "high").join(","), "");
+    checkEq("[v11] v1.1 的 coreInsight 不是报告标题",
+      dirs.filter(k => tone(v11, k).reportTitleShape).join(","), "");
+    /* 既有护栏一条都没放松 */
+    checkEq("[v11] v1.1 没有占星 / 诊断外漏",
+      dirs.filter(k => { const q = v11.validation.perDirection[k].checks;
+        return q.astrologyLeak || q.diagnosticLeak; }).join(","), "");
+    checkEq("[v11] v1.1 没有编造原因",
+      dirs.filter(k => (v11.validation.perDirection[k].fidelity.unsupported || []).length).join(","), "");
+    checkEq("[v11] v1.1 四张卡仍然彼此不重复",
+      v11.validation.crossCard.pairs[0].similarity < 0.35, true);
+    /* 反思句要能想起最近的事,不是行为统计题 */
+    checkEq("[v11] v1.1 的反思句都指向最近 / 现在",
+      dirs.filter(k => !/最近|现在|这一?周|今天/.test(v11.copies[k].reflectionPrompt)).join(","), "");
+    checkEq("[v11] v1.1 没有「上一次…多久」这种统计题",
+      dirs.filter(k => /多久|几次[^，。？]*\?|几天/.test(v11.copies[k].reflectionPrompt)).join(","), "");
+    /* 机制没有被改掉 */
+    checkEq("[v11] 两个版本选中的机制完全相同",
+      dirs.map(k => v1.input.directions[k].selectedPattern.key).join(","),
+      dirs.map(k => v11.input.directions[k].selectedPattern.key).join(","));
+  });
+}
+
+/* §6.2-1:中文模式不再显示英文小标 */
+function testCompassZhOnlyLabels() {
+  const fs = require("fs");
+  const html = fs.readFileSync(path.join(__dirname, "..", "app.html"), "utf8");
+  checkEq("[zh] 英文小标只在英文模式出现",
+    /window\.I18N\.isEN\(\)\s*\n?\s*\?\s*'<div class="cp-eyebrow">/.test(html), true);
+  checkEq("[zh] 中文模式的小标只剩一颗星", /cp-eyebrow zh-only/.test(html), true);
+  const dirBlock = html.slice(html.indexOf("function compassDirectionsHtml"),
+                              html.indexOf("function compassRemindersHtml"));
+  checkEq("[zh] 正式页四方向的英文名只在英文模式印",
+    /window\.I18N\.isEN\(\) \? '<span class="en">' \+ esc0\(it\.en\)/.test(dirBlock), true);
+  const cardBlock = html.slice(html.indexOf("function cpPvCardHtml"), html.indexOf("function cpPvGridHtml"));
+  checkEq("[zh] 预览四方向的英文名也只在英文模式印",
+    /window\.I18N\.isEN\(\) \? '<span class="en">' \+ esc0\(d\.en\)/.test(cardBlock), true);
+  /* 中文版面文字本身没有被动到 */
+  ["什么让我安定", "什么让我前进", "什么正在消耗我", "我正在被什么吸引",
+   "你的内在指南", "想留给自己的几句话", "此刻的我", "我的星空记录"].forEach(t => {
+    checkEq("[zh] 中文标题仍在:" + t, html.indexOf(t) > 0, true);
+  });
+}
+
 /* ---------- 跑 ---------- */
 function main() {
   testTimezones();
@@ -1813,7 +1934,9 @@ function main() {
   testCompassDevPreview();
   const genJobs = testCompassGeneration();
   const liveJobs = testCompassLivePath();
-  return Promise.all([genJobs, liveJobs]).then(function () { return testPlaces(); }).then(function () {
+  const voiceJobs = testCompassVoiceV11();
+  testCompassZhOnlyLabels();
+  return Promise.all([genJobs, liveJobs, voiceJobs]).then(function () { return testPlaces(); }).then(function () {
     console.log("\n对照来源:" + REF.reference);
     console.log("设置:" + JSON.stringify(REF.settings));
     console.log("\n通过 " + pass + " / 失败 " + fail);

@@ -26,7 +26,7 @@
 type Any = any;
 
 const MODEL = "claude-sonnet-4-6";
-const PROMPT_VERSION = "compass-v1";
+const DEFAULT_PROMPT_VERSION = "compass-v1.1";   // 新的生成预设走校准版;v1 仍然叫得出来
 const MAX_TOKENS = 3000;
 
 /* ── 写作指令(权威副本)────────────────────────────────────
@@ -99,6 +99,120 @@ reflectionPrompt  一句自然的问题,而且必须从同一条机制来 ——
 { "directions": [ { "direction": "grounds", "coreInsight": "…", "explanation": "…", "reflectionPrompt": "…" } ] }
 只为 status 是 ready 的方向输出。status 是 insufficient_evidence 的方向【不要】出现在结果里。`;
 
+/* ── 写作指令 v1.1(权威副本)· Phase 6.2 ───────────────────
+   校准版:Recognition → Relevance → 轻轻的方向。
+   v1 原封不动留着,两个版本都收 —— 呼叫端用 promptVersion 指定要哪一个,
+   服务端再核对 system 是否与该版本【逐字相同】。 */
+const COMPASS_SYSTEM_V11 = `你在为 The Inner Sky 的「我的内在指南」写文案。
+
+系统已经完成所有判断。你【只负责表达】。
+· 你不重新判断这个人是谁。
+· 你不重新分析任何资料。
+· 你不更改、扩充或重新诠释收到的机制。
+你收到的每一条 mechanism,都是系统已经确认「够格被说」而且「值得被说」的结论。
+
+【你要写成什么样子】
+想像一个很了解这个人的朋友,把他平常说不清楚的东西说出来,
+然后轻轻帮他看见:这件事跟他现在的生活有什么关系。
+不是心理报告,不是人生哲理,不是疗愈散文,不是鸡汤,不是建议清单。
+
+语气参考(这是目标):
+「你不是每次累的时候都想休息。有时候你只是想暂时不用回应任何人。
+等外面的声音安静一点,你才比较容易知道自己到底怎么了。
+所以有些时候,你不一定要先解释,只要先让自己安静下来就够了。」
+
+不要写成:「你具有高度内在处理需求,因此在外部刺激过多时需要撤退。」
+也不要写成:「你的灵魂需要一片安静的天空。」
+
+【explanation 的三段】
+A 认出来  —— 一个具体、认得出来的生活画面(某个时刻、某个动作)
+B 是什么  —— 说清楚真正发生的是什么。【不要过度解释为什么】
+C 轻轻一步 —— 最后一句往前半步。只能一句,而且必须从同一条机制来。
+
+C 这一句【不是建议、不是命令】。不写「你应该」「你必须」「你需要学会」。
+可以用的句式:
+「所以你不一定要……」「有时候可以先……」「你可以先不用急着……」
+「对你来说,也许比……更重要的是……」「当这种情况出现时,可以先看看……」
+「这时候不一定是你不够努力,也可能只是……」
+
+【少用分析腔】
+尽量不要出现:机制、成本、登记、结构、系统、判断、处理方式、模式本身、
+运作、输入、输出、验证、确认流程、资源、效率。
+例:不要写「成本要等结束之后才会完整地登记进来」,
+要写「很多时候,你是在事情结束以后,才发现自己其实已经累了一阵子」。
+
+【不要硬推因果】
+描述看得到的模式,不要替这个人解释「为什么会这样」。
+不要写「你愿意说多少,取决于上一次说了以后发生什么」(因果太强)。
+要写「你可能会先说一点,看看对方怎么接」「真正走近以前,你通常会多确认几次」。
+
+【四个方向各司其职】
+grounds 回答「我乱掉、累、卡住的时候,什么真的能让我回来?」结尾要帮他回到稳定。
+moves   回答「什么真的让我愿意投入、愿意往前?」——【不要】写成消耗。
+drains  回答「什么样的反覆过程正在慢慢耗掉我?」要讲清楚耗在哪一段。
+calls   回答「我总是会被什么样的经验、问题或方向吸引?」
+        要有方向感,但不要写成使命、天命、注定。
+
+【绝对禁止:占星语言】
+不得出现:星座、宫位、行星、太阳、月亮、水星、金星、火星、木星、土星、天王星、
+海王星、冥王星、上升、天顶、天底、北交、南交、节点、相位、逆行、元素、
+固定宫、变动宫、基本宫、守护星、度数、星盘、命盘、配置,以及它们的英文同义词。
+也不得出现「你的星盘显示」「你的命盘告诉你」「你的配置说明」这类说法。
+你收到的资料里本来就没有这些东西 —— 如果你想写,那代表你在自己编。
+
+【绝对禁止:玄学语言】
+宇宙、命运、灵魂、能量、召唤、蜕变、绽放、丰盛、疗愈旅程、更高的自己、生命安排。
+
+【绝对禁止:心理诊断】
+创伤、依恋、回避型、焦虑型、神经系统、失调、内在小孩、防御机制、讨好型人格、过度警觉。
+「累」「紧张」「在意」「不确定」这些日常词可以自然使用,但不要下诊断。
+
+【绝对禁止:编造原因】
+只能写收到的机制里有的东西。不得推测童年、家庭、父母、感情史、工作经历、
+性别、疾病,也不得替这个人安上机制里没有的动机。
+例如机制是「先承担 → 事后才发现累」,
+就不可以写成「你害怕别人失望,所以总是承担」——「害怕别人失望」不在机制里。
+
+【不要贴标签】
+不写「你是一个……」「你天生……」「你的性格就是……」「你属于……」「你注定……」。
+
+【coreInsight 不要像报告标题】
+少用「X 决定 Y」「真正的 X 是 Y」「你之所以……是因为……」。
+优先:「你比较容易在……之后,才发现……」「让你慢慢回来的,通常是……」
+「你真正容易累的地方,可能在……」「你会重新有兴趣,常常是因为……」
+
+【长度】
+coreInsight   15–35 个中文字,一句话
+explanation   60–130 个中文字。以读起来自然为准,不要为了凑字数硬塞。
+reflectionPrompt  一句。
+
+【reflectionPrompt 要让人想起最近发生的事】
+不是行为统计题,不是治疗作业,不是测验。
+优先:「最近有没有一件事……」「现在有没有一段关系……」
+「最近哪件事让你发现……」「有没有什么你一直以为是……,后来发现其实是……」
+不要问「上一次你……之前,你一个人待了多久?」这种要人回去计算行为的题目。
+
+【composite】
+收到 composite 时,写的是一个【有顺序的过程】,不是把两段机制拼在一起。
+
+【tension】
+收到 tension 时,不要「解决」矛盾。两边都是真的,重点是什么时候哪一边先出现。
+不要写成「你既内向又外向」。
+
+【四张卡一起读】
+你会同时看到四个方向。可以参考彼此,让四张卡像同一个人,
+但每一张只能写自己那一条机制 —— 不要把别的方向的机制写进来,也不要四张话都差不多。
+
+【输出】
+只输出 JSON,不要任何说明文字、不要 markdown 代码围栏。格式:
+{ "directions": [ { "direction": "grounds", "coreInsight": "…", "explanation": "…", "reflectionPrompt": "…" } ] }
+只为 status 是 ready 的方向输出。status 是 insufficient_evidence 的方向【不要】出现在结果里。`;
+
+const SYSTEMS: Record<string,string> = {
+  "compass-v1": COMPASS_SYSTEM,
+  "compass-v1.1": COMPASS_SYSTEM_V11
+};
+
 /* 服务端的第二道扫描。与前端 compass-generation.js 的 scrub 同一份意图,
    但刻意各自实作 —— 前端被绕过时这一道仍然会挡。 */
 const ASTRO_RE = [
@@ -145,7 +259,7 @@ Deno.serve(async (req: Request) => {
 
   const apiKey = Deno.env.get("ANTHROPIC_API_KEY") ?? "";
   if (req.method === "GET")
-    return json({ ok: true, function: "compass-generate (" + PROMPT_VERSION + ")",
+    return json({ ok: true, function: "compass-generate (" + Object.keys(SYSTEMS).join(" | ") + ")",
       anthropic_key_set: apiKey.length > 0, model: MODEL,
       note: "dev prototype · 不写资料库 · 只接受 human-mechanism contract" }, 200, cors);
 
@@ -167,11 +281,13 @@ Deno.serve(async (req: Request) => {
     if (body.chart || input.chart)
       return json({ error: "compass-generate 不接受星盘资料" }, 400, cors);
 
-    /* 写作指令必须是这一支自己那一份,一个字都不能差。
+    /* 写作指令必须是这一支自己那几份其中之一,一个字都不能差。
        呼叫端因此没有任何管道把内容偷渡进 prompt。 */
-    if (system !== COMPASS_SYSTEM)
+    const wantVersion = String(body.promptVersion || "") in SYSTEMS
+      ? String(body.promptVersion) : DEFAULT_PROMPT_VERSION;
+    if (system !== SYSTEMS[wantVersion])
       return json({ error: "prompt_mismatch",
-                    detail: "system 与服务端的 COMPASS_SYSTEM 不一致" }, 400, cors);
+                    detail: "system 与服务端的 " + wantVersion + " 不一致" }, 400, cors);
 
     /* 扫描的对象是【资料】,不是我们自己的禁令表:
          · input 全扫
@@ -189,7 +305,7 @@ Deno.serve(async (req: Request) => {
     const ready = Object.keys(input.directions)
       .filter((k) => input.directions[k] && input.directions[k].status === "ready");
     if (!ready.length)
-      return json({ status: "no_ready_direction", text: "", promptVersion: PROMPT_VERSION }, 200, cors);
+      return json({ status: "no_ready_direction", text: "", promptVersion: wantVersion }, 200, cors);
 
     const resp = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
@@ -205,14 +321,14 @@ Deno.serve(async (req: Request) => {
     if (!resp.ok) {
       const err = await resp.text();
       return json({ status: "generation_failed", reason: "upstream_" + resp.status,
-                    detail: err.slice(0, 300), promptVersion: PROMPT_VERSION }, 502, cors);
+                    detail: err.slice(0, 300), promptVersion: wantVersion }, 502, cors);
     }
     const data = await resp.json();
     const text = (data.content ?? []).map((b: Any) => (b.type === "text" ? b.text : "")).join("\n");
 
     /* 验证一律留在呼叫端(compass-generation.js)做 —— 同一份规则只有一处实作。
        这一支只负责「把话拿回来」,不负责判断话写得好不好。 */
-    return json({ status: "ok", text, promptVersion: PROMPT_VERSION, model: MODEL,
+    return json({ status: "ok", text, promptVersion: wantVersion, model: MODEL,
                   usage: data.usage ?? null, readyDirections: ready }, 200, cors);
   } catch (e) {
     return json({ status: "generation_failed", reason: "exception", detail: String(e) }, 500, cors);

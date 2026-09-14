@@ -112,10 +112,39 @@
     }
   };
 
+  /* ── compass-v1.1 的校准样本(Phase 6.2)─────────────────────
+     同样是 Claude 依照 compass-v1.1 的 prompt 实际写的,同样【不是】HTTP API 回应。
+     写的是 C1 那一组机制 —— 也正好是使用者自己那张盘选中的四条。
+     用途:让你在真的打 API 之前,先看到 v1.1 应该长什么样子。 */
+  var R11 = {
+    C1: {
+      grounds: {
+        coreInsight: "你不是不想说，多半只是还没把自己整理好。",
+        explanation: "事情刚发生的时候，你通常讲不清楚，也不太想讲。你需要先把外面的声音关小一点，让心里的东西自己沉下来，变成一句讲得出口的话，你才比较容易开口，也才重新想靠近人。所以有些时候，你不一定要先解释，先让自己安静一会儿就够了。",
+        reflectionPrompt: "最近有没有一件事，你其实还没想清楚，就被要求先说出来了？"
+      },
+      moves: {
+        coreInsight: "你会投入很久的事，通常是你说得出为什么要做的那一种。",
+        explanation: "当你知道这件事为什么要做、会把你带到哪里，你可以在上面耗很久也不觉得勉强。一旦只剩下交出去就好这个理由，同样的事情会突然变得很难推动。所以没力气的时候，可以先看看是不是那个自己认同的理由不见了。",
+        reflectionPrompt: "最近有没有一件事，你忽然发现自己说不出为什么还在做它？"
+      },
+      drains: {
+        coreInsight: "真正让你累的，可能不是靠近，而是靠近之前那一次次的确认。",
+        explanation: "你通常是先说一点，停下来看看对方怎么接；没问题，再多说一点。这样一段一段来，你会觉得比较稳，可是每一段之间都要重新掂量一次，那个反覆掂量本身就很花力气。所以慢一点没关系，只是也可以先看看，有些人是不是其实已经不用再确认了。",
+        reflectionPrompt: "现在有没有一个人，其实你早就可以少确认几次了？"
+      },
+      calls: {
+        coreInsight: "你会重新有兴趣，常常是因为换了一个看法，而不是换了一件事。",
+        explanation: "同一件事做到第三遍，你会开始走神，做得完，但整个人不在里面。难的部分你反而撑得住，重复才是真正把你磨掉的。这时候让你回来的，往往不是休息，是有人给了它另一层意思。所以你可以先不用急着换掉它，看看它还有没有另一层没被你看见。",
+        reflectionPrompt: "最近有没有一件事，你其实是想换个角度，而不是想放下它？"
+      }
+    }
+  };
+
   /* 包成 transport 可以吃的形状 —— 与真实 API 回来的文字格式完全一致,
      这样验证管线跑的是同一条路径。 */
-  function textFor(caseId) {
-    var m = R[caseId];
+  function textFor(caseId, version) {
+    var m = (version === "compass-v1.1" && R11[caseId]) ? R11[caseId] : R[caseId];
     if (!m) return null;
     return JSON.stringify({
       directions: Object.keys(m).map(function (k) {
@@ -124,9 +153,9 @@
       })
     });
   }
-  function transportFor(caseId) {
-    return function () {
-      var t = textFor(caseId);
+  function transportFor(caseId, version) {
+    return function (p) {
+      var t = textFor(caseId, (p && p.promptVersion) || version);
       if (!t) return Promise.reject(new Error("no recorded generation for " + caseId));
       return Promise.resolve(t);
     };
@@ -134,7 +163,8 @@
 
   return {
     PROMPT_VERSION: PROMPT_VERSION, MODEL: MODEL,
-    CASES: Object.keys(R), RAW: R,
+    CASES: Object.keys(R), RAW: R, RAW_V11: R11,
+    CASES_V11: Object.keys(R11),
     textFor: textFor, transportFor: transportFor,
     isRecorded: true
   };

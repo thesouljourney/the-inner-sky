@@ -272,7 +272,133 @@
     "只为 status 是 ready 的方向输出。status 是 insufficient_evidence 的方向【不要】出现在结果里。"
   ].join("\n");
 
-  function buildPrompt(input, retryNote) {
+  /* ──────────────────────────────────────────────────────────
+     3b. compass-v1.1 —— 写作校准(Phase 6.2)
+     ------------------------------------------------------------
+     v1 的问题不是不准,是太像「一个聪明的人在分析你」。
+     v1.1 只动【表达】,证据层、选择层、机制、隐私契约一律没动。
+
+     三段结构:Recognition → Relevance → 轻轻的方向。
+     v1 仍然原封不动留着,方便 A/B。
+     ────────────────────────────────────────────────────────── */
+  var SYSTEM_V11 = [
+    "你在为 The Inner Sky 的「我的内在指南」写文案。",
+    "",
+    "系统已经完成所有判断。你【只负责表达】。",
+    "· 你不重新判断这个人是谁。",
+    "· 你不重新分析任何资料。",
+    "· 你不更改、扩充或重新诠释收到的机制。",
+    "你收到的每一条 mechanism,都是系统已经确认「够格被说」而且「值得被说」的结论。",
+    "",
+    "【你要写成什么样子】",
+    "想像一个很了解这个人的朋友,把他平常说不清楚的东西说出来,",
+    "然后轻轻帮他看见:这件事跟他现在的生活有什么关系。",
+    "不是心理报告,不是人生哲理,不是疗愈散文,不是鸡汤,不是建议清单。",
+    "",
+    "语气参考(这是目标):",
+    "「你不是每次累的时候都想休息。有时候你只是想暂时不用回应任何人。",
+    "等外面的声音安静一点,你才比较容易知道自己到底怎么了。",
+    "所以有些时候,你不一定要先解释,只要先让自己安静下来就够了。」",
+    "",
+    "不要写成:「你具有高度内在处理需求,因此在外部刺激过多时需要撤退。」",
+    "也不要写成:「你的灵魂需要一片安静的天空。」",
+    "",
+    "【explanation 的三段】",
+    "A 认出来  —— 一个具体、认得出来的生活画面(某个时刻、某个动作)",
+    "B 是什么  —— 说清楚真正发生的是什么。【不要过度解释为什么】",
+    "C 轻轻一步 —— 最后一句往前半步。只能一句,而且必须从同一条机制来。",
+    "",
+    "C 这一句【不是建议、不是命令】。不写「你应该」「你必须」「你需要学会」。",
+    "可以用的句式:",
+    "「所以你不一定要……」「有时候可以先……」「你可以先不用急着……」",
+    "「对你来说,也许比……更重要的是……」「当这种情况出现时,可以先看看……」",
+    "「这时候不一定是你不够努力,也可能只是……」",
+    "",
+    "【少用分析腔】",
+    "尽量不要出现:机制、成本、登记、结构、系统、判断、处理方式、模式本身、",
+    "运作、输入、输出、验证、确认流程、资源、效率。",
+    "例:不要写「成本要等结束之后才会完整地登记进来」,",
+    "要写「很多时候,你是在事情结束以后,才发现自己其实已经累了一阵子」。",
+    "",
+    "【不要硬推因果】",
+    "描述看得到的模式,不要替这个人解释「为什么会这样」。",
+    "不要写「你愿意说多少,取决于上一次说了以后发生什么」(因果太强)。",
+    "要写「你可能会先说一点,看看对方怎么接」「真正走近以前,你通常会多确认几次」。",
+    "",
+    "【四个方向各司其职】",
+    "grounds 回答「我乱掉、累、卡住的时候,什么真的能让我回来?」结尾要帮他回到稳定。",
+    "moves   回答「什么真的让我愿意投入、愿意往前?」——【不要】写成消耗。",
+    "drains  回答「什么样的反覆过程正在慢慢耗掉我?」要讲清楚耗在哪一段。",
+    "calls   回答「我总是会被什么样的经验、问题或方向吸引?」",
+    "        要有方向感,但不要写成使命、天命、注定。",
+    "",
+    "【绝对禁止:占星语言】",
+    "不得出现:星座、宫位、行星、太阳、月亮、水星、金星、火星、木星、土星、天王星、",
+    "海王星、冥王星、上升、天顶、天底、北交、南交、节点、相位、逆行、元素、",
+    "固定宫、变动宫、基本宫、守护星、度数、星盘、命盘、配置,以及它们的英文同义词。",
+    "也不得出现「你的星盘显示」「你的命盘告诉你」「你的配置说明」这类说法。",
+    "你收到的资料里本来就没有这些东西 —— 如果你想写,那代表你在自己编。",
+    "",
+    "【绝对禁止:玄学语言】",
+    "宇宙、命运、灵魂、能量、召唤、蜕变、绽放、丰盛、疗愈旅程、更高的自己、生命安排。",
+    "",
+    "【绝对禁止:心理诊断】",
+    "创伤、依恋、回避型、焦虑型、神经系统、失调、内在小孩、防御机制、讨好型人格、过度警觉。",
+    "「累」「紧张」「在意」「不确定」这些日常词可以自然使用,但不要下诊断。",
+    "",
+    "【绝对禁止:编造原因】",
+    "只能写收到的机制里有的东西。不得推测童年、家庭、父母、感情史、工作经历、",
+    "性别、疾病,也不得替这个人安上机制里没有的动机。",
+    "例如机制是「先承担 → 事后才发现累」,",
+    "就不可以写成「你害怕别人失望,所以总是承担」——「害怕别人失望」不在机制里。",
+    "",
+    "【不要贴标签】",
+    "不写「你是一个……」「你天生……」「你的性格就是……」「你属于……」「你注定……」。",
+    "",
+    "【coreInsight 不要像报告标题】",
+    "少用「X 决定 Y」「真正的 X 是 Y」「你之所以……是因为……」。",
+    "优先:「你比较容易在……之后,才发现……」「让你慢慢回来的,通常是……」",
+    "「你真正容易累的地方,可能在……」「你会重新有兴趣,常常是因为……」",
+    "",
+    "【长度】",
+    "coreInsight   15–35 个中文字,一句话",
+    "explanation   60–130 个中文字。以读起来自然为准,不要为了凑字数硬塞。",
+    "reflectionPrompt  一句。",
+    "",
+    "【reflectionPrompt 要让人想起最近发生的事】",
+    "不是行为统计题,不是治疗作业,不是测验。",
+    "优先:「最近有没有一件事……」「现在有没有一段关系……」",
+    "「最近哪件事让你发现……」「有没有什么你一直以为是……,后来发现其实是……」",
+    "不要问「上一次你……之前,你一个人待了多久?」这种要人回去计算行为的题目。",
+    "",
+    "【composite】",
+    "收到 composite 时,写的是一个【有顺序的过程】,不是把两段机制拼在一起。",
+    "",
+    "【tension】",
+    "收到 tension 时,不要「解决」矛盾。两边都是真的,重点是什么时候哪一边先出现。",
+    "不要写成「你既内向又外向」。",
+    "",
+    "【四张卡一起读】",
+    "你会同时看到四个方向。可以参考彼此,让四张卡像同一个人,",
+    "但每一张只能写自己那一条机制 —— 不要把别的方向的机制写进来,也不要四张话都差不多。",
+    "",
+    "【输出】",
+    "只输出 JSON,不要任何说明文字、不要 markdown 代码围栏。格式:",
+    '{ "directions": [ { "direction": "grounds", "coreInsight": "…", "explanation": "…", "reflectionPrompt": "…" } ] }',
+    "只为 status 是 ready 的方向输出。status 是 insufficient_evidence 的方向【不要】出现在结果里。"
+  ].join("\n");
+
+  /* 版本表。v1 一个字都没动 —— 要 A/B 就靠这张表。 */
+  var SYSTEMS = {
+    "compass-v1": SYSTEM,
+    "compass-v1.1": SYSTEM_V11
+  };
+  var PROMPT_VERSIONS = ["compass-v1", "compass-v1.1"];
+  /* 预设版本。Phase 6.2 起新的生成走 v1.1;v1 仍然叫得出来。 */
+  var DEFAULT_PROMPT_VERSION = "compass-v1.1";
+
+  function buildPrompt(input, retryNote, version) {
+    version = SYSTEMS[version] ? version : DEFAULT_PROMPT_VERSION;
     var ready = Object.keys(input.directions).filter(function (k) {
       return input.directions[k].status === "ready";
     });
@@ -294,7 +420,7 @@
     if (retryNote) {
       lines.push("", "【上一次的输出被退回,请修正下列问题后重写】", retryNote);
     }
-    return { system: SYSTEM, user: lines.join("\n"), promptVersion: COMPASS_PROMPT_VERSION };
+    return { system: SYSTEMS[version], user: lines.join("\n"), promptVersion: version };
   }
 
   /* ──────────────────────────────────────────────────────────
@@ -344,6 +470,31 @@
   function has(text, list) { return list.some(function (w) { return text.indexOf(w) >= 0; }); }
   function hits(text, list) { return list.filter(function (w) { return text.indexOf(w) >= 0; }); }
 
+  /* §6.2:两项【量测】,不是硬性拒收。
+     校准阶段要先看得到,再决定要不要变成硬门槛 —— 现在就挡会挡到没必要挡的句子。 */
+  var ANALYTICAL = ["机制", "成本", "登记", "结构", "系统", "判断", "处理方式",
+    "模式本身", "运作", "输入", "输出", "验证", "确认流程", "资源", "效率"];
+  var GENTLE_CUES = ["不一定要", "可以先", "不用急着", "也许比", "可以先看看",
+    "不一定是", "也可能只是", "不必", "不妨", "先不用", "允许自己"];
+  var COMMANDING = ["你应该", "你必须", "你需要学会", "请你", "记得要", "一定要"];
+  /* 否定形是【温和】的句式,不是命令 —— 「你不一定要先解释」里面含有「一定要」,
+     直接比对会把正确的写法误判成命令。先把否定形拿掉再比。 */
+  var NEGATED_COMMANDS = ["不一定要", "不必一定要", "没有一定要"];
+
+  function toneCheck(copy) {
+    var all = [copy.coreInsight, copy.explanation, copy.reflectionPrompt].join("");
+    var cmdText = NEGATED_COMMANDS.reduce(function (t, w) { return t.split(w).join("　"); }, all);
+    var expl = String(copy.explanation || "");
+    return {
+      analyticalTerms: hits(all, ANALYTICAL),
+      analyticalTone: hits(all, ANALYTICAL).length >= 2 ? "high"
+        : (hits(all, ANALYTICAL).length === 1 ? "medium" : "low"),
+      gentleDirection: has(expl.slice(Math.floor(expl.length * 0.45)), GENTLE_CUES),
+      commandingTerms: hits(cmdText, COMMANDING),
+      reportTitleShape: /决定|真正的.{0,6}是|之所以/.test(String(copy.coreInsight || ""))
+    };
+  }
+
   function validateOne(copy, dirInput) {
     var fails = [], warns = [];
     var all = [copy.coreInsight, copy.explanation, copy.reflectionPrompt].join("");
@@ -386,7 +537,13 @@
     if (!fid.shapeKept)
       fails.push({ rule: "mechanismShape", detail: "机制是" + fid.shape + "型,文案没有保住这个形状", noRetry: true });
 
-    return { ok: fails.length === 0, fails: fails, warns: warns, checks: q, fidelity: fid };
+    /* 命令句是硬性的 —— §4 明写不准出现 */
+    var tone = toneCheck(copy);
+    if (tone.commandingTerms.length)
+      fails.push({ rule: "commandingTone", detail: tone.commandingTerms.join("、") });
+    q.tone = tone;
+
+    return { ok: fails.length === 0, fails: fails, warns: warns, checks: q, fidelity: fid, tone: tone };
   }
 
   /* 11 · 跨卡重复 */
@@ -449,10 +606,11 @@
      ────────────────────────────────────────────────────────── */
   function generate(vm, transport, opts) {
     opts = opts || {};
+    var version = SYSTEMS[opts.promptVersion] ? opts.promptVersion : DEFAULT_PROMPT_VERSION;
     var input = buildInput(vm, opts);
     var leaks = scrub(input);
     var meta = {
-      promptVersion: COMPASS_PROMPT_VERSION,
+      promptVersion: version,
       inputContractVersion: INPUT_CONTRACT_VERSION,
       outputSchemaVersion: OUTPUT_SCHEMA_VERSION,
       model: opts.model || null,
@@ -474,7 +632,7 @@
     }
 
     function attempt(retryNote) {
-      var p = buildPrompt(input, retryNote);
+      var p = buildPrompt(input, retryNote, version);
       meta.requests++;
       return Promise.resolve(transport(p)).then(function (text) {
         var copies = parseOutput(text);
@@ -548,6 +706,11 @@
     COMPASS_PROMPT_VERSION: COMPASS_PROMPT_VERSION,
     OUTPUT_SCHEMA_VERSION: OUTPUT_SCHEMA_VERSION,
     SYSTEM: SYSTEM,
+    SYSTEM_V11: SYSTEM_V11,
+    SYSTEMS: SYSTEMS,
+    PROMPT_VERSIONS: PROMPT_VERSIONS,
+    DEFAULT_PROMPT_VERSION: DEFAULT_PROMPT_VERSION,
+    toneCheck: toneCheck,
     DIRECTION_LABEL: DIRECTION_LABEL,
     UNSUPPORTED: UNSUPPORTED,
     scrub: scrub,
