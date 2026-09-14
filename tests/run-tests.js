@@ -1668,6 +1668,33 @@ function testCompassLivePath() {
   checkEq("[live] 端点可以用 localStorage 覆写(开发旁路)",
     /localStorage\.getItem\("compass_gen_url"\)/.test(html), true);
 
+  /* 5 · 沿用专案既有的 secret,而且【只】需要这一个 */
+  checkEq("[live] 只用既有的 ANTHROPIC_API_KEY,没有改名",
+    (edge.match(/Deno\.env\.get\("ANTHROPIC_API_KEY"\)/g) || []).length, 1);
+  checkEq("[live] 没有多要 SUPABASE_SERVICE_ROLE_KEY / SUPABASE_URL",
+    /SUPABASE_SERVICE_ROLE_KEY|Deno\.env\.get\("SUPABASE_URL"\)/.test(edge), false);
+  /* 端点预设就指向本专案的 project ref,不必另外设定 */
+  checkEq("[live] 端点预设由 CloudCfg 推导,不写死第二份网址",
+    /window\.CloudCfg\.url \+ "\/functions\/v1\/compass-generate"/.test(html), true);
+  checkEq("[live] 呼叫标头与既有的 read-chart 同一套(Bearer + apikey)",
+    /Authorization": "Bearer " \+ bearer[\s\S]{0,120}apikey/.test(
+      html.slice(html.indexOf("function cpLiveTransport"), html.indexOf("function cpPvGenerate"))), true);
+
+  /* 6 · 第一次部署最常见的失败要分得出类别,不能笼统当成「生成失败」 */
+  const lt = html.slice(html.indexOf("function cpLiveTransport"), html.indexOf("function cpPvGenerate"));
+  checkEq("[live] 非 JSON 的回应(闸道 401/404)不会让 r.json() 直接抛错",
+    /r\.text\(\)\.then/.test(lt) && !/return r\.json\(\);/.test(lt), true);
+  checkEq("[live] fetch 本身失败会被标成 network-or-cors", /network-or-cors/.test(lt), true);
+  checkEq("[live] 每一次 POST 都留下状态码与耗时", /rec\.status = r\.status/.test(lt) && /rec\.ms = Date\.now\(\) - t0/.test(lt), true);
+
+  /* 7 · 验证报告可以一键复制,而且【不含】任何凭证 */
+  const rep = html.slice(html.indexOf("function cpPvReport"), html.indexOf("function cpPvGenResult"));
+  checkEq("[live] 有验证报告可以复制", /id="cpPvCopy"/.test(html) && rep.length > 200, true);
+  checkEq("[live] 验证报告不含 Authorization / apikey / 金钥",
+    /Authorization|apikey|anon|token|sk-ant/.test(rep), false);
+  checkEq("[live] 验证报告含 HTTP 状态、请求数、验证旗标",
+    /status=/.test(rep) && /total POST/.test(rep) && /unsupported=/.test(rep), true);
+
   return testCompassLivePathAsync({ G, PV, RC, edgePath });
 }
 function CASE_IDS_FOR_LIVE() {
