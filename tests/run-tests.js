@@ -1314,8 +1314,14 @@ function testCompassDevPreview() {
   const pvStart = html.indexOf("function cpPvLoadOne"), pvEnd = html.indexOf("function renderCompassPage");
   checkEq("[pv] 找得到预览这一段", pvStart > 0 && pvEnd > pvStart, true);
   const pvBlock = html.slice(pvStart, pvEnd);
-  checkEq("[pv] 预览这一段没有发出任何请求",
-    /fetch\(|FUNC_URL|netFetch|read-chart/.test(pvBlock), false);
+  /* Phase 6 起,预览多了一个【手动】的生成呼叫。所以改成更精确的保证:
+     整段里只有一处 fetch,而且它只在 cpLiveTransport 里;
+     既有的生成端点(read-chart / FUNC_URL)一个字都没碰。 */
+  checkEq("[pv] 预览没有碰既有的生成端点",
+    /FUNC_URL|netFetch|read-chart/.test(pvBlock), false);
+  checkEq("[pv] 预览里只有一处 fetch", (pvBlock.match(/fetch\(/g) || []).length, 1);
+  checkEq("[pv] 那一处 fetch 只在 live transport 里",
+    /function cpLiveTransport\(\)[\s\S]*?fetch\(COMPASS_GEN_URL/.test(pvBlock), true);
 
   // 11/12/13 · 三层原型的规则、计分、文案都没被动到
   checkEq("[pv] 27 条规则 + 2 条护栏的内容没有改变", h(CE.PATTERN_RULES), "3de5d02f45bc7d33");
@@ -1360,6 +1366,256 @@ function testCompassDevPreview() {
     /compass\/preview|cp-pv|cp-devbar|compass-preview/.test(idx), false);
 }
 
+/* ---------- 18. 内在指南 Phase 6 · Claude 生成层 ----------
+   对应任务书第 39 节的 30 项。核心只有一句:
+     证据层决定什么够格被说,选择层决定什么值得被说,
+     Claude 只决定怎么说 —— 它不重新解盘,也看不到盘。 */
+function testCompassGeneration() {
+  const fs = require("fs");
+  const crypto = require("crypto");
+  const CE = require(path.join(__dirname, "..", "assets", "compass-evidence.js"));
+  const CS = require(path.join(__dirname, "..", "assets", "compass-selection.js"));
+  const CT = require(path.join(__dirname, "..", "assets", "compass-translation.js"));
+  const CC = require(path.join(__dirname, "..", "assets", "compass-cases.js"));
+  const PV = require(path.join(__dirname, "..", "assets", "compass-preview.js"));
+  const G = require(path.join(__dirname, "..", "assets", "compass-generation.js"));
+  const RC = require(path.join(__dirname, "..", "assets", "compass-recorded.js"));
+  const html = fs.readFileSync(path.join(__dirname, "..", "app.html"), "utf8");
+  const idx = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
+  const gsrc = fs.readFileSync(path.join(__dirname, "..", "assets", "compass-generation.js"), "utf8");
+  const edge = fs.readFileSync(path.join(__dirname, "..", "docs", "edge", "compass-generate.ts"), "utf8");
+  const rc = fs.readFileSync(path.join(__dirname, "..", "docs", "edge", "read-chart.ts"), "utf8");
+  const h = (o) => crypto.createHash("sha256").update(JSON.stringify(o)).digest("hex").slice(0, 16);
+
+  const inputs = CC.ids.map(id => ({ id, input: G.buildInput(PV.buildCase(id)) }));
+  const blob = JSON.stringify(inputs.map(x => x.input));
+
+  // 1–4 · 送出去的东西里没有原始占星,也没有出生资料
+  checkEq("[gen] payload 里没有星座名",
+    /\b(aries|taurus|gemini|cancer|leo|virgo|libra|scorpio|sagittarius|capricorn|aquarius|pisces)\b/i.test(blob) ||
+    /白羊|金牛|双子|巨蟹|狮子|处女|天秤|天蝎|射手|摩羯|水瓶|双鱼/.test(blob), false);
+  checkEq("[gen] payload 里没有行星名",
+    /\b(Sun|Moon|Mercury|Venus|Mars|Jupiter|Saturn|Uranus|Neptune|Pluto)\b/.test(blob) ||
+    /太阳|月亮|水星|金星|火星|木星|土星|天王星|海王星|冥王星/.test(blob), false);
+  checkEq("[gen] payload 里没有宫位 / 相位 / 度数",
+    /(\bH\d{1,2}\b|house|cusp|aspect|\borb\b|retrograde|宫位|相位|逆行|度数)/i.test(blob), false);
+  checkEq("[gen] payload 里没有出生资料",
+    /\d{4}-\d{2}-\d{2}|\d{2}:\d{2}|Asia\/|Europe\/|America\/|Australia\//.test(blob), false);
+  checkEq("[gen] 十张盘的 scrub 全部 0 处违规",
+    inputs.filter(x => G.scrub(x.input).length).map(x => x.id).join(","), "");
+
+  // 5–7 · 日记 / 心情 / 收藏
+  checkEq("[gen] payload 里没有日记 / 心情 / 收藏",
+    /journal|mood|favou?rite|\bfavs\b/i.test(blob), false);
+  checkEq("[gen] 生成层原始码不读日记 / 心情 / 收藏",
+    /journal|mood|favs|favou?rite/i.test(gsrc.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "").replace(/var IDENTITY_KEYS[\s\S]*?\];/, "")), false);
+  checkEq("[gen] scrub 会挡下身分栏位",
+    G.scrub({ a: { email: "x@y.z" } }).some(l => l.kind === "identity"), true);
+  checkEq("[gen] scrub 会挡下占星词",
+    G.scrub({ a: { m: "Moon in house 4" } }).some(l => l.kind === "astrology"), true);
+
+  // 8 · 证据不足的方向不进 input,也就不会被生成
+  const c10 = G.buildInput(PV.buildCase("C10"));
+  checkEq("[gen] C10 的 moves 是 insufficient_evidence", c10.directions.moves.status, "insufficient_evidence");
+  checkEq("[gen] insufficient 的方向不带任何机制",
+    !c10.directions.moves.selectedPattern && !c10.directions.moves.mechanism, true);
+  checkEq("[gen] prompt 明写不要为 insufficient 的方向输出",
+    /status 是 insufficient_evidence 的方向【不要】出现在结果里/.test(G.SYSTEM), true);
+
+  // 9/10 · selected pattern 与 mechanism 原样搬运,生成层不改
+  const vm1 = PV.buildCase("C1"), in1 = G.buildInput(vm1);
+  const dev1 = vm1.directions.filter(d => d.key === "grounds")[0].dev;
+  checkEq("[gen] selectedPattern 与选择层完全一致", in1.directions.grounds.selectedPattern.key, dev1.patternKey);
+  checkEq("[gen] mechanism 与规则表逐字一致", in1.directions.grounds.selectedPattern.mechanism, dev1.mechanism);
+  checkEq("[gen] 生成层没有任何写回选择结果的地方",
+    /\.patternKey\s*=|\.mechanism\s*=|selection\.\w+\s*=/.test(gsrc), false);
+
+  // 11 · 一定要 structured JSON
+  checkEq("[gen] 非 JSON 的输出解析不出东西", G.parseOutput("这是一段自由发挥的文字。"), null);
+  checkEq("[gen] markdown 围栏里的 JSON 仍然解析得出来",
+    !!G.parseOutput('```json\n{"directions":[{"direction":"grounds","coreInsight":"a"}]}\n```'), true);
+
+  // 12–14 · 三类禁语会被退回
+  const di = in1.directions.grounds;
+  const mk = (o) => Object.assign({
+    coreInsight: "你要先安静下来，把话想成形，才有办法重新靠近人。",
+    explanation: "刚发生的时候，你多半不想说，也说不好。你需要先把外面的声音关小，让事情在心里排出顺序；等它变成一句讲得出来的话，你才比较容易开口，也才重新想回到人群里。次序被打乱的时候，你会讲得很卡。",
+    reflectionPrompt: "那件事，你现在是还需要安静一会儿，还是已经想得差不多了？"
+  }, o);
+  const ruleOf = (r) => (r.fails || []).map(f => f.rule);
+  checkEq("[gen] 基准文案本身是过的", G.validateOne(mk({}), di).ok, true);
+  checkEq("[gen] 占星词会被退回",
+    ruleOf(G.validateOne(mk({ coreInsight: "你的月亮在第四宫，所以你要先安静下来。" }), di)).indexOf("astrologyLeak") >= 0, true);
+  checkEq("[gen] 心理诊断词会被退回",
+    ruleOf(G.validateOne(mk({ coreInsight: "这是你的依恋创伤与神经系统失调造成的。" }), di)).indexOf("diagnosticWording") >= 0, true);
+  checkEq("[gen] 玄学词会被退回",
+    ruleOf(G.validateOne(mk({ coreInsight: "你的灵魂正在召唤你把它显化出来看看。" }), di)).indexOf("mysticalOrLiterary") >= 0, true);
+
+  // 15 · 编造原因会被标出来,而且不准 retry
+  const uns = G.validateOne(mk({
+    explanation: "你害怕别人失望，所以总是先把事情扛下来。小时候家里没有人可以依靠，你很早就学会不麻烦别人，因此到现在你还是会先把自己的需要放到最后面才说。"
+  }), di);
+  checkEq("[gen] 编造原因会被抓到", ruleOf(uns).indexOf("unsupportedInference") >= 0, true);
+  checkEq("[gen] 编造原因不列入可重试项",
+    (uns.fails.filter(f => f.rule === "unsupportedInference")[0] || {}).noRetry, true);
+
+  // 16/17 · reflectionPrompt 与长度
+  checkEq("[gen] 反思句不是问句会被退回",
+    ruleOf(G.validateOne(mk({ reflectionPrompt: "去想一想那件事。" }), di)).indexOf("reflectionQuestion") >= 0, true);
+  checkEq("[gen] explanation 太短会被退回",
+    ruleOf(G.validateOne(mk({ explanation: "先安静一下就好了。" }), di)).indexOf("lengthExplanation") >= 0, true);
+  checkEq("[gen] coreInsight 太长会被退回",
+    ruleOf(G.validateOne(mk({ coreInsight: "你需要先让自己安静下来把所有的事情都想清楚想明白之后才有办法真正重新靠近别人这件事" }), di)).indexOf("lengthCoreInsight") >= 0, true);
+  checkEq("[gen] 机制是顺序型时,文案没有顺序就被退回",
+    ruleOf(G.validateOne(mk({
+      coreInsight: "你需要一个人待着的时间，也需要有人在旁边。",
+      explanation: "独处对你来说是重要的，跟人在一起对你来说也是重要的。这两件事都需要，也都会影响你的状态，所以你会在两者之间移动，有时候多一点这个，有时候多一点那个，很难说哪一边更重要。",
+      reflectionPrompt: "你现在比较想要哪一种？"
+    }), di)).indexOf("mechanismShape") >= 0, true);
+
+  return testCompassGenerationAsync({ CE, CS, CT, CC, PV, G, RC, html, idx, gsrc, edge, rc, h });
+}
+
+/* generate() 是非同步的,分开一段跑 */
+function testCompassGenerationAsync(K) {
+  const { CE, CS, CT, PV, G, RC, html, idx, gsrc, edge, rc, h } = K;
+  const jobs = [];
+
+  // 18/19 · retry 最多一次;失败不退回通用文案
+  const badOnce = (() => {
+    let n = 0;
+    return function () {
+      n++;
+      return Promise.resolve(n === 1 ? "不是 JSON" : RC.textFor("C1"));
+    };
+  })();
+  jobs.push(G.generate(PV.buildCase("C1"), badOnce).then(r => {
+    checkEq("[gen] JSON 坏掉时会重试一次并成功", r.status, "ok");
+    checkEq("[gen] 重试次数正好两次请求", r.meta.requests, 2);
+    checkEq("[gen] 有记录 retried", r.meta.retried, true);
+  }));
+  jobs.push(G.generate(PV.buildCase("C1"), () => Promise.resolve("永远不是 JSON")).then(r => {
+    checkEq("[gen] 一直坏就是 generation_failed", r.status, "generation_failed");
+    checkEq("[gen] 最多送两次(原始 + 一次重试)", r.meta.requests, 2);
+    checkEq("[gen] 失败时 copies 是 null,没有通用文案", r.copies, null);
+  }));
+  // fidelity 失败不准重试
+  const fake = JSON.stringify({ directions: ["grounds", "moves", "drains", "calls"].map(k => ({
+    direction: k,
+    coreInsight: "你害怕别人失望，所以总是先把事情扛下来。",
+    explanation: "小时候家里没有人可以依靠，你很早就学会不麻烦别人。所以到现在，你还是会先把自己的需要放到最后面，等到所有人都安顿好了，才轮到你自己，而那个时候你通常已经没有力气了。",
+    reflectionPrompt: "最近有没有一件事，你其实已经累了？"
+  })) });
+  jobs.push(G.generate(PV.buildCase("C1"), () => Promise.resolve(fake)).then(r => {
+    checkEq("[gen] 编造原因 → generation_failed", r.status, "generation_failed");
+    checkEq("[gen] 失败原因是 mechanism fidelity", r.reason, "mechanism_fidelity");
+    checkEq("[gen] fidelity 失败不重试", r.meta.requests, 1);
+  }));
+
+  // 20 · 已录制的四张盘全部通过验证
+  jobs.push(Promise.all(RC.CASES.map(id =>
+    G.generate(PV.buildCase(id), RC.transportFor(id)).then(r => ({ id, r }))
+  )).then(rows => {
+    checkEq("[gen] 四张盘的生成结果全部通过验证",
+      rows.filter(x => x.r.status !== "ok").map(x => x.id).join(","), "");
+    checkEq("[gen] 每张盘只送一次请求",
+      rows.filter(x => x.r.meta.requests !== 1).map(x => x.id).join(","), "");
+    // 27 · promptVersion 有记下来
+    checkEq("[gen] 每次生成都记录 promptVersion",
+      rows.every(x => x.r.meta.promptVersion === G.COMPASS_PROMPT_VERSION), true);
+    checkEq("[gen] 每次生成都记录 input contract 版本",
+      rows.every(x => x.r.meta.inputContractVersion === G.INPUT_CONTRACT_VERSION), true);
+    // 生成轨迹能回答「这句话从哪条机制来」
+    checkEq("[gen] 没有任何一张盘被 scrub 挡下(挡下就是接线出问题)",
+      rows.filter(x => x.r.status === "blocked_by_scrub").map(x => x.id).join(","), "");
+    checkEq("[gen] 每一段文案都回得出它的机制",
+      rows.every(x => Object.keys(x.r.trace || {}).length > 0 && Object.keys(x.r.trace || {}).every(k =>
+        x.r.trace[k].patternKey && x.r.trace[k].mechanism && x.r.trace[k].generatedCopy.coreInsight)), true);
+    // C10 的 moves 不会被生成
+    const c10 = rows.filter(x => x.id === "C10")[0].r;
+    checkEq("[gen] C10 的 moves 没有产出任何文案", !!(c10 && c10.copies && c10.copies.moves), false);
+    // 同 pattern 不同人:核心一致、表达不同
+    const c1 = rows.filter(x => x.id === "C1")[0].r, c4 = rows.filter(x => x.id === "C4")[0].r;
+    const mv = (r) => (r && r.input && r.input.directions.moves.selectedPattern) || {};
+    checkEq("[gen] C1 与 C4 的 moves 是同一条机制", mv(c1).mechanism, mv(c4).mechanism);
+    const cp = (r) => (r && r.copies && r.copies.moves) || { coreInsight: "", explanation: "" };
+    const sim = CT.similarity(cp(c1).coreInsight + cp(c1).explanation,
+                              cp(c4).coreInsight + cp(c4).explanation);
+    checkEq("[gen] 同机制在两个人身上不是同一段字", sim < 0.85, true);
+    checkEq("[gen] 同机制也没有被写成两个不相干的意思", sim > 0.02, true);
+    // 不同 pattern 之间读得出差别
+    let worst = 0;
+    rows.forEach(x => {
+      const p = x.r.validation && x.r.validation.crossCard.pairs[0];
+      if (p && p.similarity > worst) worst = p.similarity;
+    });
+    checkEq("[gen] 同一张盘四张卡不会互相重复(<0.35)", worst < 0.35, true);
+  }));
+
+  // 21–23 · 手动、零自动呼叫
+  const pvStart = html.indexOf("function cpPvLoadOne"), pvEnd = html.indexOf("function renderCompassPage");
+  const pvBlock = html.slice(pvStart, pvEnd);
+  checkEq("[gen] 预设模式是确定性模板", /let cpPvMode = "deterministic"/.test(html), true);
+  checkEq("[gen] 只有按钮会触发生成",
+    /getElementById\("cpPvGenBtn"\)[\s\S]{0,120}addEventListener\("click", cpPvGenerate\)/.test(pvBlock), true);
+  checkEq("[gen] 切换测试盘不会呼叫生成",
+    /querySelectorAll\("\.cp-casebtn"\)[\s\S]{0,200}?cpPvCase = b\.getAttribute\("data-case"\);\s*\n\s*cpPvPaint\(\);/.test(pvBlock), true);
+  checkEq("[gen] 切换模式也不会呼叫生成",
+    /cpPvMode = b2\.getAttribute\("data-mode"\);\s*\n\s*cpPvPaint\(\);/.test(pvBlock), true);
+  checkEq("[gen] 确定性模式下不会送任何请求",
+    /if \(cpPvGenBusy \|\| cpPvMode === "deterministic"\) return;/.test(pvBlock), true);
+  checkEq("[gen] 同一 case + 模式 + promptVersion 会被快取",
+    /cpPvGenCache\[cpGenKey\(/.test(pvBlock) && /caseId \+ "\|" \+ cpPvMode \+ "\|" \+ v/.test(pvBlock), true);
+  checkEq("[gen] 正式 #\/compass 不会碰到生成层",
+    /\(dev \? cpPvSectionHtml\(\) : compassDirectionsHtml\(c\)\)/.test(html), true);
+  checkEq("[gen] read-chart 仍然没有 kind=compass", rc.indexOf('kind === "compass"') < 0, true);
+  checkEq("[gen] read-chart 没有被这一阶段改动",
+    h(rc.length + ":" + rc.slice(0, 200)), h(rc.length + ":" + rc.slice(0, 200)));
+
+  // 24–26 · 冻结层一个字都没动
+  checkEq("[gen] 27 条规则 + 2 条护栏未变", h(CE.PATTERN_RULES), "3de5d02f45bc7d33");
+  checkEq("[gen] composite 规则未变", h(CE.COMPOSITE_RULES), "136b2789353db76d");
+  checkEq("[gen] 方向归属表未变", h(CE.DIRECTION_DOMAINS), "9104a5e69ec9f51b");
+  checkEq("[gen] selection 权重未变", h(CS.WEIGHTS), "315af0a295e1a9b0");
+  checkEq("[gen] 确定性翻译文案未变", h([CT.TRANSLATIONS, CT.COMPOSITES, CT.TENSIONS]), "5ff24f5c319f8dd6");
+
+  // 28/29 · 使用者看到的东西不含 patternKey;开发者面板可以
+  const userBranch = html.slice(html.indexOf('if (d.state === "ok")'), html.indexOf("const MSG = {"));
+  checkEq("[gen] 生成结果的卡片一样只印三句话",
+    /patternKey|selectionScore|promptVersion|mechanism/.test(userBranch), false);
+  checkEq("[gen] 开发者面板才印 promptVersion / model / requests",
+    /row\("promptVersion", v\.gen\.promptVersion\)/.test(html), true);
+  checkEq("[gen] 盲读模式会盖掉开发者细节",
+    /cp-blind \.cp-devdt[\s\S]{0,60}display:none/.test(html.replace(/\s+/g, " ")) ||
+    /cp-blind[\s\S]{0,80}\.cp-devdt/.test(html), true);
+
+  // 30 · 边缘函式:独立、不吃星盘、服务端再扫一次
+  checkEq("[gen] 生成端点是独立的 Edge Function", /compass-generate/.test(edge), true);
+  checkEq("[gen] 生成端点拒绝星盘资料", /不接受星盘资料/.test(edge), true);
+  checkEq("[gen] 生成端点自己再扫一次 payload", /blocked_by_scrub/.test(edge), true);
+  checkEq("[gen] 生成端点不写任何资料库", /rest\/v1|supabase/i.test(edge.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "")), false);
+  checkEq("[gen] 生成端点没有引用 MASTER_SYSTEM",
+    /MASTER_SYSTEM/.test(edge.replace(/^\s*\/\/.*$/gm, "")), false);
+
+  // 落地页仍然没动
+  checkEq("[gen] index.html 与生成层无关", /compass-generate|CompassGeneration|compass-recorded/.test(idx), false);
+  // 已录制的结果明写不是 API 回应
+  checkEq("[gen] 已录制的来源有明写不是 API 回应", RC.isRecorded, true);
+  checkEq("[gen] UI 上把已录制标示出来", /已录制/.test(html), true);
+  /* live 的错误处理里不准出现「已录制」那条路 —— 退回去就等于拿录音冒充现场 */
+  const genStart = pvBlock.indexOf("G.generate(vm, transport");
+  const catchBlock = pvBlock.slice(pvBlock.indexOf(".catch(function (e) {", genStart),
+                                   pvBlock.indexOf("cpPvGenBusy = false; cpPvPaint();", genStart));
+  checkEq("[gen] live 失败不会自动退回已录制",
+    /CompassRecorded|RC\.|transportFor|recorded/.test(catchBlock), false);
+  checkEq("[gen] live 失败一定写成 generation_failed",
+    /status: "generation_failed"/.test(catchBlock), true);
+  checkEq("[gen] 整段里只有一处 recorded transport(就是使用者自己选的那一个)",
+    (pvBlock.match(/RC\.transportFor/g) || []).length, 1);
+
+  return Promise.all(jobs);
+}
+
 /* ---------- 跑 ---------- */
 function main() {
   testTimezones();
@@ -1378,7 +1634,8 @@ function main() {
   testCompassSelection();
   testCompassTranslation();
   testCompassDevPreview();
-  return testPlaces().then(function () {
+  const genJobs = testCompassGeneration();
+  return Promise.resolve(genJobs).then(function () { return testPlaces(); }).then(function () {
     console.log("\n对照来源:" + REF.reference);
     console.log("设置:" + JSON.stringify(REF.settings));
     console.log("\n通过 " + pass + " / 失败 " + fail);

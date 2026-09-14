@@ -2845,6 +2845,21 @@
   #dpage.compass-page .cp-devdt b{color:var(--dp-ink);font-weight:500}
   #dpage.compass-page .cp-devdt .kv{display:block}
 
+  #dpage.compass-page .cp-mode{letter-spacing:.02em}
+  #dpage.compass-page .cp-gen{
+    margin-left:6px;background:var(--dp-navy);border-color:var(--dp-navy);color:var(--dp-light)
+  }
+  #dpage.compass-page .cp-gen[disabled]{opacity:.55;cursor:default}
+  #dpage.compass-page .cp-warn{
+    margin-top:10px;padding:8px 10px;border-radius:6px;
+    background:rgba(154,106,52,.09);border:1px solid rgba(154,106,52,.2);
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+    font-size:10.5px;line-height:1.8;color:#7a5228
+  }
+  /* 盲读:盖掉所有会泄漏身分的东西 */
+  #dpage.compass-page.cp-blind .cp-devdt,
+  #dpage.compass-page.cp-blind .cp-pv-card .gaptag{display:none}
+
   @media(max-width:900px){
     #dpage.compass-page .cp-pv-grid{grid-template-columns:1fr}
   }
@@ -7774,14 +7789,25 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   let cpPvReady = false;         // 原型三层是否已经载进来
   let cpPvLoading = false;
   let cpPvError = "";
-  /* 原型三层只有走到 #/compass/preview 才会被下载,顺序固定(preview 依赖前面四支)。 */
+  /* 原型各层只有走到 #/compass/preview 才会被下载,顺序固定(后面的依赖前面的)。 */
   const CP_PV_SRC = [
     "assets/compass-evidence.js",
     "assets/compass-selection.js",
     "assets/compass-translation.js",
     "assets/compass-cases.js",
-    "assets/compass-preview.js"
+    "assets/compass-preview.js",
+    "assets/compass-generation.js",
+    "assets/compass-recorded.js"
   ];
+
+  /* Phase 6:生成模式。预设永远是确定性模板 —— 不按按钮就不会有任何请求。 */
+  let cpPvMode = "deterministic";   // "deterministic" | "live" | "recorded"
+  let cpPvBlind = false;            // 盲读:盖掉 case id / patternKey / 机制 / 分数
+  let cpPvGenBusy = false;
+  let cpPvGenInput = null;   // live transport 要送的 payload(只在按下按钮那一刻建立)
+  const cpPvGenCache = {};          // key = caseId|mode|promptVersion
+  const COMPASS_GEN_URL = (window.CloudCfg && window.CloudCfg.url)
+    ? window.CloudCfg.url + "/functions/v1/compass-generate" : "";
 
   /* 阅读预览:同一时间只跑一次;这一轮工作阶段试过而没有结果的星盘记在 pvSkip,
      不重试 —— 否则每一次重画页面都会再送一次生成请求。 */
@@ -8959,6 +8985,73 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     } catch (e) { cpPvError = String((e && e.message) || e); return null; }
   }
 
+  /* ── Phase 6:Claude 生成(dev-only,只有按按钮才会送)────────
+     · 证据层 / 选择层 / 确定性翻译层都没有改动,这一段只是多一种「表达方式」。
+     · insufficient_evidence 的方向不会进入 generation input,自然不会被生成。
+     · 验证不过就是 generation_failed —— 不退回通用文案,也不偷偷用模板顶替。
+     ──────────────────────────────────────────────────────── */
+  function cpGenKey(caseId) {
+    const v = (window.CompassGeneration && window.CompassGeneration.COMPASS_PROMPT_VERSION) || "?";
+    return caseId + "|" + cpPvMode + "|" + v;
+  }
+  /* 真的打到 Edge Function。函式没部署 / 出错 → generation_failed,不 fallback。 */
+  function cpLiveTransport() {
+    return function (p) {
+      if (!COMPASS_GEN_URL) return Promise.reject(new Error("no generate url"));
+      const bearer = (window.Cloud && window.Cloud.token && window.Cloud.token()) ||
+        ((window.CloudCfg || {}).anon || "");
+      return fetch(COMPASS_GEN_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": "Bearer " + bearer,
+                   "apikey": (window.CloudCfg || {}).anon || "" },
+        body: JSON.stringify({ input: p._input, system: p.system, user: p.user,
+                               promptVersion: p.promptVersion })
+      }).then(function (r) { return r.json(); }).then(function (o) {
+        if (!o || o.status !== "ok" || typeof o.text !== "string")
+          throw new Error((o && (o.reason || o.error)) || "bad response");
+        return o.text;
+      });
+    };
+  }
+  function cpPvGenerate() {
+    if (cpPvGenBusy || cpPvMode === "deterministic") return;
+    const G = window.CompassGeneration, RC = window.CompassRecorded;
+    if (!G) return;
+    const caseId = cpPvCase;
+    const vm = cpPvBuild();
+    if (!vm) return;
+    let transport;
+    if (cpPvMode === "recorded") {
+      if (!RC || RC.CASES.indexOf(caseId) < 0) {
+        cpPvGenCache[cpGenKey(caseId)] = { status: "generation_failed", reason: "no_recorded_case",
+                                           meta: { requests: 0, promptVersion: G.COMPASS_PROMPT_VERSION } };
+        cpPvPaint(); return;
+      }
+      transport = RC.transportFor(caseId);
+    } else {
+      const live = cpLiveTransport();
+      /* payload 要带 input,所以在这里包一层把它塞回去 */
+      transport = function (p) { p._input = cpPvGenInput; return live(p); };
+    }
+    cpPvGenBusy = true;
+    cpPvGenCache[cpGenKey(caseId)] = { status: "pending" };
+    cpPvPaint();
+    /* buildInput 在 generate 里会再跑一次,这里先算一份给 live transport 当 payload */
+    cpPvGenInput = G.buildInput(vm);
+    G.generate(vm, transport, { model: cpPvMode === "recorded" ? (RC && RC.MODEL) : null })
+      .then(function (r) { cpPvGenCache[cpGenKey(caseId)] = r; })
+      .catch(function (e) {
+        cpPvGenCache[cpGenKey(caseId)] = { status: "generation_failed",
+          reason: String((e && e.message) || e),
+          meta: { requests: 1, promptVersion: G.COMPASS_PROMPT_VERSION } };
+      })
+      .then(function () { cpPvGenBusy = false; cpPvPaint(); });
+  }
+  function cpPvGenResult() {
+    if (cpPvMode === "deterministic") return null;
+    return cpPvGenCache[cpGenKey(cpPvCase)] || null;
+  }
+
   function cpPvBarHtml() {
     const ids = (window.CompassCases && window.CompassCases.ids) || [];
     const opts = ids.concat(curResult ? ["CURRENT"] : []);
@@ -8971,22 +9064,58 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       "</span>" +
       '<div class="bar-row"><span class="bar-lb">CASE</span>' +
       opts.map(function (id) {
-        return '<button type="button" class="cp-case' + (id === cpPvCase ? " on" : "") +
+        return '<button type="button" class="cp-case cp-casebtn' + (id === cpPvCase ? " on" : "") +
           '" data-case="' + esc0(id) + '" aria-pressed="' + (id === cpPvCase ? "true" : "false") +
-          '">' + esc0(id === "CURRENT" ? dpT("我的盘", "My chart") : id) + "</button>";
+          '">' + esc0(cpPvBlind ? String.fromCharCode(65 + opts.indexOf(id))
+                      : (id === "CURRENT" ? dpT("我的盘", "My chart") : id)) + "</button>";
       }).join("") + "</div>" +
+      '<div class="bar-row"><span class="bar-lb">MODE</span>' +
+      [["deterministic", dpT("确定性模板", "Deterministic")],
+       ["live", dpT("Claude API（live）", "Claude API (live)")],
+       ["recorded", dpT("Claude（已录制）", "Claude (recorded)")]].map(function (m) {
+        return '<button type="button" class="cp-case cp-mode' + (m[0] === cpPvMode ? " on" : "") +
+          '" data-mode="' + m[0] + '" aria-pressed="' + (m[0] === cpPvMode ? "true" : "false") +
+          '">' + esc0(m[1]) + "</button>";
+      }).join("") +
+      (cpPvMode === "deterministic" ? "" :
+        '<button type="button" class="cp-case cp-gen" id="cpPvGenBtn"' + (cpPvGenBusy ? " disabled" : "") + ">" +
+        esc0(cpPvGenBusy ? dpT("生成中…", "Generating…")
+                         : (cpPvGenResult() ? dpT("重新生成一次", "Generate again")
+                                            : dpT("用 Claude 生成", "Generate with Claude"))) + "</button>") +
+      "</div>" +
+      (cpPvMode === "deterministic" ? "" :
+        '<div class="cp-warn">' + esc0(cpPvMode === "live"
+          ? dpT("DEV ONLY · 按下按钮才会真的呼叫一次 API。切换测试盘、重画页面都不会自动呼叫。",
+                "DEV ONLY · one real API call per button press. Switching cases never calls it.")
+          : dpT("DEV ONLY · 这是已录制的 Claude 生成结果,不是这次打出去的 API 回应。",
+                "DEV ONLY · recorded Claude output, not a live API response.")) + "</div>") +
       '<div class="bar-row"><label class="cp-devtog"><input type="checkbox" id="cpPvDev"' +
       (cpPvShowDev ? " checked" : "") + ">" +
-      esc0(dpT("显示开发者细节", "Show developer details")) + "</label></div>" +
+      esc0(dpT("显示开发者细节", "Show developer details")) + "</label>" +
+      '<label class="cp-devtog"><input type="checkbox" id="cpPvBlind"' +
+      (cpPvBlind ? " checked" : "") + ">" +
+      esc0(dpT("盲读模式", "Blind copy view")) + "</label></div>" +
       '<div class="cp-cov" id="cpPvCov"></div></div>';
   }
 
   function cpPvCovHtml(vm) {
     if (!vm) return "";
     const c = vm.counts;
-    return esc0(cpPvCase) + "  ·  ok " + c.ok + " / 4" +
-      "  ·  not_translated " + c.notTranslated +
-      "  ·  insufficient_evidence " + c.insufficient;
+    const who = cpPvBlind ? "—" : cpPvCase;
+    if (cpPvMode === "deterministic")
+      return who + "  ·  deterministic  ·  ok " + c.ok + " / 4" +
+        "  ·  not_translated " + c.notTranslated +
+        "  ·  insufficient_evidence " + c.insufficient;
+    const g = cpPvGenResult();
+    if (!g) return who + "  ·  " + cpPvMode + "  ·  尚未生成(按按钮才会送)";
+    if (g.status === "pending") return who + "  ·  " + cpPvMode + "  ·  生成中…";
+    const m = g.meta || {};
+    return who + "  ·  " + cpPvMode + "  ·  " + g.status +
+      (g.reason ? "(" + g.reason + ")" : "") +
+      "  ·  promptVersion " + (m.promptVersion || "?") +
+      "  ·  requests " + (m.requests || 0) +
+      "  ·  retried " + (m.retried ? "yes" : "no") +
+      "  ·  insufficient " + c.insufficient;
   }
 
   function cpPvDevHtml(d) {
@@ -9014,10 +9143,40 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       row("lived", v.livedExperience) +
       row("why", v.why) +
       (v.reason ? row("reason", v.reason) : "") +
+      (v.gen ? row("— generation —", "") +
+        row("promptVersion", v.gen.promptVersion) +
+        row("model", v.gen.model) +
+        row("requests", v.gen.requests) +
+        row("retried", v.gen.retried) +
+        row("validation", v.gen.validation) : "") +
       "</div>";
   }
 
-  function cpPvCardHtml(d) {
+  /* 依模式决定这一张卡要显示什么。确定性模式完全走 Phase 5 的老路。 */
+  function cpPvResolve(d) {
+    if (cpPvMode === "deterministic") return d;
+    const g = cpPvGenResult();
+    const out = { key: d.key, no: d.no, en: d.en, zh: d.zh,
+                  state: d.state, copy: null,
+                  dev: Object.assign({}, d.dev) };
+    if (d.state === "insufficient_evidence") return out;   // 不生成,永远 null
+    if (!g) { out.state = "not_generated"; return out; }
+    if (g.status === "pending") { out.state = "generating"; return out; }
+    const m = g.meta || {};
+    out.dev.gen = { promptVersion: m.promptVersion, model: m.model,
+                    requests: m.requests, retried: m.retried,
+                    validation: g.status === "ok" ? "passed" : (g.reason || g.status) };
+    if (g.status !== "ok" || !g.copies || !g.copies[d.key]) {
+      out.state = "generation_failed";
+      return out;
+    }
+    out.state = "ok";
+    out.copy = g.copies[d.key];
+    return out;
+  }
+
+  function cpPvCardHtml(d0) {
+    const d = cpPvResolve(d0);
     const head = '<span class="no">' + esc0(d.no) + "</span>" +
       '<span class="en">' + esc0(d.en) + "</span>" +
       '<b class="zh">' + esc0(d.zh) + '</b><span class="rule" aria-hidden="true"></span>';
@@ -9032,11 +9191,18 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
         "<p>" + esc0(d.copy.reflectionPrompt) + "</p></div>" +
         cpPvDevHtml(d) + "</article>";
     }
-    const msg = d.state === "insufficient_evidence"
-      ? dpT("此方向目前没有足够证据生成内容。",
-            "There is not enough evidence to generate anything for this direction yet.")
-      : dpT("此 pattern 尚未进入 Human Translation prototype。",
-            "This pattern has not entered the human-translation prototype yet.");
+    const MSG = {
+      insufficient_evidence: dpT("此方向目前没有足够证据生成内容。",
+        "There is not enough evidence to generate anything for this direction yet."),
+      not_translated: dpT("此 pattern 尚未进入 Human Translation prototype。",
+        "This pattern has not entered the human-translation prototype yet."),
+      not_generated: dpT("还没有生成。按上面的「用 Claude 生成」。",
+        "Not generated yet — press “Generate with Claude” above."),
+      generating: dpT("生成中…", "Generating…"),
+      generation_failed: dpT("生成失败。这里【不会】退回通用文案。",
+        "Generation failed. No generic fallback is shown here, by design.")
+    };
+    const msg = MSG[d.state] || d.state;
     return '<article class="cp-pv-card gap">' + head +
       '<p class="gapmsg">' + esc0(msg) + "</p>" +
       '<span class="gaptag">' + esc0(d.state) + " · dev preview only</span>" +
@@ -9076,7 +9242,8 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   function cpPvBindBar() {
     const bar = document.getElementById("cpPvBar");
     if (!bar) return;
-    bar.querySelectorAll(".cp-case").forEach(function (b) {
+    /* 只绑 case 按钮 —— 模式按钮与生成按钮各自有自己的 handler */
+    bar.querySelectorAll(".cp-casebtn").forEach(function (b) {
       b.addEventListener("click", function () {
         cpPvCase = b.getAttribute("data-case");
         cpPvPaint();
@@ -9087,6 +9254,22 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       cpPvShowDev = !!tog.checked;
       $("dpage").classList.toggle("cp-showdev", cpPvShowDev);
     });
+    const bl = document.getElementById("cpPvBlind");
+    if (bl) bl.addEventListener("change", function () {
+      cpPvBlind = !!bl.checked;
+      /* 盲读:强制关掉开发者细节,否则等于没盲 */
+      if (cpPvBlind) { cpPvShowDev = false; $("dpage").classList.remove("cp-showdev"); }
+      $("dpage").classList.toggle("cp-blind", cpPvBlind);
+      cpPvPaint();
+    });
+    bar.querySelectorAll(".cp-mode").forEach(function (b2) {
+      b2.addEventListener("click", function () {
+        cpPvMode = b2.getAttribute("data-mode");
+        cpPvPaint();                       // 切模式本身不送任何请求
+      });
+    });
+    const gen = document.getElementById("cpPvGenBtn");
+    if (gen) gen.addEventListener("click", cpPvGenerate);
   }
 
   function cpPvSectionHtml() {
