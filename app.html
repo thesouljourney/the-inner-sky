@@ -2716,6 +2716,156 @@
     #dpage.compass-page .cp-empty{padding:34px 16px}
   }
 
+  /* ============================================================
+     Dev Preview(#/compass/preview)—— Phase 5
+     ------------------------------------------------------------
+     只在 .compass-page.cp-preview 底下生效。
+     正式的 #/compass 完全不会挂上 .cp-preview,一个像素都不受影响。
+
+     两种视觉刻意分开:
+       .cp-devbar / .cp-devdt  开发工具 —— 等宽字、灰阶、像工具
+       .cp-pv-card             使用者内容 —— 珍珠白、深蓝、香槟,像成品
+     ============================================================ */
+  #dpage.compass-page .cp-devbar{
+    max-width:min(100%,var(--dp-wide));margin:0 auto clamp(34px,4vw,52px);
+    padding:16px 18px 18px;border-radius:14px;
+    background:rgba(34,35,58,.045);border:1px dashed rgba(34,35,58,.22)
+  }
+  #dpage.compass-page .cp-devbar .bar-tag{
+    display:inline-block;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+    font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;
+    padding:4px 9px;border-radius:4px;
+    background:rgba(154,106,52,.14);color:#7a5228
+  }
+  #dpage.compass-page .cp-devbar .bar-t{
+    display:block;margin-top:9px;font-family:var(--dp-serif);
+    font-size:15px;color:var(--dp-ink)
+  }
+  #dpage.compass-page .cp-devbar .bar-s{
+    display:block;margin-top:4px;font-size:12px;line-height:1.8;color:var(--dp-mut)
+  }
+  #dpage.compass-page .cp-devbar .bar-row{
+    display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:14px
+  }
+  #dpage.compass-page .cp-devbar .bar-lb{
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+    font-size:10.5px;letter-spacing:.12em;color:var(--dp-mut);margin-right:2px
+  }
+  #dpage.compass-page .cp-case{
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;
+    min-height:30px;padding:0 11px;border-radius:6px;cursor:pointer;
+    background:#fff;border:1px solid rgba(34,35,58,.16);color:var(--dp-ink);
+    transition:border-color .18s,background .18s
+  }
+  @media(hover:hover){#dpage.compass-page .cp-case:hover{border-color:rgba(154,106,52,.45)}}
+  #dpage.compass-page .cp-case.on{
+    background:var(--dp-navy);border-color:var(--dp-navy);color:var(--dp-light)
+  }
+  #dpage.compass-page .cp-case:focus-visible,
+  #dpage.compass-page .cp-devtog:focus-visible{outline:2px solid rgba(154,140,205,.8);outline-offset:2px}
+  #dpage.compass-page .cp-devtog{
+    display:inline-flex;align-items:center;gap:7px;cursor:pointer;
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px;color:var(--dp-ink)
+  }
+  #dpage.compass-page .cp-devtog input{margin:0;accent-color:#7a5228}
+  #dpage.compass-page .cp-cov{
+    margin-top:12px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+    font-size:11px;line-height:1.9;color:var(--dp-mut)
+  }
+
+  /* ── 使用者内容:这一块要像成品,不像 dashboard ─────────── */
+  #dpage.compass-page .cp-pv-grid{
+    display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:clamp(20px,2.6vw,30px);margin-top:clamp(30px,4vw,48px)
+  }
+  #dpage.compass-page .cp-pv-card{
+    position:relative;padding:clamp(26px,3vw,36px) clamp(22px,2.6vw,32px);
+    border-radius:20px;background:var(--dp-cloud);
+    border:1px solid rgba(154,140,205,.16);
+    box-shadow:0 18px 44px -34px rgba(9,18,46,.4)
+  }
+  #dpage.compass-page .cp-pv-card .no{
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+    font-size:10.5px;letter-spacing:.2em;color:rgba(154,106,52,.55)
+  }
+  #dpage.compass-page .cp-pv-card .en{
+    display:block;margin-top:7px;font-size:10.5px;letter-spacing:.2em;
+    text-transform:uppercase;color:rgba(119,119,138,.85)
+  }
+  #dpage.compass-page .cp-pv-card .zh{
+    display:block;margin-top:6px;font-family:var(--dp-serif);font-weight:500;
+    font-size:clamp(17px,1.9vw,20px);color:var(--dp-ink)
+  }
+  #dpage.compass-page .cp-pv-card .rule{
+    display:block;width:40px;height:1px;margin:18px 0 0;
+    background:linear-gradient(90deg,rgba(154,106,52,.5),rgba(154,140,205,.25))
+  }
+  #dpage.compass-page .cp-pv-card .ci{
+    margin:18px 0 0;font-family:var(--dp-serif);font-weight:500;
+    font-size:clamp(16px,1.8vw,18.5px);line-height:1.95;color:var(--dp-ink)
+  }
+  #dpage.compass-page .cp-pv-card .ex{
+    margin:14px 0 0;font-size:14.5px;line-height:2.1;font-weight:300;
+    color:rgba(34,35,58,.86)
+  }
+  #dpage.compass-page .cp-pv-card .rp{
+    margin-top:22px;padding:16px 18px;border-radius:14px;
+    background:rgba(170,160,213,.09);border:1px solid rgba(170,160,213,.18)
+  }
+  #dpage.compass-page .cp-pv-card .rp .k{
+    display:block;font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;
+    color:rgba(119,119,138,.9)
+  }
+  #dpage.compass-page .cp-pv-card .rp p{
+    margin:8px 0 0;font-family:var(--dp-serif);font-size:15px;line-height:1.95;color:var(--dp-ink)
+  }
+
+  /* 两种缺口:不补文案,画面上明确说明这是开发态 */
+  #dpage.compass-page .cp-pv-card.gap{background:rgba(248,242,237,.7);border-style:dashed}
+  #dpage.compass-page .cp-pv-card .gapmsg{
+    margin:18px 0 0;font-size:14px;line-height:2;color:rgba(119,119,138,.95)
+  }
+  #dpage.compass-page .cp-pv-card .gaptag{
+    display:inline-block;margin-top:14px;
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+    font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+    padding:3px 8px;border-radius:4px;
+    background:rgba(34,35,58,.06);color:var(--dp-mut)
+  }
+
+  /* ── 开发者细节:预设不显示 ─────────────────────────────── */
+  #dpage.compass-page .cp-devdt{display:none}
+  #dpage.compass-page.cp-showdev .cp-devdt{display:block}
+  #dpage.compass-page .cp-devdt{
+    margin-top:22px;padding-top:16px;border-top:1px dashed rgba(34,35,58,.18);
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+    font-size:11px;line-height:1.95;color:var(--dp-mut);
+    overflow-x:auto;overflow-wrap:anywhere
+  }
+  #dpage.compass-page .cp-devdt b{color:var(--dp-ink);font-weight:500}
+  #dpage.compass-page .cp-devdt .kv{display:block}
+
+  @media(max-width:900px){
+    #dpage.compass-page .cp-pv-grid{grid-template-columns:1fr}
+  }
+  @media(max-width:767px){
+    #dpage.compass-page .cp-devbar{padding:14px 15px 16px;border-radius:12px}
+    #dpage.compass-page .cp-devbar .bar-row{gap:7px}
+    #dpage.compass-page .cp-case{min-height:34px;font-size:11.5px;padding:0 10px}
+    #dpage.compass-page .cp-pv-grid{gap:16px;margin-top:26px}
+    #dpage.compass-page .cp-pv-card{padding:24px 18px;border-radius:18px}
+    #dpage.compass-page .cp-pv-card .ci{font-size:16px;line-height:1.95}
+    #dpage.compass-page .cp-pv-card .ex{font-size:14px;line-height:2.05}
+    #dpage.compass-page .cp-pv-card .rp{padding:14px 15px}
+    #dpage.compass-page .cp-pv-card .rp p{font-size:14.5px}
+    /* 开发工具在手机上收起来,不要跟内容抢位置 */
+    #dpage.compass-page .cp-devbar details > summary{
+      cursor:pointer;list-style:none;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+      font-size:11px;letter-spacing:.1em;color:var(--dp-mut);padding:6px 0
+    }
+    #dpage.compass-page .cp-devbar details > summary::-webkit-details-marker{display:none}
+  }
+
   /* 划词收藏:轻盈的浮动动作,不打断阅读 */
   #dpSaveTip{position:absolute;z-index:90;display:none;align-items:center;gap:6px;
     font-family:"Noto Sans SC","Helvetica Neue",Arial,sans-serif;font-size:12.5px;color:#fff;background:rgba(26,22,52,.94);
@@ -7300,6 +7450,8 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     if ((m = h.match(/^#\/map\/(\d{1,2})$/))) return { k: "map", tab: +m[1] };
     if (h === "#/my-sky") return { k: "mysky" };
     if (h === "#/compass") return { k: "compass" };
+    /* 开发预览。正式路由不受影响,而且这一条只在网址明确写了 /preview 时才成立。 */
+    if (h === "#/compass/preview") return { k: "compass", dev: true };
     if (h === "#/favorites") return { k: "favorites" };
     if (h === "#/onboarding") return { k: "onboarding" };
     if (h === "#/settings") return { k: "settings" };
@@ -7494,7 +7646,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     document.body.classList.add("dp-open");
     dp.style.display = "";
     // 只有真正换页时才回到顶部;同一页内切换页签(例如生命蓝图的五章)保留阅读位置
-    const routeId = curRoute.k + ":" + (curRoute.id || "");
+    const routeId = curRoute.k + ":" + (curRoute.id || "") + (curRoute.dev ? ":dev" : "");
     if (routeId !== lastRouteId) window.scrollTo(0, 0);
     lastRouteId = routeId;
     renderRoute();
@@ -7518,6 +7670,9 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     $("dpage").classList.toggle("thread-page", r.k === "map");
     // 内在指南同样自己一套版面,样式全锁在这个 class 底下
     $("dpage").classList.toggle("compass-page", r.k === "compass");
+    /* 开发预览的样式全锁在这个额外的 class 底下 —— 没有它,这一页与修改前一模一样 */
+    $("dpage").classList.toggle("cp-preview", r.k === "compass" && !!r.dev);
+    if (!(r.k === "compass" && r.dev)) $("dpage").classList.remove("cp-showdev");
     if (r.k === "topic") renderTopicPage(r.id);
     else if (r.k === "q") renderQPage(r.id);
     else if (r.k === "reading") { readingTab = r.tab || 0; renderReadingPage(); }
@@ -7611,6 +7766,22 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   let compassEntries = null;     // 已载入的记录;null = 还没载到
   let compassAll = false;        // 「查看全部」是否展开
   let compassBusy = false;
+
+  /* Dev Preview(#/compass/preview)的 UI 状态。同样必须写在首次渲染之前。
+     这一组只有在开发预览路由下才会被读到,正式的 #/compass 完全不碰。 */
+  let cpPvCase = "C1";           // 目前在看哪一张测试盘("CURRENT" = 登入者自己的盘)
+  let cpPvShowDev = false;       // 「显示开发者细节」预设关闭
+  let cpPvReady = false;         // 原型三层是否已经载进来
+  let cpPvLoading = false;
+  let cpPvError = "";
+  /* 原型三层只有走到 #/compass/preview 才会被下载,顺序固定(preview 依赖前面四支)。 */
+  const CP_PV_SRC = [
+    "assets/compass-evidence.js",
+    "assets/compass-selection.js",
+    "assets/compass-translation.js",
+    "assets/compass-cases.js",
+    "assets/compass-preview.js"
+  ];
 
   /* 阅读预览:同一时间只跑一次;这一轮工作阶段试过而没有结果的星盘记在 pvSkip,
      不重试 —— 否则每一次重画页面都会再送一次生成请求。 */
@@ -8736,16 +8907,209 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       inner + "</section>";
   }
 
+  /* ============================================================
+     Dev Preview(#/compass/preview)—— Phase 5
+     ------------------------------------------------------------
+     把已经做好的三层原型接到画面上,让我们可以在浏览器里
+     真的读到不同测试盘的内在指南。
+
+     ⚠ 这一段只做「显示」:
+       · 不新增任何 Claude API 呼叫、不新增 kind="compass"
+       · 不改 evidence rules / evidence scoring / selection scoring
+       · 不改任何一句 translation 文案
+       · 不读日记 / 心情 / 收藏
+       · 证据不够、或这条模式还没写翻译 —— 一律如实显示,
+         【绝不】为了版面完整生出任何 fallback 文案
+     原型的三层只有走到这条路由才会被载入,正式页面不会多下载任何东西。
+     ============================================================ */
+  function cpPvLoadOne(src) {
+    return new Promise(function (ok, no) {
+      if (document.querySelector('script[data-cppv="' + src + '"]')) return ok();
+      const el = document.createElement("script");
+      el.src = src; el.async = false; el.setAttribute("data-cppv", src);
+      el.onload = function () { ok(); };
+      el.onerror = function () { no(new Error(src)); };
+      document.head.appendChild(el);
+    });
+  }
+  function cpPvLoad() {
+    if (cpPvReady) return Promise.resolve();
+    if (cpPvLoading) return Promise.resolve();
+    cpPvLoading = true;
+    return CP_PV_SRC.reduce(function (chain, src) {
+      return chain.then(function () { return cpPvLoadOne(src); });
+    }, Promise.resolve()).then(function () {
+      cpPvLoading = false;
+      cpPvReady = !!(window.CompassPreview && window.InnerSkyAstro);
+      if (!cpPvReady) cpPvError = "prototype modules did not initialise";
+      if (curRoute && curRoute.k === "compass" && curRoute.dev) cpPvPaint();
+    }).catch(function (e) {
+      cpPvLoading = false;
+      cpPvError = String((e && e.message) || e);
+      if (curRoute && curRoute.k === "compass" && curRoute.dev) cpPvPaint();
+    });
+  }
+
+  /* 这一份 view model 完全由原型三层算出来,画面不做任何判断,也不存任何文案。 */
+  function cpPvBuild() {
+    if (!cpPvReady) return null;
+    try {
+      if (cpPvCase === "CURRENT") return window.CompassPreview.buildCurrent(curResult);
+      return window.CompassPreview.buildCase(cpPvCase);
+    } catch (e) { cpPvError = String((e && e.message) || e); return null; }
+  }
+
+  function cpPvBarHtml() {
+    const ids = (window.CompassCases && window.CompassCases.ids) || [];
+    const opts = ids.concat(curResult ? ["CURRENT"] : []);
+    return '<div class="cp-devbar">' +
+      '<span class="bar-tag">Dev preview only</span>' +
+      '<b class="bar-t">' + esc0(dpT("内在指南预览 · 开发用", "Inner Compass Preview · development only")) + "</b>" +
+      '<span class="bar-s">' +
+      esc0(dpT("这里显示的是原型(证据 → 选择 → 人话翻译)的真实输出，不是已经上线的内容。没有呼叫任何生成 API。",
+               "This is the live output of the prototype (evidence → selection → translation). It is not production content, and no generation API is called.")) +
+      "</span>" +
+      '<div class="bar-row"><span class="bar-lb">CASE</span>' +
+      opts.map(function (id) {
+        return '<button type="button" class="cp-case' + (id === cpPvCase ? " on" : "") +
+          '" data-case="' + esc0(id) + '" aria-pressed="' + (id === cpPvCase ? "true" : "false") +
+          '">' + esc0(id === "CURRENT" ? dpT("我的盘", "My chart") : id) + "</button>";
+      }).join("") + "</div>" +
+      '<div class="bar-row"><label class="cp-devtog"><input type="checkbox" id="cpPvDev"' +
+      (cpPvShowDev ? " checked" : "") + ">" +
+      esc0(dpT("显示开发者细节", "Show developer details")) + "</label></div>" +
+      '<div class="cp-cov" id="cpPvCov"></div></div>';
+  }
+
+  function cpPvCovHtml(vm) {
+    if (!vm) return "";
+    const c = vm.counts;
+    return esc0(cpPvCase) + "  ·  ok " + c.ok + " / 4" +
+      "  ·  not_translated " + c.notTranslated +
+      "  ·  insufficient_evidence " + c.insufficient;
+  }
+
+  function cpPvDevHtml(d) {
+    const v = d.dev;
+    if (!v) return "";
+    function row(k, val) {
+      if (val === null || val === undefined || val === "") return "";
+      return '<span class="kv"><b>' + esc0(k) + "</b> " + esc0(String(val)) + "</span>";
+    }
+    return '<div class="cp-devdt">' +
+      row("patternKey", v.patternKey) +
+      row("kind", v.kind) +
+      row("translationStatus", v.translationStatus) +
+      row("selectionScore", v.selectionScore) +
+      row("evidenceStrength", v.evidenceStrength) +
+      row("directionRelevance", v.directionRelevance) +
+      row("distinctiveness", v.distinctiveness) +
+      row("compositeValue", v.compositeValue) +
+      row("redundancy", v.redundancyPenalty + (v.redundancyAgainst ? " vs " + v.redundancyAgainst : "")) +
+      row("flags", (v.distinctivenessFlags || []).join(",")) +
+      row("acceptedAcrossCases", v.acceptedFrequency) +
+      row("childPatterns", (v.childPatterns || []).join(" + ")) +
+      row("sequence", (v.sequence || []).join(" → ")) +
+      row("mechanism", v.mechanism) +
+      row("lived", v.livedExperience) +
+      row("why", v.why) +
+      (v.reason ? row("reason", v.reason) : "") +
+      "</div>";
+  }
+
+  function cpPvCardHtml(d) {
+    const head = '<span class="no">' + esc0(d.no) + "</span>" +
+      '<span class="en">' + esc0(d.en) + "</span>" +
+      '<b class="zh">' + esc0(d.zh) + '</b><span class="rule" aria-hidden="true"></span>';
+
+    if (d.state === "ok") {
+      /* composite 只显示 composite 本身的文案 —— 不并列两个 child 的句子。
+         tension 同理:用翻译层给的那一段,画面不自己拼。 */
+      return '<article class="cp-pv-card">' + head +
+        '<p class="ci">' + esc0(d.copy.coreInsight) + "</p>" +
+        '<p class="ex">' + esc0(d.copy.explanation) + "</p>" +
+        '<div class="rp"><span class="k">' + esc0(dpT("想一想", "A question")) + "</span>" +
+        "<p>" + esc0(d.copy.reflectionPrompt) + "</p></div>" +
+        cpPvDevHtml(d) + "</article>";
+    }
+    const msg = d.state === "insufficient_evidence"
+      ? dpT("此方向目前没有足够证据生成内容。",
+            "There is not enough evidence to generate anything for this direction yet.")
+      : dpT("此 pattern 尚未进入 Human Translation prototype。",
+            "This pattern has not entered the human-translation prototype yet.");
+    return '<article class="cp-pv-card gap">' + head +
+      '<p class="gapmsg">' + esc0(msg) + "</p>" +
+      '<span class="gaptag">' + esc0(d.state) + " · dev preview only</span>" +
+      cpPvDevHtml(d) + "</article>";
+  }
+
+  function cpPvGridHtml() {
+    if (cpPvError) {
+      return '<p class="cp-pv-err" style="font-size:13px;color:#8a3b3b">' +
+        esc0(dpT("原型载入失败:", "Prototype failed to load: ") + cpPvError) + "</p>";
+    }
+    if (!cpPvReady) {
+      return '<p style="font-size:13px;color:var(--dp-mut)">' +
+        esc0(dpT("正在载入原型…", "Loading prototype…")) + "</p>";
+    }
+    const vm = cpPvBuild();
+    if (!vm) {
+      return '<p style="font-size:13px;color:var(--dp-mut)">' +
+        esc0(dpT("这张盘算不出结果。", "No result for this chart.")) + "</p>";
+    }
+    return '<div class="cp-pv-grid">' + vm.directions.map(cpPvCardHtml).join("") + "</div>";
+  }
+
+  /* 只重画预览区,不重画整页 —— 切 case 要能连着看 */
+  function cpPvPaint() {
+    const host = document.getElementById("cpPvHost");
+    if (!host) return;
+    host.innerHTML = cpPvGridHtml();
+    const bar = document.getElementById("cpPvBar");
+    if (bar) {
+      bar.innerHTML = cpPvBarHtml();
+      cpPvBindBar();
+    }
+    const cov = document.getElementById("cpPvCov");
+    if (cov && cpPvReady && !cpPvError) cov.textContent = cpPvCovHtml(cpPvBuild());
+  }
+  function cpPvBindBar() {
+    const bar = document.getElementById("cpPvBar");
+    if (!bar) return;
+    bar.querySelectorAll(".cp-case").forEach(function (b) {
+      b.addEventListener("click", function () {
+        cpPvCase = b.getAttribute("data-case");
+        cpPvPaint();
+      });
+    });
+    const tog = document.getElementById("cpPvDev");
+    if (tog) tog.addEventListener("change", function () {
+      cpPvShowDev = !!tog.checked;
+      $("dpage").classList.toggle("cp-showdev", cpPvShowDev);
+    });
+  }
+
+  function cpPvSectionHtml() {
+    return '<section class="cp-sec cp-compass cp-pv">' +
+      '<div id="cpPvBar">' + cpPvBarHtml() + "</div>" +
+      compassEyebrow(dpT("你的内在指南", "Your Inner Compass"), "YOUR INNER COMPASS") +
+      '<div class="cp-rose-wrap" style="display:block;text-align:center">' + compassRoseSvg() + "</div>" +
+      '<div id="cpPvHost">' + cpPvGridHtml() + "</div></section>";
+  }
+
   function renderCompassPage() {
     const c = activeChart();
+    const dev = !!(curRoute && curRoute.dev);
     let body;
     if (!c || !curResult) body = dpNeedChart();
     else {
       /* 把已经算好的盘面交给内在指南的资料层。只是传参照,不重算、不发请求。
          目前没有注册 generator,所以这一行不改变画面上的任何东西。 */
       window.Compass.setNatal(curResult);
+      /* 开发预览:只有「你的内在指南」这一段吃原型输出,其余 section 原样保留。
+         正式的 #/compass 走的是原本那一行,一个字都没变。 */
       body = '<div class="cp-flow">' +
-        compassDirectionsHtml(c) +
+        (dev ? cpPvSectionHtml() : compassDirectionsHtml(c)) +
         compassRemindersHtml(c) +
         compassNowHtml() +
         compassQuestionHtml(c) +
@@ -8769,6 +9133,13 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       seed: 71
     });
     if (!c || !curResult) return;
+
+    if (dev) {
+      $("dpage").classList.toggle("cp-showdev", cpPvShowDev);
+      cpPvBindBar();
+      if (!cpPvReady) cpPvLoad();      // 原型三层只有走到这条路由才下载
+      else cpPvPaint();
+    }
 
     // 第一次进来才去读记录;之后重画沿用已经载到的那一份
     if (compassEntries === null && !compassBusy) {

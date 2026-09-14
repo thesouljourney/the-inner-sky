@@ -844,18 +844,8 @@ function testCompassSelection() {
   const Astro4 = require(path.join(__dirname, "..", "assets", "astro", "astro-core.js"));
   const mk = (d, t, lat, lon, tz) =>
     Astro4.computeNatalChart({ date: d, time: t, place: { lat, lon, tzId: tz } }).chart;
-  const FIX = [
-    ["C1", "1994-11-21", "01:44", 1.8548, 102.9325, "Asia/Kuala_Lumpur"],
-    ["C2", "1988-03-02", "14:20", 25.033, 121.5654, "Asia/Taipei"],
-    ["C3", "1975-07-09", "06:05", 51.5072, -0.1276, "Europe/London"],
-    ["C4", "2001-12-30", "23:10", 40.7128, -74.006, "America/New_York"],
-    ["C5", "1969-05-17", "09:40", -33.8688, 151.2093, "Australia/Sydney"],
-    ["C6", "1983-09-28", "18:55", 3.139, 101.6869, "Asia/Kuala_Lumpur"],
-    ["C7", "1996-02-14", "04:15", 35.6762, 139.6503, "Asia/Tokyo"],
-    ["C8", "1979-08-23", "12:00", 48.8566, 2.3522, "Europe/Paris"],
-    ["C9", "2006-04-05", "20:30", -23.5505, -46.6333, "America/Sao_Paulo"],
-    ["C10", "1962-10-11", "16:45", 19.076, 72.8777, "Asia/Kolkata"]
-  ];
+  /* 测试盘清单的单一来源:assets/compass-cases.js(Phase 5 起三处共用同一份) */
+  const FIX = require(path.join(__dirname, "..", "assets", "compass-cases.js")).tuples();
   const build = (extra) => {
     extra = extra || {};
     const cases = FIX.map(([id, d, t, la, lo, tz]) => ({
@@ -1057,7 +1047,12 @@ function testCompassSelection() {
   checkEq("[sel] 选择层没有任何网路呼叫",
     !/fetch\(|XMLHttpRequest|anthropic|supabase/i.test(src), true);
   checkEq("[sel] 服务端仍然没有 kind=compass", ts.indexOf('kind === "compass"') < 0, true);
-  checkEq("[sel] app.html 没有引入选择层", html.indexOf("compass-selection") < 0, true);
+  /* Phase 5 起 app.html 会载入选择层 —— 但只在 #/compass/preview 这条开发路由,
+     而且只能透过 CP_PV_SRC 这一张清单动态载入,不得写成静态 <script src>。 */
+  checkEq("[sel] 选择层没有被写成 app.html 的静态 script",
+    /<script[^>]+compass-selection/.test(html), false);
+  checkEq("[sel] 选择层只透过开发预览的载入清单出现",
+    (html.match(/compass-selection\.js/g) || []).length, 1);
   checkEq("[sel] 生命脉络与九个主题的 Prompt 仍未改动",
     /把前面读过的所有理解连起来/.test(ts) && /现在写【第二部分 · 主题探索】中的一章/.test(ts), true);
 
@@ -1201,7 +1196,10 @@ function testCompassTranslation() {
   // 20 · 产品侧完全没动
   const html = fs.readFileSync(path.join(__dirname, "..", "app.html"), "utf8");
   const ts = fs.readFileSync(path.join(__dirname, "..", "docs", "edge", "read-chart.ts"), "utf8");
-  checkEq("[tr] app.html 没有引入翻译层", html.indexOf("compass-translation") < 0, true);
+  checkEq("[tr] 翻译层没有被写成 app.html 的静态 script",
+    /<script[^>]+compass-translation/.test(html), false);
+  checkEq("[tr] 翻译层只透过开发预览的载入清单出现",
+    (html.match(/compass-translation\.js/g) || []).length, 1);
   checkEq("[tr] 服务端仍然没有 kind=compass", ts.indexOf('kind === "compass"') < 0, true);
   const core = CE.PATTERN_RULES.filter(r => r.family !== "GUARD");
   checkEq("[tr] 27 条核心规则 + 2 条护栏仍未改动",
@@ -1217,6 +1215,149 @@ function testCompassTranslation() {
     rep.cases.every(c => Object.keys(c.translated).every(d =>
       c.translated[d].status === "ok" ||
       (c.translated[d].copy === null && !c.translated[d].coreInsight))), true);
+}
+
+/* ---------- 17. 内在指南 Phase 5 · Dev Preview 接线 ----------
+   对应任务书第 17 节的 18 项。这一阶段只做「显示」,所以测试的重点是
+   下面这三件事一件都没发生:
+     · 多打了一次生成 API
+     · 三层原型的规则 / 计分 / 文案被动到
+     · 为了让画面好看而补出不存在的文案 */
+function testCompassDevPreview() {
+  const fs = require("fs");
+  const crypto = require("crypto");
+  const CE = require(path.join(__dirname, "..", "assets", "compass-evidence.js"));
+  const CS = require(path.join(__dirname, "..", "assets", "compass-selection.js"));
+  const CT = require(path.join(__dirname, "..", "assets", "compass-translation.js"));
+  const CC = require(path.join(__dirname, "..", "assets", "compass-cases.js"));
+  const PV = require(path.join(__dirname, "..", "assets", "compass-preview.js"));
+  const html = fs.readFileSync(path.join(__dirname, "..", "app.html"), "utf8");
+  const idx = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
+  const pvSrc = fs.readFileSync(path.join(__dirname, "..", "assets", "compass-preview.js"), "utf8");
+  const h = (o) => crypto.createHash("sha256").update(JSON.stringify(o)).digest("hex").slice(0, 16);
+
+  const vms = CC.ids.map(id => PV.buildCase(id));
+
+  // 1 · Case Selector 是确定性的
+  checkEq("[pv] 同一张盘跑两次,四个方向完全一样",
+    JSON.stringify(PV.buildCase("C4").directions), JSON.stringify(PV.buildCase("C4").directions));
+  // 2 · 同一张盘 → 同一组 selection
+  checkEq("[pv] 同一张盘的 patternKey 不会跳动",
+    vms[3].directions.map(d => d.dev && d.dev.patternKey).join(","),
+    PV.buildCase("C4").directions.map(d => d.dev && d.dev.patternKey).join(","));
+  // 3 · 不同盘可以得到不同结果(切 case 要真的看得出差别)
+  const sigs = vms.map(v => v.directions.map(d => (d.dev && d.dev.patternKey) || "-").join("|"));
+  checkEq("[pv] 十张盘至少有六种不同的四方向组合", new Set(sigs).size >= 6, true);
+
+  // 4 · 证据不足 → 没有任何文案
+  const insufficient = [];
+  vms.forEach(v => v.directions.forEach(d => { if (d.state === "insufficient_evidence") insufficient.push(v.caseId + "/" + d.key); }));
+  checkEq("[pv] 测试盘里确实出现过 insufficient_evidence", insufficient.length > 0, true);
+  checkEq("[pv] insufficient 的方向 copy 一律是 null",
+    vms.every(v => v.directions.every(d => d.state !== "insufficient_evidence" || d.copy === null)), true);
+  // 5 · 还没翻译 → 没有任何文案,也不换一条有翻译的来顶替
+  const notTr = [];
+  vms.forEach(v => v.directions.forEach(d => { if (d.state === "not_translated") notTr.push(v.caseId + "/" + d.key + ":" + d.dev.patternKey); }));
+  checkEq("[pv] 测试盘里确实出现过 not_translated", notTr.length > 0, true);
+  checkEq("[pv] not_translated 的方向 copy 一律是 null",
+    vms.every(v => v.directions.every(d => d.state !== "not_translated" || d.copy === null)), true);
+  checkEq("[pv] not_translated 的 patternKey 真的不在翻译表里",
+    vms.every(v => v.directions.every(d => d.state !== "not_translated" ||
+      (!CT.TRANSLATIONS[d.dev.patternKey] && !CT.COMPOSITES[d.dev.patternKey]))), true);
+
+  // 6 · composite 只显示自己那一段,不并列 child
+  let composites = 0;
+  vms.forEach(v => v.directions.forEach(d => {
+    if (d.state === "ok" && d.dev.kind === "composite") {
+      composites++;
+      const kids = (d.dev.childPatterns || []).map(k => CT.TRANSLATIONS[k]).filter(Boolean);
+      const dup = kids.some(kid => d.copy.explanation.indexOf(kid.zh.explanation) >= 0 ||
+                                   d.copy.coreInsight.indexOf(kid.zh.coreInsight) >= 0);
+      if (dup) composites = -999;
+    }
+  }));
+  checkEq("[pv] composite 有出现在测试盘里", composites > 0, true);
+  checkEq("[pv] composite 的画面文案没有并列 child 的句子", composites > 0, true);
+  checkEq("[pv] child 的 patternKey 只出现在开发者细节里,不在 copy",
+    /childPatterns/.test(html.slice(html.indexOf("function cpPvDevHtml"), html.indexOf("function cpPvCardHtml"))) &&
+    !/childPatterns/.test(html.slice(html.indexOf("function cpPvCardHtml"), html.indexOf("function cpPvGridHtml"))), true);
+
+  // 7 · 使用者看到的文字里没有占星语言
+  const leaks = [];
+  vms.forEach(v => v.directions.forEach(d => {
+    if (!d.copy) return;
+    const q = CT.checkCopy(d.copy);
+    if (q.astrologyLeak || q.diagnosticLeak) leaks.push(v.caseId + "/" + d.key);
+  }));
+  checkEq("[pv] 十张盘的所有使用者文案都没有占星 / 诊断词", leaks.join(","), "");
+
+  // 8 · 使用者看到的卡片不会曝露 patternKey / 分数
+  const userBranch = html.slice(html.indexOf('if (d.state === "ok")'), html.indexOf("const msg = d.state"));
+  checkEq("[pv] 使用者卡片只印三句话,不印 patternKey / 分数",
+    /patternKey|selectionScore|evidenceStrength|distinctiveness/.test(userBranch), false);
+  checkEq("[pv] 使用者卡片只取 coreInsight / explanation / reflectionPrompt",
+    (userBranch.match(/d\.copy\.\w+/g) || []).sort().join(","),
+    "d.copy.coreInsight,d.copy.explanation,d.copy.reflectionPrompt");
+  // 9 · 开发者面板可以曝露,但预设关闭
+  checkEq("[pv] 开发者细节预设不显示",
+    /#dpage\.compass-page \.cp-devdt\{display:none\}/.test(html.replace(/\s+/g, " ").replace(/ \{/g, "{")) ||
+    /\.cp-devdt\s*\{\s*display:\s*none\s*\}/.test(html), true);
+  checkEq("[pv] 打开开关才加上 cp-showdev", /cp-showdev/.test(html), true);
+  checkEq("[pv] 开发者面板确实印 patternKey",
+    /row\("patternKey", v\.patternKey\)/.test(html), true);
+
+  // 10 · 没有新增任何生成呼叫
+  checkEq("[pv] 编排层没有任何网路呼叫",
+    /fetch\(|XMLHttpRequest|anthropic|supabase/i.test(pvSrc.replace(/\/\*[\s\S]*?\*\//g, "")), false);
+  const ts = fs.readFileSync(path.join(__dirname, "..", "docs", "edge", "read-chart.ts"), "utf8");
+  checkEq("[pv] 服务端仍然没有 kind=compass", ts.indexOf('kind === "compass"') < 0, true);
+  const pvStart = html.indexOf("function cpPvLoadOne"), pvEnd = html.indexOf("function renderCompassPage");
+  checkEq("[pv] 找得到预览这一段", pvStart > 0 && pvEnd > pvStart, true);
+  const pvBlock = html.slice(pvStart, pvEnd);
+  checkEq("[pv] 预览这一段没有发出任何请求",
+    /fetch\(|FUNC_URL|netFetch|read-chart/.test(pvBlock), false);
+
+  // 11/12/13 · 三层原型的规则、计分、文案都没被动到
+  checkEq("[pv] 27 条规则 + 2 条护栏的内容没有改变", h(CE.PATTERN_RULES), "3de5d02f45bc7d33");
+  checkEq("[pv] composite 规则没有改变", h(CE.COMPOSITE_RULES), "136b2789353db76d");
+  checkEq("[pv] 方向归属表没有改变", h(CE.DIRECTION_DOMAINS), "9104a5e69ec9f51b");
+  checkEq("[pv] selection 权重没有改变", h(CS.WEIGHTS), "315af0a295e1a9b0");
+  checkEq("[pv] 翻译文案一个字都没有改变", h([CT.TRANSLATIONS, CT.COMPOSITES, CT.TENSIONS]), "5ff24f5c319f8dd6");
+
+  // 14 · 不读日记 / 心情 / 收藏
+  checkEq("[pv] 编排层不碰日记 / 心情 / 收藏",
+    /journal|mood|favs|favou?rite/i.test(pvSrc.replace(/\/\*[\s\S]*?\*\//g, "")), false);
+  checkEq("[pv] 预览这一段也不碰日记 / 心情 / 收藏",
+    /compassMood|compassEntries|favs/.test(pvBlock), false);
+
+  // 15 · 手机版护栏
+  const flat = html.replace(/\s+/g, " ");
+  checkEq("[pv] ≤900px 时四张卡收成一栏",
+    /@media\(max-width:900px\)\{ #dpage\.compass-page \.cp-pv-grid\{grid-template-columns:1fr\}/.test(flat), true);
+  checkEq("[pv] ≤767px 有专属的手机间距",
+    /#dpage\.compass-page \.cp-pv-card\{padding:24px 18px/.test(flat), true);
+  checkEq("[pv] case 按钮在手机上够大(≥34px)",
+    /#dpage\.compass-page \.cp-case\{min-height:34px/.test(flat), true);
+
+  // 16 · 既有路由没有少
+  ["#\\/topic\\/", "#\\/q\\/", "#\\/reading", '"#\\/map"', '"#\\/my-sky"', '"#\\/compass"',
+   '"#\\/favorites"', '"#\\/onboarding"', '"#\\/settings"', '"#\\/login"'].forEach(function (r) {
+    checkEq("[pv] 既有路由仍在:" + r.replace(/\\\\/g, ""), new RegExp(r).test(html), true);
+  });
+  checkEq("[pv] 预览是自己一条路由,不是改写 #/compass",
+    /h === "#\/compass\/preview"/.test(html) && /h === "#\/compass"\) return \{ k: "compass" \}/.test(html), true);
+  checkEq("[pv] 没有 dev 旗标时,画面走的仍然是原本那一支",
+    /\(dev \? cpPvSectionHtml\(\) : compassDirectionsHtml\(c\)\)/.test(html), true);
+
+  // 17 · 顶部导览没有多一个入口(预览不该出现在正式选单里)
+  const nav = html.slice(html.indexOf("function dpNavItems"), html.indexOf("function dpNavItems") + 1400);
+  checkEq("[pv] 导览选单没有新增预览入口", /compass\/preview/.test(nav), false);
+  checkEq("[pv] 导览选单仍然是原本那五项",
+    (nav.match(/"#\/(reading|my-sky|map|compass|favorites)"/g) || []).length, 5);
+
+  // 18 · 落地页一个字都没动
+  checkEq("[pv] index.html 没有任何预览相关的东西",
+    /compass\/preview|cp-pv|cp-devbar|compass-preview/.test(idx), false);
 }
 
 /* ---------- 跑 ---------- */
@@ -1236,6 +1377,7 @@ function main() {
   testCompassRules();
   testCompassSelection();
   testCompassTranslation();
+  testCompassDevPreview();
   return testPlaces().then(function () {
     console.log("\n对照来源:" + REF.reference);
     console.log("设置:" + JSON.stringify(REF.settings));

@@ -17,18 +17,7 @@ const CS = require(path.join(__dirname, "..", "assets", "compass-selection.js"))
 const CT = require(path.join(__dirname, "..", "assets", "compass-translation.js"));
 
 /* 与 Phase 3 同一组测试盘 —— 刻意不换 test set。 */
-const CASES = [
-  ["C1",  "1994-11-21", "01:44",   1.8548, 102.9325, "Asia/Kuala_Lumpur"],
-  ["C2",  "1988-03-02", "14:20",  25.0330, 121.5654, "Asia/Taipei"],
-  ["C3",  "1975-07-09", "06:05",  51.5072,  -0.1276, "Europe/London"],
-  ["C4",  "2001-12-30", "23:10",  40.7128, -74.0060, "America/New_York"],
-  ["C5",  "1969-05-17", "09:40", -33.8688, 151.2093, "Australia/Sydney"],
-  ["C6",  "1983-09-28", "18:55",   3.1390, 101.6869, "Asia/Kuala_Lumpur"],
-  ["C7",  "1996-02-14", "04:15",  35.6762, 139.6503, "Asia/Tokyo"],
-  ["C8",  "1979-08-23", "12:00",  48.8566,   2.3522, "Europe/Paris"],
-  ["C9",  "2006-04-05", "20:30", -23.5505, -46.6333, "America/Sao_Paulo"],
-  ["C10", "1962-10-11", "16:45",  19.0760,  72.8777, "Asia/Kolkata"]
-];
+const CASES = require(path.join(__dirname, "..", "assets", "compass-cases.js")).tuples();
 
 const RULE_BY_KEY = {};
 CE.PATTERN_RULES.forEach(r => { RULE_BY_KEY[r.patternKey] = r; });
