@@ -9060,10 +9060,19 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   function cpPvGenerate() {
     if (cpPvGenBusy || cpPvMode === "deterministic") return;
     const G = window.CompassGeneration, RC = window.CompassRecorded;
-    if (!G) return;
     const caseId = cpPvCase;
+    /* 按下按钮【一定】要有可见的结果。以前这几条路是 return 就没了 ——
+       按下去什么都不会发生,也不会说为什么,那比失败还糟。 */
+    function bail(reason) {
+      cpPvGenCache[cpGenKey(caseId)] = { status: "generation_failed", reason: reason,
+        meta: { requests: 0, promptVersion: G ? G.COMPASS_PROMPT_VERSION : "?" } };
+      cpPvPaint();
+    }
+    if (!G) return bail("generation layer not loaded — 重新整理一次这一页");
     const vm = cpPvBuild();
-    if (!vm) return;
+    if (!vm) return bail(caseId === "CURRENT"
+      ? "还没有你自己的星盘可以用(curResult 是空的)—— 先回 #/my-sky 等星盘算好再回来"
+      : "这张盘算不出结果:" + (cpPvError || "unknown"));
     let transport;
     if (cpPvMode === "recorded") {
       if (!RC || RC.CASES.indexOf(caseId) < 0) {
