@@ -592,9 +592,18 @@ function testCompassEvidence() {
     full.candidates.every(c => c.sourceSignals
       .filter(s => s.sourceType === "theme")
       .every(s => s.countsTowardIndependentEvidence === false)), true);
-  checkEq("[evi] 独立证据数只数盘面讯号",
-    full.candidates.every(c => c.independentEvidenceCount ===
+  /* Phase 3.5 起,独立性以「结构锚点」计而不是讯号笔数 ——
+     同一个宫位里的四颗行星是一个结构事实,不是四份独立证据。
+     这里守两件事:只数盘面讯号,而且数的是锚点。 */
+  checkEq("[evi] 独立证据数只数盘面讯号(主题 / 生命脉络一律不进)",
+    full.candidates.every(c => c.independentEvidenceCount <=
       new Set(c.sourceSignals.filter(s => s.sourceType === "chart").map(s => s.independenceKey)).size), true);
+  checkEq("[evi] 独立证据数 = 结构锚点数",
+    full.candidates.every(c => c.independentEvidenceCount === (c.structuralAnchors || []).length), true);
+  checkEq("[evi] 同一个宫位里的多颗行星只算一个结构",
+    full.candidates.every(c => (c.structuralAnchors || [])
+      .filter(a => a.indexOf("house:") === 0).length ===
+      new Set((c.structuralAnchors || []).filter(a => a.indexOf("house:") === 0)).size), true);
 
   // 4 · 两个真正独立的盘面讯号可以形成候选
   const carry = find("carry-before-noticing-cost");
@@ -707,6 +716,21 @@ function testCompassRules() {
     core.every(r => typeof r.mechanism === "string" && r.mechanism.length > 40), true);
   checkEq("[rules] 每条核心规则都标了通用化风险与最低独立证据",
     core.every(r => ["low", "medium", "high"].indexOf(r.genericRisk) >= 0), true);
+  /* Phase 3.5 修掉的记账漏洞:DIRECTION_DOMAINS 是 9 条规则时写的,
+     扩到 27 条时有 8 个 domain 从没被加进任何方向、3 个列错方向 ——
+     导致 11 条规则不管证据多好都拿不到「方向相关」那 2 分。
+     这条不变量确保它不会再发生:每条规则的 domain
+     都必须出现在它自己宣告的 primary 方向底下。 */
+  const orphanDomains = core.filter(r =>
+    (CE.DIRECTION_DOMAINS[r.compass.primary] || []).indexOf(r.domain) < 0);
+  checkEq("[rules] 每条规则的 domain 都列在它宣告的方向下" +
+    (orphanDomains.length ? ":" + orphanDomains.map(r => r.patternKey + "(" + r.domain + ")").slice(0, 4).join(", ") : ""),
+    orphanDomains.length, 0);
+  checkEq("[rules] secondary 方向若有宣告,也必须列得出来",
+    core.every(r => !r.compass.secondary ||
+      !CE.DIRECTION_DOMAINS[r.compass.secondary] ||
+      typeof r.compass.secondary === "string"), true);
+
   checkEq("[rules] 高风险规则的独立证据门槛更高",
     rA.candidates.filter(c => c.genericRisk === "high")
       .every(c => c.minIndependent >= 3), true);
@@ -715,11 +739,13 @@ function testCompassRules() {
   checkEq("[rules] 刻意的单一结构规则永远不会 accepted", guard.status !== "accepted", true);
 
   // —— 同一个盘面讯号不得被重複计数 ——
-  checkEq("[rules] 每个候选的独立证据数 = 去重后的结构数",
+  checkEq("[rules] 独立证据数不会超过实际讯号数(锚点只会收敛,不会虚增)",
     rA.candidates.every(c => {
       const keys = c.sourceSignals.filter(s => s.sourceType === "chart").map(s => s.independenceKey);
-      return c.independentEvidenceCount === new Set(keys).size;
+      return c.independentEvidenceCount <= new Set(keys).size;
     }), true);
+  checkEq("[rules] 有候选真的被锚点收敛过(证明这条防线在动)",
+    rA.candidates.some(c => c.rawChartSignalCount > c.independentEvidenceCount), true);
   checkEq("[rules] 不同规则共用同一讯号,不会在单一候选内重複计",
     rA.candidates.every(c => {
       const keys = c.sourceSignals.filter(s => s.sourceType === "chart").map(s => s.independenceKey);
@@ -764,7 +790,8 @@ function testCompassRules() {
   const weak = rA.composites.find(c => c.compositeKey === "output-gate-sequence");
   checkEq("[rules] 证据不够的 composite 不会成立", weak.status, "rejected");
   checkEq("[rules] 而且说得出为什么不成立",
-    /child-evidence-too-weak|unrelated-systems|same-evidence|adds-no-information/.test(weak.rejectionReason), true);
+    /child-pattern-rejected|child-evidence-too-weak|unrelated-systems|same-evidence|adds-no-information/
+      .test(weak.rejectionReason), true);
   // 不相关的两个 pattern 不会被误合并
   checkEq("[rules] 没有宣告过的组合永远不会变成 composite",
     CE.COMPOSITE_RULES.every(r => r.childPatterns.length === 2) &&

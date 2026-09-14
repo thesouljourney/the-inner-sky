@@ -38,15 +38,31 @@
   var DIRECTIONS = ["grounds", "moves", "drains", "calls"];
 
   /* 每个方向关心哪些领域(来自内容规格第四部分) */
+  /* ⚠ Phase 3.5 修正:这张表是 Phase 2 只有 9 条规则时写的。
+     规则表扩到 27 条之后,有 8 个 domain 从来没有被加进任何方向
+     (trust / self-expectation / stimulation / boundaries / intimacy /
+      relational-response / recognition / decision-pattern),
+     另有 3 个只列在与规则宣告不同的方向下。
+     后果:27 条里有 11 条不管证据多好,都永远拿不到「方向相关」那 2 分,
+     被结构性地压在门槛下 —— 那是记账漏洞,不是机制判断。
+     实例:closeness-needs-room 的证据(5 个独立结构 / 7 个物件)比
+     solitude-then-contact(4 / 6)更厚,分数却低 2 分、卡在 provisional。
+
+     这里把表补齐:每一个 domain 都列在它真正服务的方向下,
+     需要时跨列(一个 domain 可以同时服务两个方向)。
+     ⚠ 没有动 accepted 门槛(仍是 7),也没有动任何规则的 needs 或 minIndependent。 */
   var DIRECTION_DOMAINS = {
     grounds: ["emotional-regulation", "security", "recovery", "processing-style",
-              "belonging", "rest"],
+              "belonging", "rest", "boundaries", "trust", "decision-pattern"],
     moves:   ["motivation", "agency", "meaningful-engagement", "creation",
-              "sense-of-meaning", "expression"],
+              "sense-of-meaning", "expression", "autonomy", "stimulation"],
     drains:  ["internal-pressure", "over-responsibility", "avoidance",
-              "suppression", "repeated-tension", "uncertainty-response"],
+              "suppression", "repeated-tension", "uncertainty-response",
+              "self-expectation", "expression", "trust", "relational-response",
+              "recognition", "decision-pattern"],
     calls:   ["curiosity", "growth-direction", "developmental-pull", "autonomy",
-              "sense-of-meaning", "creation"]
+              "sense-of-meaning", "creation", "meaningful-engagement",
+              "stimulation", "intimacy"]
   };
 
   /* ──────────────────────────────────────────────────────────
@@ -78,6 +94,26 @@
       role: "primary",
       independence: "independent"
     };
+  }
+
+  /* 一个讯号的「结构锚点」= 产生这个讯号的那一个结构事实。
+     同一个锚点底下的讯号,彼此不算互相独立。 */
+  function anchorOf(s) {
+    var house = s.actors.filter(function (a) { return /^H\d+$/.test(a); })[0];
+    switch (s.structure) {
+      case "planet-house":
+      case "stellium":      return "house:" + house;
+      case "aspect":        return "aspect:" + s.actors.slice().sort().join("+");
+      case "angular":       return "axis:" + s.actors.filter(function (a) {
+                              return ["ASC", "DSC", "MC", "IC"].indexOf(a) >= 0; }).join("");
+      case "element-balance":
+      case "element-lack":
+      case "mode-balance":  return "stat:" + s.actors[0];
+      case "retrograde-personal": return "retrograde";
+      case "node-house":    return "node";
+      case "sect":          return "sect";
+      default:              return s.structure + ":" + s.actors.join("+");
+    }
   }
 
   function elementOf(signIdx) { return ["fire", "earth", "air", "water"][signIdx % 4]; }
@@ -672,13 +708,27 @@
         })
       : [];
 
-    /* 4b. 独立性:用 independenceKey 去重 —— 同一个结构讲几次都只算一次 */
-    var keys = {}, actors = {};
+    /* 4b. 独立性:以「结构锚点」计,不以讯号笔数计。
+       ------------------------------------------------------------
+       Phase 3.5 稽核发现的膨胀:同一个宫位里的四颗行星,会产生四笔
+       planet-house 讯号、被当成四份独立证据 —— 但那其实是【一个】结构事实
+       (这个宫位很重),只是由四颗行星表达。相位与轴点同理。
+
+       所以独立性改成数「不同的结构锚点」:
+         planet-house / stellium  → 锚点是那个宫位
+         aspect                   → 锚点是那一对行星
+         angular                  → 锚点是那条轴
+         element/mode balance     → 锚点是那个统计量
+         retrograde / node / sect → 各自一个锚点
+       同一个锚点底下不管有几笔讯号,永远只算一份。 */
+    var anchors = {}, keys = {}, actors = {};
     matched.forEach(function (s) {
+      anchors[anchorOf(s)] = true;
       keys[s.independenceKey] = true;
       s.actors.forEach(function (a) { actors[a] = true; });
     });
-    var independentCount = Object.keys(keys).length;
+    var independentCount = Object.keys(anchors).length;
+    var rawSignalCount = Object.keys(keys).length;
     var actorCount = Object.keys(actors).length;
 
     /* 4c. 主题支持:记来源,但永远不加进 independentCount */
@@ -724,6 +774,10 @@
       }).concat(themeSupport).concat(threadSupport ? [threadSupport] : []),
       evidenceCount: matched.length + themeSupport.length + (threadSupport ? 1 : 0),
       independentEvidenceCount: independentCount,
+      /* 稽核用:去重前的讯号笔数,与实际用到的结构锚点。
+         两者差距越大,代表原本的算法把同一件事重複计了越多次。 */
+      rawChartSignalCount: rawSignalCount,
+      structuralAnchors: Object.keys(anchors).sort(),
       distinctActorCount: actorCount,
       needGroupsHit: groupsHit,
       needGroupsTotal: rule.needs.length,
