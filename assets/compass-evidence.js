@@ -96,11 +96,13 @@
       var h = p.house, tags = [];
       if (h === 12) tags.push("withdrawn-processing", "solitude-need");
       if (h === 4)  tags.push("private-base", "security-inward");
-      if (h === 8)  tags.push("depth-engagement", "guarded-disclosure");
+      if (h === 8)  tags.push("depth-engagement", "guarded-disclosure", "trust-gated", "control-stake");
       if (h === 6)  tags.push("duty-load", "routine-bound");
-      if (h === 10) tags.push("visible-responsibility");
+      if (h === 10) tags.push("visible-responsibility", "visibility-exposure", "recognition-stake");
       if (h === 9)  tags.push("horizon-pull", "meaning-search");
-      if (h === 11) tags.push("collective-pull");
+      if (h === 11) tags.push("collective-pull", "belonging-search");
+      if (h === 2)  tags.push("worth-anchor", "material-ground");
+      if (h === 7)  tags.push("relational-mirror", "pacing-with-others");
       if (h === 3)  tags.push("articulation-need");
       if (h === 1)  tags.push("self-forward");
       if (h === 5)  tags.push("making-impulse");
@@ -136,6 +138,18 @@
       if (has("Pluto") && pair.some(function (k) { return PERSONAL.indexOf(k) >= 0; }))
         tags.push("depth-engagement", hard ? "control-tension" : "depth-pull");
       if (has("Moon") && has("Mercury")) tags.push("feeling-to-words");
+      if (has("Moon") && has("Saturn"))
+        tags.push("self-expectation", hard ? "comfort-restraint" : "steady-holding");
+      if (has("Sun") && has("Saturn"))
+        tags.push("achievement-pressure", hard ? "never-quite-enough" : "earned-confidence");
+      if (has("Mercury") && has("Saturn")) tags.push("verify-before-speaking", "careful-output");
+      if (has("Venus") && has("Saturn")) tags.push("measured-closeness", "slow-warmth");
+      if (has("Venus") && has("Uranus")) tags.push("space-in-closeness", "novelty-pull");
+      if (has("Venus") && has("Neptune")) tags.push("boundary-blur", "idealise-then-adjust");
+      if (has("Mars") && has("Neptune")) tags.push("diffuse-drive", "effort-fog");
+      if (has("Mars") && has("Pluto")) tags.push("control-stake", "all-or-nothing-effort");
+      if (has("Jupiter") && has("Saturn")) tags.push("expand-vs-limit");
+      if (has("Mercury") && has("Uranus")) tags.push("fast-switching", "novelty-pull");
       if (has("Mars") && has("Saturn")) tags.push(hard ? "effort-friction" : "sustained-effort");
       if (has("Jupiter") && pair.some(function (k) { return PERSONAL.indexOf(k) >= 0; }))
         tags.push("horizon-pull");
@@ -144,6 +158,23 @@
       out.push(sig("aspect", pair, tags,
         a.aKey + " " + a.type + " " + a.bKey + " (orb " + a.orb.toFixed(1) + ")",
         tight ? 1.4 : 1));
+    });
+
+    /* —— 1b2. 合轴:行星贴着四轴,是结构上的「显著位置」 —— */
+    var ANG = { ASC: "self-forward", MC: "visibility-exposure", DSC: "pacing-with-others", IC: "private-base" };
+    Object.keys(ANG).forEach(function (ax) {
+      var a = extras[ax]; if (!a) return;
+      natal.planets.forEach(function (p) {
+        var d = Math.abs(((p.lon - a.lon + 540) % 360) - 180);
+        d = 180 - d;
+        if (d > 8) return;
+        var tags = ["angular-emphasis", ANG[ax]];
+        if (p.key === "Saturn") tags.push("pressure-source");
+        if (p.key === "Moon") tags.push("regulation-site");
+        if (p.key === "Uranus") tags.push("autonomy-need");
+        out.push(sig("angular", [p.key, ax], tags,
+          p.key + " conjunct " + ax + " (" + d.toFixed(1) + "°)", 1.3));
+      });
     });
 
     /* —— 1c. 元素 / 三方四正的整体倾斜 —— */
@@ -203,102 +234,346 @@
   }
 
   /* ──────────────────────────────────────────────────────────
-     2. 模式规则
+     2. 规则表 —— 按「人类机制」分类,不是按行星 / 宫位堆
      ------------------------------------------------------------
-     每条规则要求「至少两组不同的 tag 家族」都出现 ——
-     单一落点永远凑不满,这是硬规则(任务书第 6 节)。
-     mechanism 是内部工作语言,必须写出「机制」而不是「特质」,
-     没有 mechanism 的规则会被通用性检查挡下来。
+     七个机制家族(taxonomy):
+       REGULATION  回到基线的方式
+       PROCESSING  输入怎么变成可用的东西
+       LOAD        接下了什么、代价什么时候出现
+       DRIVE       什么启动并维持移动
+       DIRECTION   什么在往前拉
+       RELATION    远近怎么协商
+       DECISION    怎么承诺
+
+     每一条规则的形状:
+       needs        必要证据形状。**至少两组**,每组至少命中一个讯号 ——
+                    单一落点在结构上就凑不满,这是硬规则。
+       disqualifiers 出现这些讯号时,这条规则会被扣分甚至失格
+       partners     对立的机制家族(可能构成张力,而不是二选一)
+       genericRisk  通用化风险:high 的规则要求更多独立证据
+       minIndependent 最低独立盘面证据数(预设 2,高风险的要 3)
+
+     ⚠ 规则不是「某个落点 = 某种性格」,
+       而是「多个独立结构同时出现时,可能支持某种生活机制」。
      ────────────────────────────────────────────────────────── */
   var PATTERN_RULES = [
-    { patternKey: "clarity-before-release", domain: "uncertainty-response",
-      compass: { primary: "drains", secondary: "processing-style" },
-      mechanismFamily: "withholding-until-certain",
-      mechanism: "unresolved input stays mentally active until enough certainty is reached; output is postponed rather than dropped",
-      needs: [["self-monitoring", "delayed-permission", "pressure-contact"],
-              ["internal-first", "delayed-output", "absorb-first", "withdrawn-processing"]] },
 
-    { patternKey: "solitude-then-contact", domain: "recovery",
+    /* ═══ REGULATION · 回到基线的方式 ═══ */
+    { patternKey: "solitude-then-contact", family: "REGULATION", domain: "recovery",
       compass: { primary: "grounds", secondary: "relational-response" },
-      mechanismFamily: "withdraw-to-reset",
+      mechanismFamily: "withdraw-to-reset", genericRisk: "medium",
       mechanism: "regulation happens by reducing input first; contact becomes wanted again only after internal sorting is done",
       needs: [["solitude-need", "withdrawn-processing", "private-base"],
-              ["absorb-first", "inward-reference", "regulation-site"]] },
+              ["absorb-first", "inward-reference", "regulation-site"]],
+      partners: ["articulation-as-regulation"] },
 
-    { patternKey: "naming-to-settle", domain: "processing-style",
+    { patternKey: "naming-to-settle", family: "REGULATION", domain: "processing-style",
       compass: { primary: "grounds", secondary: "expression" },
-      mechanismFamily: "articulation-as-regulation",
+      mechanismFamily: "articulation-as-regulation", genericRisk: "medium",
       mechanism: "a state stays diffuse until it is put into words; once named it stops occupying background attention",
       needs: [["feeling-to-words", "articulation-need", "processing-site"],
-              ["distance-to-think", "hard-to-name-state", "diffuse-processing"]] },
+              ["distance-to-think", "hard-to-name-state", "diffuse-processing"]],
+      partners: ["withdraw-to-reset"] },
 
-    { patternKey: "carry-before-noticing-cost", domain: "over-responsibility",
+    { patternKey: "rest-needs-permission", family: "REGULATION", domain: "rest",
+      compass: { primary: "grounds", secondary: "internal-pressure" },
+      mechanismFamily: "rest-as-earned", genericRisk: "medium",
+      mechanism: "rest is treated as something to be earned rather than scheduled; stopping happens only once the work is defensible",
+      needs: [["self-expectation", "comfort-restraint", "never-quite-enough"],
+              ["duty-load", "routine-bound", "sustained-effort"]],
+      disqualifiers: ["momentum-need"],
+      partners: ["load-taken-by-default"] },
+
+    { patternKey: "belonging-on-own-terms", family: "REGULATION", domain: "belonging",
+      compass: { primary: "grounds", secondary: "autonomy" },
+      mechanismFamily: "conditional-belonging", genericRisk: "high", minIndependent: 3,
+      mechanism: "group settings are wanted but only tolerable with an exit; belonging holds when participation stays self-defined",
+      needs: [["collective-pull", "belonging-search"],
+              ["autonomy-need", "space-in-closeness", "solitude-need"]],
+      partners: ["self-set-conditions"] },
+
+    /* ═══ PROCESSING · 输入怎么变成可用的东西 ═══ */
+    { patternKey: "clarity-before-release", family: "PROCESSING", domain: "uncertainty-response",
+      compass: { primary: "drains", secondary: "processing-style" },
+      mechanismFamily: "withholding-until-certain", genericRisk: "medium",
+      mechanism: "unresolved input stays mentally active until enough certainty is reached; output is postponed rather than dropped",
+      needs: [["self-monitoring", "delayed-permission", "pressure-contact", "verify-before-speaking"],
+              ["internal-first", "delayed-output", "absorb-first", "withdrawn-processing"]],
+      partners: ["articulation-as-regulation"] },
+
+    { patternKey: "checked-before-spoken", family: "PROCESSING", domain: "expression",
+      compass: { primary: "drains", secondary: "expression" },
+      mechanismFamily: "output-pre-audited", genericRisk: "medium",
+      mechanism: "wording is audited before it leaves; the pause is not hesitation about content but about how it will land",
+      needs: [["verify-before-speaking", "careful-output"],
+              ["articulation-need", "processing-site", "feeling-to-words"]],
+      partners: ["articulation-as-regulation"] },
+
+    { patternKey: "open-loop-stays-loud", family: "PROCESSING", domain: "uncertainty-response",
+      compass: { primary: "drains", secondary: "decision-pattern" },
+      mechanismFamily: "unclosed-loop-cost", genericRisk: "medium",
+      mechanism: "an unfinished conversation or undecided matter keeps running in the background and costs more than the outcome itself",
+      needs: [["hard-to-switch", "sustained-effort", "control-stake"],
+              ["hard-to-name-state", "diffuse-processing", "guarded-disclosure"]],
+      partners: ["adaptive-drift"] },
+
+    { patternKey: "trust-opens-slowly", family: "PROCESSING", domain: "trust",
+      compass: { primary: "drains", secondary: "relational-response" },
+      mechanismFamily: "graded-disclosure", genericRisk: "medium",
+      mechanism: "disclosure is released in stages; each stage is checked before the next, so closeness lags behind actual feeling",
+      needs: [["trust-gated", "guarded-disclosure", "depth-engagement"],
+              ["measured-closeness", "slow-warmth", "delayed-permission"]],
+      partners: ["depth-threshold"] },
+
+    /* ═══ LOAD · 接下了什么、代价什么时候出现 ═══ */
+    { patternKey: "carry-before-noticing-cost", family: "LOAD", domain: "over-responsibility",
       compass: { primary: "drains", secondary: "internal-pressure" },
-      mechanismFamily: "load-taken-by-default",
+      mechanismFamily: "load-taken-by-default", genericRisk: "low",
       mechanism: "responsibility is absorbed automatically; the cost registers only after the task period ends",
       needs: [["pressure-source", "pressure-contact", "visible-responsibility", "duty-load"],
-              ["sustained-effort", "hard-to-switch", "effort-friction"]] },
+              ["sustained-effort", "hard-to-switch", "effort-friction"]],
+      partners: ["self-set-conditions"] },
 
-    { patternKey: "meaning-gates-effort", domain: "motivation",
+    { patternKey: "standard-set-internally", family: "LOAD", domain: "self-expectation",
+      compass: { primary: "drains", secondary: "internal-pressure" },
+      mechanismFamily: "internal-bar", genericRisk: "medium",
+      mechanism: "the bar being met is the one set internally, not the one others asked for; meeting the external ask does not end the effort",
+      needs: [["self-expectation", "never-quite-enough", "achievement-pressure"],
+              ["self-monitoring", "careful-output", "delayed-permission"]],
+      partners: ["meaning-conditional-energy"] },
+
+    { patternKey: "visible-means-exposed", family: "LOAD", domain: "internal-pressure",
+      compass: { primary: "drains", secondary: "recognition" },
+      mechanismFamily: "visibility-cost", genericRisk: "high", minIndependent: 3,
+      mechanism: "being seen raises the stake rather than the reward; visibility is managed carefully instead of enjoyed",
+      needs: [["visibility-exposure", "recognition-stake", "angular-emphasis"],
+              ["pressure-source", "self-monitoring", "guarded-disclosure"]],
+      partners: ["making-for-its-own-sake"] },
+
+    { patternKey: "hold-it-in-until-it-passes", family: "LOAD", domain: "suppression",
+      compass: { primary: "drains", secondary: "emotional-regulation" },
+      mechanismFamily: "contain-then-release", genericRisk: "medium",
+      mechanism: "a reaction is held while it matters and surfaces later in a smaller unrelated moment",
+      needs: [["comfort-restraint", "guarded-disclosure", "delayed-output"],
+              ["absorb-first", "regulation-site", "hard-to-name-state"]],
+      partners: ["articulation-as-regulation"] },
+
+    { patternKey: "effort-without-traction", family: "LOAD", domain: "repeated-tension",
+      compass: { primary: "drains", secondary: "agency" },
+      mechanismFamily: "friction-in-effort", genericRisk: "medium",
+      mechanism: "effort is available but does not convert cleanly into movement; the gap between trying and progress is where energy goes",
+      needs: [["effort-friction", "diffuse-drive", "effort-fog"],
+              ["agency-site", "sustained-effort", "all-or-nothing-effort"]],
+      partners: ["momentum-from-starting"] },
+
+    /* ═══ DRIVE · 什么启动并维持移动 ═══ */
+    { patternKey: "meaning-gates-effort", family: "DRIVE", domain: "motivation",
       compass: { primary: "moves", secondary: "meaningful-engagement" },
-      mechanismFamily: "meaning-conditional-energy",
+      mechanismFamily: "meaning-conditional-energy", genericRisk: "low",
       mechanism: "energy is not allocated by importance but by whether the work still reads as meaningful; repetitive prescribed work drains fastest",
       needs: [["meaning-search", "horizon-pull", "expansion-site"],
-              ["momentum-need", "initiation-pull", "making-impulse", "agency-site"]] },
+              ["momentum-need", "initiation-pull", "making-impulse", "agency-site"]],
+      partners: ["load-taken-by-default"] },
 
-    { patternKey: "autonomy-or-stall", domain: "autonomy",
+    { patternKey: "autonomy-or-stall", family: "DRIVE", domain: "autonomy",
       compass: { primary: "moves", secondary: "calls" },
-      mechanismFamily: "self-set-conditions",
+      mechanismFamily: "self-set-conditions", genericRisk: "low",
       mechanism: "motivation drops when the shape of the day is externally prescribed, independent of how agreeable the content is",
       needs: [["autonomy-need", "variety-pull", "disruption-sensitivity"],
-              ["momentum-need", "initiation-pull", "hard-to-settle"]] },
+              ["momentum-need", "initiation-pull", "hard-to-settle"]],
+      partners: ["load-taken-by-default"] },
 
-    { patternKey: "depth-or-disengage", domain: "meaningful-engagement",
+    { patternKey: "making-restores-agency", family: "DRIVE", domain: "creation",
+      compass: { primary: "moves", secondary: "creation" },
+      mechanismFamily: "making-for-its-own-sake", genericRisk: "medium",
+      mechanism: "producing something concrete restores a sense of agency faster than resolving the thing that removed it",
+      needs: [["making-impulse", "agency-site", "self-forward"],
+              ["momentum-need", "initiation-pull", "novelty-pull"]],
+      partners: ["visibility-cost"] },
+
+    { patternKey: "starting-is-the-hard-part", family: "DRIVE", domain: "agency",
+      compass: { primary: "moves", secondary: "decision-pattern" },
+      mechanismFamily: "momentum-from-starting", genericRisk: "medium",
+      mechanism: "the cost sits at the threshold rather than in the work; once begun, continuing is comparatively easy",
+      needs: [["hard-to-switch", "sustained-effort", "slow-to-commit"],
+              ["momentum-need", "agency-site", "initiation-pull"]],
+      partners: ["adaptive-drift"] },
+
+    /* ═══ DIRECTION · 什么在往前拉 ═══ */
+    { patternKey: "depth-or-disengage", family: "DIRECTION", domain: "meaningful-engagement",
       compass: { primary: "calls", secondary: "moves" },
-      mechanismFamily: "depth-threshold",
+      mechanismFamily: "depth-threshold", genericRisk: "medium",
       mechanism: "surface-level involvement does not hold attention; engagement starts only when permitted to go past the first layer",
-      needs: [["depth-engagement", "depth-pull", "control-tension"],
-              ["meaning-search", "horizon-pull", "concentration"]] },
+      needs: [["depth-engagement", "depth-pull", "control-tension", "trust-gated"],
+              ["meaning-search", "horizon-pull", "concentration"]],
+      partners: ["novelty-over-repetition"] },
 
-    { patternKey: "stability-before-movement", domain: "security",
+    { patternKey: "wider-frame-pull", family: "DIRECTION", domain: "curiosity",
+      compass: { primary: "calls", secondary: "sense-of-meaning" },
+      mechanismFamily: "horizon-expansion", genericRisk: "medium",
+      mechanism: "interest reliably moves toward the larger frame around a subject rather than the subject itself",
+      needs: [["horizon-pull", "meaning-search", "expansion-site"],
+              ["articulation-need", "processing-site", "novelty-pull", "developmental-pull"]],
+      partners: ["ground-then-move"] },
+
+    { patternKey: "novelty-over-repetition", family: "DIRECTION", domain: "stimulation",
+      compass: { primary: "calls", secondary: "moves" },
+      mechanismFamily: "novelty-over-repetition", genericRisk: "medium",
+      mechanism: "repetition erodes attention faster than difficulty does; a changed angle restores it more reliably than rest",
+      needs: [["novelty-pull", "variety-pull", "fast-switching", "autonomy-need"],
+              ["hard-to-settle", "adapt-first", "making-impulse", "disruption-sensitivity"]],
+      partners: ["depth-threshold"] },
+
+    { patternKey: "growth-through-articulating", family: "DIRECTION", domain: "developmental-pull",
+      compass: { primary: "calls", secondary: "expression" },
+      mechanismFamily: "development-via-output", genericRisk: "medium",
+      mechanism: "the developmental pull is toward putting inner material outside, where it can be tested rather than only held",
+      needs: [["developmental-pull", "articulation-need"],
+              ["internal-first", "delayed-output", "withdrawn-processing", "absorb-first"]],
+      partners: ["withdraw-to-reset"] },
+
+    /* ═══ RELATION · 远近怎么协商 ═══ */
+    { patternKey: "closeness-needs-room", family: "RELATION", domain: "boundaries",
+      compass: { primary: "grounds", secondary: "relational-response" },
+      mechanismFamily: "space-inside-closeness", genericRisk: "medium",
+      mechanism: "closeness is sustainable when room to withdraw stays available; the room matters more than how often it is used",
+      needs: [["space-in-closeness", "novelty-pull", "autonomy-need"],
+              ["relational-mirror", "pacing-with-others", "measured-closeness"]],
+      partners: ["conditional-belonging"] },
+
+    { patternKey: "depth-or-nothing-in-closeness", family: "RELATION", domain: "intimacy",
+      compass: { primary: "calls", secondary: "relational-response" },
+      mechanismFamily: "intimacy-depth-gate", genericRisk: "high", minIndependent: 3,
+      mechanism: "casual closeness registers as effort rather than ease; engagement arrives only where real exchange is possible",
+      needs: [["depth-engagement", "trust-gated", "guarded-disclosure"],
+              ["relational-mirror", "pacing-with-others", "control-stake"]],
+      partners: ["space-inside-closeness"] },
+
+    { patternKey: "pace-set-by-the-other", family: "RELATION", domain: "relational-response",
+      compass: { primary: "drains", secondary: "boundaries" },
+      mechanismFamily: "adaptive-pacing", genericRisk: "high", minIndependent: 3,
+      mechanism: "pace is matched to the other person before checking one's own; the mismatch shows up as fatigue rather than as disagreement",
+      needs: [["pacing-with-others", "relational-mirror", "boundary-blur"],
+              ["adapt-first", "absorb-first", "comfort-restraint"]],
+      partners: ["self-set-conditions"] },
+
+    { patternKey: "recognition-wanted-not-sought", family: "RELATION", domain: "recognition",
+      compass: { primary: "drains", secondary: "recognition" },
+      mechanismFamily: "unasked-recognition", genericRisk: "high", minIndependent: 3,
+      mechanism: "acknowledgement matters but asking for it feels disqualifying, so the wanting stays unstated and unmet",
+      needs: [["recognition-stake", "visibility-exposure"],
+              ["guarded-disclosure", "self-expectation", "delayed-permission"]],
+      partners: ["making-for-its-own-sake"] },
+
+    /* ═══ DECISION · 怎么承诺 ═══ */
+    { patternKey: "stability-before-movement", family: "DECISION", domain: "security",
       compass: { primary: "grounds", secondary: "decision-pattern" },
-      mechanismFamily: "ground-then-move",
+      mechanismFamily: "ground-then-move", genericRisk: "medium",
       mechanism: "concrete footing is required before commitment; ambiguity is tolerated far less than difficulty",
-      needs: [["needs-concrete", "slow-to-commit", "private-base"],
-              ["security-inward", "regulation-site", "routine-bound"]] },
+      needs: [["needs-concrete", "slow-to-commit", "private-base", "worth-anchor"],
+              ["security-inward", "regulation-site", "routine-bound", "material-ground"]],
+      partners: ["adaptive-drift"] },
 
-    /* 刻意放进来的反例:没有 mechanism、只讲特质 —— 用来验证通用性检查真的会挡 */
-    { patternKey: "values-security", domain: "security",
+    { patternKey: "decide-then-revisit", family: "DECISION", domain: "decision-pattern",
+      compass: { primary: "drains", secondary: "uncertainty-response" },
+      mechanismFamily: "post-decision-review", genericRisk: "medium",
+      mechanism: "a decision is made on time but stays open for review afterwards; the re-checking costs more than the choice did",
+      needs: [["self-monitoring", "hard-to-settle", "adapt-first"],
+              ["delayed-permission", "verify-before-speaking", "control-stake"]],
+      partners: ["ground-then-move"] },
+
+    /* ═══ 护栏用的反例 —— 刻意不合格,用来证明筛选真的在动 ═══ */
+    { patternKey: "values-security", family: "GUARD", domain: "security",
       compass: { primary: "grounds" },
-      mechanismFamily: "generic-trait",
-      mechanism: null,
-      generic: true,
-      needs: [["security-inward", "private-base", "needs-concrete"]] }
+      mechanismFamily: "generic-trait", genericRisk: "high",
+      mechanism: null, generic: true,
+      needs: [["security-inward", "private-base", "needs-concrete"]] },
+
+    { patternKey: "single-signal-sensitivity", family: "GUARD", domain: "emotional-regulation",
+      compass: { primary: "grounds" },
+      mechanismFamily: "single-placement-guard", genericRisk: "high",
+      mechanism: "placeholder rule that intentionally rests on one structure only, to prove single placements cannot be accepted",
+      needs: [["night-chart-only-marker"]] }
   ];
 
-  /* 互相对立的机制家族 —— 两边都强时保留成 tension,不是二选一 */
-  var TENSION_PAIRS = [
-    ["withdraw-to-reset", "articulation-as-regulation"],
-    ["self-set-conditions", "load-taken-by-default"],
-    ["ground-then-move", "self-set-conditions"],
-    ["withholding-until-certain", "articulation-as-regulation"]
-  ];
+  /* 对立的机制家族:直接从规则的 partners 推出来,不另外手写一张表 ——
+     规则改了,张力关系就跟着改,不会有两份说法不一致的东西。 */
+  var TENSION_PAIRS = (function () {
+    var seen = {}, out = [];
+    PATTERN_RULES.forEach(function (r) {
+      (r.partners || []).forEach(function (other) {
+        var k = [r.mechanismFamily, other].sort().join("~");
+        if (seen[k] || r.mechanismFamily === other) return;
+        seen[k] = true; out.push(k.split("~"));
+      });
+    });
+    return out;
+  })();
 
+  /* ──────────────────────────────────────────────────────────
+     2b. Composite pattern —— 白名单,不是「两个都强就自动合并」
+     ------------------------------------------------------------
+     只有明确宣告过的组合才有资格becomes composite,而且还要通过自己的
+     证据验证(见 buildComposites)。宣告里要写清楚行为顺序。
+     ────────────────────────────────────────────────────────── */
+  var COMPOSITE_RULES = [
+    { compositeKey: "regulation-sequence",
+      domain: "emotional-regulation",
+      childPatterns: ["solitude-then-contact", "naming-to-settle"],
+      sequence: ["withdraw", "process", "articulate", "reconnect"],
+      primaryCompassDirection: "grounds",
+      mechanism: "regulation runs as an ordered sequence rather than a preference: input is reduced first, the state is sorted internally, it is then put into words, and contact becomes wanted again afterwards",
+      requires: {
+        bothChildrenAtLeast: 7,        // 两边都要够强
+        sharedActorsAtLeast: 1,        // 要有共同的盘面物件 → 讲的是同一套系统
+        distinctKeysEachAtLeast: 1,    // 各自要有对方没有的证据 → 不是同一件事
+        unionMustExceedBest: true      // 合起来的证据必须多于任一边 → 合并真的加了资讯
+      } },
+
+    { compositeKey: "output-gate-sequence",
+      domain: "expression",
+      childPatterns: ["clarity-before-release", "checked-before-spoken"],
+      sequence: ["absorb", "verify", "wait-for-certainty", "release"],
+      primaryCompassDirection: "drains",
+      mechanism: "output passes two gates in order: it waits for internal certainty, then it waits for the wording to be safe; the delay is cumulative rather than from a single cause",
+      requires: { bothChildrenAtLeast: 7, sharedActorsAtLeast: 1,
+                  distinctKeysEachAtLeast: 1, unionMustExceedBest: true } }
+  ];
   /* ──────────────────────────────────────────────────────────
      3. 主题 / 生命脉络的比对(只做关键词,不做语意模型)
      ------------------------------------------------------------
      ⚠ 这两者永远不进 independentEvidenceCount。
      ────────────────────────────────────────────────────────── */
   var PATTERN_HINTS = {
-    "clarity-before-release": ["想清楚", "确定", "谨慎", "说出来", "带出来", "犹豫", "反覆"],
-    "solitude-then-contact": ["一个人", "独处", "安静", "消化", "沉淀", "空间"],
-    "naming-to-settle": ["说出", "表达", "语言", "讲清楚", "写下"],
+    "solitude-then-contact":      ["一个人", "独处", "安静", "消化", "沉淀", "空间"],
+    "naming-to-settle":           ["说出", "表达", "语言", "讲清楚", "写下"],
+    "rest-needs-permission":      ["休息", "停下", "撑", "累", "允许"],
+    "belonging-on-own-terms":     ["group", "群", "人多", "参与", "退开"],
+    "clarity-before-release":     ["想清楚", "确定", "谨慎", "说出来", "带出来", "犹豫", "反覆"],
+    "checked-before-spoken":      ["怎么说", "措辞", "开口", "confirm", "先想"],
+    "open-loop-stays-loud":       ["没说清楚", "悬着", "放不下", "一直想", "结果"],
+    "trust-opens-slowly":         ["信任", "慢慢", "试探", "深交", "防备"],
     "carry-before-noticing-cost": ["承担", "责任", "撑", "扛", "别人", "累"],
-    "meaning-gates-effort": ["意义", "值得", "投入", "燃", "在乎"],
-    "autonomy-or-stall": ["自由", "自己决定", "被安排", "掌控", "空间"],
-    "depth-or-disengage": ["深", "表面", "穿透", "真正"],
-    "stability-before-movement": ["安全感", "稳", "确定", "踏实", "基础"],
-    "values-security": ["安全感", "稳"]
+    "standard-set-internally":    ["标准", "要求自己", "不够", "做到"],
+    "visible-means-exposed":      ["被看见", "曝光", "评价", "在意别人怎么看"],
+    "hold-it-in-until-it-passes": ["忍", "压", "不说", "过去就好"],
+    "effort-without-traction":    ["使不上力", "白费", "卡住", "没有进展"],
+    "meaning-gates-effort":       ["意义", "值得", "投入", "燃", "在乎"],
+    "autonomy-or-stall":          ["自由", "自己决定", "被安排", "掌控", "空间"],
+    "making-restores-agency":     ["做出来", "创造", "作品", "完成"],
+    "starting-is-the-hard-part":  ["开始", "起头", "拖", "一旦开始"],
+    "depth-or-disengage":         ["深", "表面", "穿透", "真正"],
+    "wider-frame-pull":           ["更大的", "全貌", "背后", "为什么"],
+    "novelty-over-repetition":    ["重複", "新鲜", "腻", "一成不变", "变化"],
+    "growth-through-articulating":["讲出来", "写出来", "分享", "表达"],
+    "closeness-needs-room":       ["距离", "空间", "喘口气", "靠近"],
+    "depth-or-nothing-in-closeness": ["浅", "深入", "交心", "应酬"],
+    "pace-set-by-the-other":      ["配合", "迁就", "对方", "节奏"],
+    "recognition-wanted-not-sought": ["肯定", "认可", "被看见", "不好意思说"],
+    "stability-before-movement":  ["安全感", "稳", "确定", "踏实", "基础"],
+    "decide-then-revisit":        ["决定", "回头想", "后悔", "再确认"],
+    "values-security":            ["安全感", "稳"],
+    "single-signal-sensitivity":  ["敏感"]
   };
 
   function textOfThemes(themes) {
@@ -354,6 +629,11 @@
     var tensions = detectTensions(candidates);
     // 最终分类
     candidates.forEach(function (c) { classify(c); });
+    /* Composite:只在白名单宣告过、且自己通过证据验证时才成立。
+       成立之后【不删除】任何 child —— child 仍然带着自己的证据留在池子里。 */
+    var composites = buildComposites(candidates, tensions);
+
+    var byDirection = groupByDirection(candidates, composites);
 
     return {
       generatedAt: new Date().toISOString(),
@@ -365,8 +645,11 @@
       signalCount: signals.length,
       signals: signals,
       candidates: candidates,
+      composites: composites,
       tensions: tensions,
-      byDirection: groupByDirection(candidates),
+      byDirection: byDirection,
+      directionStatus: directionStatus(byDirection),
+      ruleCount: PATTERN_RULES.length,
       excludedSources: ["favorites", "journal", "mood", "reflectionAnswers"]
     };
   }
@@ -381,6 +664,13 @@
       if (found.length) groupsHit++;
       found.forEach(function (s) { if (matched.indexOf(s) < 0) matched.push(s); });
     });
+
+    /* 4a2. 失格讯号:规则自己宣告的反向证据 */
+    var disq = (rule.disqualifiers || []).length
+      ? signals.filter(function (s) {
+          return s.tags.some(function (t) { return rule.disqualifiers.indexOf(t) >= 0; });
+        })
+      : [];
 
     /* 4b. 独立性:用 independenceKey 去重 —— 同一个结构讲几次都只算一次 */
     var keys = {}, actors = {};
@@ -442,6 +732,12 @@
       contradictionSignals: [],
       compassRelevance: { primary: rule.compass.primary, secondary: rule.compass.secondary || null },
       generic: !!rule.generic || !rule.mechanism,
+      genericRisk: rule.genericRisk || "medium",
+      /* 通用化风险高的规则要求更多独立证据 —— 越容易套在谁身上的说法,门槛越高 */
+      minIndependent: rule.minIndependent || (rule.genericRisk === "high" ? 3 : 2),
+      disqualifiedBy: disq.map(function (d) { return d.id; }),
+      family: rule.family || "UNCLASSIFIED",
+      partOfComposite: null,
       duplicateOf: null,
       strength: 0,
       status: "provisional",
@@ -451,19 +747,33 @@
     return c;
   }
 
-  /* 4e. 强度:概念阶段的简单规则,分数不给使用者看 */
+  /* 4e. 强度:分数永不给使用者看。
+     ------------------------------------------------------------
+     这一版刻意把「证据量」做成分级,而不是一个门槛就满分 ——
+     上一版所有通过的候选分数都是 7,等于没有鉴别力,
+     「哪一个是这个方向的首选」会变成看阵列顺序。
+
+     ⚠ 门槛没有降低,是提高了:
+       规格说「2 个独立盘面讯号」是进入 strong candidate consideration 的
+       最低标准,不是 accepted 的标准。所以光有最低标准 → provisional;
+       要 accepted 得再加上「主题支持」或「更厚的盘面证据」。 */
   function score(c, rule) {
     var s = 0;
-    if (c.independentEvidenceCount >= 2) s += 3;          // 重複出现的独立盘面证据
-    if (c.needGroupsHit >= c.needGroupsTotal) s += 2;      // 结构上真的对得起来
+    // 证据量分级:越多独立结构,分数越高(这是这一版新增的鉴别力)
+    if (c.independentEvidenceCount >= 2) s += 2;
+    if (c.independentEvidenceCount >= 4) s += 1;
+    if (c.independentEvidenceCount >= 6) s += 1;
+    if (c.distinctActorCount >= 5) s += 1;                // 涉及够多不同的盘面物件
+    if (c.needGroupsHit >= c.needGroupsTotal) s += 2;      // 结构真的对得起来
     if (DIRECTION_DOMAINS[c.compassRelevance.primary] &&
-        DIRECTION_DOMAINS[c.compassRelevance.primary].indexOf(c.domain) >= 0) s += 2;  // 方向相关
+        DIRECTION_DOMAINS[c.compassRelevance.primary].indexOf(c.domain) >= 0) s += 2;
     if (c.supportingSources.length >= 1) s += 2;          // 主题支持
     if (c.supportingSources.length >= 2) s += 1;          // 跨多个相关主题重複
-    if (c.contextualSources.length) s += 1;               // 生命脉络只给这 1 分,且不进独立计数
+    if (c.contextualSources.length) s += 1;               // 生命脉络只给 1 分,且不进独立计数
     if (c.independentEvidenceCount <= 1) s -= 3;          // 单一孤立落点
     if (c.generic) s -= 3;                                // 通用诠释
     if (c.distinctActorCount <= 2 && c.independentEvidenceCount >= 2) s -= 1; // 同一组物件换讲法
+    if (c.disqualifiedBy.length) s -= 2;                  // 规则自己宣告的反向证据
     return s;
   }
 
@@ -521,9 +831,11 @@
         : "no-chart-evidence";
       return;
     }
-    if (c.independentEvidenceCount < 2) {
+    if (c.independentEvidenceCount < c.minIndependent) {
       c.status = "rejected";
-      c.rejectionReason = "isolated-placement-only";
+      c.rejectionReason = c.independentEvidenceCount < 2
+        ? "isolated-placement-only"
+        : "below-required-independent-evidence:" + c.minIndependent;
       return;
     }
     if (c.needGroupsHit < c.needGroupsTotal) {
@@ -540,15 +852,128 @@
     c.status = "provisional";
   }
 
-  function groupByDirection(cands) {
+  function groupByDirection(cands, composites) {
     var out = {};
     DIRECTIONS.forEach(function (d) {
-      out[d] = cands.filter(function (c) {
+      var rows = cands.filter(function (c) {
         return c.compassRelevance.primary === d && c.status === "accepted";
-      }).sort(function (a, b) { return b.strength - a.strength; })
-        .map(function (c) { return { patternKey: c.patternKey, strength: c.strength, family: c.mechanismFamily }; });
+      }).map(function (c) {
+        return { kind: "pattern", patternKey: c.patternKey, strength: c.strength, family: c.mechanismFamily };
+      });
+      (composites || []).forEach(function (cp) {
+        if (cp.status === "accepted" && cp.primaryCompassDirection === d)
+          rows.push({ kind: "composite", patternKey: cp.compositeKey, strength: cp.strength,
+                      family: cp.compositeKey, childPatterns: cp.childPatterns });
+      });
+      rows.sort(function (a, b) { return b.strength - a.strength; });
+      out[d] = rows;
     });
     return out;
+  }
+
+  /* 每个方向自己的状态。
+     ⚠ 没有 accepted 的时候一律是 insufficient_evidence:
+       不降门槛、不自动把最强的 provisional 升上来、不塞通用模式进去。
+       未来若要从 provisional 做 secondary review,必须另外通过额外验证,
+       这一层只负责如实说「证据不够」。 */
+  function directionStatus(byDirection) {
+    var out = {};
+    DIRECTIONS.forEach(function (d) {
+      var rows = byDirection[d] || [];
+      out[d] = rows.length
+        ? { status: "accepted", topPatternKey: rows[0].patternKey, acceptedCount: rows.length }
+        : { status: "insufficient_evidence", topPatternKey: null, acceptedCount: 0,
+            note: "no candidate met the acceptance bar; threshold is NOT lowered to fill this direction" };
+    });
+    return out;
+  }
+
+  /* Composite:白名单 + 自己的证据验证。四个条件全过才成立。 */
+  function buildComposites(cands, tensions) {
+    var byKey = {};
+    cands.forEach(function (c) { byKey[c.patternKey] = c; });
+
+    return COMPOSITE_RULES.map(function (rule) {
+      var kids = rule.childPatterns.map(function (k) { return byKey[k]; });
+      var req = rule.requires;
+      var rec = {
+        compositeKey: rule.compositeKey,
+        domain: rule.domain,
+        mechanism: rule.mechanism,
+        childPatterns: rule.childPatterns.slice(),
+        sequence: rule.sequence.slice(),
+        primaryCompassDirection: rule.primaryCompassDirection,
+        childStrengths: {},
+        evidenceUnion: [],
+        independentEvidenceCount: 0,
+        contradictionResolvedAsSequence: false,
+        strength: 0,
+        status: "rejected",
+        rejectionReason: null,
+        checks: {}
+      };
+
+      if (kids.some(function (k) { return !k; })) {
+        rec.rejectionReason = "child-pattern-missing"; return rec;
+      }
+      kids.forEach(function (k) { rec.childStrengths[k.patternKey] = k.strength; });
+
+      // 每个 child 自己的盘面证据键
+      var keySets = kids.map(function (k) {
+        return k.sourceSignals.filter(function (s) { return s.sourceType === "chart"; })
+          .map(function (s) { return s.independenceKey; });
+      });
+      var actorSets = kids.map(function (k) {
+        var a = {};
+        k.sourceSignals.filter(function (s) { return s.sourceType === "chart"; })
+          .forEach(function (s) { s.independenceKey.split("|")[1].split("+").forEach(function (x) { a[x] = true; }); });
+        return Object.keys(a);
+      });
+
+      var union = {};
+      keySets.forEach(function (ks) { ks.forEach(function (k) { union[k] = true; }); });
+      rec.evidenceUnion = Object.keys(union);
+      rec.independentEvidenceCount = rec.evidenceUnion.length;
+
+      var sharedActors = actorSets[0].filter(function (a) { return actorSets[1].indexOf(a) >= 0; });
+      var ownKeys = keySets.map(function (ks, i) {
+        var other = keySets[1 - i];
+        return ks.filter(function (k) { return other.indexOf(k) < 0; });
+      });
+      var bestChild = Math.max(keySets[0].length, keySets[1].length);
+
+      rec.checks = {
+        bothChildrenStrong: kids.every(function (k) { return k.strength >= req.bothChildrenAtLeast; }),
+        childrenNotRejected: kids.every(function (k) { return k.status !== "rejected"; }),
+        sharedActors: sharedActors,
+        sharedActorsOk: sharedActors.length >= req.sharedActorsAtLeast,
+        distinctKeysEach: ownKeys.map(function (k) { return k.length; }),
+        distinctKeysOk: ownKeys.every(function (k) { return k.length >= req.distinctKeysEachAtLeast; }),
+        unionExceedsBest: rec.independentEvidenceCount > bestChild,
+        notMutuallyNegating: true
+      };
+
+      /* 互为张力 ≠ 互相否定。张力是「两边都真,在不同阶段」——
+         正好就是 sequence 想描述的东西,所以这里把它记成「张力以顺序化解」。 */
+      var fams = kids.map(function (k) { return k.mechanismFamily; }).sort().join("~");
+      rec.contradictionResolvedAsSequence = (tensions || []).some(function (t) {
+        return [t.familyA, t.familyB].sort().join("~") === fams && t.bothStrong;
+      });
+
+      var ch = rec.checks;
+      if (!ch.childrenNotRejected) { rec.rejectionReason = "child-pattern-rejected"; return rec; }
+      if (!ch.bothChildrenStrong) { rec.rejectionReason = "child-evidence-too-weak"; return rec; }
+      if (!ch.sharedActorsOk) { rec.rejectionReason = "children-describe-unrelated-systems"; return rec; }
+      if (!ch.distinctKeysOk) { rec.rejectionReason = "children-are-the-same-evidence"; return rec; }
+      if (req.unionMustExceedBest && !ch.unionExceedsBest) {
+        rec.rejectionReason = "merging-adds-no-information"; return rec;
+      }
+
+      rec.status = "accepted";
+      rec.strength = Math.max(kids[0].strength, kids[1].strength) + 1;
+      kids.forEach(function (k) { k.partOfComposite = rule.compositeKey; });
+      return rec;
+    });
   }
 
   /* 多样性:四个方向的首选如果落在同一个机制家族,标出来 */
@@ -568,6 +993,8 @@
     DIRECTIONS: DIRECTIONS,
     DIRECTION_DOMAINS: DIRECTION_DOMAINS,
     PATTERN_RULES: PATTERN_RULES,
+    COMPOSITE_RULES: COMPOSITE_RULES,
+    TENSION_PAIRS: TENSION_PAIRS,
     extractChartSignals: extractChartSignals,
     build: build,
     diversityCheck: diversityCheck

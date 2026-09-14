@@ -61,6 +61,11 @@ function main() {
   line("  排除的来源:" + report.excludedSources.join(", "));
   rule();
 
+  const fams = {};
+  CE.PATTERN_RULES.forEach(r => { fams[r.family] = (fams[r.family] || 0) + 1; });
+  line("规则表:" + report.ruleCount + " 条  " +
+    Object.keys(fams).map(f => f + "(" + fams[f] + ")").join("  "));
+  rule();
   line("① 原始盘面讯号  共 " + report.signalCount + " 条");
   report.signals.forEach(s =>
     line("  [" + s.structure.padEnd(18) + "] " + s.detail.padEnd(40) + " tags: " + s.tags.join(",")));
@@ -114,7 +119,32 @@ function main() {
          "  bothStrong=" + t.bothStrong + "  → " + t.resolution));
   rule();
 
-  line("⑤ 四个方向目前的候选(只列 accepted)");
+  line("⑤ Composite pattern");
+  report.composites.forEach(cp => {
+    line("  " + cp.compositeKey + "  [" + cp.status.toUpperCase() + "]" +
+         (cp.status === "accepted" ? "  strength=" + cp.strength : "  " + cp.rejectionReason));
+    line("    children   " + cp.childPatterns.join(" + ") +
+         "  (" + Object.keys(cp.childStrengths).map(k => k + ":" + cp.childStrengths[k]).join(", ") + ")");
+    line("    sequence   " + cp.sequence.join(" → "));
+    line("    方向       " + cp.primaryCompassDirection);
+    line("    证据联集   " + cp.independentEvidenceCount + " 个独立结构");
+    line("    张力以顺序化解  " + cp.contradictionResolvedAsSequence);
+    line("    验证       " + JSON.stringify({
+      bothStrong: cp.checks.bothChildrenStrong, sharedActors: cp.checks.sharedActors,
+      distinctKeysEach: cp.checks.distinctKeysEach, unionExceedsBest: cp.checks.unionExceedsBest }));
+  });
+  rule();
+
+  line("⑥ 每个方向的状态");
+  CE.DIRECTIONS.forEach(d => {
+    const st = report.directionStatus[d];
+    line("  " + d.padEnd(9) + st.status.toUpperCase() +
+         (st.topPatternKey ? "   top=" + st.topPatternKey + "  accepted=" + st.acceptedCount : "") +
+         (st.note ? "\n             " + st.note : ""));
+  });
+  rule();
+
+  line("⑦ 四个方向目前的候选(只列 accepted)");
   CE.DIRECTIONS.forEach(d => {
     const rows = report.byDirection[d];
     line("  " + d.padEnd(9) + (rows.length
@@ -123,7 +153,7 @@ function main() {
   });
   rule();
 
-  line("⑥ 多样性检查");
+  line("⑧ 多样性检查");
   line("  通过:" + diversity.ok);
   line("  各方向首选的机制家族:" + (diversity.pickedFamilies.join(", ") || "（无）"));
   if (!diversity.ok)

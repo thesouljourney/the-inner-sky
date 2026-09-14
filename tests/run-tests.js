@@ -677,6 +677,136 @@ function testCompassEvidence() {
     /if \(!generator\) return null;/.test(html), true);
 }
 
+/* ---------- 14. 内在指南 · 规则扩展 + composite + insufficient_evidence ----------
+   对应本阶段任务书 E 节要求的九项。 */
+function testCompassRules() {
+  const CE = require(path.join(__dirname, "..", "assets", "compass-evidence.js"));
+  const Astro3 = require(path.join(__dirname, "..", "assets", "astro", "astro-core.js"));
+  const chart = (d, t, lat, lon, tz) =>
+    Astro3.computeNatalChart({ date: d, time: t, place: { lat: lat, lon: lon, tzId: tz } }).chart;
+  const A = chart("1994-11-21", "01:44", 1.8548, 102.9325, "Asia/Kuala_Lumpur");
+  const E = chart("1969-05-17", "09:40", -33.8688, 151.2093, "Australia/Sydney");
+  const run = (n, themes, thread) => CE.build({
+    evidence: { chart: n, themes: themes || {} },
+    context: thread ? { lifeThreads: thread } : {}
+  });
+  const rA = run(A), rE = run(E);
+
+  // —— 规则表本身 ——
+  const core = CE.PATTERN_RULES.filter(r => r.family !== "GUARD");
+  checkEq("[rules] 核心规则 24–30 条", core.length >= 24 && core.length <= 30, true);
+  const fams = {};
+  core.forEach(r => { fams[r.family] = (fams[r.family] || 0) + 1; });
+  checkEq("[rules] 按人类机制分成七族",
+    ["REGULATION", "PROCESSING", "LOAD", "DRIVE", "DIRECTION", "RELATION", "DECISION"]
+      .every(f => fams[f] >= 2), true);
+  // 不准有 single-placement 规则:每条核心规则至少两组 needs
+  checkEq("[rules] 没有任何核心规则只靠单一结构",
+    core.every(r => r.needs.length >= 2 && r.needs.every(g => g.length >= 1)), true);
+  checkEq("[rules] 每条核心规则都写得出 mechanism",
+    core.every(r => typeof r.mechanism === "string" && r.mechanism.length > 40), true);
+  checkEq("[rules] 每条核心规则都标了通用化风险与最低独立证据",
+    core.every(r => ["low", "medium", "high"].indexOf(r.genericRisk) >= 0), true);
+  checkEq("[rules] 高风险规则的独立证据门槛更高",
+    rA.candidates.filter(c => c.genericRisk === "high")
+      .every(c => c.minIndependent >= 3), true);
+  // 护栏规则:刻意只靠一个结构 → 永远不能 accepted
+  const guard = rA.candidates.find(c => c.patternKey === "single-signal-sensitivity");
+  checkEq("[rules] 刻意的单一结构规则永远不会 accepted", guard.status !== "accepted", true);
+
+  // —— 同一个盘面讯号不得被重複计数 ——
+  checkEq("[rules] 每个候选的独立证据数 = 去重后的结构数",
+    rA.candidates.every(c => {
+      const keys = c.sourceSignals.filter(s => s.sourceType === "chart").map(s => s.independenceKey);
+      return c.independentEvidenceCount === new Set(keys).size;
+    }), true);
+  checkEq("[rules] 不同规则共用同一讯号,不会在单一候选内重複计",
+    rA.candidates.every(c => {
+      const keys = c.sourceSignals.filter(s => s.sourceType === "chart").map(s => s.independenceKey);
+      return keys.length === new Set(keys).size;
+    }), true);
+
+  // —— A. insufficient_evidence ——
+  checkEq("[rules] 每个方向都有自己的状态",
+    CE.DIRECTIONS.every(d => !!rA.directionStatus[d] &&
+      ["accepted", "insufficient_evidence"].indexOf(rA.directionStatus[d].status) >= 0), true);
+  checkEq("[rules] 真实盘上确实出现 insufficient_evidence(E 盘 drains)",
+    rE.directionStatus.drains.status, "insufficient_evidence");
+  checkEq("[rules] insufficient 时不给 top,也不自动升级 provisional",
+    rE.directionStatus.drains.topPatternKey === null &&
+    rE.directionStatus.drains.acceptedCount === 0, true);
+  const drainsProv = rE.candidates.filter(c =>
+    c.compassRelevance.primary === "drains" && c.status === "provisional");
+  checkEq("[rules] 该方向确实还有 provisional,但没有被升上来",
+    drainsProv.length > 0 && drainsProv.every(c => c.status === "provisional"), true);
+  checkEq("[rules] 状态里明写不会为了凑满而降门槛",
+    /threshold is NOT lowered/.test(rE.directionStatus.drains.note || ""), true);
+
+  // —— B. composite ——
+  const comp = rA.composites.find(c => c.compositeKey === "regulation-sequence");
+  checkEq("[rules] composite 只从白名单产生",
+    rA.composites.length === CE.COMPOSITE_RULES.length, true);
+  checkEq("[rules] regulation-sequence 在 A 盘成立", comp.status, "accepted");
+  checkEq("[rules] composite 记得住行为顺序",
+    comp.sequence.join(">"), "withdraw>process>articulate>reconnect");
+  checkEq("[rules] composite 的张力以顺序化解", comp.contradictionResolvedAsSequence, true);
+  checkEq("[rules] composite 有自己的证据联集,且多于任一 child",
+    comp.independentEvidenceCount > Math.max(
+      ...comp.childPatterns.map(k => rA.candidates.find(c => c.patternKey === k).independentEvidenceCount)), true);
+  // 不吞掉 child:两个 child 仍然在池子里,证据与状态都还在
+  const kids = comp.childPatterns.map(k => rA.candidates.find(c => c.patternKey === k));
+  checkEq("[rules] composite 不吞掉 child —— child 仍在候选池且仍是 accepted",
+    kids.length === 2 && kids.every(k => k && k.status === "accepted" &&
+      k.independentEvidenceCount >= 2 && k.sourceSignals.length > 0), true);
+  checkEq("[rules] child 会标记自己属于哪个 composite",
+    kids.every(k => k.partOfComposite === "regulation-sequence"), true);
+  // 强证据才允许合并
+  const weak = rA.composites.find(c => c.compositeKey === "output-gate-sequence");
+  checkEq("[rules] 证据不够的 composite 不会成立", weak.status, "rejected");
+  checkEq("[rules] 而且说得出为什么不成立",
+    /child-evidence-too-weak|unrelated-systems|same-evidence|adds-no-information/.test(weak.rejectionReason), true);
+  // 不相关的两个 pattern 不会被误合并
+  checkEq("[rules] 没有宣告过的组合永远不会变成 composite",
+    CE.COMPOSITE_RULES.every(r => r.childPatterns.length === 2) &&
+    rA.composites.every(c => CE.COMPOSITE_RULES.some(r => r.compositeKey === c.compositeKey)), true);
+  checkEq("[rules] composite 必须检查两边讲的是同一套系统(共同盘面物件)",
+    Array.isArray(comp.checks.sharedActors) && comp.checks.sharedActors.length >= 1, true);
+  /* 这一条专门盯住「两边都够强、但讲的是不相关的系统」——
+     不是理论:1981-07-12 这张盘就是这个情况(两个 child 分别 8 分与 7 分,
+     却没有任何共同的盘面物件),必须因为 unrelated-systems 被挡下来。 */
+  const U = chart("1981-07-12", "08:30", 3.139, 101.6869, "Asia/Kuala_Lumpur");
+  const rU = run(U);
+  const uComp = rU.composites.find(c => c.compositeKey === "regulation-sequence");
+  checkEq("[rules] 两边都够强但系统不相关时,composite 仍然不成立",
+    uComp.checks.bothChildrenStrong === true &&
+    uComp.checks.sharedActors.length === 0 &&
+    uComp.status === "rejected" &&
+    uComp.rejectionReason === "children-describe-unrelated-systems", true);
+
+  // —— 门槛没有被降低 ——
+  checkEq("[rules] 最低标准(2 独立证据、无主题支持)只能到 provisional,不是 accepted",
+    rA.candidates.filter(c => c.status === "accepted")
+      .every(c => c.independentEvidenceCount >= 2), true);
+  checkEq("[rules] accepted 的分数有鉴别力,不是全部同分",
+    new Set(rA.candidates.filter(c => c.status === "accepted").map(c => c.strength)).size > 1, true);
+
+  // —— 既有逻辑没有被这一轮改坏 ——
+  checkEq("[rules] 通用规则仍然被拒",
+    rA.candidates.find(c => c.patternKey === "values-security").rejectionReason,
+    "too-generic-no-mechanism");
+  checkEq("[rules] 三种状态都还在用",
+    ["accepted", "provisional", "rejected"]
+      .every(st => rA.candidates.some(c => c.status === st)), true);
+  const withThread = run(A, { self: { tagline: "你想清楚才说出来。", aha: ["确定之前不讲"] } },
+    { tagline: "你要确认安全才带出来。", aha: ["谨慎在消耗你"] });
+  checkEq("[rules] 生命脉络仍然不增加任何独立证据",
+    CE.PATTERN_RULES.every(r => {
+      const a = rA.candidates.find(c => c.patternKey === r.patternKey);
+      const b = withThread.candidates.find(c => c.patternKey === r.patternKey);
+      return a.independentEvidenceCount === b.independentEvidenceCount;
+    }), true);
+}
+
 /* ---------- 跑 ---------- */
 function main() {
   testTimezones();
@@ -691,6 +821,7 @@ function main() {
   testThreadMobileScope();
   testInnerCompass();
   testCompassEvidence();
+  testCompassRules();
   return testPlaces().then(function () {
     console.log("\n对照来源:" + REF.reference);
     console.log("设置:" + JSON.stringify(REF.settings));

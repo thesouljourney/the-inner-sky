@@ -140,6 +140,101 @@ strength ≥ 7                          → accepted
 
 ---
 
+## 规则分类（27 条核心 + 2 条护栏）
+
+按**人类机制**分族，不是按行星 / 宫位堆。
+
+| 家族 | 条数 | 规则 |
+|---|---|---|
+| **REGULATION** 回到基线 | 4 | solitude-then-contact · naming-to-settle · rest-needs-permission · belonging-on-own-terms |
+| **PROCESSING** 输入变成可用 | 4 | clarity-before-release · checked-before-spoken · open-loop-stays-loud · trust-opens-slowly |
+| **LOAD** 接下什么、代价何时出现 | 5 | carry-before-noticing-cost · standard-set-internally · visible-means-exposed · hold-it-in-until-it-passes · effort-without-traction |
+| **DRIVE** 什么启动并维持移动 | 4 | meaning-gates-effort · autonomy-or-stall · making-restores-agency · starting-is-the-hard-part |
+| **DIRECTION** 什么在往前拉 | 4 | depth-or-disengage · wider-frame-pull · novelty-over-repetition · growth-through-articulating |
+| **RELATION** 远近怎么协商 | 4 | closeness-needs-room · depth-or-nothing-in-closeness · pace-set-by-the-other · recognition-wanted-not-sought |
+| **DECISION** 怎么承诺 | 2 | stability-before-movement · decide-then-revisit |
+| **GUARD** 护栏反例 | 2 | values-security（无机制）· single-signal-sensitivity（只靠单一结构） |
+
+### 每条规则的形状
+
+```js
+{
+  patternKey, family, domain,
+  mechanism,        // 必填。没有 → 通用性检查直接拒
+  needs: [[...],[...]],   // 必要证据形状：至少两组，单一落点在结构上凑不满
+  disqualifiers,    // 反向证据，出现就扣分
+  partners,         // 对立机制家族 → 自动推导张力关系
+  compass: { primary, secondary },
+  genericRisk,      // low | medium | high
+  minIndependent    // 预设 2；genericRisk=high 自动提高到 3
+}
+```
+
+**没有任何一条核心规则只靠单一结构** —— 测试逐条盯着 `needs.length >= 2`。
+
+---
+
+## Composite pattern
+
+白名单宣告，**不是「两个都强就自动合并」**。四个条件全过才成立：
+
+```
+bothChildrenAtLeast      两个 child 都要够强
+sharedActorsAtLeast      要有共同的盘面物件 → 讲的是同一套系统
+distinctKeysEachAtLeast  各自要有对方没有的证据 → 不是同一件事
+unionMustExceedBest      合起来的证据要多于任一边 → 合并真的加了资讯
+```
+
+成立之后**不删除任何 child**：child 留在候选池、保留自己的证据与状态，
+只多一个 `partOfComposite` 标记。
+
+目前宣告了两条：
+
+| composite | children | sequence | 方向 |
+|---|---|---|---|
+| `regulation-sequence` | solitude-then-contact + naming-to-settle | withdraw → process → articulate → reconnect | grounds |
+| `output-gate-sequence` | clarity-before-release + checked-before-spoken | absorb → verify → wait-for-certainty → release | drains |
+
+> 互为张力 ≠ 互相否定。张力是「两边都真，只是在不同阶段」——
+> 这正是 sequence 想描述的东西，所以成立时会记 `contradictionResolvedAsSequence: true`。
+
+---
+
+## `insufficient_evidence`
+
+这是**方向层**的状态，不是候选层的：
+
+```js
+directionStatus.calls = {
+  status: "insufficient_evidence",
+  topPatternKey: null,
+  acceptedCount: 0,
+  note: "no candidate met the acceptance bar; threshold is NOT lowered to fill this direction"
+}
+```
+
+- **不降门槛**
+- **不自动把最强的 provisional 升上来**
+- **不塞通用模式进去**
+
+未来若要从 provisional 做 secondary review，必须另外通过额外验证，
+这一层只负责如实说「证据不够」。
+
+---
+
+## 评分为什么改了
+
+上一版**所有通过的候选分数都是 7** —— 等于没有鉴别力，
+「哪一个是这个方向的首选」会变成看阵列顺序。
+
+这一版把证据量做成分级（≥2 / ≥4 / ≥6 各加分，涉及物件 ≥5 再加分）。
+
+⚠ **门槛没有降低，是提高了**：规格说「2 个独立盘面讯号」是进入
+strong candidate consideration 的最低标准，不是 accepted 的标准。
+所以光有最低标准 → `provisional`；要 `accepted` 得再加上主题支持或更厚的盘面证据。
+
+---
+
 ## 未来的生成契约（提案，本阶段不实作）
 
 现行 `Compass.GENERATION_CONTRACT` 的 `directions[]` 只有一个 `text`，不够。
