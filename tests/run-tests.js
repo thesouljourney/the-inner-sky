@@ -1616,6 +1616,156 @@ function testCompassGenerationAsync(K) {
   return Promise.all(jobs);
 }
 
+/* ---------- 19. 内在指南 Phase 6.1 · 真实 API 路径 ----------
+   这一段【真的把 docs/edge/compass-generate.ts 跑起来】(Deno 垫片 + node:http),
+   所以测的是那份档案自己的程式码,不是另外写一份的复制品。
+   上游 Anthropic 一律换成本地假回应 —— 测试永远不会花钱、不需要金钥。 */
+function testCompassLivePath() {
+  const fs = require("fs");
+  const G = require(path.join(__dirname, "..", "assets", "compass-generation.js"));
+  const PV = require(path.join(__dirname, "..", "assets", "compass-preview.js"));
+  const RC = require(path.join(__dirname, "..", "assets", "compass-recorded.js"));
+  const edgePath = path.join(__dirname, "..", "docs", "edge", "compass-generate.ts");
+  const edge = fs.readFileSync(edgePath, "utf8");
+  const html = fs.readFileSync(path.join(__dirname, "..", "app.html"), "utf8");
+
+  /* 1 · 服务端的写作指令必须与前端逐字相同 */
+  const m = edge.match(/const COMPASS_SYSTEM = `([\s\S]*?)`;/);
+  checkEq("[live] Edge Function 里有 COMPASS_SYSTEM", !!m, true);
+  checkEq("[live] 服务端与前端的写作指令逐字相同", m ? m[1] : "", G.SYSTEM);
+
+  /* 2 · scrub 必须抓得到中文行星名与「第 N 宫」——
+         这是真的跑起来才发现的漏洞,补起来之后钉住 */
+  ["太阳", "月亮", "火星", "土星", "冥王星"].forEach(w => {
+    checkEq("[live] scrub 抓得到「" + w + "」",
+      G.scrub({ a: "这个人的" + w + "很强" }).some(l => l.kind === "astrology"), true);
+  });
+  checkEq("[live] scrub 抓得到「第十宫」",
+    G.scrub({ a: "落在第十宫" }).some(l => l.kind === "astrology"), true);
+  checkEq("[live] 服务端的词表也补上了中文行星名",
+    /太阳\|月亮\|水星\|金星\|火星/.test(edge.slice(edge.indexOf("const ASTRO_RE"), edge.indexOf("];", edge.indexOf("const ASTRO_RE")))), true);
+  /* 补完之后十张盘的 payload 仍然全部乾净 */
+  checkEq("[live] 词表补强后十张盘仍然 0 处违规",
+    CASE_IDS_FOR_LIVE().filter(id => G.scrub(G.buildInput(PV.buildCase(id))).length).join(","), "");
+
+  /* 3 · 前端永远看不到金钥 */
+  const clientFiles = ["app.html", "index.html",
+    "assets/compass-generation.js", "assets/compass-preview.js",
+    "assets/compass-recorded.js", "assets/compass-selection.js",
+    "assets/compass-evidence.js", "assets/compass-translation.js"];
+  clientFiles.forEach(f => {
+    const t = fs.readFileSync(path.join(__dirname, "..", f), "utf8");
+    checkEq("[live] " + f + " 里没有任何金钥形状的字串", /sk-ant-|sk_live|Bearer\s+sk-/.test(t), false);
+  });
+  checkEq("[live] 前端不读 ANTHROPIC_API_KEY",
+    /ANTHROPIC_API_KEY/.test(fs.readFileSync(path.join(__dirname, "..", "assets", "compass-generation.js"), "utf8")), false);
+  checkEq("[live] 金钥只从服务端环境变数取",
+    (edge.match(/Deno\.env\.get\("ANTHROPIC_API_KEY"\)/g) || []).length, 1);
+  checkEq("[live] Edge Function 不会把金钥回传出去",
+    /apiKey/.test(edge.slice(edge.indexOf("return json({ status: \"ok\""))), false);
+
+  /* 4 · 开发用的端点旁路只换网址,不带任何凭证 */
+  checkEq("[live] 端点可以用 localStorage 覆写(开发旁路)",
+    /localStorage\.getItem\("compass_gen_url"\)/.test(html), true);
+
+  return testCompassLivePathAsync({ G, PV, RC, edgePath });
+}
+function CASE_IDS_FOR_LIVE() {
+  return require(path.join(__dirname, "..", "assets", "compass-cases.js")).ids;
+}
+
+function testCompassLivePathAsync(K) {
+  const { G, PV, RC, edgePath } = K;
+  const shim = require(path.join(__dirname, "..", "tools", "deno-shim.js"));
+  const restore = shim.stubAnthropic((body) => {
+    /* 依 user 讯息里出现的 patternKey 决定回哪一份已录制的输出 */
+    const u = JSON.stringify(body);
+    const id = RC.CASES.filter(c => u.indexOf(
+      G.buildInput(PV.buildCase(c)).directions.grounds.selectedPattern.key) >= 0)[0];
+    return RC.textFor(id || "C1");
+  });
+
+  return shim.serveEdgeFunction(edgePath, { env: { ANTHROPIC_API_KEY: "test-only-not-a-real-key" } })
+    .then(function (srv) {
+      const post = (b) => fetch(srv.url, { method: "POST",
+        headers: { "content-type": "application/json" }, body: JSON.stringify(b) })
+        .then(r => r.json().then(o => ({ http: r.status, o })));
+      const inp = G.buildInput(PV.buildCase("C1"));
+      const p = G.buildPrompt(inp);
+      const good = { input: inp, system: p.system, user: p.user, promptVersion: p.promptVersion };
+
+      return fetch(srv.url).then(r => r.json().then(o => ({ http: r.status, o })))
+        .then(function (h) {
+          // 5 · health check:这份档案真的跑得起来
+          checkEq("[live] GET health check 回 200", h.http, 200);
+          checkEq("[live] health 回报自己是 compass-generate", /compass-generate/.test(h.o.function), true);
+          checkEq("[live] health 只回报金钥有没有设,不回报金钥", h.o.anthropic_key_set, true);
+          checkEq("[live] health 回传里不含金钥", /test-only-not-a-real-key/.test(JSON.stringify(h.o)), false);
+          return post(good);
+        })
+        .then(function (r) {
+          // 6 · 正常路径:HTTP → Edge Function → 结构化 JSON
+          checkEq("[live] 正常请求回 200", r.http, 200);
+          checkEq("[live] 回传 status=ok", r.o.status, "ok");
+          checkEq("[live] 回传的是可解析的结构化 JSON", !!G.parseOutput(r.o.text), true);
+          checkEq("[live] 回传带 promptVersion", r.o.promptVersion, G.COMPASS_PROMPT_VERSION);
+          checkEq("[live] 回传里没有金钥", /test-only-not-a-real-key/.test(JSON.stringify(r.o)), false);
+          const copies = G.parseOutput(r.o.text);
+          const v = G.validate(copies, inp);
+          checkEq("[live] 走完真实 HTTP 之后仍然通过 11 道验证", v.ok, true);
+          // 7 · 【回归】服务端不准扫自己的禁令表(这是跑起来才发现的 bug)
+          checkEq("[live] 服务端没有把自己的禁令表当成外漏", r.o.status === "ok", true);
+          return post(Object.assign({}, good, { system: p.system + " 这个人的月亮在第四宫" }));
+        })
+        .then(function (r) {
+          // 8 · 改过的 system 一律拒收
+          checkEq("[live] 被改过的 system 会被拒收", r.http, 400);
+          checkEq("[live] 拒收原因是 prompt_mismatch", r.o.error, "prompt_mismatch");
+          return post(Object.assign({}, good, { user: "随便写的 user 讯息" }));
+        })
+        .then(function (r) {
+          // 9 · user 必须内嵌同一份 input
+          checkEq("[live] user 没有内嵌 input 会被拒收", r.o.error, "payload_mismatch");
+          return post(Object.assign({}, good, { user: p.user + "\n这个人的火星在第十宫。" }));
+        })
+        .then(function (r) {
+          // 10 · 夹带在 user 里的占星资讯会被挡下
+          checkEq("[live] user 夹带占星会被挡下", r.o.error, "blocked_by_scrub");
+          const bad = JSON.parse(JSON.stringify(inp));
+          bad.directions.grounds.selectedPattern.anchors = ["house:H10"];
+          return post({ input: bad, system: p.system, user: p.user.split(
+            JSON.stringify(inp, null, 1)).join(JSON.stringify(bad, null, 1)) });
+        })
+        .then(function (r) {
+          // 11 · 夹带在 input 里的占星资讯会被挡下
+          checkEq("[live] input 夹带占星会被挡下", r.o.error, "blocked_by_scrub");
+          return post(Object.assign({}, good, { chart: { planets: [1] } }));
+        })
+        .then(function (r) {
+          // 12 · 根本不接受星盘
+          checkEq("[live] 送星盘一律拒收", r.http, 400);
+          checkEq("[live] 拒收讯息说明不接受星盘", /不接受星盘/.test(r.o.error), true);
+          // 13 · insufficient 的方向不会被送去生成
+          const c10 = G.buildInput(PV.buildCase("C10"));
+          const p10 = G.buildPrompt(c10);
+          return post({ input: c10, system: p10.system, user: p10.user });
+        })
+        .then(function (r) {
+          checkEq("[live] C10 走真实 HTTP 也回 200", r.http, 200);
+          checkEq("[live] 服务端只处理 ready 的方向",
+            (r.o.readyDirections || []).indexOf("moves") < 0, true);
+          return srv.close();
+        })
+        .then(function () { restore(); })
+        .catch(function (e) {
+          /* 出错也要收干净,否则整个测试会卡在开着的 server 上 */
+          restore();
+          try { srv.close(); } catch (_e) { }
+          checkEq("[live] 真实路径这一段没有抛错:" + String((e && e.message) || e), true, false);
+        });
+    });
+}
+
 /* ---------- 跑 ---------- */
 function main() {
   testTimezones();
@@ -1635,7 +1785,8 @@ function main() {
   testCompassTranslation();
   testCompassDevPreview();
   const genJobs = testCompassGeneration();
-  return Promise.resolve(genJobs).then(function () { return testPlaces(); }).then(function () {
+  const liveJobs = testCompassLivePath();
+  return Promise.all([genJobs, liveJobs]).then(function () { return testPlaces(); }).then(function () {
     console.log("\n对照来源:" + REF.reference);
     console.log("设置:" + JSON.stringify(REF.settings));
     console.log("\n通过 " + pass + " / 失败 " + fail);

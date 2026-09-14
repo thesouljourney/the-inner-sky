@@ -41,7 +41,7 @@
     /\bsextile/i, /\bopposition/i, /\bstellium/i, /\bsect\b/i, /\bzodiac/i, /\bnatal\b/i,
     /\b(aries|taurus|gemini|cancer|leo|virgo|libra|scorpio|sagittarius|capricorn|aquarius|pisces)\b/i,
     /\belem-/i, /\bmode-/i, /\bangular\b/i,
-    /星座|宫位|行星|相位|逆行|上升|天顶|天底|北交|南交|星盘|命盘|本命|度数|守护星/
+    /星座|宫位|行星|相位|逆行|上升|天顶|天底|北交|南交|星盘|命盘|本命|度数|守护星|太阳|月亮|水星|金星|火星|木星|土星|天王星|海王星|冥王星|凯龙|莉莉丝|第[一二三四五六七八九十0-9]+宫|白羊座|金牛座|双子座|巨蟹座|狮子座|处女座|天秤座|天蝎座|射手座|摩羯座|水瓶座|双鱼座|黄道|合相|刑相|拱相|冲相/
   ];
   /* 这些 key 一旦出现在 payload 里就是接错了。刻意用组字的方式写,
      免得「这份档案里出现 journal / mood / favs」被误读成「这一层会去读它们」——

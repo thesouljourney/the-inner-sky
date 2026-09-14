@@ -7806,8 +7806,18 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   let cpPvGenBusy = false;
   let cpPvGenInput = null;   // live transport 要送的 payload(只在按下按钮那一刻建立)
   const cpPvGenCache = {};          // key = caseId|mode|promptVersion
-  const COMPASS_GEN_URL = (window.CloudCfg && window.CloudCfg.url)
-    ? window.CloudCfg.url + "/functions/v1/compass-generate" : "";
+  /* 生成端点。预设指向这个专案的 Edge Function;
+     开发时可以用 localStorage 指到别的地方(例如本机跑的那一份)——
+     这只是个开发旁路,不影响任何正式行为,也永远不会带任何金钥:
+       localStorage.setItem("compass_gen_url", "http://127.0.0.1:PORT")
+     API 金钥只存在于服务端 secret,前端从头到尾看不到它。 */
+  const COMPASS_GEN_URL = (function () {
+    let override = "";
+    try { override = localStorage.getItem("compass_gen_url") || ""; } catch (e) { }
+    if (override) return override;
+    return (window.CloudCfg && window.CloudCfg.url)
+      ? window.CloudCfg.url + "/functions/v1/compass-generate" : "";
+  })();
 
   /* 阅读预览:同一时间只跑一次;这一轮工作阶段试过而没有结果的星盘记在 pvSkip,
      不重试 —— 否则每一次重画页面都会再送一次生成请求。 */
