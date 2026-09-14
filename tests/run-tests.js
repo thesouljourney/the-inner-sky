@@ -1069,6 +1069,156 @@ function testCompassSelection() {
     new Set(cases.map(c => JSON.stringify(c.selection.signature.selected))).size, cases.length);
 }
 
+/* ---------- 16. 内在指南 Phase 4 · 人话翻译原型 ----------
+   对应任务书第 26 节的 20 项。要证明的只有一件事:
+   已经选出来的内部机制,能稳定翻成自然、具体、简单、有温度,
+   但不文学 / 不玄学 / 不诊断的使用者语言;翻不出来就如实说翻不出来。 */
+function testCompassTranslation() {
+  const fs = require("fs");
+  const CE = require(path.join(__dirname, "..", "assets", "compass-evidence.js"));
+  const CT = require(path.join(__dirname, "..", "assets", "compass-translation.js"));
+  const REPORT = require(path.join(__dirname, "..", "tools", "compass-translation-report.js"));
+
+  const ALL = Object.assign({}, CT.TRANSLATIONS, CT.COMPOSITES, CT.TENSIONS);
+  const keys = Object.keys(ALL);
+  const q = {};
+  keys.forEach(k => { q[k] = CT.checkCopy(ALL[k].zh); });
+
+  // 1 · 原型规模:10–12 条模式 + composite + tension
+  checkEq("[tr] 至少写了 10 条模式翻译", Object.keys(CT.TRANSLATIONS).length >= 10, true);
+  checkEq("[tr] composite 与 tension 各至少一条",
+    Object.keys(CT.COMPOSITES).length >= 1 && Object.keys(CT.TENSIONS).length >= 1, true);
+
+  // 2 · 占星语言绝对不能外漏
+  checkEq("[tr] 没有任何一条出现占星词汇",
+    keys.filter(k => q[k].astrologyLeak).join(","), "");
+
+  // 3 · 不玄学 / 不文学
+  checkEq("[tr] 没有任何一条踩到玄学或过度文学的词",
+    keys.filter(k => q[k].literaryRisk === "high").join(","), "");
+
+  // 4 · 不做心理诊断
+  checkEq("[tr] 没有任何一条出现临床 / 诊断词汇",
+    keys.filter(k => q[k].diagnosticLeak).join(","), "");
+
+  // 5 · 不贴标签(不讲「你是一个……」)
+  checkEq("[tr] 没有任何一条在给人贴标签",
+    keys.filter(k => q[k].labelRisk === "high").join(","), "");
+
+  // 6 · 不讲套话
+  checkEq("[tr] 没有任何一条是心灵鸡汤套话",
+    keys.filter(k => q[k].genericRisk === "high").join(","), "");
+
+  // 7 · 长度契约
+  checkEq("[tr] coreInsight 一律 15–35 字", keys.filter(k => !q[k].coreLenOk).join(","), "");
+  checkEq("[tr] explanation 一律 70–130 字", keys.filter(k => !q[k].explLenOk).join(","), "");
+
+  // 8 · reflectionPrompt 是一句简单问题
+  checkEq("[tr] reflectionPrompt 都是问句", keys.filter(k => !q[k].promptIsQuestion).join(","), "");
+  checkEq("[tr] reflectionPrompt 都是「一句」而不是一段",
+    keys.filter(k => (ALL[k].zh.reflectionPrompt.match(/[。？?！]/g) || []).length !== 1).join(","), "");
+
+  // 9 · 具体行为:有时间 / 条件,也有动作
+  checkEq("[tr] 每一条都写到具体会发生的事", keys.filter(k => !q[k].concreteBehaviourPresent).join(","), "");
+
+  // 10 · 文案里不应该混进英文(这一阶段只做中文)
+  checkEq("[tr] 使用者看到的文字里没有英文",
+    keys.filter(k => /[A-Za-z]/.test([ALL[k].zh.coreInsight, ALL[k].zh.explanation,
+      ALL[k].zh.reflectionPrompt].join(""))).join(","), "");
+
+  // 11 · 每一条翻译都必须对得上冻结规则表里的一条机制
+  const ruleKeys = CE.PATTERN_RULES.map(r => r.patternKey);
+  const compKeys = CE.COMPOSITE_RULES.map(r => r.compositeKey);
+  checkEq("[tr] 每条模式翻译都能对回规则表",
+    Object.keys(CT.TRANSLATIONS).filter(k => ruleKeys.indexOf(k) < 0).join(","), "");
+  checkEq("[tr] composite 翻译对得回 composite 规则",
+    Object.keys(CT.COMPOSITES).filter(k => compKeys.indexOf(k) < 0).join(","), "");
+
+  // 12 · composite 要表达顺序,不是把两个 child 的句子接起来
+  const rs = CT.COMPOSITES["regulation-sequence"];
+  const ruleRS = CE.COMPOSITE_RULES.find(r => r.compositeKey === "regulation-sequence");
+  checkEq("[tr] composite 的 childPatterns / sequence 与规则一致",
+    JSON.stringify([rs.childPatterns, rs.sequence]),
+    JSON.stringify([ruleRS.childPatterns, ruleRS.sequence]));
+  const kidText = rs.childPatterns.map(k => CT.TRANSLATIONS[k].zh.explanation);
+  checkEq("[tr] composite 文案不是两个 child 句子的拼接",
+    kidText.some(t => rs.zh.explanation.indexOf(t) >= 0), false);
+  checkEq("[tr] composite 文案讲的是先后顺序",
+    /先[\s\S]*再|之后|等/.test(rs.zh.explanation + rs.zh.coreInsight), true);
+
+  // 13 · 张力:两边都要保留,而且写成先后,不是「有时这样有时那样」
+  const tn = CT.TENSIONS["articulation-as-regulation~withdraw-to-reset"];
+  checkEq("[tr] 张力在规则表里确实成对",
+    CE.TENSION_PAIRS.some(p => p.slice().sort().join("~") === "articulation-as-regulation~withdraw-to-reset"), true);
+  checkEq("[tr] 张力文案两边都保留,并且给出顺序",
+    /既[\s\S]*也|两边/.test(tn.zh.coreInsight + tn.zh.explanation) &&
+    /先后|先[\s\S]*再|顺序/.test(tn.zh.coreInsight + tn.zh.explanation), true);
+
+  // 14 · 证据不足 → 不生成任何文案,也没有通用 fallback
+  const ins = CT.translate({ status: "insufficient_evidence", primaryDirection: "drains" });
+  checkEq("[tr] 证据不足时 status 正确", ins.status, "insufficient_evidence");
+  checkEq("[tr] 证据不足时 copy 是 null,不给通用安慰话", ins.copy === null &&
+    ins.coreInsight === undefined && ins.explanation === undefined, true);
+
+  // 15 · 还没写翻译的模式 → 如实回报,绝不硬凑
+  const nt = CT.translate({ patternKey: "trust-opens-slowly", primaryDirection: "relation" });
+  checkEq("[tr] 没写翻译的模式如实回报 not_translated", nt.status, "not_translated");
+  checkEq("[tr] 没写翻译的模式不会生出文案", nt.copy === null && !nt.coreInsight, true);
+
+  // 16 · 模式之间必须真的不一样(相邻两字 Jaccard)
+  const sep = CT.separationCheck();
+  checkEq("[tr] 任何两条模式文案的相似度都低于 0.35", sep[0].similarity < 0.35, true);
+  checkEq("[tr] 相似度量得出东西(同一段文字对自己是 1)",
+    CT.similarity("你先把事情做完才发现累了", "你先把事情做完才发现累了"), 1);
+
+  // 17 · 护栏真的会咬:把禁用词塞进去必须被抓到
+  const mut = (patch) => CT.checkCopy(Object.assign({}, CT.TRANSLATIONS["naming-to-settle"].zh, patch));
+  checkEq("[tr] 护栏会抓占星词", mut({ explanation: "你的月亮在第四宫，所以你需要说出来。" }).astrologyLeak, true);
+  checkEq("[tr] 护栏会抓玄学词", mut({ explanation: "你的灵魂在召唤你把它显化出来。" }).literaryRisk, "high");
+  checkEq("[tr] 护栏会抓诊断词", mut({ explanation: "这是你的依恋创伤与神经系统失调。" }).diagnosticLeak, true);
+  checkEq("[tr] 护栏会抓标签句", mut({ coreInsight: "你是一个需要说出来的人。" }).labelRisk, "high");
+  checkEq("[tr] 护栏会抓套话", mut({ explanation: "相信自己，学会放下，一切都会好起来。" }).genericRisk, "high");
+  checkEq("[tr] 护栏会抓长度不足", mut({ explanation: "说出来就好了。" }).explLenOk, false);
+
+  // 18 · 同一个模式在不同方向拿到的文案完全一样(翻译只是模式的函数)
+  const a = CT.translate({ patternKey: "naming-to-settle", primaryDirection: "grounds", mechanism: "m" });
+  const b = CT.translate({ patternKey: "naming-to-settle", primaryDirection: "calls", mechanism: "m" });
+  checkEq("[tr] 翻译是确定性的:同一模式两次结果相同",
+    JSON.stringify(a.coreInsight + a.explanation + a.reflectionPrompt),
+    JSON.stringify(b.coreInsight + b.explanation + b.reflectionPrompt));
+  checkEq("[tr] recognitionPotential 有算出来", ["low", "medium", "high"].indexOf(a.qualityChecks.recognitionPotential) >= 0, true);
+
+  // 19 · 这一层不呼叫 API、不读日记 / 心情 / 收藏、不碰资料库
+  const src = fs.readFileSync(path.join(__dirname, "..", "assets", "compass-translation.js"), "utf8");
+  const codeOnly = src.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+  checkEq("[tr] 翻译层没有任何网路呼叫或资料库存取",
+    !/fetch\(|XMLHttpRequest|anthropic|supabase|localStorage/i.test(codeOnly), true);
+  checkEq("[tr] 翻译层没有读日记 / 心情 / 收藏",
+    !/journal|mood|favs|favou?rite/i.test(codeOnly), true);
+  checkEq("[tr] 翻译层不 require 证据层或选择层",
+    !/require\(|import\s/.test(codeOnly), true);
+
+  // 20 · 产品侧完全没动
+  const html = fs.readFileSync(path.join(__dirname, "..", "app.html"), "utf8");
+  const ts = fs.readFileSync(path.join(__dirname, "..", "docs", "edge", "read-chart.ts"), "utf8");
+  checkEq("[tr] app.html 没有引入翻译层", html.indexOf("compass-translation") < 0, true);
+  checkEq("[tr] 服务端仍然没有 kind=compass", ts.indexOf('kind === "compass"') < 0, true);
+  const core = CE.PATTERN_RULES.filter(r => r.family !== "GUARD");
+  checkEq("[tr] 27 条核心规则 + 2 条护栏仍未改动",
+    core.length === 27 && CE.PATTERN_RULES.length === 29, true);
+
+  // 21 · 报告工具跑得起来,而且会如实列出翻不出来的部分
+  const rep = REPORT.run();
+  const cov = REPORT.coverage(rep.cases);
+  checkEq("[tr] 报告涵盖 10 张盘", rep.cases.length, 10);
+  checkEq("[tr] 被选中但没写翻译的,一律 not_translated 而不是硬凑",
+    cov.translatedPicks + cov.untranslated.reduce((n, u) => n + u.picks, 0), cov.totalPicks);
+  checkEq("[tr] 证据不足的方向不会产出文案",
+    rep.cases.every(c => Object.keys(c.translated).every(d =>
+      c.translated[d].status === "ok" ||
+      (c.translated[d].copy === null && !c.translated[d].coreInsight))), true);
+}
+
 /* ---------- 跑 ---------- */
 function main() {
   testTimezones();
@@ -1085,6 +1235,7 @@ function main() {
   testCompassEvidence();
   testCompassRules();
   testCompassSelection();
+  testCompassTranslation();
   return testPlaces().then(function () {
     console.log("\n对照来源:" + REF.reference);
     console.log("设置:" + JSON.stringify(REF.settings));
