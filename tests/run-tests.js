@@ -807,6 +807,241 @@ function testCompassRules() {
     }), true);
 }
 
+/* ---------- 15. 内在指南 Phase 3 · 差异化与选择 ----------
+   对应任务书第 31 节的 25 项。核心是:选择只能在 accepted pool 内排序,
+   永远不能回头改变 evidence status。 */
+function testCompassSelection() {
+  const fs = require("fs");
+  const CE = require(path.join(__dirname, "..", "assets", "compass-evidence.js"));
+  const CS = require(path.join(__dirname, "..", "assets", "compass-selection.js"));
+  const Astro4 = require(path.join(__dirname, "..", "assets", "astro", "astro-core.js"));
+  const mk = (d, t, lat, lon, tz) =>
+    Astro4.computeNatalChart({ date: d, time: t, place: { lat, lon, tzId: tz } }).chart;
+  const FIX = [
+    ["C1", "1994-11-21", "01:44", 1.8548, 102.9325, "Asia/Kuala_Lumpur"],
+    ["C2", "1988-03-02", "14:20", 25.033, 121.5654, "Asia/Taipei"],
+    ["C3", "1975-07-09", "06:05", 51.5072, -0.1276, "Europe/London"],
+    ["C4", "2001-12-30", "23:10", 40.7128, -74.006, "America/New_York"],
+    ["C5", "1969-05-17", "09:40", -33.8688, 151.2093, "Australia/Sydney"],
+    ["C6", "1983-09-28", "18:55", 3.139, 101.6869, "Asia/Kuala_Lumpur"],
+    ["C7", "1996-02-14", "04:15", 35.6762, 139.6503, "Asia/Tokyo"],
+    ["C8", "1979-08-23", "12:00", 48.8566, 2.3522, "Europe/Paris"],
+    ["C9", "2006-04-05", "20:30", -23.5505, -46.6333, "America/Sao_Paulo"],
+    ["C10", "1962-10-11", "16:45", 19.076, 72.8777, "Asia/Kolkata"]
+  ];
+  const build = (extra) => {
+    extra = extra || {};
+    const cases = FIX.map(([id, d, t, la, lo, tz]) => ({
+      caseId: id,
+      report: CE.build({
+        // 每张盘仍然是自己的盘 —— extra 只是往 evidence / context 里多塞栏位
+        evidence: Object.assign({ chart: mk(d, t, la, lo, tz), themes: {} }, extra.evidence || {}),
+        context: Object.assign({}, extra.context || {})
+      })
+    }));
+    const corpus = CS.buildCorpus(cases);
+    cases.forEach(c => { c.selection = CS.select(c.report, corpus); });
+    return { cases, corpus };
+  };
+  const { cases, corpus } = build();
+  const byId = {}; cases.forEach(c => { byId[c.caseId] = c; });
+
+  // 1 · rejected 永远不能因为 distinctiveness 复活
+  const allSelectedKeys = [];
+  cases.forEach(c => CS.DIRECTIONS.forEach(d => {
+    const dd = c.selection.directions[d];
+    if (dd.primary) allSelectedKeys.push({ caseId: c.caseId, key: dd.primary.key, kind: dd.primary.kind });
+  }));
+  checkEq("[sel] 被选中的东西一定是 accepted 的 pattern 或 composite",
+    allSelectedKeys.every(s => {
+      const c = byId[s.caseId];
+      if (s.kind === "composite")
+        return c.report.composites.some(x => x.compositeKey === s.key && x.status === "accepted");
+      return c.report.candidates.some(x => x.patternKey === s.key && x.status === "accepted");
+    }), true);
+  checkEq("[sel] rejected 的 pattern 从来没有被选中过",
+    allSelectedKeys.every(s => {
+      const c = byId[s.caseId];
+      const cand = c.report.candidates.find(x => x.patternKey === s.key);
+      return !cand || cand.status !== "rejected";
+    }), true);
+  // 2 · provisional 也不行
+  checkEq("[sel] provisional 从来没有被选中过",
+    allSelectedKeys.every(s => {
+      const c = byId[s.caseId];
+      const cand = c.report.candidates.find(x => x.patternKey === s.key);
+      return !cand || cand.status !== "provisional";
+    }), true);
+  // 3 · selection 不改变 evidence status
+  const before = JSON.stringify(cases.map(c => c.report.candidates.map(x => [x.patternKey, x.status])));
+  cases.forEach(c => CS.select(c.report, corpus));
+  checkEq("[sel] 再选一次不会改动任何 evidence status",
+    JSON.stringify(cases.map(c => c.report.candidates.map(x => [x.patternKey, x.status]))), before);
+
+  // 4 · 高证据低区分 vs 低证据高区分 可以正确竞争
+  const rowUniversal = corpus.stats["wider-frame-pull"];
+  checkEq("[sel] 人人都中的 pattern 区分度最低", rowUniversal.acceptedFrequency >= 0.9 &&
+    rowUniversal.distinctiveness.value <= 0.1 &&
+    rowUniversal.distinctiveness.flags.indexOf("low-distinctiveness") >= 0, true);
+  const universalPickedAsPrimary = allSelectedKeys.filter(s => s.key === "wider-frame-pull").length;
+  checkEq("[sel] 但它没有因此支配全部 case(仍可能在证据极强时胜出)",
+    universalPickedAsPrimary < cases.length, true);
+
+  /* 5 · 阵列顺序不影响选择。
+     刻意用 C4:它的 grounds 有两个候选分数完全相同(0.508)——
+     如果 tie-break 是看阵列顺序,把候选反过来就会选到另一个。 */
+  const tieCase = byId.C4;
+  const tieRanked = tieCase.selection.directions.grounds.ranked;
+  checkEq("[sel] C4 的 grounds 确实存在同分,足以验出阵列顺序问题",
+    tieRanked.length >= 2 && tieRanked[0].score === tieRanked[1].score, true);
+  const shuffled = JSON.parse(JSON.stringify(tieCase.report));
+  shuffled.candidates.reverse();
+  (shuffled.composites || []).reverse();
+  const selA = CS.select(tieCase.report, corpus), selB = CS.select(shuffled, corpus);
+  checkEq("[sel] 把候选顺序反过来,同分时选出来的仍然一样",
+    JSON.stringify(CS.DIRECTIONS.map(d => (selA.directions[d].primary || {}).key)),
+    JSON.stringify(CS.DIRECTIONS.map(d => (selB.directions[d].primary || {}).key)));
+
+  // 6 · 生命脉络不影响 distinctiveness 的证据计数
+  const withThread = build({ context: { lifeThreads: { tagline: "你要确认安全才带出来。", aha: ["谨慎在消耗你"] } } });
+  checkEq("[sel] 加进生命脉络后,跨盘 accepted 频率完全没变",
+    JSON.stringify(corpus.matrix.rows.map(r => [r.patternKey, r.acceptedCount])),
+    JSON.stringify(withThread.corpus.matrix.rows.map(r => [r.patternKey, r.acceptedCount])));
+
+  // 7/8/9 · 日记 / 收藏 / 心情 不进差异化
+  const src = fs.readFileSync(path.join(__dirname, "..", "assets", "compass-selection.js"), "utf8");
+  checkEq("[sel] 选择层原始码不含日记 / 收藏 / 心情栏位",
+    !/journal|favorites|favs|mood|reflectionAnswer|compass_entries/.test(
+      src.replace(/不读日记 \/ 心情 \/ 收藏[^\n]*/g, "")), true);
+  const polluted = build({ evidence: { favorites: ["x"], journal: ["y"] }, context: { mood: "平静" } });
+  checkEq("[sel] 硬塞日记 / 收藏 / 心情,矩阵一格都不变",
+    JSON.stringify(polluted.corpus.matrix.rows.map(r => [r.patternKey, r.acceptedCount])),
+    JSON.stringify(corpus.matrix.rows.map(r => [r.patternKey, r.acceptedCount])));
+
+  // 10/11/12 · composite 的 selection advantage 要靠「多讲了一件事」
+  const compCase = cases.find(c => (c.report.composites || []).some(x => x.status === "accepted"));
+  const cp = compCase.report.composites.find(x => x.status === "accepted");
+  const candsByKey = {}; compCase.report.candidates.forEach(x => { candsByKey[x.patternKey] = x; });
+  const cv = CS.compositeValue(cp, candsByKey);
+  checkEq("[sel] 有顺序又化解张力的 composite 拿得到 compositeValue", cv.value > 0 &&
+    cv.reasons.indexOf("new-sequence") >= 0, true);
+  const stitched = CS.compositeValue({
+    status: "accepted", sequence: ["a", "b"], mechanism: "short",
+    contradictionResolvedAsSequence: false, childPatterns: [], independentEvidenceCount: 2, evidenceUnion: ["x", "y"]
+  }, {});
+  checkEq("[sel] 只是把两个东西拼起来的 composite 没有任何加分",
+    stitched.value === 0 && stitched.reasons[0] === "merely-stitched", true);
+  checkEq("[sel] composite 不会自动压过 child —— 权重只占 " + CS.WEIGHTS.composite,
+    CS.WEIGHTS.composite < CS.WEIGHTS.evidence, true);
+
+  // 13 · composite 选上之后,child 不会再占别的方向
+  cases.forEach(c => {
+    CS.DIRECTIONS.forEach(d => {
+      const dd = c.selection.directions[d];
+      if (!dd.primary || dd.primary.kind !== "composite") return;
+      const kids = (c.report.composites.find(x => x.compositeKey === dd.primary.key) || {}).childPatterns || [];
+      const elsewhere = CS.DIRECTIONS.filter(o => o !== d)
+        .map(o => c.selection.directions[o].primary)
+        .filter(p => p && kids.indexOf(p.key) >= 0);
+      checkEq("[sel] " + c.caseId + " 的 composite child 没有同时占住别的方向", elsewhere.length, 0);
+    });
+  });
+
+  // 14/15 · 证据重叠 → 罚分,但机制不同就不重罚,更不会自动 reject
+  const a = byId.C1.report.candidates.find(x => x.patternKey === "solitude-then-contact");
+  const b = byId.C1.report.candidates.find(x => x.patternKey === "naming-to-settle");
+  const ov = CS.evidenceOverlap(a, b);
+  checkEq("[sel] 证据重叠算得出共用了几条讯号",
+    typeof ov.sharedEvidenceCount === "number" && ov.evidenceOverlapRatio >= 0 &&
+    ov.evidenceOverlapRatio <= 1, true);
+  checkEq("[sel] 机制不同的时候相似度不是 1", CS.mechanismSimilarity(a, b) < 1, true);
+  checkEq("[sel] 高重叠不会让候选被自动 reject(状态仍由证据层决定)",
+    a.status === "accepted" && b.status === "accepted", true);
+
+  // 16 · insufficient_evidence 不会被 selection 填满
+  const insufficient = [];
+  cases.forEach(c => CS.DIRECTIONS.forEach(d => {
+    if (c.report.directionStatus[d].status === "insufficient_evidence")
+      insufficient.push({ caseId: c.caseId, d: d, sel: c.selection.directions[d] });
+  }));
+  checkEq("[sel] 测试组里确实出现过 insufficient_evidence", insufficient.length > 0, true);
+  checkEq("[sel] insufficient 的方向永远没有被填上东西",
+    insufficient.every(x => x.sel.status === "insufficient_evidence" && x.sel.primary === null), true);
+
+  /* 16b · 就算有候选的「次要相关」指向那个方向,insufficient 也不准被填满。
+     用一份合成 report 直接顶住这个守卫:accepted 的候选 primary=moves、
+     secondary=drains,而 drains 在证据层是 insufficient。 */
+  const synthetic = {
+    candidates: [{
+      patternKey: "synthetic-strong", status: "accepted", strength: 11,
+      family: "DRIVE", mechanismFamily: "synthetic", domain: "motivation",
+      compassRelevance: { primary: "moves", secondary: "drains" },
+      sourceSignals: [{ sourceType: "chart", independenceKey: "aspect|A+B" },
+                      { sourceType: "chart", independenceKey: "aspect|C+D" }],
+      independentEvidenceCount: 2
+    }],
+    composites: [],
+    tensions: [],
+    directionStatus: {
+      grounds: { status: "insufficient_evidence" },
+      moves:   { status: "accepted" },
+      drains:  { status: "insufficient_evidence" },
+      calls:   { status: "insufficient_evidence" }
+    }
+  };
+  const synSel = CS.select(synthetic, CS.buildCorpus([{ caseId: "S", report: synthetic }]));
+  checkEq("[sel] 次要相关也不能把 insufficient 的方向填满",
+    synSel.directions.drains.status === "insufficient_evidence" &&
+    synSel.directions.drains.primary === null, true);
+  checkEq("[sel] 该选的那个方向仍然选得出来",
+    synSel.directions.moves.primary.key, "synthetic-strong");
+
+  // 17 · 跨方向多样性:找得到 next-best
+  const hasRunnerUp = cases.some(c => CS.DIRECTIONS.some(d => {
+    const dd = c.selection.directions[d];
+    return dd.runnerUp && dd.runnerUp.parts.redundancyPenalty > 0;
+  }));
+  checkEq("[sel] 会因为与已选项重叠而把候选往下压,改选 next-best", hasRunnerUp, true);
+
+  // 18 · family diversity 是偏好不是硬规则
+  checkEq("[sel] 没有写死「四个方向必须四个不同 family」",
+    !/mustBeDistinctFamily|requireFourFamilies/.test(src), true);
+
+  // 19/20 · 决定性:同样输入跑两次结果完全一样
+  const run1 = build(), run2 = build();
+  checkEq("[sel] 重跑一次,四向选择完全相同",
+    JSON.stringify(run1.cases.map(c => CS.DIRECTIONS.map(d => (c.selection.directions[d].primary || {}).key))),
+    JSON.stringify(run2.cases.map(c => CS.DIRECTIONS.map(d => (c.selection.directions[d].primary || {}).key))));
+  checkEq("[sel] 两两相似度也完全可重现",
+    JSON.stringify(CS.pairwise(run1.cases)), JSON.stringify(CS.pairwise(run2.cases)));
+
+  // 21 · 27 条规则表没有被这一阶段改动
+  const core = CE.PATTERN_RULES.filter(r => r.family !== "GUARD");
+  checkEq("[sel] 规则表仍然是 27 条核心 + 2 条护栏",
+    core.length === 27 && CE.PATTERN_RULES.length === 29, true);
+  /* 只看真正的 require / import 与对规则表的赋值 —— 注解里提到档名不算 */
+  const codeOnly = src.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+  checkEq("[sel] 选择层没有 require 证据层,也没有碰规则表",
+    !/require\(|import\s|PATTERN_RULES|COMPOSITE_RULES/.test(codeOnly), true);
+
+  // 22/23/24/25 · 没有新增 API、没有改 UI、两套既有生成没动
+  const html = fs.readFileSync(path.join(__dirname, "..", "app.html"), "utf8");
+  const ts = fs.readFileSync(path.join(__dirname, "..", "docs", "edge", "read-chart.ts"), "utf8");
+  checkEq("[sel] 选择层没有任何网路呼叫",
+    !/fetch\(|XMLHttpRequest|anthropic|supabase/i.test(src), true);
+  checkEq("[sel] 服务端仍然没有 kind=compass", ts.indexOf('kind === "compass"') < 0, true);
+  checkEq("[sel] app.html 没有引入选择层", html.indexOf("compass-selection") < 0, true);
+  checkEq("[sel] 生命脉络与九个主题的 Prompt 仍未改动",
+    /把前面读过的所有理解连起来/.test(ts) && /现在写【第二部分 · 主题探索】中的一章/.test(ts), true);
+
+  // 差异化本身要有结论
+  const diff = CS.differentiationCheck(cases);
+  checkEq("[sel] 差异化体检给得出判定",
+    diff.verdict === "OK" || diff.verdict === "DIFFERENTIATION_FAILURE", true);
+  checkEq("[sel] 十张盘的 signature 没有任何两张完全相同",
+    new Set(cases.map(c => JSON.stringify(c.selection.signature.selected))).size, cases.length);
+}
+
 /* ---------- 跑 ---------- */
 function main() {
   testTimezones();
@@ -822,6 +1057,7 @@ function main() {
   testInnerCompass();
   testCompassEvidence();
   testCompassRules();
+  testCompassSelection();
   return testPlaces().then(function () {
     console.log("\n对照来源:" + REF.reference);
     console.log("设置:" + JSON.stringify(REF.settings));
