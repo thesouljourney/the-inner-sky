@@ -5210,14 +5210,17 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       ts: r.created_at || r.ts || new Date().toISOString(),
       mood: r.mood || "",
       text: r.body || "",
-      kind: r.kind === "answer" ? "answer" : "note"
+      kind: r.kind === "answer" ? "answer" : "note",
+      /* 那天的问题。旧的列没有这一栏(null),读回来就是空字串 ——
+         画面上的 `open && r.question` 会自己安静地跳过,不编一个问题出来。 */
+      question: r.question || ""
     };
   }
 
   const tableStore = {
     name: "table",
     list: function () {
-      return nf(restUrl("?select=id,created_at,mood,body,kind&order=created_at.desc&limit=" + PAGE_SIZE),
+      return nf(restUrl("?select=id,created_at,mood,body,kind,question&order=created_at.desc&limit=" + PAGE_SIZE),
         { headers: authHeaders() })
         .then(function (r) {
           if (!r.ok) throw new Error("DB " + r.status);
@@ -5235,7 +5238,10 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
         headers: Object.assign({ "Prefer": "return=representation" }, authHeaders()),
         body: JSON.stringify({
           user_id: uidNow, mood: row.mood, body: row.text, kind: row.kind,
-          created_at: row.ts
+          created_at: row.ts,
+          /* 回答的时候把当天那个问题一起送上去 —— 少了它,之后回来看
+             只剩下自己的答案,不知道自己在答什么。没有问题就送 null。 */
+          question: row.question || null
         })
       }).then(function (r) {
         if (!r.ok) throw new Error("DB " + r.status);
@@ -8702,8 +8708,11 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
      不传时产生的 HTML 与修改前逐字相同 —— 九个主题页与三十道探索题一个字元都没变。
      传 true 时只是多挂两个 .mob-only 的节点:桌机 display:none,手机才换上另一组文案。
      连结与目的地(LANDING_TOPICS)两边完全一样,没有任何路由改动。 */
-  function dpReturnFoot(threadTail) {
-    const label = dpT("返回主题列表", "Back to topics");
+  /* opts:{label, href} —— 不传就完全维持原本的行为(九大主题与其他页都没变)。
+     我的内在指南是从主选单进来的独立页面,不是主题底下的一篇,所以它自己传一组。 */
+  function dpReturnFoot(threadTail, opts) {
+    const o = opts || {};
+    const label = o.label || dpT("返回主题列表", "Back to topics");
     const cta = threadTail
       ? '<span class="lb-d">' + label + '</span><span class="lb-m mob-only">' +
         esc0(dpT("回到九个主题 ✦", "Back to the nine ✦")) + "</span>"
@@ -8715,7 +8724,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       : "";
     return '<div class="dp-return' + (threadTail ? " thread-return" : "") + '"><span class="say">' +
       dpT("你不是来寻找答案,\n而是来重新看见自己。", "You are not here for answers —\nyou are here to see yourself again.").replace(/\n/g, "<br>") +
-      '</span><a class="dp-cta" href="' + LANDING_TOPICS + '">' + cta + "</a>" + hint + "</div>";
+      '</span><a class="dp-cta" href="' + (o.href || LANDING_TOPICS) + '">' + cta + "</a>" + hint + "</div>";
   }
 
   // ---------- 页面:九大主题 ----------
@@ -9995,7 +10004,8 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
           .split("\n").map(function (x) { return esc0(x); }).join("<br>") +
         "</span></div>",
       body: body,
-      foot: dpReturnFoot(),
+      /* 这一页不是九大主题底下的一篇,页尾要跟上面的返回键说同一件事 */
+      foot: dpReturnFoot(false, { label: dpT("回到主页", "Back to home"), href: LANDING_URL }),
       backLabel: dpT("返回主页", "Back to home"),
       backHref: LANDING_URL,
       seed: 71

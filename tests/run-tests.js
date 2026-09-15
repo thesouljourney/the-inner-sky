@@ -2848,6 +2848,76 @@ function testCompassAnchorsLock() {
     });
 }
 
+
+/* ---------- 29. 上线前修的两件事(F1 / F2) ----------
+   F1 云端记录会把「那天的问题」丢掉  F2 内在指南的页尾指向错的地方
+   ------------------------------------------------------------------- */
+function testCompassPreLaunchFixes() {
+  const fs = require("fs");
+  const html = fs.readFileSync(path.join(__dirname, "..", "app.html"), "utf8");
+  const sqlDir = path.join(__dirname, "..", "docs", "sql");
+  const sql = fs.readFileSync(path.join(sqlDir, "compass_entries.sql"), "utf8");
+  const mig = fs.readFileSync(path.join(sqlDir, "compass_entries_add_question.sql"), "utf8");
+
+  /* —— F1:那天的问题要能来回走一趟 —— */
+  const rowIn = html.slice(html.indexOf("function rowIn(r)"), html.indexOf("const tableStore"));
+  checkEq("[F1] rowIn 会把 question 带回来", /question:\s*r\.question \|\| ""/.test(rowIn), true);
+
+  const ts = html.slice(html.indexOf("const tableStore = {"), html.indexOf("function pickStore"));
+  checkEq("[F1] list 的 select 有要 question",
+    /select=id,created_at,mood,body,kind,question&/.test(ts), true);
+  checkEq("[F1] add 的 POST 会送 question", /question:\s*row\.question \|\| null/.test(ts), true);
+  /* 送上去的还是只有使用者看得到的东西 */
+  checkEq("[F1] POST 没有夹带机制 / 证据 / 分数 / prompt",
+    /\bmechanism\b|support\[|selectionScore|patternKey|systemPrompt|promptVersion/i
+      .test(ts.slice(ts.indexOf("body: JSON.stringify({"), ts.indexOf("}).then"))), false);
+  /* 本机那一条路没有被动到 */
+  const shape = html.slice(html.indexOf("function shape(entry, keep)"), html.indexOf("function isEmpty"));
+  checkEq("[F1] 本机的资料形状没有变", /question: String\(e\.question/.test(shape), true);
+
+  /* —— 资料库:只能用「加栏位」的方式,不能重建或删资料 —— */
+  checkEq("[F1] 正式 schema 有 question 这一栏", /^\s*question\s+text,/m.test(sql), true);
+  checkEq("[F1] question 是可以为 null 的", /question\s+text\s*,/.test(sql) && !/question\s+text\s+not null/.test(sql), true);
+  checkEq("[F1] schema 有长度限制", /compass_question_len_chk/.test(sql), true);
+  checkEq("[F1] 迁移只加栏位", /add column if not exists question text/.test(mig), true);
+  checkEq("[F1] 迁移可以重复跑", /if not exists/.test(mig) && /pg_constraint/.test(mig), true);
+  ["drop table", "truncate", "delete from", "create table", "drop column"].forEach(function (bad) {
+    checkEq("[F1] 迁移没有「" + bad + "」", mig.toLowerCase().indexOf(bad) >= 0, false);
+  });
+  checkEq("[F1] 迁移的长度限制与前端一致(160)",
+    /<= 160/.test(mig) && /MAX_MOOD \* 4/.test(shape), true);
+  checkEq("[F1] 正式 schema 指得出该跑哪一段迁移",
+    sql.indexOf("compass_entries_add_question.sql") >= 0, true);
+  /* 旧的列 question 是 null:画面本来就只在有值的时候才印 */
+  const skyFn = (function () {
+    const a = html.indexOf("function compassSkyHtml()");
+    return html.slice(a, html.indexOf("\n  /*", a + 10));
+  })();
+  checkEq("[F1] 没有值就不印「那天的问题」", /open && r\.question/.test(skyFn), true);
+  checkEq("[F1] 不会替旧记录编一个问题出来",
+    /r\.question \|\| *["']那|placeholder|示例/.test(skyFn), false);
+
+  /* —— F2:只有内在指南这一页换页尾 —— */
+  const foot = html.slice(html.indexOf("function dpReturnFoot("), html.indexOf("// ---------- 页面:九大主题"));
+  checkEq("[F2] dpReturnFoot 收一组可选的 label / href",
+    /function dpReturnFoot\(threadTail, opts\)/.test(foot), true);
+  checkEq("[F2] 不传就维持原本的文案",
+    /o\.label \|\| dpT\("返回主题列表"/.test(foot), true);
+  checkEq("[F2] 不传就维持原本的去处",
+    /\(o\.href \|\| LANDING_TOPICS\)/.test(foot), true);
+  checkEq("[F2] 内在指南这一页自己传一组",
+    /foot: dpReturnFoot\(false, \{ label: dpT\("回到主页", "Back to home"\), href: LANDING_URL \}\)/.test(html), true);
+  /* 其他页面一个都没被改到:剩下的呼叫仍然不带第二个参数 */
+  const calls = (html.match(/dpReturnFoot\([^)]*\)/g) || [])
+    .filter(function (c) { return c !== "dpReturnFoot(threadTail, opts)"; });
+  checkEq("[F2] 其他页面的呼叫没有被动过",
+    calls.filter(function (c) { return c.indexOf("label:") >= 0; }).length, 1);
+  checkEq("[F2] 其他页面仍然拿到预设值",
+    calls.filter(function (c) {
+      return c.indexOf("label:") < 0 && !/dpReturnFoot\((\)|true\))/.test(c);
+    }).join(","), "");
+}
+
 /* ---------- 跑 ---------- */
 function main() {
   testTimezones();
@@ -2877,6 +2947,7 @@ function main() {
   testCompassAnchorScopeGuard();
   testCompassAnchorReusability();
   testCompassAnchorsLock();
+  testCompassPreLaunchFixes();
   testCompassZhOnlyLabels();
   return Promise.all([genJobs, liveJobs, voiceJobs, v12Jobs]).then(function () { return testPlaces(); }).then(function () {
     console.log("\n对照来源:" + REF.reference);
