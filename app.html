@@ -7826,6 +7826,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   let cpPvGenBusy = false;
   let cpPvGenInput = null;   // live transport 要送的 payload(只在按下按钮那一刻建立)
   let cpPvLastServer = null; // 最近一次 Edge Function 回报的 model / promptVersion(不含任何凭证)
+  let cpPvSentKeys = null;   // 最近一次送出去的 payload【栏位名】(只记 key,不记值)
   /* 每一次 POST 都记下来:第一次部署最常遇到的是 401 / 404 / CORS,
      必须一眼看得出是哪一类,而不是笼统的「生成失败」。
      纪录里【永远】不含任何凭证 —— 只有网址、状态码、耗时、错误讯息。 */
@@ -9039,51 +9040,99 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     return caseId + "|" + cpPvMode + "|" + cpPvVersion();
   }
   /* 真的打到 Edge Function。函式没部署 / 出错 → generation_failed,不 fallback。 */
+  /* ── Phase 7:真实路径的三件事 ────────────────────────────
+     1. 一定要有登入中的 session 才送 —— 不准悄悄用 anon key 顶替。
+        (匿名请求就算通过闸道,也不是我们要验证的那条「production-shaped」路径。)
+     2. 令牌过期(401)先续期一次再重送同一个请求。
+        这是 HTTP 层的重试,与生成层「最多一次 targeted retry」是两回事,不互相占用。
+     3. 每一次都记下来源、状态码、耗时 —— 回传一定标成 live,永远不会被别的来源冒充。
+     ──────────────────────────────────────────────────────── */
+  function cpLiveSession() {
+    const C = window.Cloud;
+    if (!C || !C.hasSession || !C.hasSession()) return null;
+    if (C.dayValid && !C.dayValid()) return null;
+    const t = C.token && C.token();
+    return t ? { token: t } : null;
+  }
   function cpLiveTransport() {
     return function (p) {
       if (!COMPASS_GEN_URL) return Promise.reject(new Error("no generate url"));
-      const bearer = (window.Cloud && window.Cloud.token && window.Cloud.token()) ||
-        ((window.CloudCfg || {}).anon || "");
-      const t0 = Date.now();
-      const rec = { url: COMPASS_GEN_URL, t: new Date().toISOString(), status: null, ms: null, note: "" };
-      cpPvHttpLog.push(rec);
-      return fetch(COMPASS_GEN_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": "Bearer " + bearer,
-                   "apikey": (window.CloudCfg || {}).anon || "" },
-        body: JSON.stringify({ input: p._input, system: p.system, user: p.user,
-                               promptVersion: p.promptVersion })
-      }).then(function (r) {
-        rec.status = r.status;
-        /* 非 2xx 有可能回的是 HTML / 纯文字(闸道层的 401、404),不能直接 r.json() */
-        return r.text().then(function (body) {
-          let o = null;
-          try { o = JSON.parse(body); } catch (e) { o = null; }
-          return { r: r, o: o, body: body };
+      const anon = (window.CloudCfg || {}).anon || "";
+
+      function send(bearer, attempt) {
+        const t0 = Date.now();
+        const rec = { url: COMPASS_GEN_URL, t: new Date().toISOString(),
+                      attempt: attempt, status: null, ms: null, note: "" };
+        cpPvHttpLog.push(rec);
+        const payload = { input: p._input, system: p.system, user: p.user,
+                          promptVersion: p.promptVersion };
+        /* §4 的开发诊断:送出去的到底有哪些栏位(只记 key,不记值) */
+        cpPvSentKeys = {
+          top: Object.keys(payload),
+          directions: Object.keys((p._input && p._input.directions) || {}),
+          perDirection: Object.keys(((p._input && p._input.directions) || {}).grounds || {}),
+          globalContext: Object.keys((p._input && p._input.globalContext) || {})
+        };
+        return fetch(COMPASS_GEN_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json",
+                     "Authorization": "Bearer " + bearer, "apikey": anon },
+          body: JSON.stringify(payload)
+        }).then(function (r) {
+          rec.status = r.status;
+          /* 非 2xx 有可能回的是 HTML / 纯文字(闸道层的 401、404),不能直接 r.json() */
+          return r.text().then(function (body) {
+            let o = null;
+            try { o = JSON.parse(body); } catch (e) { o = null; }
+            return { r: r, o: o, body: body };
+          });
+        }).then(function (x) {
+          rec.ms = Date.now() - t0;
+          /* 令牌过期:续期一次再重送同一个请求(与既有的 read-chart 做法一致) */
+          if (x.r.status === 401 && attempt === 1 && window.Cloud && window.Cloud.refresh) {
+            rec.note = "401 → 续期后重送";
+            return window.Cloud.refresh()
+              .then(function () {
+                const t2 = cpLiveSession();
+                if (!t2) throw new Error("http 401 · 会话已过期,请重新登入");
+                return send(t2.token, 2);
+              }, function () { throw new Error("http 401 · 会话已过期,请重新登入"); });
+          }
+          if (!x.o) {
+            rec.note = "non-json-" + x.r.status;
+            throw new Error("http " + x.r.status + " · 回应不是 JSON:" + x.body.slice(0, 120));
+          }
+          if (x.o.status !== "ok" || typeof x.o.text !== "string") {
+            /* 闸道层的错误只有 message(例如 JWT 无效),也要原样带出来 */
+            rec.note = String(x.o.reason || x.o.error || x.o.message || ("http " + x.r.status));
+            throw new Error("http " + x.r.status + " · " + rec.note);
+          }
+          rec.note = "ok";
+          rec.model = x.o.model || null;
+          rec.promptVersion = x.o.promptVersion || null;
+          cpPvLastServer = { source: "live-anthropic",
+                             model: x.o.model || null, promptVersion: x.o.promptVersion || null,
+                             readyDirections: x.o.readyDirections || null,
+                             httpStatus: x.r.status, ms: rec.ms,
+                             usage: x.o.usage ? Object.keys(x.o.usage).length + " fields" : null };
+          return x.o.text;
+        }, function (e) {
+          /* fetch 本身就失败 = 网路 / CORS / DNS。这是最需要分清楚的一类。 */
+          if (rec.status === null) {
+            rec.ms = Date.now() - t0;
+            rec.note = "network-or-cors: " + String((e && e.message) || e);
+          }
+          throw e;
         });
-      }).then(function (x) {
-        rec.ms = Date.now() - t0;
-        if (!x.o) {
-          rec.note = "non-json-" + x.r.status;
-          throw new Error("http " + x.r.status + " · 回应不是 JSON:" + x.body.slice(0, 120));
-        }
-        if (x.o.status !== "ok" || typeof x.o.text !== "string") {
-          /* 闸道层的错误只有 message(例如 JWT 无效),也要原样带出来 */
-          rec.note = String(x.o.reason || x.o.error || x.o.message || ("http " + x.r.status));
-          throw new Error("http " + x.r.status + " · " + rec.note);
-        }
-        rec.note = "ok";
-        rec.model = x.o.model || null;
-        rec.promptVersion = x.o.promptVersion || null;
-        cpPvLastServer = { model: x.o.model || null, promptVersion: x.o.promptVersion || null,
-                           readyDirections: x.o.readyDirections || null,
-                           usage: x.o.usage ? Object.keys(x.o.usage).length + " fields" : null };
-        return x.o.text;
-      }, function (e) {
-        /* fetch 本身就失败 = 网路 / CORS / DNS。这是最需要分清楚的一类。 */
-        if (rec.status === null) { rec.ms = Date.now() - t0; rec.note = "network-or-cors: " + String((e && e.message) || e); }
-        throw e;
-      });
+      }
+
+      const sess = cpLiveSession();
+      if (!sess) {
+        return Promise.reject(new Error(
+          "Live Compass generation requires an authenticated Supabase session." +
+          "(需要登入中的 session 才会送出;不会改用 anon key 顶替)"));
+      }
+      return send(sess.token, 1);
     };
   }
   function cpPvGenerate() {
@@ -9146,11 +9195,24 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     L.push("promptVersion   " + (G ? G.COMPASS_PROMPT_VERSION : "?") +
            "   input " + (G ? G.INPUT_CONTRACT_VERSION : "?") +
            "   output " + (G ? G.OUTPUT_SCHEMA_VERSION : "?"));
+    L.push("session         " + (cpLiveSession() ? "authenticated" : "NONE"));
     if (cpPvLastServer) {
+      L.push("SOURCE          " + String(cpPvLastServer.source || "?").toUpperCase());
       L.push("server reported model=" + cpPvLastServer.model +
              "  promptVersion=" + cpPvLastServer.promptVersion +
+             "  http=" + cpPvLastServer.httpStatus + "  " + cpPvLastServer.ms + "ms" +
              "  ready=" + JSON.stringify(cpPvLastServer.readyDirections) +
              "  usage=" + cpPvLastServer.usage);
+    } else if (cpPvMode === "recorded") {
+      L.push("SOURCE          RECORDED FIXTURE (not a live API response)");
+    }
+    if (cpPvSentKeys) {
+      L.push("");
+      L.push("-- payload 送出去的栏位名(只有 key,没有值)--");
+      L.push("  top            " + cpPvSentKeys.top.join(", "));
+      L.push("  directions     " + cpPvSentKeys.directions.join(", "));
+      L.push("  per direction  " + cpPvSentKeys.perDirection.join(", "));
+      L.push("  globalContext  " + cpPvSentKeys.globalContext.join(", "));
     }
     L.push("");
     L.push("-- HTTP log (browser → edge function) --");
@@ -9285,7 +9347,9 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     if (!g) return who + "  ·  " + cpPvMode + "  ·  " + cpPvVersion() + "  ·  尚未生成(按按钮才会送)";
     if (g.status === "pending") return who + "  ·  " + cpPvMode + "  ·  生成中…";
     const m = g.meta || {};
-    return who + "  ·  " + cpPvMode + "  ·  " + g.status +
+    return who + "  ·  " + cpPvMode +
+      (cpPvMode === "live" && cpPvLastServer ? "  ·  " + cpPvLastServer.source : "") +
+      "  ·  " + g.status +
       (g.reason ? "(" + g.reason + ")" : "") +
       "  ·  promptVersion " + (m.promptVersion || "?") +
       "  ·  requests " + (m.requests || 0) +
@@ -9323,6 +9387,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
         row("model", v.gen.model) +
         row("requests", v.gen.requests) +
         row("retried", v.gen.retried) +
+        row("source", v.gen.source) +
         row("validation", v.gen.validation) : "") +
       "</div>";
   }
@@ -9340,6 +9405,9 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     const m = g.meta || {};
     out.dev.gen = { promptVersion: m.promptVersion, model: m.model,
                     requests: m.requests, retried: m.retried,
+                    source: cpPvMode === "live"
+                      ? ((cpPvLastServer && cpPvLastServer.source) || "live (no response yet)")
+                      : "recorded fixture (NOT live)",
                     validation: g.status === "ok" ? "passed" : (g.reason || g.status) };
     if (g.status !== "ok" || !g.copies || !g.copies[d.key]) {
       out.state = "generation_failed";

@@ -198,3 +198,42 @@ Claude API（live）   真的送请求
 
 live 失败**绝不**自动显示已录制或模板的文案 —— `generation_failed` 就是 `generation_failed`。
 `assets/compass-recorded.js` 保留,当回归 fixture 与比较基准,但永远标示 RECORDED。
+
+---
+
+## 9. ⚠ 如果你在 Phase 6.1 就已经部署过 —— 必须重新贴一次
+
+那时候贴上去的那一份**只认得 `compass-v1`**:
+
+```ts
+// e0fd8e5 的版本
+const PROMPT_VERSION = "compass-v1";
+if (system !== COMPASS_SYSTEM) return json({ error: "prompt_mismatch" }, 400, cors);
+```
+
+现在前端预设送的是**锁定的 `compass-v1.2`**。
+用旧版函式跑 live,一定会得到:
+
+```
+http 400 · prompt_mismatch
+```
+
+**解法:把 `docs/edge/compass-generate.ts` 的现行版本完整重贴一次,再 Deploy。**
+现行版本认得三个版本:
+
+```ts
+const SYSTEMS = { "compass-v1": …, "compass-v1.1": …, "compass-v1.2": … };
+const wantVersion = String(body.promptVersion || "") in SYSTEMS ? … : DEFAULT_PROMPT_VERSION;
+if (system !== SYSTEMS[wantVersion]) return json({ error: "prompt_mismatch", … }, 400, cors);
+```
+
+重贴之后,GET 那个网址(带 anon key)应该看到:
+
+```json
+{"ok":true,"function":"compass-generate (compass-v1 | compass-v1.1 | compass-v1.2)", …}
+```
+
+括号里有 **`compass-v1.2`** 才算是新版上去了。
+
+### Secrets 不用动
+`ANTHROPIC_API_KEY` 沿用既有的,名字没改、也不需要新增任何 secret。

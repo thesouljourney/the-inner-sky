@@ -478,10 +478,17 @@ function testInnerCompass() {
     leaks.length, 0);
 
   // —— 4. 内容边界:页面不得写死任何「属于某个人的答案」——
+  /* 正式页面那一段。Phase 5 起中间夹了一块【被授权】呼叫 compass-generate 的
+     dev preview(cpPvLoadOne … renderCompassPage),那一块不属于正式页面,
+     所以从这里剪掉 —— 否则「正式页面不送生成请求」这条断言会被它误伤。 */
   const page = (function () {
     const i = html.indexOf("页面:我的内在指南(#/compass)");
     const j = html.indexOf("function renderFavoritesPage()", i);
-    return i < 0 || j < 0 ? "" : html.slice(i, j);
+    if (i < 0 || j < 0) return "";
+    const whole = html.slice(i, j);
+    const a = whole.indexOf("function cpPvLoadOne");
+    const b = whole.indexOf("function renderCompassPage");
+    return (a > 0 && b > a) ? whole.slice(0, a) + whole.slice(b) : whole;
   })();
   checkEq("[compass] 找得到页面实作", page.length > 2000, true);
   checkEq("[compass] 四个方向的内容来自 Compass 模组,不是写死在页面里",
@@ -516,9 +523,12 @@ function testInnerCompass() {
     !/create table|alter table|drop table/i.test(mod), true);
   checkEq("[compass] 单则记录有长度上限", /MAX_TEXT/.test(mod) && /\.slice\(0, MAX_TEXT\)/.test(mod), true);
 
-  // —— 5. 这一轮不准新增任何生成请求 ——
-  checkEq("[compass] 页面没有呼叫 Edge Function / Claude",
-    !/callFunc\(|read-chart|anthropic/.test(page + mod), true);
+  // —— 5. 正式的内在指南页面不准送出任何生成请求 ——
+  /* 注解不算数(注解里会提到 read-chart 的做法);Phase 5 起 dev preview 被授权
+     呼叫 compass-generate,所以这里只看正式页面那一段的【程式码】。 */
+  const strip = (t) => t.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+  checkEq("[compass] 正式页面没有呼叫 Edge Function / Claude",
+    !/callFunc\(|read-chart|anthropic/i.test(strip(page + mod)), true);
 
   /* —— 6. 落地页那份选单 ——
      index.html 有自己一份已登入选单(#navUserMenu),与 app.html 的 dpNavItems()
@@ -1328,8 +1338,10 @@ function testCompassDevPreview() {
   /* Phase 6 起,预览多了一个【手动】的生成呼叫。所以改成更精确的保证:
      整段里只有一处 fetch,而且它只在 cpLiveTransport 里;
      既有的生成端点(read-chart / FUNC_URL)一个字都没碰。 */
+  /* 注解里提到 read-chart 的做法不算碰它 —— 只看程式码 */
+  const pvCode = pvBlock.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
   checkEq("[pv] 预览没有碰既有的生成端点",
-    /FUNC_URL|netFetch|read-chart/.test(pvBlock), false);
+    /FUNC_URL|netFetch|read-chart/.test(pvCode), false);
   checkEq("[pv] 预览里只有一处 fetch", (pvBlock.match(/fetch\(/g) || []).length, 1);
   checkEq("[pv] 那一处 fetch 只在 live transport 里",
     /function cpLiveTransport\(\)[\s\S]*?fetch\(COMPASS_GEN_URL/.test(pvBlock), true);
@@ -2072,6 +2084,82 @@ function testCompassVoiceV12() {
   });
 }
 
+/* ---------- 22. 内在指南 Phase 7 · 真实认证路径 ----------
+   这里只能测【浏览器这一侧】。真正的 end-to-end 必须由人在部署过的环境按一次,
+   所以下面没有任何一条会宣称 live 已经验证过。 */
+function testCompassLiveAuthPath() {
+  const fs = require("fs");
+  const html = fs.readFileSync(path.join(__dirname, "..", "app.html"), "utf8");
+  const edge = fs.readFileSync(path.join(__dirname, "..", "docs", "edge", "compass-generate.ts"), "utf8");
+  const G = require(path.join(__dirname, "..", "assets", "compass-generation.js"));
+  const PV = require(path.join(__dirname, "..", "assets", "compass-preview.js"));
+  const lt = html.slice(html.indexOf("function cpLiveSession"), html.indexOf("function cpPvGenerate"));
+
+  // §3 · 没有登入中的 session 就不送
+  checkEq("[p7] 送出前会检查 session", /function cpLiveSession\(\)/.test(html), true);
+  checkEq("[p7] 没有 session 直接拒绝,不送请求",
+    /if \(!sess\) \{\s*\n\s*return Promise\.reject/.test(lt), true);
+  checkEq("[p7] 拒绝讯息是开发者看得懂的那一句",
+    /Live Compass generation requires an authenticated Supabase session\./.test(lt), true);
+  checkEq("[p7] 不会用 anon key 顶替使用者的 token",
+    /Cloud\.token\(\)\s*\|\|[\s\S]{0,40}anon/.test(lt), false);
+  checkEq("[p7] 跨日失效的 session 也算没有 session", /dayValid\(\)/.test(lt), true);
+
+  // §C · 401 先续期再重送(HTTP 层,不占用生成层的 retry 额度)
+  checkEq("[p7] 401 会先续期一次", /x\.r\.status === 401 && attempt === 1/.test(lt), true);
+  checkEq("[p7] 续期只做一次", /return send\(t2\.token, 2\);/.test(lt), true);
+  checkEq("[p7] 续期失败就说会话过期", /会话已过期,请重新登入/.test(lt), true);
+  checkEq("[p7] HTTP 续期与生成层的 retry 是两回事",
+    /生成层「最多一次 targeted retry」是两回事/.test(html), true);
+
+  // §D/§5 · promptVersion 真的送出去,而且是锁定的 v1.2
+  checkEq("[p7] payload 带 promptVersion", /promptVersion: p\.promptVersion/.test(lt), true);
+  checkEq("[p7] 送的是锁定的基准版本", G.DEFAULT_PROMPT_VERSION, G.VOICE_BASELINE.version);
+  checkEq("[p7] 版本不符时不会降级重试",
+    /compass-v1\.1|compass-v1"/.test(lt.replace(/\/\*[\s\S]*?\*\//g, "")), false);
+
+  // §F/§4 · 送出去的就是那份 sanitized contract,不多不少
+  const inp = G.buildInput(PV.buildCase("C1"));
+  checkEq("[p7] payload 顶层只有四个栏位",
+    /body: JSON\.stringify\(payload\)/.test(lt) &&
+    /const payload = \{ input: p\._input, system: p\.system, user: p\.user,\s*\n\s*promptVersion: p\.promptVersion \};/.test(lt), true);
+  checkEq("[p7] contract 本身仍然 0 处违规", G.scrub(inp).length, 0);
+  checkEq("[p7] 有开发诊断可以看送了哪些栏位名", /cpPvSentKeys = \{/.test(lt), true);
+  checkEq("[p7] 诊断只记 key 不记值", /只记 key,不记值/.test(html), true);
+
+  // §6 · 回传一定标成 live,而且永远不会被别的来源冒充
+  checkEq("[p7] 成功的 live 回传标成 live-anthropic", /source: "live-anthropic"/.test(lt), true);
+  checkEq("[p7] recorded 模式在报告里明写不是 live",
+    /RECORDED FIXTURE \(not a live API response\)/.test(html), true);
+  checkEq("[p7] 卡片的开发细节会标出来源", /row\("source", v\.gen\.source\)/.test(html), true);
+  checkEq("[p7] live 失败不会改用已录制",
+    /CompassRecorded|RC\.transportFor/.test(lt), false);
+
+  // §2 · 不准关掉 JWT 验证,也不准把金钥搬到前端
+  checkEq("[p7] 没有任何关闭 JWT 验证的痕迹",
+    /no-verify-jwt|verify_jwt\s*=\s*false/i.test(html + edge), false);
+  /* 前端只在一句错误讯息里【提到】这个 secret 的名字(告诉使用者服务端还没设),
+     那不是读它。真正要挡的是「前端去取值」。 */
+  checkEq("[p7] 前端不会去读 ANTHROPIC_API_KEY 的值",
+    /Deno\.env\.get\(\s*"ANTHROPIC|process\.env\.ANTHROPIC|ANTHROPIC_API_KEY\s*[=:]|getItem\(\s*"ANTHROPIC/.test(html), false);
+  checkEq("[p7] 前端提到这个名字的地方只有那一句提示",
+    (html.match(/ANTHROPIC_API_KEY/g) || []).length, 2);
+  checkEq("[p7] 服务端仍然只从环境变数取金钥",
+    (edge.match(/Deno\.env\.get\("ANTHROPIC_API_KEY"\)/g) || []).length, 1);
+  checkEq("[p7] 验证报告不含任何凭证",
+    /Authorization|apikey|access_token|sk-ant/.test(
+      html.slice(html.indexOf("function cpPvReport"), html.indexOf("function cpPvGenResult"))), false);
+
+  // §7 · 验证器没有为了让 live 过而放宽
+  checkEq("[p7] 硬性拒收的规则一条都没少",
+    ["astrologyLeak", "diagnosticWording", "mysticalOrLiterary", "labelling", "genericPhrase",
+     "unsupportedInference", "commandingTone", "realityVerdict", "embeddedConclusion",
+     "mechanismShape", "lengthExplanation", "reflectionQuestion"]
+      .filter(r => !new RegExp('rule: "' + r + '"').test(
+        fs.readFileSync(path.join(__dirname, "..", "assets", "compass-generation.js"), "utf8")))
+      .join(","), "");
+}
+
 /* ---------- 跑 ---------- */
 function main() {
   testTimezones();
@@ -2094,6 +2182,7 @@ function main() {
   const liveJobs = testCompassLivePath();
   const voiceJobs = testCompassVoiceV11();
   const v12Jobs = testCompassVoiceV12();
+  testCompassLiveAuthPath();
   testCompassZhOnlyLabels();
   return Promise.all([genJobs, liveJobs, voiceJobs, v12Jobs]).then(function () { return testPlaces(); }).then(function () {
     console.log("\n对照来源:" + REF.reference);
