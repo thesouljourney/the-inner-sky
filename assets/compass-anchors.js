@@ -28,6 +28,24 @@
   "use strict";
 
   var VERSION = "anchors-2.2";
+
+  /* ★ PERSONAL ANCHORS v1 —— 现行生产基准
+     ------------------------------------------------------------
+     这不只是一句宣告:tests/run-tests.js 用 sha256 把【判断用的词表】
+     与【已锁样本的完整推导结果】钉住。行为一变,整批测试立刻红。
+     要改做法的正确方式是开新版本(anchors-3.x),不是就地编辑这一版。 */
+  var ANCHORS_BASELINE = {
+    version: "anchors-2.2",
+    name: "Personal Anchors v1",
+    language: "zh",
+    lockedAt: "2026-09-15",
+    lockedBy: "human content review",
+    note: "改做法请开新版本,不要就地编辑已锁的版本",
+    locks: ["candidate derivation", "scope guard", "hedge handling", "reusability",
+            "scoring", "function classification", "complementarity", "selection",
+            "verifyDerived", "user-facing copy behavior"],
+    history: ["anchors-1.0", "anchors-2.0", "anchors-2.1"]
+  };
   var ANCHOR_COUNT = 3;
 
   /* ── 词表:刻意很小。这些不是心理规则,只是「这句话长什么形状」 ── */
@@ -353,7 +371,8 @@
   }
 
   return {
-    VERSION: VERSION, ANCHOR_COUNT: ANCHOR_COUNT, FUNCTIONS: FUNCTIONS,
+    VERSION: VERSION, ANCHORS_BASELINE: ANCHORS_BASELINE,
+    ANCHOR_COUNT: ANCHOR_COUNT, FUNCTIONS: FUNCTIONS, COMMANDING: COMMANDING,
     SITUATION_RECURRING: SITUATION_RECURRING, MOVE_GENTLE: MOVE_GENTLE, HEDGE: HEDGE,
     MOVE_LOOK: MOVE_LOOK, MOVE_PERMISSION: MOVE_PERMISSION,
     SITUATION_ONCE: SITUATION_ONCE, GENERIC: GENERIC, reusabilityOf: reusabilityOf,

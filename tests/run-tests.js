@@ -2289,7 +2289,7 @@ function testCompassProductPage() {
   const r = AN.derive(copies);
   checkEq("[prod] 正好三句锚点", r.anchors.length, 3);
   checkEq("[prod] 不是一个方向一句(四取三)", r.dropped.length, 1);
-  checkEq("[prod] 被留下的那一句说得出原因", !!r.dropped[0].reason, true);
+  checkEq("[prod] 被留下的那一句说得出原因", !!(r.dropped[0] && r.dropped[0].reason), true);
   checkEq("[prod] 每一句都能在已接受的文案里找到",
     AN.verifyDerived(r, copies).offenders.join(","), "");
   checkEq("[prod] 三句之间不重复", r.maxSimilarity < 0.35, true);
@@ -2735,6 +2735,119 @@ function testCompassAnchorReusability() {
   } finally { global.fetch = realFetch; global.XMLHttpRequest = realXHR; }
 }
 
+
+/* ---------- 28. ★ PERSONAL ANCHORS v1 LOCK ----------
+   「想留给自己的几句话」这一层已经通过人工内容审查,定为生产基准。
+   这一段的存在只有一个目的:让【以后不相干的改动】没办法悄悄改掉它的行为。
+
+   钉住的是两类东西:
+     · 判断用的词表(那些词决定什么算场合、什么算一步、什么算保留字)
+     · 已锁样本的【完整推导结果】(三句话、来源、功能、每一项分数、被换掉的那一个)
+   所以纯粹改注解、换排版不会误红,但只要取舍结果真的变了就一定红。
+
+   要改做法的正确方式是开新版本(anchors-3.x),不是就地编辑这一版。
+   ------------------------------------------------------------------- */
+function testCompassAnchorsLock() {
+  const crypto = require("crypto");
+  const AN = require(path.join(__dirname, "..", "assets", "compass-anchors.js"));
+  const RC = require(path.join(__dirname, "..", "assets", "compass-recorded.js"));
+  const h = (o) => crypto.createHash("sha256")
+    .update(typeof o === "string" ? o : JSON.stringify(o)).digest("hex").slice(0, 16);
+  function d(ci, ex) {
+    return { coreInsight: ci, explanation: ex, reflectionPrompt: "你希望这件事把你带到哪里？" };
+  }
+
+  /* —— 基准身分 —— */
+  const B = AN.ANCHORS_BASELINE;
+  checkEq("[alock] 基准版本是 anchors-2.2", B.version, "anchors-2.2");
+  checkEq("[alock] 程式码跑的就是基准版本", AN.VERSION, B.version);
+  checkEq("[alock] 基准名称是 Personal Anchors v1", B.name, "Personal Anchors v1");
+  checkEq("[alock] 基准的语言是中文", B.language, "zh");
+  checkEq("[alock] 历史版本都记着", B.history.join(","), "anchors-1.0,anchors-2.0,anchors-2.1");
+  checkEq("[alock] 锁住的项目一个都没少",
+    B.locks.join("|"),
+    "candidate derivation|scope guard|hedge handling|reusability|scoring|" +
+    "function classification|complementarity|selection|verifyDerived|user-facing copy behavior");
+
+  /* —— 1. 判断用的词表逐字钉住 —— */
+  const VOCAB = {
+    SITUATION_RECURRING: AN.SITUATION_RECURRING, SITUATION_ONCE: AN.SITUATION_ONCE,
+    MOVE_GENTLE: AN.MOVE_GENTLE, MOVE_LOOK: AN.MOVE_LOOK, MOVE_PERMISSION: AN.MOVE_PERMISSION,
+    COMMANDING: AN.COMMANDING, GENERIC: AN.GENERIC, HEDGE: AN.HEDGE, FUNCTIONS: AN.FUNCTIONS
+  };
+  checkEq("[alock] 判断用的词表逐字未动", h(VOCAB), "52eaf14835ee7076");
+
+  /* —— 2. 已锁样本的完整推导结果 —— */
+  checkEq("[alock] 已锁样本的推导结果逐项未动",
+    h(AN.derive(RC.RAW_V12.C1)), "3b48592c7de80a85");
+
+  const CALLS_WINS = {
+    grounds: d("你在安静的地方比较容易想清楚。",
+      "很多人以为要想清楚就得多讨论。对你来说不是这样。事情刚发生的时候，先让自己安静一会儿就够了。"),
+    moves: d("你需要一个说得通的理由才走得动。",
+      "没有理由的时候你会停住。这不是拖延。最近如果比较没力气，也可能只是那个理由暂时不见了。"),
+    drains: d("反覆确认会把你的力气用掉。",
+      "这一次你一直在重新检查，刚才那一轮其实就够了。"),
+    calls: d("你对还没看完的事情特别放不下。",
+      "每次有一件事你一直绕回去想，可以先看看，它到底还有哪一层没被你看完，而不是先怪自己分心。")
+  };
+  checkEq("[alock] CALLS_WINS 的推导结果逐项未动",
+    h(AN.derive(CALLS_WINS)), "77f1fc2f861c052c");
+
+  /* —— 3. 边界矩阵:范围守则 × 保留字 × reusability 三个级距 —— */
+  const MATRIX = {
+    reuse: [
+      [null, "先让自己安静一会儿就够了，不一定要马上解释"],
+      [null, "可以先看看现在到底是什么让你放不下心"],
+      [null, "也可能只是那个理由暂时不见了"],
+      [null, "那不一定是分心"],
+      ["最近有件事卡着", "可以先看看它到底卡在哪里"],
+      ["这一次比较难", "刚才那一轮其实就够了"],
+      ["每次遇到这种事", "可以先看看自己在担心什么"],
+      ["没力气的时候", "可以先看看那个理由还在不在"],
+      ["一直停在同一个地方", "不一定要马上给答案"]
+    ].map(function (x) {
+      return AN.reusabilityOf({ line: (x[0] ? x[0] + "，" : "") + x[1] + "。",
+                                situation: x[0], move: x[1] });
+    }),
+    guard: [
+      /* 范围有保留 → 不跨句搬 */
+      "被追问的时候，你会先把话收起来。通常，先让自己想一想就够了，不一定要当场给答案。",
+      "被追问的时候，你会先把话收起来。有些时候，先让自己想一想就够了。",
+      /* 保留字跟着那一步走 → 不必挡 */
+      "被追问的时候，你会先把话收起来。通常先让自己想一想就够了，不一定要当场给答案。",
+      /* 范围本来就没有保留 → 照常组合 */
+      "被追问的时候，你会先把话收起来。先让自己想一想就够了，不一定要当场给答案。"
+    ].map(function (ex) {
+      const c = AN.candidateFor("grounds", d("你在别人不急着接话的时候比较敢讲。", ex));
+      return c ? [c.scopeGuard, c.sameSentence, c.line] : null;
+    })
+  };
+  checkEq("[alock] 边界矩阵逐项未动", h(MATRIX), "b5437b1c7ab6f8c2");
+
+  /* —— 4. 对外的介面没有被悄悄拿掉 —— */
+  checkEq("[alock] 对外介面一个都没少",
+    ["VERSION", "ANCHORS_BASELINE", "ANCHOR_COUNT", "FUNCTIONS", "derive", "verifyDerived",
+     "candidateFor", "scoreCandidate", "reusabilityOf", "similarity"]
+      .filter(function (k) { return !(k in AN); }).join(","), "");
+  checkEq("[alock] 仍然只取三句", AN.ANCHOR_COUNT, 3);
+
+  /* —— 5. 这一层永远不呼叫 API —— */
+  const fs = require("fs");
+  const src = fs.readFileSync(path.join(__dirname, "..", "assets", "compass-anchors.js"), "utf8")
+    .replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+  checkEq("[alock] 锁定的这一版没有任何网路呼叫",
+    /fetch\(|XMLHttpRequest|anthropic|supabase|import\s|require\(/i.test(src), false);
+
+  /* —— 6. 基准文件跟程式码说的是同一件事 —— */
+  const doc = fs.readFileSync(
+    path.join(__dirname, "..", "docs", "INNER-COMPASS-ANCHORS-BASELINE.md"), "utf8");
+  ["anchors-2.2", "52eaf14835ee7076", "3b48592c7de80a85", "77f1fc2f861c052c"]
+    .forEach(function (t) {
+      checkEq("[alock] 基准文件写着 " + t, doc.indexOf(t) >= 0, true);
+    });
+}
+
 /* ---------- 跑 ---------- */
 function main() {
   testTimezones();
@@ -2763,6 +2876,7 @@ function main() {
   testCompassAnchorSelection();
   testCompassAnchorScopeGuard();
   testCompassAnchorReusability();
+  testCompassAnchorsLock();
   testCompassZhOnlyLabels();
   return Promise.all([genJobs, liveJobs, voiceJobs, v12Jobs]).then(function () { return testPlaces(); }).then(function () {
     console.log("\n对照来源:" + REF.reference);
