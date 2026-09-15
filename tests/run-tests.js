@@ -491,9 +491,12 @@ function testInnerCompass() {
     return (a > 0 && b > a) ? whole.slice(0, a) + whole.slice(b) : whole;
   })();
   checkEq("[compass] 找得到页面实作", page.length > 2000, true);
-  checkEq("[compass] 四个方向的内容来自 Compass 模组,不是写死在页面里",
-    /window\.Compass\.directions\(/.test(page) && /window\.Compass\.reminders\(/.test(page) &&
-    /window\.Compass\.question\(/.test(page), true);
+  /* Phase 8 起:四个方向来自【已生成并通过验证】的本机快取,
+     锚点与今天的问题都是从那一份推出来的 —— 页面自己不写任何内容。 */
+  checkEq("[compass] 四个方向来自已生成的结果,不是写死在页面里",
+    /window\.Compass\.result\.get\(compassOwner\(\)\)/.test(page), true);
+  checkEq("[compass] 锚点与今天的问题也来自同一份",
+    (page.match(/window\.Compass\.result\.get\(/g) || []).length >= 3, true);
   checkEq("[compass] 还没接上生成逻辑时会标示「示例」",
     /compassStub\(/.test(page) && /示例 · 尚未接上你的星盘/.test(page), true);
 
@@ -1072,8 +1075,8 @@ function testCompassSelection() {
      而且只能透过 CP_PV_SRC 这一张清单动态载入,不得写成静态 <script src>。 */
   checkEq("[sel] 选择层没有被写成 app.html 的静态 script",
     /<script[^>]+compass-selection/.test(html), false);
-  checkEq("[sel] 选择层只透过开发预览的载入清单出现",
-    (html.match(/compass-selection\.js/g) || []).length, 1);
+  checkEq("[sel] 选择层只出现在两张载入清单里(开发预览 + 正式生成)",
+    (html.match(/compass-selection\.js/g) || []).length, 2);
   checkEq("[sel] 生命脉络与九个主题的 Prompt 仍未改动",
     /把前面读过的所有理解连起来/.test(ts) && /现在写【第二部分 · 主题探索】中的一章/.test(ts), true);
 
@@ -1219,8 +1222,8 @@ function testCompassTranslation() {
   const ts = fs.readFileSync(path.join(__dirname, "..", "docs", "edge", "read-chart.ts"), "utf8");
   checkEq("[tr] 翻译层没有被写成 app.html 的静态 script",
     /<script[^>]+compass-translation/.test(html), false);
-  checkEq("[tr] 翻译层只透过开发预览的载入清单出现",
-    (html.match(/compass-translation\.js/g) || []).length, 1);
+  checkEq("[tr] 翻译层只出现在两张载入清单里(开发预览 + 正式生成)",
+    (html.match(/compass-translation\.js/g) || []).length, 2);
   checkEq("[tr] 服务端仍然没有 kind=compass", ts.indexOf('kind === "compass"') < 0, true);
   const core = CE.PATTERN_RULES.filter(r => r.family !== "GUARD");
   checkEq("[tr] 27 条核心规则 + 2 条护栏仍未改动",
@@ -1938,7 +1941,7 @@ function testCompassZhOnlyLabels() {
   const dirBlock = html.slice(html.indexOf("function compassDirectionsHtml"),
                               html.indexOf("function compassRemindersHtml"));
   checkEq("[zh] 正式页四方向的英文名只在英文模式印",
-    /window\.I18N\.isEN\(\) \? '<span class="en">' \+ esc0\(it\.en\)/.test(dirBlock), true);
+    /window\.I18N\.isEN\(\) \? '<span class="en">' \+ esc0\(d\.en\)/.test(dirBlock), true);
   const cardBlock = html.slice(html.indexOf("function cpPvCardHtml"), html.indexOf("function cpPvGridHtml"));
   checkEq("[zh] 预览四方向的英文名也只在英文模式印",
     /window\.I18N\.isEN\(\) \? '<span class="en">' \+ esc0\(d\.en\)/.test(cardBlock), true);
@@ -2272,6 +2275,117 @@ function testCompassShadowPermission() {
       .join(","), "");
 }
 
+/* ---------- 24. 我的内在指南 · 完整产品页(Phase 8) ---------- */
+function testCompassProductPage() {
+  const fs = require("fs");
+  const AN = require(path.join(__dirname, "..", "assets", "compass-anchors.js"));
+  const RC = require(path.join(__dirname, "..", "assets", "compass-recorded.js"));
+  const html = fs.readFileSync(path.join(__dirname, "..", "app.html"), "utf8");
+  const asrc = fs.readFileSync(path.join(__dirname, "..", "assets", "compass-anchors.js"), "utf8");
+  const code = asrc.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+  const copies = RC.RAW_V12.C1;
+
+  // —— 想留给自己的几句话:三句,而且每一句都出自已接受的文案 ——
+  const r = AN.derive(copies);
+  checkEq("[prod] 正好三句锚点", r.anchors.length, 3);
+  checkEq("[prod] 不是一个方向一句(四取三)", r.dropped.length, 1);
+  checkEq("[prod] 被留下的那一句说得出原因", !!r.dropped[0].reason, true);
+  checkEq("[prod] 每一句都能在已接受的文案里找到",
+    AN.verifyDerived(r, copies).offenders.join(","), "");
+  checkEq("[prod] 三句之间不重复", r.maxSimilarity < 0.35, true);
+  checkEq("[prod] 同一份 Compass 永远得到同一组",
+    JSON.stringify(AN.derive(copies)), JSON.stringify(r));
+  /* 少于三个方向就如实说不够,不重复用同一句凑数 */
+  const thin = AN.derive({ grounds: copies.grounds, moves: copies.moves });
+  checkEq("[prod] 不够三句就说不够", thin.status, "insufficient");
+  checkEq("[prod] 不够的时候不硬凑", thin.anchors.length, 0);
+
+  // 这一层不读星盘、不呼叫 API、不产生新主张
+  checkEq("[prod] 锚点层没有任何网路呼叫",
+    /fetch\(|XMLHttpRequest|anthropic|supabase/i.test(code), false);
+  checkEq("[prod] 锚点层不碰星盘 / 机制 / 分数",
+    /planets|cusps|\bmechanism\b|selectionScore|patternKey|support\[|\.domain/i.test(code), false);
+  checkEq("[prod] 锚点层不读日记 / 心情 / 收藏",
+    /journal|mood|favs|favou?rite/i.test(code), false);
+
+  // —— 正式页面 ——
+  const page = (function () {
+    const i = html.indexOf("页面:我的内在指南(#/compass)");
+    const j = html.indexOf("function renderFavoritesPage()", i);
+    const w = html.slice(i, j);
+    const a = w.indexOf("function cpPvLoadOne"), b = w.indexOf("function compassRepaint");
+    return (a > 0 && b > a) ? w.slice(0, a) + w.slice(b) : w;
+  })();
+  checkEq("[prod] 四个方向来自已生成的快取",
+    /window\.Compass\.result\.get\(compassOwner\(\)\)/.test(page), true);
+  checkEq("[prod] 没有生成过就如实说,不拿示例冒充",
+    /cp-empty4[\s\S]{0,400}你的内在指南还没有生成/.test(page), true);
+  checkEq("[prod] 锚点没有资料时也不编",
+    /cp-keep[\s\S]{0,600}等上面的内在指南生成之后/.test(page), true);
+  checkEq("[prod] 今天的问题来自已通过验证的 reflectionPrompt",
+    /saved\.directions\[k\] && saved\.directions\[k\]\.reflectionPrompt/.test(page), true);
+  checkEq("[prod] 一次只有一个问题",
+    /pool\[window\.Compass\.rotateIndex\(pool\.length, compassSeed\(\)\)\]/.test(page), true);
+
+  // 生成只由按钮触发
+  checkEq("[prod] 生成只绑在按钮上",
+    /getElementById\("cpGenBtn"\)[\s\S]{0,120}addEventListener\("click", cpProdGenerate\)/.test(page), true);
+  checkEq("[prod] 渲染流程里没有自动生成",
+    /cpProdGenerate\(\)/.test(page
+      .replace(/addEventListener\("click", cpProdGenerate\)/g, "")
+      .replace(/function cpProdGenerate\(\)/g, "")), false);
+  checkEq("[prod] 正式页面不载入开发用的已录制 fixture",
+    /compass-recorded/.test(html.slice(html.indexOf("const CP_PROD_SRC"),
+      html.indexOf("];", html.indexOf("const CP_PROD_SRC")))), false);
+
+  // 快取只存使用者看得到的东西
+  const rs = html.indexOf("result: (function () {");
+  const store = html.slice(rs, html.indexOf("})(),", rs));
+  checkEq("[prod] 快取只收白名单栏位",
+    /coreInsight: String\(c\.coreInsight\)/.test(store) &&
+    /explanation: String\(c\.explanation/.test(store) &&
+    /reflectionPrompt: String\(c\.reflectionPrompt/.test(store), true);
+  /* 注:锚点自己有一个 support 栏位(那一句支撑话),那不是证据 support。
+     要挡的是机制 / 证据 support[] / 分数 / prompt 这一类开发资料。 */
+  checkEq("[prod] 快取不存机制 / 证据 support / 分数 / prompt",
+    /\bmechanism\b|support\[|\.domain|selectionScore|systemPrompt|patternKey|tension/i.test(store), false);
+
+  // 日记:存当天的问题,不存任何诊断
+  const shape = html.slice(html.indexOf("function shape(entry, keep)"), html.indexOf("function isEmpty"));
+  checkEq("[prod] 记录会存下当天的问题", /question: String\(e\.question/.test(shape), true);
+  checkEq("[prod] 记录不存机制 / 分数 / prompt / 模型推理",
+    /mechanism|support|score|prompt(?!\b)|reasoning/i.test(shape.replace(/question/g, "")), false);
+
+  // 展开长在自己下面 + 删除要确认
+  checkEq("[prod] 展开的内容长在被点的那一张卡里",
+    /data-entry="' \+ esc0\(r\.id\)/.test(page) && /open \? t : preview/.test(page), true);
+  checkEq("[prod] 原地互动会保住卷动位置",
+    /function compassRepaint\(\)/.test(html) && /window\.scrollTo\(0, y\)/.test(html), true);
+  checkEq("[prod] 删除要按两次(第一下只是问)",
+    /if \(compassDelAsk !== id\)/.test(html), true);
+
+  /* 使用者真正看得到的东西,只由这几支产生 —— 只检查它们,
+     不要把「按钮按下去才跑」的生成函式也算进画面。 */
+  const render = ["compassDirectionsHtml", "compassAnchorsHtml", "compassNowHtml",
+                  "compassQuestionHtml", "compassSkyHtml"].map(function (fn) {
+    const a = html.indexOf("function " + fn + "(");
+    return a < 0 ? "" : html.slice(a, html.indexOf("\n  function ", a + 10));
+  }).join("\n");
+  checkEq("[prod] 找得到五个渲染函式", render.length > 3000, true);
+  ["cp-devbar", "cp-mode", "cp-casebtn", "cp-devdt", "patternKey", "promptVersion",
+   "SHADOW", "selectionScore", "mechanism"].forEach(function (t) {
+    checkEq("[prod] 画面上没有 " + t, render.indexOf(t) >= 0, false);
+  });
+  checkEq("[prod] 中文模式没有英文小标",
+    /YOUR INNER COMPASS|THINGS TO REMEMBER|A QUESTION FOR YOU|MY SKY/.test(render), false);
+
+  // 此刻的我:日常说法,不诊断
+  const moods = html.slice(html.indexOf("const MOODS = ["), html.indexOf("];", html.indexOf("const MOODS = [")));
+  checkEq("[prod] 心情选项不使用临床词汇",
+    /焦虑|抑郁|创伤|解离|失调|障碍/.test(moods), false);
+  checkEq("[prod] 心情由使用者自己选", /data-mood=/.test(page), true);
+}
+
 /* ---------- 跑 ---------- */
 function main() {
   testTimezones();
@@ -2296,6 +2410,7 @@ function main() {
   const v12Jobs = testCompassVoiceV12();
   testCompassLiveAuthPath();
   testCompassShadowPermission();
+  testCompassProductPage();
   testCompassZhOnlyLabels();
   return Promise.all([genJobs, liveJobs, voiceJobs, v12Jobs]).then(function () { return testPlaces(); }).then(function () {
     console.log("\n对照来源:" + REF.reference);
