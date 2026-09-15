@@ -36,6 +36,17 @@ const failures = [];
 
 function arcsec(a, b) { return Math.abs(((a - b + 540) % 360) - 180) * 3600; }
 
+/* 两份长文比对:只报第一处差异,不要把整份 prompt 吐出来 */
+function firstDiff(a, b) {
+  a = String(a); b = String(b);
+  if (a === b) return "";
+  for (let i = 0; i < Math.max(a.length, b.length); i++) {
+    if (a[i] !== b[i])
+      return "第 " + i + " 字起不同: 服务端「" + a.slice(i, i + 24) + "」vs 前端「" + b.slice(i, i + 24) + "」";
+  }
+  return "长度不同 " + a.length + " vs " + b.length;
+}
+
 function check(label, got, want, tolArcsec) {
   if (got === null || got === undefined || !isFinite(got)) {
     fail++; failures.push(label + ": 没有算出数值"); return;
@@ -1632,7 +1643,8 @@ function testCompassLivePath() {
   /* 1 · 服务端的写作指令必须与前端逐字相同 */
   const m = edge.match(/const COMPASS_SYSTEM = `([\s\S]*?)`;/);
   checkEq("[live] Edge Function 里有 COMPASS_SYSTEM", !!m, true);
-  checkEq("[live] 服务端与前端的写作指令逐字相同", m ? m[1] : "", G.SYSTEM);
+  checkEq("[live] 服务端与前端的 v1 写作指令逐字相同",
+    m ? firstDiff(m[1], G.SYSTEM) : "缺 COMPASS_SYSTEM", "");
 
   /* 2 · scrub 必须抓得到中文行星名与「第 N 宫」——
          这是真的跑起来才发现的漏洞,补起来之后钉住 */
@@ -1824,8 +1836,10 @@ function testCompassVoiceV11() {
   // 3 · 服务端两个版本都收,而且各自逐字核对
   const m1 = edge.match(/const COMPASS_SYSTEM = `([\s\S]*?)`;/);
   const m2 = edge.match(/const COMPASS_SYSTEM_V11 = `([\s\S]*?)`;/);
-  checkEq("[v11] 服务端的 v1 与前端逐字相同", m1 ? m1[1] : "", G.SYSTEM);
-  checkEq("[v11] 服务端的 v1.1 与前端逐字相同", m2 ? m2[1] : "", G.SYSTEM_V11);
+  checkEq("[v11] 服务端的 v1 与前端逐字相同",
+    m1 ? firstDiff(m1[1], G.SYSTEM) : "缺 COMPASS_SYSTEM", "");
+  checkEq("[v11] 服务端的 v1.1 与前端逐字相同",
+    m2 ? firstDiff(m2[1], G.SYSTEM_V11) : "缺 COMPASS_SYSTEM_V11", "");
   checkEq("[v11] 服务端依 promptVersion 选版本核对",
     /system !== SYSTEMS\[wantVersion\]/.test(edge), true);
 
@@ -1934,12 +1948,26 @@ function testCompassVoiceV12() {
   const crypto = require("crypto");
   const h = (t) => crypto.createHash("sha256").update(t).digest("hex").slice(0, 16);
 
+  /* ★ VOICE LOCK:三份写作指令全部逐字钉住。
+     改写法的正确做法是开新版本,不是就地编辑 —— 就地改会让这三条立刻红。 */
+  checkEq("[lock] 声音基准是 compass-v1.2", G.VOICE_BASELINE.version, "compass-v1.2");
+  checkEq("[lock] 基准的语言是中文", G.VOICE_BASELINE.language, "zh");
+  checkEq("[lock] 预设生成走的就是基准版本",
+    G.DEFAULT_PROMPT_VERSION, G.VOICE_BASELINE.version);
+  checkEq("[lock] 历史版本都还留着",
+    G.VOICE_BASELINE.history.filter(v => !G.SYSTEMS[v]).join(","), "");
+  checkEq("[lock] compass-v1 逐字未动", h(G.SYSTEMS["compass-v1"]), "df3b0a8385d86155");
+  checkEq("[lock] compass-v1.1 逐字未动", h(G.SYSTEMS["compass-v1.1"]), "f81a63bee5bb64d2");
+  checkEq("[lock] compass-v1.2 逐字未动(已锁)", h(G.SYSTEMS["compass-v1.2"]), "a06710405bc99c8e");
+  checkEq("[lock] 已锁的 v1.2 样本文案逐字未动",
+    h(JSON.stringify(RC.RAW_V12.C1)), "afd185f8e09f4739");
+
   // 1 · 前两版原封不动
-  checkEq("[v12] compass-v1 未被改动", h(G.SYSTEMS["compass-v1"]), "df3b0a8385d86155");
   checkEq("[v12] compass-v1.1 未被改动", G.SYSTEMS["compass-v1.1"] === G.SYSTEM_V11, true);
   checkEq("[v12] v1.2 不是 v1.1 的复制品", G.SYSTEM_V11 === G.SYSTEM_V12, false);
   const m12 = edge.match(/const COMPASS_SYSTEM_V12 = `([\s\S]*?)`;/);
-  checkEq("[v12] 服务端的 v1.2 与前端逐字相同", m12 ? m12[1] : "", G.SYSTEM_V12);
+  checkEq("[v12] 服务端的 v1.2 与前端逐字相同",
+    m12 ? firstDiff(m12[1], G.SYSTEM_V12) : "缺 COMPASS_SYSTEM_V12", "");
 
   // 2 · v1.2 写进了这一阶段的三条规则
   checkEq("[v12] 写明不要每张都用「所以」收尾", /不要】每一张都用「所以」/.test(G.SYSTEM_V12), true);

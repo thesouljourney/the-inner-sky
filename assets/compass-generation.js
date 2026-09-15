@@ -553,6 +553,23 @@
   /* 预设版本。Phase 6.3 起新的生成走 v1.2;前两版仍然叫得出来。 */
   var DEFAULT_PROMPT_VERSION = "compass-v1.2";
 
+  /* ★★ VOICE LOCK ★★
+     compass-v1.2 已经通过人工 voice review,是目前中文 Compass 的声音基准。
+     v1 / v1.1 只留作历史与 A/B 对照,不再使用。
+
+     这不只是一句宣告 —— tests/run-tests.js 用 sha256 把三份写作指令逐字钉住,
+     任何一个字被改动,整批测试立刻红。要改 v1.2 的写法,正确做法是:
+       开 compass-v1.3,把它加进 SYSTEMS,让 v1.2 原样留着当基准。
+     不要就地编辑 v1.2。 */
+  var VOICE_BASELINE = {
+    version: "compass-v1.2",
+    language: "zh",
+    lockedAt: "2026-09-15",
+    lockedBy: "human voice review",
+    note: "改写法请开新版本,不要就地编辑已锁的版本",
+    history: ["compass-v1", "compass-v1.1"]
+  };
+
   function buildPrompt(input, retryNote, version) {
     version = SYSTEMS[version] ? version : DEFAULT_PROMPT_VERSION;
     var ready = Object.keys(input.directions).filter(function (k) {
@@ -955,6 +972,7 @@
     SYSTEMS: SYSTEMS,
     PROMPT_VERSIONS: PROMPT_VERSIONS,
     DEFAULT_PROMPT_VERSION: DEFAULT_PROMPT_VERSION,
+    VOICE_BASELINE: VOICE_BASELINE,
     toneCheck: toneCheck,
     permissionCheck: permissionCheck,
     groupCheck: groupCheck,
