@@ -2432,11 +2432,10 @@ function testCompassAnchorSelection() {
 
   /* 选的是【功能互补】,不是方向顺序 */
   const r = AN.derive(live);
-  /* 功能互补仍然优先,但它【赢不过范围守则】:
-     grounds 被守则拿掉场合那一半之后分数掉下来,目前这份样本只覆盖到两种功能。
-     这里如实记下实际覆盖数,不用「一定要三种」把这件事盖掉。 */
+  /* 功能互补是加分,不是硬性规定。这里记的是这份样本【实际】覆盖到几种,
+     不是「一定要三种」—— 下面那一条才是真正的把关。 */
   checkEq("[anc] 目前样本实际覆盖的功能数",
-    new Set(r.anchors.map(function (a) { return a["function"]; })).size, 2);
+    new Set(r.anchors.map(function (a) { return a["function"]; })).size, 3);
   checkEq("[anc] 能补的功能都补过了(候选池里只剩重复的功能)",
     (function () {
       const pool = ["grounds", "moves", "drains", "calls"]
@@ -2620,6 +2619,122 @@ function testCompassAnchorScopeGuard() {
     JSON.stringify(AN.derive(live)), JSON.stringify(r));
 }
 
+
+/* ---------- 27. reusability 的定义(anchors 2.2) ----------
+   它回答的是「这句提醒以后还回得来吗」,不是「剖析器有没有抓到场合片语」。
+   ------------------------------------------------------------------- */
+function testCompassAnchorReusability() {
+  const AN = require(path.join(__dirname, "..", "assets", "compass-anchors.js"));
+  const RC = require(path.join(__dirname, "..", "assets", "compass-recorded.js"));
+  const live = RC.RAW_V12.C1;
+  function d(ci, ex) {
+    return { coreInsight: ci, explanation: ex, reflectionPrompt: "你希望这件事把你带到哪里？" };
+  }
+  /* 直接喂候选物件,把这一条规则单独隔离出来量 */
+  function cand(situation, move) {
+    return { line: (situation ? situation + "，" : "") + move + "。", situation: situation, move: move };
+  }
+
+  /* 1. 没有场合,但那一步自己站得住 → 仍然是「会再回来」 ------------------- */
+  checkEq("[reuse] 没场合 + 给了许可的一步 → 2",
+    AN.reusabilityOf(cand(null, "先让自己安静一会儿就够了，不一定要马上解释")), 2);
+  checkEq("[reuse] 没场合 + 给了动作的一步 → 2",
+    AN.reusabilityOf(cand(null, "可以先看看现在到底是什么让你放不下心")), 2);
+
+  /* 2. 没有场合,而且那一步只是换个说法去理解 → 仍然是 0 ------------------ */
+  checkEq("[reuse] 没场合 + 只是换个说法 → 0",
+    AN.reusabilityOf(cand(null, "也可能只是那个理由暂时不见了")), 0);
+  checkEq("[reuse] 没场合 + 纯描述 → 0",
+    AN.reusabilityOf(cand(null, "那不一定是分心")), 0);
+  checkEq("[reuse] 0 不是因为「没抓到场合」,而是因为那一步站不住",
+    AN.reusabilityOf(cand(null, "先让自己安静一会儿就够了")) !== 
+    AN.reusabilityOf(cand(null, "也可能只是那个理由暂时不见了")), true);
+
+  /* 3. 绑在这一阵子 → 1(不是 2,也不是 0) ------------------------------- */
+  ["最近", "这一次", "刚才", "今天", "这阵子"].forEach(function (w) {
+    checkEq("[reuse] 「" + w + "」仍然只是这一阵子 → 1",
+      AN.reusabilityOf(cand(w + "有件事一直卡着", "可以先看看它到底卡在哪里")), 1);
+  });
+  checkEq("[reuse] 一次性 + 站不住的一步 → 0",
+    AN.reusabilityOf(cand("最近有件事卡着", "那不一定是分心")), 0);
+
+  /* 4. 会重复出现的入口 → 2 -------------------------------------------- */
+  ["每次", "一直", "只要", "每当"].forEach(function (w) {
+    checkEq("[reuse] 「" + w + "」是会再回来的入口 → 2",
+      AN.reusabilityOf(cand(w + "遇到这种事", "可以先看看自己在担心什么")), 2);
+  });
+  checkEq("[reuse] 「……的时候」也是会再回来的入口 → 2",
+    AN.reusabilityOf(cand("没力气的时候", "可以先看看那个理由还在不在")), 2);
+
+  /* 5. anchors-2.1 的范围守则一个字都没有松动 --------------------------- */
+  const g = AN.candidateFor("grounds", live.grounds);
+  checkEq("[reuse] 范围守则仍然在挡", g.scopeGuard, "cross-sentence-would-tighten-scope");
+  checkEq("[reuse] 范围守则仍然不留场合那一半", g.situation, null);
+
+  /* 6. Grounds 没有把「事情刚发生的时候」拿回来 -------------------------- */
+  checkEq("[reuse] Grounds 仍然是那一步本身",
+    g.line, "先让自己安静一会儿就够了，不一定要马上解释。");
+  checkEq("[reuse] Grounds 没有拿回被挡下来的条件",
+    g.line.indexOf("事情刚发生的时候") >= 0, false);
+  const r = AN.derive(live);
+  checkEq("[reuse] 画面上那三句里没有被挡下来的条件",
+    r.anchors.filter(function (a) { return a.line.indexOf("事情刚发生的时候") >= 0; }).length, 0);
+  /* 新定义之后它确实被一般规则选上了 —— 不是被硬塞进去的 */
+  const gp = r.anchors.filter(function (a) { return a.sourceDirection === "grounds"; })[0];
+  checkEq("[reuse] Grounds 这次靠一般规则被选上", !!gp, true);
+  checkEq("[reuse] 它是靠「那一步自己站得住」拿到 2 的", gp ? gp.score.reusability : "(没被选上)", 2);
+  checkEq("[reuse] 它拿到的是补位加分,不是特权",
+    !!gp && gp.selectionReason.indexOf("补上「回到自己」") >= 0, true);
+
+  /* 7. CALLS_WINS 仍然选得到 Calls,而且三句一个字都没变 ----------------- */
+  const CALLS_WINS = {
+    grounds: d("你在安静的地方比较容易想清楚。",
+      "很多人以为要想清楚就得多讨论。对你来说不是这样。事情刚发生的时候，先让自己安静一会儿就够了。"),
+    moves: d("你需要一个说得通的理由才走得动。",
+      "没有理由的时候你会停住。这不是拖延。最近如果比较没力气，也可能只是那个理由暂时不见了。"),
+    drains: d("反覆确认会把你的力气用掉。",
+      "这一次你一直在重新检查，刚才那一轮其实就够了。"),
+    calls: d("你对还没看完的事情特别放不下。",
+      "每次有一件事你一直绕回去想，可以先看看，它到底还有哪一层没被你看完，而不是先怪自己分心。")
+  };
+  const w = AN.derive(CALLS_WINS);
+  checkEq("[reuse] CALLS_WINS 仍然是 Calls 排第一", w.anchors[0].sourceDirection, "calls");
+  checkEq("[reuse] CALLS_WINS 三句一个字都没变",
+    w.anchors.map(function (a) { return a.line; }).join("|"),
+    "每次有一件事你一直绕回去想，可以先看看，它到底还有哪一层没被你看完，而不是先怪自己分心。|" +
+    "事情刚发生的时候，先让自己安静一会儿就够了。|" +
+    "这一次你一直在重新检查，刚才那一轮其实就够了。");
+  /* 被换掉的 moves 就是「situation===null 而且站不住 → 0」的真实例子 */
+  const wm = w.dropped.filter(function (x) { return x.direction === "moves"; })[0];
+  checkEq("[reuse] 被换掉的仍然是 Moves", !!wm, true);
+  checkEq("[reuse] 它的 reusability 真的是 0",
+    AN.scoreCandidate(AN.candidateFor("moves", CALLS_WINS.moves)).reusability, 0);
+  checkEq("[reuse] 它的 situation 确实是 null",
+    AN.candidateFor("moves", CALLS_WINS.moves).situation, null);
+
+  /* 8. 功能互补是加分,不是硬性规定 ------------------------------------- */
+  checkEq("[reuse] CALLS_WINS 只覆盖两种功能,照样成立",
+    new Set(w.anchors.map(function (a) { return a["function"]; })).size, 2);
+  checkEq("[reuse] 没有把 return+orient+notice 定成必须的组合",
+    (function () {
+      const fns = w.anchors.map(function (a) { return a["function"]; }).slice().sort().join(",");
+      return fns === "notice,orient,return";
+    })(), false);
+  checkEq("[reuse] 也没有把 Grounds+Moves+Drains 定成必须的组合",
+    w.anchors.map(function (a) { return a.sourceDirection; }).slice().sort().join(","),
+    "calls,drains,grounds");
+
+  /* 9. 没有多出任何请求 -------------------------------------------------- */
+  const realFetch = global.fetch, realXHR = global.XMLHttpRequest;
+  let called = 0;
+  global.fetch = function () { called++; throw new Error("no"); };
+  global.XMLHttpRequest = function () { called++; throw new Error("no"); };
+  try {
+    checkEq("[reuse] 新定义跑起来不发请求", AN.derive(live).status, "ok");
+    checkEq("[reuse] fetch 一次都没被碰到", called, 0);
+  } finally { global.fetch = realFetch; global.XMLHttpRequest = realXHR; }
+}
+
 /* ---------- 跑 ---------- */
 function main() {
   testTimezones();
@@ -2647,6 +2762,7 @@ function main() {
   testCompassProductPage();
   testCompassAnchorSelection();
   testCompassAnchorScopeGuard();
+  testCompassAnchorReusability();
   testCompassZhOnlyLabels();
   return Promise.all([genJobs, liveJobs, voiceJobs, v12Jobs]).then(function () { return testPlaces(); }).then(function () {
     console.log("\n对照来源:" + REF.reference);

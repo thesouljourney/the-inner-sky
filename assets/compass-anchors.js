@@ -27,7 +27,7 @@
 })(typeof self !== "undefined" ? self : this, function () {
   "use strict";
 
-  var VERSION = "anchors-2.1";
+  var VERSION = "anchors-2.2";
   var ANCHOR_COUNT = 3;
 
   /* ── 词表:刻意很小。这些不是心理规则,只是「这句话长什么形状」 ── */
@@ -35,11 +35,16 @@
   /* 会重复发生的场合 —— 锚点要能在未来用得上,靠的就是这个 */
   var SITUATION_RECURRING = ["的时候", "一旦", "每次", "每当", "只要", "遇到", "碰到", "一直"];
   /* 一次性的场合,当不了长期提醒 */
-  var SITUATION_ONCE = ["最近", "今天", "这一次", "刚才"];
+  var SITUATION_ONCE = ["最近", "今天", "这一次", "刚才", "这阵子", "这一阵子"];
   /* 轻轻的一步:给一个可以站的位置,不是命令 */
   var MOVE_GENTLE = ["可以先看看", "也可以先看看", "可以先", "也可以", "不一定要", "不一定是",
     "不用急着", "先不用", "就够了", "不妨", "允许自己", "没有关系", "没关系",
     "也许可以", "也可能只是", "还在不在", "不必"];
+  /* 可以重复站上去的位置:给一个「这样就行」的许可。
+     它跟 MOVE_LOOK 一起,决定这一步【自己站不站得住】——
+     只是换个说法去理解一件事(不一定是 / 也可能只是),两边都不算。 */
+  var MOVE_PERMISSION = ["就够了", "不一定要", "不用急着", "先不用", "没有关系", "没关系",
+    "允许自己", "不必", "不妨"];
   /* 指向「去看一眼」而不是「去做什么」—— 这是 actionability 的核心 */
   var MOVE_LOOK = ["看看", "问问", "想想", "留意", "注意", "停一下", "停下来", "检查"];
   /* 命令句:一出现就不是锚点 */
@@ -201,11 +206,40 @@
      评分。顺序就是任务书第 7 节的优先顺序。
      长度【只】在最后当微调,不会把更有用的一句挤掉。
      ────────────────────────────────────────────────────────── */
+  /* ── reusability ──────────────────────────────────────────
+     它回答的是:
+
+       「这句提醒,以后在一般的日子里还回得来吗?」
+
+     它【不是】在回答「剖析器有没有抓到一个场合片语」。
+     没有写出场合,不等于用不了第二次 —— 也不等于一定用得上。
+     所以要看整个候选:场合 + 那一步 + 那一步自己站不站得住 + 有没有绑在一次性的时间上。
+
+       2  会再回来 / 广泛可用
+          有一个会重复出现的入口(每次 / 一直 / ……的时候 / 当你发现……),
+          或者【那一步本身】就是一个可以重复站上去的位置,不依赖某一件事。
+       1  绑在这一阵子
+          最近 / 这一次 / 刚才 / 今天 / 这阵子 —— 讲的是现在,不是以后。
+       0  没有可以重复回来的东西
+          既没有入口,那一步也只是换个说法去理解一件事,不是可以站的位置。
+          ⚠ 不可以只因为「没有抓到场合片语」就给 0。
+     ───────────────────────────────────────────────────────── */
+  function reusabilityOf(c) {
+    var mv = c.move || "";
+    /* 那一步自己站不站得住:要嘛给一个动作,要嘛给一个「这样就行」的许可 */
+    var standalone = has(mv, MOVE_LOOK) || has(mv, MOVE_PERMISSION);
+    /* 有没有一个会再回来的入口 */
+    var recurring = !!(c.situation && has(c.situation, SITUATION_RECURRING));
+    /* 绑在一次性的时间上 —— 场合或那一步里出现都算 */
+    if (has(c.line, SITUATION_ONCE)) return (standalone || recurring) ? 1 : 0;
+    if (recurring || standalone) return 2;
+    return 0;
+  }
+
   function scoreCandidate(c) {
     var t = c.line;
     var fidelity = 1;                                   // 由 verifyDerived 把关,这里是结构分
-    var reusable = (c.situation && has(c.situation, SITUATION_RECURRING) ? 2 : 0) +
-                   (c.situation && has(c.situation, SITUATION_ONCE) ? -1 : 0);
+    var reusable = reusabilityOf(c);
     var actionable = (has(t, MOVE_LOOK) ? 2 : 0) + (has(t, MOVE_GENTLE) ? 1 : 0) -
                      (has(t, COMMANDING) ? 5 : 0);
     var specific = has(t, GENERIC) ? -4 : (c._fnHits >= 2 ? 1 : 0);
@@ -321,7 +355,8 @@
   return {
     VERSION: VERSION, ANCHOR_COUNT: ANCHOR_COUNT, FUNCTIONS: FUNCTIONS,
     SITUATION_RECURRING: SITUATION_RECURRING, MOVE_GENTLE: MOVE_GENTLE, HEDGE: HEDGE,
-    MOVE_LOOK: MOVE_LOOK, GENERIC: GENERIC,
+    MOVE_LOOK: MOVE_LOOK, MOVE_PERMISSION: MOVE_PERMISSION,
+    SITUATION_ONCE: SITUATION_ONCE, GENERIC: GENERIC, reusabilityOf: reusabilityOf,
     derive: derive, verifyDerived: verifyDerived,
     candidateFor: candidateFor, scoreCandidate: scoreCandidate, similarity: similarity
   };
