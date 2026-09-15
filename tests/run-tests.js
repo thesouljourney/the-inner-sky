@@ -2160,6 +2160,118 @@ function testCompassLiveAuthPath() {
       .join(","), "");
 }
 
+/* ---------- 23. 内在指南 Phase 7 · 三项诊断 + 影子验证器 ----------
+   影子验证器只标记、不拒收。第一次 live 的那句话是【被授权的】,
+   所以它在这里必须【不】被 flag —— 这是一条回归 fixture。 */
+function testCompassShadowPermission() {
+  const fs = require("fs");
+  const G = require(path.join(__dirname, "..", "assets", "compass-generation.js"));
+  const PV = require(path.join(__dirname, "..", "assets", "compass-preview.js"));
+  const RC = require(path.join(__dirname, "..", "assets", "compass-recorded.js"));
+  const html = fs.readFileSync(path.join(__dirname, "..", "app.html"), "utf8");
+  const gsrc = fs.readFileSync(path.join(__dirname, "..", "assets", "compass-generation.js"), "utf8");
+  const vm = PV.buildCase("C1");
+  const inp = G.buildInput(vm);
+
+  /* 第一次 live 真的写出来的那一句(drains) */
+  const LIVE_DRAINS = {
+    coreInsight: "真正让你累的，可能不是靠近，而是靠近之前那一次次的确认。",
+    explanation: "有时候情绪当下没出来，等到某个小事才冒头，自己也说不清楚那是从哪里来的。",
+    reflectionPrompt: "最近有没有一段关系，让你发现自己一直在等一个可以放心的感觉？"
+  };
+
+  // A · 同一句话 + 有 suppression / delayed 授权 → 不 flag
+  const a = G.shadowInternalProcessCheck(LIVE_DRAINS, inp.directions.drains);
+  checkEq("[p7s] 第一次 live 的 drains 句子不该被 flag", a.status, "PASS");
+  checkEq("[p7s] 而且说得出是谁授权的",
+    (a.claimsDetected.filter(c => c.claimClass === "delayed-emergence")[0] || {}).authorizedBy,
+    "domain:suppression/repeated-tension");
+  checkEq("[p7s] 授权确实来自 support 里的 suppression",
+    (inp.directions.drains.support || []).some(x => x.domain === "suppression"), true);
+
+  // B · 同一句话 + 没有相关授权 → SHADOW FLAG
+  const b = G.shadowInternalProcessCheck(LIVE_DRAINS, inp.directions.grounds);
+  checkEq("[p7s] 换到没有授权的方向就会 flag", b.status, "SHADOW FLAG");
+  checkEq("[p7s] flag 说得出缺的是哪一个概念",
+    (b.flags[0] || {}).missingPermission, "delayed-emergence");
+  checkEq("[p7s] flag 指得出是哪一句触发的",
+    (b.flags[0] || {}).detectedFragment, "当下没出来");
+  /* 这就是「同一句话、不同 contract、不同结果」——不是全域禁用词表 */
+  checkEq("[p7s] 不是全域禁用词表(同句不同命)", a.status !== b.status, true);
+
+  // C · 外部现实的权限规则完全没被动到
+  checkEq("[p7s] realityVerdict 仍然是硬性拒收",
+    /rule: "realityVerdict", detail: perm\.realityVerdicts\.join\("、"\), noRetry: true/.test(gsrc), true);
+  const badExternal = { coreInsight: "你会一段一段靠近一个人。",
+    explanation: "慢一点没关系，只是也可以先看看，有些人是不是其实已经不用再确认了。",
+    reflectionPrompt: "最近有没有一段关系，让你发现自己在等什么？" };
+  checkEq("[p7s] 替使用者判断现实仍然会被硬挡",
+    (G.validateOne(badExternal, inp.directions.drains).fails || [])
+      .filter(f => f.rule === "realityVerdict").length, 1);
+
+  // D/E · 影子旗标不拒收、不触发重试
+  const v = G.validateOne(LIVE_DRAINS, inp.directions.grounds);   // 这一组会 shadow flag
+  checkEq("[p7s] 影子 flag 时该方向仍然可以是 ok",
+    v.unsupportedInternalProcess.status, "SHADOW FLAG");
+  checkEq("[p7s] 影子 flag 不会进 fails",
+    (v.fails || []).filter(f => /InternalProcess|shadow/i.test(f.rule)).length, 0);
+  checkEq("[p7s] 影子结果自己标明只是影子", v.unsupportedInternalProcess.shadowOnly, true);
+  checkEq("[p7s] 影子不会出现在可重试清单里",
+    /unsupportedInternalProcess/.test(
+      gsrc.slice(gsrc.indexOf("function validate("), gsrc.indexOf("function generate("))), false);
+
+  // F · permittedConcepts 只从 sanitized contract 来,不含任何盘面
+  const perm = G.permittedConcepts(inp.directions.drains);
+  checkEq("[p7s] 授权集合里没有原始占星",
+    G.scrub({ p: perm }).length, 0);
+  checkEq("[p7s] 授权集合只来自机制与 domain",
+    perm.domains.filter(d => /planet|house|sign|aspect|H\d/i.test(d)).join(","), "");
+
+  // G · 授权脉络只在 dev preview,不进正式页面
+  const devBlock = html.slice(html.indexOf("function cpPvDevHtml"), html.indexOf("function cpPvCardHtml"));
+  checkEq("[p7s] 授权脉络印在开发面板里", /授权脉络\(送出去的就是这些\)/.test(devBlock), true);
+  const prodPage = (function () {
+    const i = html.indexOf("页面:我的内在指南(#/compass)");
+    const j = html.indexOf("function renderFavoritesPage()", i);
+    const whole = html.slice(i, j);
+    const x = whole.indexOf("function cpPvLoadOne"), y = whole.indexOf("function renderCompassPage");
+    return (x > 0 && y > x) ? whole.slice(0, x) + whole.slice(y) : whole;
+  })();
+  checkEq("[p7s] 正式页面不印授权脉络", /auth\.support|授权脉络/.test(prodPage), false);
+  checkEq("[p7s] 授权脉络只有机制文字,没有盘面",
+    G.scrub(vm.directions.filter(d => d.key === "drains")[0].dev.auth).length, 0);
+  checkEq("[p7s] 授权脉络与真的送出去的那一份同源",
+    vm.directions.filter(d => d.key === "drains")[0].dev.auth.support.length,
+    inp.directions.drains.support.length);
+
+  // H · 版本一律取自请求 / 回应的 metadata
+  checkEq("[p7s] 会骗人的旧常数已经移除", /COMPASS_PROMPT_VERSION/.test(gsrc), false);
+  const rep = html.slice(html.indexOf("function cpPvReport"), html.indexOf("function cpPvGenResult"));
+  checkEq("[p7s] requested 取自这一次请求的 metadata",
+    /const reqVer = \(g && g\.meta && g\.meta\.promptVersion\)/.test(rep), true);
+  checkEq("[p7s] server 取自 Edge Function 的回应",
+    /const srvVer = \(cpPvLastServer && cpPvLastServer\.promptVersion\)/.test(rep), true);
+  checkEq("[p7s] 两者不同会警告,不会被悄悄抹平",
+    /PROMPT VERSION MISMATCH/.test(rep), true);
+  checkEq("[p7s] 版本不从 UI 选择器事后推断", /cpPvVersion\(\)/.test(rep), false);
+
+  // I · 重试诊断有原因,但没有模型原文
+  checkEq("[p7s] 报告会印 attempt 1 / attempt 2",
+    /-- attempt 1 --/.test(rep) && /-- attempt 2 --/.test(rep), true);
+  checkEq("[p7s] attempt 1 印的是验证器规则与原因",
+    /f\.rule \+ "  —  " \+ f\.detail/.test(rep), true);
+  checkEq("[p7s] 不印模型原始回应 / 被退回的文案 / system prompt",
+    /a1\.raw|\.raw\b|a1\.copies|p\.system/.test(rep), false);
+  checkEq("[p7s] 明写 HTTP 续期与内容重试是两回事",
+    /HTTP 401 续期属于传输层,两者不共用额度/.test(rep), true);
+
+  // 影子验证器跑过所有已锁样本:v1.2 四张都不该被 flag
+  const dirs = ["grounds", "moves", "drains", "calls"];
+  checkEq("[p7s] 已锁的 v1.2 样本没有任何影子旗标",
+    dirs.filter(k => G.shadowInternalProcessCheck(RC.RAW_V12.C1[k], inp.directions[k]).status !== "PASS")
+      .join(","), "");
+}
+
 /* ---------- 跑 ---------- */
 function main() {
   testTimezones();
@@ -2183,6 +2295,7 @@ function main() {
   const voiceJobs = testCompassVoiceV11();
   const v12Jobs = testCompassVoiceV12();
   testCompassLiveAuthPath();
+  testCompassShadowPermission();
   testCompassZhOnlyLabels();
   return Promise.all([genJobs, liveJobs, voiceJobs, v12Jobs]).then(function () { return testPlaces(); }).then(function () {
     console.log("\n对照来源:" + REF.reference);

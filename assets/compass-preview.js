@@ -102,6 +102,9 @@
       childPatterns: t.childPatterns || null,
       sequence: t.sequence || null,
       acceptedFrequency: corpusRow ? (corpusRow.acceptedCount + "/" + corpusRow.testedCharts) : null,
+      /* 授权脉络由生成层在建 contract 时补上(见 compass-generation.js 的 attachAuth)。
+         这一层不重建 —— 一定要跟真的送出去的那一份是同一个来源。 */
+      auth: null,
       qualityChecks: t.qualityChecks || null
     };
     out.dev = dev;

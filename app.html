@@ -9143,7 +9143,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
        按下去什么都不会发生,也不会说为什么,那比失败还糟。 */
     function bail(reason) {
       cpPvGenCache[cpGenKey(caseId)] = { status: "generation_failed", reason: reason,
-        meta: { requests: 0, promptVersion: G ? G.COMPASS_PROMPT_VERSION : "?" } };
+        meta: { requests: 0, promptVersion: cpPvVersion() } };
       cpPvPaint();
     }
     if (!G) return bail("generation layer not loaded — 重新整理一次这一页");
@@ -9155,7 +9155,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     if (cpPvMode === "recorded") {
       if (!RC || RC.CASES.indexOf(caseId) < 0) {
         cpPvGenCache[cpGenKey(caseId)] = { status: "generation_failed", reason: "no_recorded_case",
-                                           meta: { requests: 0, promptVersion: G.COMPASS_PROMPT_VERSION } };
+                                           meta: { requests: 0, promptVersion: cpPvVersion() } };
         cpPvPaint(); return;
       }
       transport = RC.transportFor(caseId);
@@ -9175,7 +9175,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       .catch(function (e) {
         cpPvGenCache[cpGenKey(caseId)] = { status: "generation_failed",
           reason: String((e && e.message) || e),
-          meta: { requests: 1, promptVersion: G.COMPASS_PROMPT_VERSION } };
+          meta: { requests: 1, promptVersion: cpPvVersion() } };
       })
       .then(function () { cpPvGenBusy = false; cpPvPaint(); });
   }
@@ -9192,9 +9192,16 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     L.push("case            " + (cpPvBlind ? "(blind)" : cpPvCase));
     L.push("mode            " + cpPvMode);
     L.push("endpoint        " + (COMPASS_GEN_URL || "(none)"));
-    L.push("promptVersion   " + (G ? G.COMPASS_PROMPT_VERSION : "?") +
-           "   input " + (G ? G.INPUT_CONTRACT_VERSION : "?") +
-           "   output " + (G ? G.OUTPUT_SCHEMA_VERSION : "?"));
+    /* 版本一律取自【这一次请求的 metadata】与【服务端的回应】——
+       不从 UI 选择器推断(生成完之后使用者可能已经切走了)。 */
+    const reqVer = (g && g.meta && g.meta.promptVersion) || null;
+    const srvVer = (cpPvLastServer && cpPvLastServer.promptVersion) || null;
+    L.push("requestedPromptVersion  " + (reqVer || "(尚未生成)"));
+    L.push("serverPromptVersion     " + (srvVer || (cpPvMode === "live" ? "(没有回应)" : "(不适用:非 live)")));
+    if (reqVer && srvVer && reqVer !== srvVer) L.push("⚠ PROMPT VERSION MISMATCH");
+    L.push("contract        input " + (G ? G.INPUT_CONTRACT_VERSION : "?") +
+           "   output " + (G ? G.OUTPUT_SCHEMA_VERSION : "?") +
+           "   baseline " + (G ? G.VOICE_BASELINE.version : "?"));
     L.push("session         " + (cpLiveSession() ? "authenticated" : "NONE"));
     if (cpPvLastServer) {
       L.push("SOURCE          " + String(cpPvLastServer.source || "?").toUpperCase());
@@ -9254,6 +9261,22 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
                " label=" + q.labelRisk +
                " astrology=" + (rb.astrologyLeakage ? "LEAK" : "none") +
                " unsupported=" + (rb.unsupportedInference ? "YES" : "no"));
+        /* ★ SHADOW:只报告,不影响验收 */
+        const sh = q.unsupportedInternalProcess;
+        if (sh) {
+          L.push("    unsupportedInternalProcess  " + sh.status + "   (shadow only — 不影响验收)");
+          sh.flags.forEach(function (f) {
+            L.push("      ⚑ claimClass=" + f.claimClass +
+                   "  detected=「" + f.detectedFragment + "」" +
+                   "  missingPermission=" + f.missingPermission);
+          });
+          sh.claimsDetected.filter(function (c) { return c.authorizedBy; }).forEach(function (c) {
+            L.push("      ✓ " + c.claimClass + " 由「" + c.authorizedBy + "」授权");
+          });
+          L.push("      permittedConcepts  " +
+                 (sh.permittedConcepts.map(function (x) { return x.concept + "(" + x.via + ")"; })
+                   .join(", ") || "(none)"));
+        }
       });
       L.push("");
       L.push("  cross-card max " + JSON.stringify(g.validation.crossCard.pairs[0] || null));
@@ -9262,6 +9285,40 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
         const v = g.validation.perDirection[k];
         if (!v.ok) L.push("  [" + k + "] FAIL " + JSON.stringify(v.fails));
       });
+    }
+
+    /* ── 为什么需要重试 ────────────────────────────────
+       只印「哪一条验证器、什么原因」。不印模型原始回应、不印被退回的文案、
+       不印 system prompt、不印任何凭证或身分。 */
+    if (g.meta && g.meta.retried) {
+      const a1 = g.firstAttempt;
+      L.push("");
+      L.push("-- attempt 1 --");
+      if (!a1) {
+        L.push("  (没有留下纪录)");
+      } else if (a1.parseFailed) {
+        L.push("  parse      FAIL(回应不是合法 JSON)");
+        L.push("  validation (没跑到)");
+      } else {
+        L.push("  parse      OK");
+        L.push("  validation " + (a1.validation && a1.validation.ok ? "PASS" : "FAIL"));
+        const pd = (a1.validation && a1.validation.perDirection) || {};
+        Object.keys(pd).forEach(function (k) {
+          if (pd[k].ok) return;
+          (pd[k].fails || []).forEach(function (f) {
+            L.push("    [" + k + "]  " + f.rule + "  —  " + f.detail +
+                   (f.noRetry ? "  (不可重试)" : ""));
+          });
+        });
+        if (a1.validation && !a1.validation.crossCard.ok)
+          L.push("    [group]  crossCardRepetition  —  " +
+                 JSON.stringify(a1.validation.crossCard.pairs[0]));
+      }
+      L.push("");
+      L.push("-- attempt 2 --");
+      L.push("  validation " + (g.status === "ok" ? "PASS" : "FAIL"));
+      L.push("  accepted   " + (g.copies ? Object.keys(g.copies).join(", ") : "(无)"));
+      L.push("  注:这是【内容】重试。HTTP 401 续期属于传输层,两者不共用额度。");
     }
     return L.join("\n");
   }
@@ -9382,6 +9439,17 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       row("lived", v.livedExperience) +
       row("why", v.why) +
       (v.reason ? row("reason", v.reason) : "") +
+      /* §3:这一次【实际送给生成层】的授权面。
+         有了它,「这句话是谁授权的」从翻程式码变成扫一眼。
+         这里印的全部来自 sanitized contract —— 没有盘面、没有身分。 */
+      (v.auth ? row("— 授权脉络(送出去的就是这些)—", "") +
+        row("mechanism", v.auth.mechanism) +
+        row("livedMechanism", v.auth.livedMechanism || "(none)") +
+        (v.auth.support || []).map(function (x, i) {
+          return row("support[" + i + "]", x.mechanism + "   [domain " + x.domain + "]");
+        }).join("") +
+        row("tension", v.auth.tension || "(none)") +
+        row("composite.children", (v.auth.compositeChildren || []).join("  +  ") || "(none)") : "") +
       (v.gen ? row("— generation —", "") +
         row("promptVersion", v.gen.promptVersion) +
         row("model", v.gen.model) +
@@ -9389,6 +9457,10 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
         row("retried", v.gen.retried) +
         row("source", v.gen.source) +
         row("validation", v.gen.validation) : "") +
+      (v.shadow ? row("unsupportedInternalProcess", v.shadow.status +
+        (v.shadow.flags.length ? "  ⚑ " + v.shadow.flags.map(function (f) {
+          return f.claimClass + ":「" + f.detectedFragment + "」"; }).join(" ") : "") +
+        "   (shadow only)") : "") +
       "</div>";
   }
 
@@ -9403,6 +9475,8 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     if (!g) { out.state = "not_generated"; return out; }
     if (g.status === "pending") { out.state = "generating"; return out; }
     const m = g.meta || {};
+    const sv = g.validation && g.validation.perDirection[d.key];
+    if (sv && sv.unsupportedInternalProcess) out.dev.shadow = sv.unsupportedInternalProcess;
     out.dev.gen = { promptVersion: m.promptVersion, model: m.model,
                     requests: m.requests, retried: m.retried,
                     source: cpPvMode === "live"

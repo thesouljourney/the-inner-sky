@@ -82,7 +82,7 @@ async function main() {
     return;
   }
 
-  L("我的内在指南 · Phase 6 生成层报告   promptVersion=" + G.COMPASS_PROMPT_VERSION +
+  L("我的内在指南 · Phase 6 生成层报告   promptVersion=" + G.DEFAULT_PROMPT_VERSION +
     "   来源=" + (RC.isRecorded ? "已录制(非 HTTP API 回应)" : "live"));
   R();
 

@@ -28,7 +28,6 @@
   var INPUT_CONTRACT_VERSION = "compass-input-1.0";
   /* 生成层自己的 explanation 长度契约(与 v1.1 / v1.2 的写作指令一致) */
   var EXPL_MIN = 60, EXPL_MAX = 130;
-  var COMPASS_PROMPT_VERSION = "compass-v1";
   var OUTPUT_SCHEMA_VERSION = "compass-output-1.0";
 
   /* ──────────────────────────────────────────────────────────
@@ -179,6 +178,23 @@
         return { familyA: t.familyA, familyB: t.familyB,
                  note: "同一个人身上两种都真,写的时候注意先后,不要互相抵消。" };
       });
+
+    /* §3:把【真的会送出去的那一份】授权面挂回 view model,给 dev preview 显示。
+       刻意不另外重建一份 —— 画面上看到的必须与 payload 同源,否则追溯没有意义。 */
+    vm.directions.forEach(function (d) {
+      var di = directions[d.key];
+      if (!d.dev || !di || di.status !== "ready") return;
+      d.dev.auth = {
+        patternKey: di.selectedPattern.key,
+        mechanism: di.selectedPattern.mechanism,
+        livedMechanism: di.livedMechanism,
+        support: (di.support || []).map(function (x) {
+          return { mechanism: x.mechanism, domain: x.domain };
+        }),
+        tension: di.tension ? di.tension.otherMechanism : null,
+        compositeChildren: di.composite ? di.composite.childMechanisms : null
+      };
+    });
 
     var readyCount = Object.keys(directions).filter(function (k) {
       return directions[k].status === "ready";
@@ -704,6 +720,136 @@
     };
   }
 
+  /* ══════════════════════════════════════════════════════════
+     ★ SHADOW VALIDATOR:unsupportedInternalProcess(Phase 7)
+     ------------------------------------------------------------
+     既有的 permissionCheck 管的是【外部现实】——不准替使用者判断
+     某个人值不值得信任。这一支把同一个原则延伸到【内在现实】:
+
+       模型可以描述送进去的机制。
+       模型可以把送进去的 support 翻成生活语言。
+       模型【不可以】因为「听起来很合理」就自己多发明一个心理历程。
+
+     关键设计(与禁用词表的差别):
+       中文短语只回答「这句话做了哪一类宣称」。
+       准不准,由【这一次送进去的 sanitized contract】决定。
+       所以同一句话:
+         input 带 suppression / delayed-emergence 的授权 → PASS
+         input 没有                                   → SHADOW FLAG
+
+     ⚠ SHADOW MODE:只标记、只量测、只进报告。
+       不拒收、不触发 retry、不改变 ready 状态、不影响任何产出。
+     ══════════════════════════════════════════════════════════ */
+
+  /* 刻意保持很小。目标是「凭空编出来的高风险内在故事」,
+     不是把每一句心理描述都分类。 */
+  var CLAIM_CLASSES = [
+    {
+      id: "delayed-emergence",
+      zh: ["当下没出来", "才冒头", "才冒出来", "后来才爆", "事后才涌", "才浮上来",
+           "过一阵子才", "隔了几天才发作", "在小事上突然"],
+      /* 授权来源:domain,或英文机制里的这些说法 */
+      domains: ["suppression", "delayed-cost", "repeated-tension"],
+      mechanism: /held while it matters|surfaces later|later in a smaller|registers only after|stays (?:mentally )?active until|keeps running in the background/i
+    },
+    {
+      id: "suppression",
+      zh: ["压抑", "憋着", "忍住不说", "把情绪收起来", "吞回去"],
+      domains: ["suppression"],
+      mechanism: /is held while|held back|contained|not expressed|withheld/i
+    },
+    {
+      id: "hidden-anger",
+      zh: ["其实很生气", "心里有气", "积着怨", "憋着火", "其实在生气"],
+      domains: [],
+      mechanism: /anger|resentment|irritation/i
+    },
+    {
+      id: "already-knew-but-avoided",
+      zh: ["其实早就知道", "你只是不敢", "只是害怕面对", "你心里明白只是"],
+      domains: [],
+      mechanism: /already knows|knows but|avoids facing/i
+    },
+    {
+      id: "later-realized-hurt",
+      zh: ["事后才发现自己受伤", "后来才知道被伤", "过后才觉得痛"],
+      domains: [],
+      mechanism: /hurt|wounded|injury/i
+    },
+    {
+      id: "trauma-history",
+      zh: ["创伤", "那件事留下的伤", "旧伤"],
+      domains: [],
+      mechanism: /trauma/i
+    },
+    {
+      id: "childhood-origin",
+      zh: ["童年", "小时候", "从小", "原生家庭", "早年"],
+      domains: [],
+      mechanism: /childhood|early years|upbringing/i
+    },
+    {
+      id: "attachment-story",
+      zh: ["依恋", "安全感的建立", "早年关系"],
+      domains: [],
+      mechanism: /attachment|bonding style/i
+    }
+  ];
+
+  /* 只从 sanitized contract 取,绝不碰原始盘面 */
+  function permittedConcepts(dirInput) {
+    var texts = [], domains = [];
+    if (dirInput && dirInput.selectedPattern) texts.push(dirInput.selectedPattern.mechanism || "");
+    if (dirInput && dirInput.livedMechanism) texts.push(dirInput.livedMechanism);
+    (dirInput && dirInput.support || []).forEach(function (x) {
+      texts.push(x.mechanism || "");
+      if (x.domain) domains.push(x.domain);
+    });
+    if (dirInput && dirInput.tension) texts.push(dirInput.tension.otherMechanism || "");
+    if (dirInput && dirInput.composite)
+      (dirInput.composite.childMechanisms || []).forEach(function (m) { texts.push(m); });
+    if (dirInput && dirInput.selectedPattern && dirInput.selectedPattern.domain)
+      domains.push(dirInput.selectedPattern.domain);
+
+    var blob = texts.join(" \n ");
+    var granted = [];
+    CLAIM_CLASSES.forEach(function (c) {
+      var byDomain = c.domains.filter(function (d) { return domains.indexOf(d) >= 0; });
+      var byText = c.mechanism.test(blob);
+      if (byDomain.length || byText) {
+        granted.push({ concept: c.id,
+                       via: byDomain.length ? ("domain:" + byDomain.join("/")) : "mechanism-text" });
+      }
+    });
+    return { concepts: granted, domains: domains, sourceCount: texts.filter(Boolean).length };
+  }
+
+  function shadowInternalProcessCheck(copy, dirInput) {
+    var all = [copy.coreInsight, copy.explanation, copy.reflectionPrompt].join("");
+    var perm = permittedConcepts(dirInput);
+    var permitted = {};
+    perm.concepts.forEach(function (g) { permitted[g.concept] = g.via; });
+
+    var flags = [], claims = [];
+    CLAIM_CLASSES.forEach(function (c) {
+      var hit = c.zh.filter(function (w) { return all.indexOf(w) >= 0; });
+      if (!hit.length) return;
+      claims.push({ claimClass: c.id, detectedFragment: hit[0],
+                    authorizedBy: permitted[c.id] || null });
+      if (!permitted[c.id])
+        flags.push({ claimClass: c.id, detectedFragment: hit[0],
+                     missingPermission: c.id });
+    });
+    return {
+      status: flags.length ? "SHADOW FLAG" : "PASS",
+      shadowOnly: true,          // 明写:这一支永远不影响验收
+      flags: flags,
+      claimsDetected: claims,
+      permittedConcepts: perm.concepts,
+      permittedDomains: perm.domains
+    };
+  }
+
   function validateOne(copy, dirInput) {
     var fails = [], warns = [];
     var all = [copy.coreInsight, copy.explanation, copy.reflectionPrompt].join("");
@@ -765,8 +911,13 @@
       fails.push({ rule: "embeddedConclusion", detail: perm.embeddedConclusion.join("、"), noRetry: true });
     q.permission = perm;
 
+    /* ★ SHADOW:只记录。刻意【不】写进 fails —— 写进去就会拒收与触发重试。 */
+    var shadow = shadowInternalProcessCheck(copy, dirInput);
+    q.unsupportedInternalProcess = shadow;
+
     return { ok: fails.length === 0, fails: fails, warns: warns, checks: q,
-             fidelity: fid, tone: tone, permission: perm };
+             fidelity: fid, tone: tone, permission: perm,
+             unsupportedInternalProcess: shadow };
   }
 
   /* ★ Phase 6.3 · 组层品质:四张连着读像不像同一个模板。
@@ -964,7 +1115,6 @@
 
   return {
     INPUT_CONTRACT_VERSION: INPUT_CONTRACT_VERSION,
-    COMPASS_PROMPT_VERSION: COMPASS_PROMPT_VERSION,
     OUTPUT_SCHEMA_VERSION: OUTPUT_SCHEMA_VERSION,
     SYSTEM: SYSTEM,
     SYSTEM_V11: SYSTEM_V11,
@@ -975,6 +1125,9 @@
     VOICE_BASELINE: VOICE_BASELINE,
     toneCheck: toneCheck,
     permissionCheck: permissionCheck,
+    CLAIM_CLASSES: CLAIM_CLASSES,
+    permittedConcepts: permittedConcepts,
+    shadowInternalProcessCheck: shadowInternalProcessCheck,
     groupCheck: groupCheck,
     DIRECTION_LABEL: DIRECTION_LABEL,
     UNSUPPORTED: UNSUPPORTED,

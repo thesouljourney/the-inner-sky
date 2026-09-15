@@ -64,7 +64,7 @@ function transportFor(endpoint, anon) {
 }
 
 async function main() {
-  const out = { mode: MODE, key: keyState(), promptVersion: G.COMPASS_PROMPT_VERSION,
+  const out = { mode: MODE, key: keyState(), promptVersion: G.DEFAULT_PROMPT_VERSION,
                 health: null, cases: [], totals: { requests: 0, retries: 0, latency: [] } };
   let endpoint = val("--url"), anon = val("--anon"), server = null, restore = null;
 
