@@ -27,7 +27,7 @@
 })(typeof self !== "undefined" ? self : this, function () {
   "use strict";
 
-  var VERSION = "anchors-2.0";
+  var VERSION = "anchors-2.1";
   var ANCHOR_COUNT = 3;
 
   /* ── 词表:刻意很小。这些不是心理规则,只是「这句话长什么形状」 ── */
@@ -44,6 +44,10 @@
   var MOVE_LOOK = ["看看", "问问", "想想", "留意", "注意", "停一下", "停下来", "检查"];
   /* 命令句:一出现就不是锚点 */
   var COMMANDING = ["你应该", "你必须", "你需要学会", "你最好", "请你", "记得要"];
+  /* 语意上的保留字:原文用它们把话说得【没那么满】。
+     压缩可以拿掉它们,但不可以因此把话说得比原文更肯定。 */
+  var HEDGE = ["有些时候", "有时候", "有时", "可能", "也许", "或许", "不一定",
+    "比较", "往往", "通常", "多半", "大概", "不见得", "未必"];
   /* 谁都能说的空话 */
   var GENERIC = ["相信自己", "慢慢来", "照顾好自己", "一切都会好", "做真实的自己",
     "放轻松", "加油", "顺其自然", "活在当下", "爱自己"];
@@ -137,16 +141,40 @@
       var sc = sitScoreOf(c);
       if (sc > sitScore) { sitScore = sc; sit = c; sitSameSentence = true; }
     });
+
+    /* ②-a 范围守则(scope guard)
+       ------------------------------------------------------------
+       同一句里找得到场合,那就是原文自己给的范围,压缩不会改变它。
+       但是【跨句】把另一句的条件搬过来,有可能把话说得比原文更肯定 ——
+       原文说「有些时候……就够了」,搬成「事情刚发生的时候……就够了」,
+       那已经不是压缩,是替作者做了一个它没做的承诺。
+
+       判断方式是语意的,不是「保留字必须原样出现」:
+         看那一步【原本站在什么范围底下】(句首到它自己之前的那一段)。
+         那个范围本来是有保留的 → 换成别句的条件一定会更肯定 → 整个不搬。
+         那个范围本来就没有保留 → 原文自己就没有留余地,搬过来不会更肯定 → 可以搬。
+       注意这里只看【范围】那一段,不看整句:保留字长在那一步自己身上的时候
+       (「通常先让自己想一想就够了」),它会跟着那一步一起被带走,不算被拿掉。
+       守不住的时候宁可只留那一步本身 —— 少一半,好过多一分原文没有的确定。 */
+    var movSentRaw = sents[movSentIdx] || "";
+    var movHead = clauses(stripLead(movSentRaw))[movClauseIdx] || "";
+    var movScope = movHead ? movSentRaw.slice(0, movSentRaw.indexOf(movHead)) : "";
+    var scopeHedged = has(movScope, HEDGE);
+    var scopeGuard = null;
+
     if (!sit) {
       var all = clauses(copy.coreInsight).concat(
         sents.map(function (x) { return clauses(stripLead(x)); })
              .reduce(function (a2, b2) { return a2.concat(b2); }, []));
       all.forEach(function (c) {
         if (c === mov) return;
+        /* 这一句原本是有保留的,从别句搬一个条件进来一定会把它说死 —— 不搬 */
+        if (scopeHedged) { scopeGuard = "cross-sentence-would-tighten-scope"; return; }
         var sc = sitScoreOf(c);
         if (sc > sitScore) { sitScore = sc; sit = c; }
       });
     }
+    if (sit) scopeGuard = null;   // 真的找到可以用的场合,就没有被挡下来这回事
 
     var line = (sit ? sit + "，" : "") + mov;
     if (!/[。！？]$/.test(line)) line += "。";
@@ -162,6 +190,7 @@
       direction: dirKey,
       line: line,
       situation: sit, move: mov, sameSentence: sitSameSentence,
+      scopeHedged: scopeHedged, scopeGuard: scopeGuard,
       "function": fn,
       sourceFields: srcFields,
       _sit: sitScore, _mov: movScore, _len: len(line), _fnHits: fnBest
@@ -291,7 +320,7 @@
 
   return {
     VERSION: VERSION, ANCHOR_COUNT: ANCHOR_COUNT, FUNCTIONS: FUNCTIONS,
-    SITUATION_RECURRING: SITUATION_RECURRING, MOVE_GENTLE: MOVE_GENTLE,
+    SITUATION_RECURRING: SITUATION_RECURRING, MOVE_GENTLE: MOVE_GENTLE, HEDGE: HEDGE,
     MOVE_LOOK: MOVE_LOOK, GENERIC: GENERIC,
     derive: derive, verifyDerived: verifyDerived,
     candidateFor: candidateFor, scoreCandidate: scoreCandidate, similarity: similarity

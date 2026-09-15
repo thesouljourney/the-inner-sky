@@ -2432,8 +2432,22 @@ function testCompassAnchorSelection() {
 
   /* 选的是【功能互补】,不是方向顺序 */
   const r = AN.derive(live);
-  checkEq("[anc] 三句的功能彼此不同",
-    new Set(r.anchors.map(function (a) { return a["function"]; })).size, 3);
+  /* 功能互补仍然优先,但它【赢不过范围守则】:
+     grounds 被守则拿掉场合那一半之后分数掉下来,目前这份样本只覆盖到两种功能。
+     这里如实记下实际覆盖数,不用「一定要三种」把这件事盖掉。 */
+  checkEq("[anc] 目前样本实际覆盖的功能数",
+    new Set(r.anchors.map(function (a) { return a["function"]; })).size, 2);
+  checkEq("[anc] 能补的功能都补过了(候选池里只剩重复的功能)",
+    (function () {
+      const pool = ["grounds", "moves", "drains", "calls"]
+        .map(function (k) { return AN.candidateFor(k, live[k]); }).filter(Boolean);
+      const picked = new Set(r.anchors.map(function (a) { return a["function"]; }));
+      /* 没被选上的候选里,不该还有一个【已选功能之外】而且分数够高的 */
+      return pool.filter(function (c) {
+        return !picked.has(c["function"]) &&
+          AN.scoreCandidate(c).total > r.anchors[r.anchors.length - 1].score.total;
+      }).length;
+    })(), 0);
   checkEq("[anc] 不是照 grounds→moves→drains 的顺序挑",
     r.anchors.map(function (a) { return a.sourceDirection; }).join(",") === "grounds,moves,drains", false);
   checkEq("[anc] 每一句都说得出为什么留下它",
@@ -2492,6 +2506,120 @@ function testCompassAnchorSelection() {
   checkEq("[anc] 手机上心情不横向卷动", /overflow-x:auto/.test(moodCss.slice(0, 260)), false);
 }
 
+
+/* ---------- 26. 范围守则:压缩不可以把话说得更肯定(anchors 2.1) ----------
+   规则是语意的,不是「保留字必须原样出现」:
+     看那一步【原本站在什么范围底下】。原本有保留、搬进来的条件却是确定的,
+     就不搬 —— 宁可只留那一步本身。
+   ------------------------------------------------------------------- */
+function testCompassAnchorScopeGuard() {
+  const AN = require(path.join(__dirname, "..", "assets", "compass-anchors.js"));
+  const RC = require(path.join(__dirname, "..", "assets", "compass-recorded.js"));
+  const live = RC.RAW_V12.C1;
+  function d(ci, ex) {
+    return { coreInsight: ci, explanation: ex, reflectionPrompt: "你希望这件事把你带到哪里？" };
+  }
+
+  /* 1. 跨句组合会把范围说死 → 挡下来 ------------------------------------ */
+  const g = AN.candidateFor("grounds", live.grounds);
+  checkEq("[scope] 原文那一步本来站在有保留的范围底下", g.scopeHedged, true);
+  checkEq("[scope] 跨句搬过来的确定条件被挡下来", g.scopeGuard, "cross-sentence-would-tighten-scope");
+  checkEq("[scope] 挡下来之后不留场合那一半", g.situation, null);
+  checkEq("[scope] 留下的是原文直接给的那一步",
+    g.line, "先让自己安静一会儿就够了，不一定要马上解释。");
+  checkEq("[scope] 原文的「有些时候」没有被换成确定条件",
+    g.line.indexOf("事情刚发生的时候") >= 0, false);
+  checkEq("[scope] 留下的那一步整段都在原文里",
+    live.grounds.explanation.indexOf(g.line.replace(/。$/, "")) >= 0, true);
+
+  /* 规则不是为 C1 写死的:换一组字、换一个保留字,照样挡 */
+  const HEDGED = d("你在别人不急着接话的时候比较敢讲。",
+    "被追问的时候，你会先把话收起来。通常，先让自己想一想就够了，不一定要当场给答案。");
+  const h = AN.candidateFor("grounds", HEDGED);
+  checkEq("[scope] 换一组文案、换成「通常」也一样挡", h.scopeGuard, "cross-sentence-would-tighten-scope");
+  checkEq("[scope] 换一组文案也只留那一步",
+    h.line, "先让自己想一想就够了，不一定要当场给答案。");
+
+  /* 保留字长在那一步自己身上 → 它会跟着被带走,没有被拿掉 → 可以组合 */
+  const CARRIED = d("你在别人不急着接话的时候比较敢讲。",
+    "被追问的时候，你会先把话收起来。通常先让自己想一想就够了，不一定要当场给答案。");
+  const ca = AN.candidateFor("grounds", CARRIED);
+  checkEq("[scope] 保留字跟着那一步走的时候不必挡", ca.scopeGuard, null);
+  checkEq("[scope] 「通常」仍然留在句子里", ca.line.indexOf("通常") >= 0, true);
+
+  /* 原文本来就没有保留字 → 搬过来不会更肯定 → 照常组合 */
+  const PLAIN = d("你在别人不急着接话的时候比较敢讲。",
+    "被追问的时候，你会先把话收起来。先让自己想一想就够了，不一定要当场给答案。");
+  const pl = AN.candidateFor("grounds", PLAIN);
+  checkEq("[scope] 原文没有保留字就不必挡", pl.scopeGuard, null);
+  checkEq("[scope] 原文没有保留字时照常跨句组合", pl.sameSentence, false);
+  checkEq("[scope] 组合出来的句子真的多了一半场合", pl.line.length > pl.move.length + 1, true);
+
+  /* 2. 同一句里的压缩,保留了不确定 → 接受 -------------------------------- */
+  const dr = AN.candidateFor("drains", live.drains);
+  checkEq("[scope] 同一句压缩不受守则影响", dr.scopeGuard, null);
+  checkEq("[scope] 同一句压缩保留了「也许」", dr.line.indexOf("也许") >= 0, true);
+  checkEq("[scope] 同一句压缩保留了原本的场合", dr.sameSentence, true);
+
+  /* 3. 只拿掉纯连接词,范围没有变 → 接受 --------------------------------- */
+  checkEq("[scope] 原文有句首连接词「只是当」", live.drains.explanation.indexOf("只是当") >= 0, true);
+  checkEq("[scope] 锚点把连接词拿掉了", dr.line.indexOf("只是当") >= 0, false);
+  checkEq("[scope] 拿掉连接词之后整句仍是原文的一段",
+    live.drains.explanation.indexOf(dr.line.replace(/。$/, "")) >= 0, true);
+
+  /* 4 & 5. Moves 与 Drains 一个字都没有变 -------------------------------- */
+  const r = AN.derive(live);
+  const byDir = {};
+  r.anchors.forEach(function (a) { byDir[a.sourceDirection] = a.line; });
+  checkEq("[scope] Moves 的那一句没有变",
+    byDir.moves, "没力气的时候，可以先看看那个自己认同的理由还在不在，而不是先怀疑自己不够努力。");
+  checkEq("[scope] Drains 的那一句没有变",
+    byDir.drains, "你发现自己一直停在再确认一下，也许可以先看看，现在到底是什么让你放不下心。");
+
+  /* 6. CALLS_WINS 仍然成立 ---------------------------------------------- */
+  const CALLS_WINS = {
+    grounds: d("你在安静的地方比较容易想清楚。",
+      "很多人以为要想清楚就得多讨论。对你来说不是这样。事情刚发生的时候，先让自己安静一会儿就够了。"),
+    moves: d("你需要一个说得通的理由才走得动。",
+      "没有理由的时候你会停住。这不是拖延。最近如果比较没力气，也可能只是那个理由暂时不见了。"),
+    drains: d("反覆确认会把你的力气用掉。",
+      "这一次你一直在重新检查，刚才那一轮其实就够了。"),
+    calls: d("你对还没看完的事情特别放不下。",
+      "每次有一件事你一直绕回去想，可以先看看，它到底还有哪一层没被你看完，而不是先怪自己分心。")
+  };
+  const w = AN.derive(CALLS_WINS);
+  const wDirs = w.anchors.map(function (a) { return a.sourceDirection; });
+  checkEq("[scope] 守则之后 Calls 仍然被选上而且排第一", wDirs[0], "calls");
+  checkEq("[scope] 守则之后仍然是 Moves 被换掉",
+    w.dropped.map(function (x) { return x.direction; }).join(","), "moves");
+  checkEq("[scope] 守则之后那三句一个字都没有变",
+    w.anchors.map(function (a) { return a.line; }).join("|"),
+    "每次有一件事你一直绕回去想，可以先看看，它到底还有哪一层没被你看完，而不是先怪自己分心。|" +
+    "事情刚发生的时候，先让自己安静一会儿就够了。|" +
+    "这一次你一直在重新检查，刚才那一轮其实就够了。");
+
+  /* 7. 没有多出任何请求 -------------------------------------------------- */
+  const fs = require("fs");
+  const src = fs.readFileSync(path.join(__dirname, "..", "assets", "compass-anchors.js"), "utf8")
+    .replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+  checkEq("[scope] 守则没有带进任何网路呼叫",
+    /fetch\(|XMLHttpRequest|anthropic|supabase|require\(/i.test(src), false);
+  const realFetch = global.fetch, realXHR = global.XMLHttpRequest;
+  let called = 0;
+  global.fetch = function () { called++; throw new Error("no"); };
+  global.XMLHttpRequest = function () { called++; throw new Error("no"); };
+  try {
+    checkEq("[scope] 守则跑起来不发请求", AN.derive(live).status, "ok");
+    checkEq("[scope] fetch 一次都没被碰到", called, 0);
+  } finally { global.fetch = realFetch; global.XMLHttpRequest = realXHR; }
+
+  /* 8. 目前的样本仍然给得出正好三句 -------------------------------------- */
+  checkEq("[scope] 目前的样本仍然是三句", r.anchors.length, 3);
+  checkEq("[scope] 三句仍然全部回查得过", AN.verifyDerived(r, live).offenders.length, 0);
+  checkEq("[scope] 同一份 Compass 仍然永远一样",
+    JSON.stringify(AN.derive(live)), JSON.stringify(r));
+}
+
 /* ---------- 跑 ---------- */
 function main() {
   testTimezones();
@@ -2518,6 +2646,7 @@ function main() {
   testCompassShadowPermission();
   testCompassProductPage();
   testCompassAnchorSelection();
+  testCompassAnchorScopeGuard();
   testCompassZhOnlyLabels();
   return Promise.all([genJobs, liveJobs, voiceJobs, v12Jobs]).then(function () { return testPlaces(); }).then(function () {
     console.log("\n对照来源:" + REF.reference);
