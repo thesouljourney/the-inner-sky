@@ -1,21 +1,24 @@
 /* ============================================================
    我的内在指南 · 想留给自己的几句话(Personal Anchors)
    ------------------------------------------------------------
-   这一层【不是】另一次解读。它不读星盘、不呼叫任何 API、
-   不产生任何新的心理判断 —— 它只做一件事:
+   这一层回答的是:
 
-     从【已经通过验证、已经被接受】的四张 Compass 文案里,
-     挑出三句「以后真的值得回来提醒自己」的话。
+     「读完我的内在指南以后,有什么是我以后真的值得回来提醒自己的?」
 
-   为什么是三句而不是四句:
-     四个方向是系统在说话,三句锚点是使用者要带走的东西。
-     一个方向一句会变成摘要;摘要没有取舍,取舍才有用。
+   它【不是】四张卡的摘要,不是最后一句话,不是励志语录,
+   也【不是】第二次解读 —— 它不读星盘、不呼叫任何 API、不产生新主张。
+
+   做法:从每一个 ready 方向的【已接受文案】里,压缩出一句可以重复使用的提醒,
+   再从这些候选里挑出三句【功能互补】的。
+
+   一句锚点 = 什么时候 + 可以往哪里看
+     什么时候   从文案里带「的时候 / 一旦 / 每次 / 一直」的那一段来
+     往哪里看   从文案里带「可以先看看 / 不一定要 / 就够了」的那一段来
+   两半都是原文里本来就有的话 —— 压缩,不是改写,更不是新增。
 
    ⚠ 硬边界
-     · 输入只有 accepted Compass copies(coreInsight / explanation /
-       reflectionPrompt)与它们的方向 —— 没有盘面、没有机制、没有分数。
-     · 不新增任何主张:每一句锚点都是从已接受文案里【截出来】的,
-       不是重新写的。截取点与取舍规则完全确定性。
+     · 输入只有 accepted Compass(coreInsight / explanation / reflectionPrompt)
+     · 不新增任何概念:verifyDerived 会逐个字段回查
      · 不呼叫 API。同一份 Compass 永远得到同一组锚点。
    ============================================================ */
 (function (root, factory) {
@@ -24,61 +27,44 @@
 })(typeof self !== "undefined" ? self : this, function () {
   "use strict";
 
-  var VERSION = "anchors-1.0";
+  var VERSION = "anchors-2.0";
   var ANCHOR_COUNT = 3;
 
-  /* v1.2 的写作指令要求 explanation 最后有一句「轻轻一步」——
-     那一句正好就是「可以带走的东西」。这些是它可能的起手式。 */
-  var LEAD_CONNECTORS = [
-    "所以", "因此", "于是", "这时候", "有些时候", "有时候",
-    "如果最近刚好遇到这种情况", "如果最近", "对你来说", "也许真正值得留意的是",
-    "只是当", "只是", "而且", "另外"
+  /* ── 词表:刻意很小。这些不是心理规则,只是「这句话长什么形状」 ── */
+
+  /* 会重复发生的场合 —— 锚点要能在未来用得上,靠的就是这个 */
+  var SITUATION_RECURRING = ["的时候", "一旦", "每次", "每当", "只要", "遇到", "碰到", "一直"];
+  /* 一次性的场合,当不了长期提醒 */
+  var SITUATION_ONCE = ["最近", "今天", "这一次", "刚才"];
+  /* 轻轻的一步:给一个可以站的位置,不是命令 */
+  var MOVE_GENTLE = ["可以先看看", "也可以先看看", "可以先", "也可以", "不一定要", "不一定是",
+    "不用急着", "先不用", "就够了", "不妨", "允许自己", "没有关系", "没关系",
+    "也许可以", "也可能只是", "还在不在", "不必"];
+  /* 指向「去看一眼」而不是「去做什么」—— 这是 actionability 的核心 */
+  var MOVE_LOOK = ["看看", "问问", "想想", "留意", "注意", "停一下", "停下来", "检查"];
+  /* 命令句:一出现就不是锚点 */
+  var COMMANDING = ["你应该", "你必须", "你需要学会", "你最好", "请你", "记得要"];
+  /* 谁都能说的空话 */
+  var GENERIC = ["相信自己", "慢慢来", "照顾好自己", "一切都会好", "做真实的自己",
+    "放轻松", "加油", "顺其自然", "活在当下", "爱自己"];
+
+  /* 三种功能。用【这句话在讲什么】判断,不是用它来自哪个方向。 */
+  var FUNCTIONS = [
+    { id: "return",  zh: "回到自己",
+      cues: ["安静", "停", "退", "休息", "空间", "慢", "沉下来", "关小", "一个人", "独处", "喘"] },
+    { id: "orient",  zh: "决定方向",
+      cues: ["理由", "为什么", "值得", "方向", "还在不在", "要不要", "意义", "说得通",
+             "带到哪里", "继续", "投入", "在意"] },
+    { id: "notice",  zh: "早点发现",
+      cues: ["一直", "反覆", "反复", "又", "再确认", "绕", "卡", "耗", "掂量", "重新",
+             "没完", "拖"] }
   ];
-  /* 「轻轻一步」的记号。有这些的句子优先当锚点 —— 它本来就是写来给人带走的。 */
-  var GENTLE_CUES = ["不一定要", "可以先", "不用急着", "也许比", "可以先看看",
-    "不一定是", "也可能只是", "不必", "不妨", "先不用", "允许自己",
-    "没有关系", "没关系", "就够了", "还在不在"];
 
   var CJK = /[，。！？；：、（）「」“”\s]/g;
   function len(s) { return String(s || "").replace(CJK, "").length; }
-  function sentences(t) {
-    return String(t || "").split(/(?<=[。！？])/).map(function (x) { return x.trim(); })
-      .filter(Boolean);
-  }
-  function stripLead(s) {
-    var out = String(s || "").trim();
-    for (var i = 0; i < LEAD_CONNECTORS.length; i++) {
-      var c = LEAD_CONNECTORS[i];
-      if (out.indexOf(c) === 0) {
-        out = out.slice(c.length).replace(/^[，、,]\s*/, "");
-        break;
-      }
-    }
-    return out;
-  }
-  function hasCue(s) {
-    return GENTLE_CUES.some(function (w) { return String(s).indexOf(w) >= 0; });
-  }
-  /* 太长的锚点记不住,但砍掉重点更糟。
-     作法:找【放得进长度、而且带着「轻轻一步」记号的最长一段】,
-     同长度时取比较前面的那一段 —— 前面通常是「什么时候」,
-     少了它锚点会变成一句没有场合的建议。 */
-  function tighten(s, max) {
-    var t = String(s || "").trim();
-    if (len(t) <= max) return t;
-    var parts = t.split(/[，；]/).map(function (x) { return x.trim(); }).filter(Boolean);
-    var best = null;
-    for (var n = parts.length; n >= 1 && !best; n--) {
-      for (var i = 0; i + n <= parts.length; i++) {
-        var slice = parts.slice(i, i + n).join("，");
-        if (len(slice) <= max && hasCue(slice)) { best = slice; break; }
-      }
-    }
-    if (!best) best = parts[parts.length - 1] || t;   // 都没有记号:宁可短也不要断在半句
-    return /[。！？]$/.test(best) ? best : best + "。";
-  }
+  function has(t, list) { return list.some(function (w) { return String(t).indexOf(w) >= 0; }); }
+  function hits(t, list) { return list.filter(function (w) { return String(t).indexOf(w) >= 0; }); }
 
-  /* 相邻两字 Jaccard —— 与其他层同一个量法 */
   function bigrams(s) {
     var t = String(s).replace(CJK, ""), o = {};
     for (var i = 0; i + 1 < t.length; i++) o[t.slice(i, i + 2)] = true;
@@ -91,46 +77,118 @@
     return inter / (ka.length + kb.length - inter);
   }
 
-  /* 一个方向 → 一个候选锚点。纯粹是截取,没有改写。 */
-  function candidateFor(dirKey, copy) {
-    var sents = sentences(copy.explanation);
-    if (!sents.length) return null;
-    var last = stripLead(sents[sents.length - 1]);
-    var fromLast = hasCue(last);
-    /* 最后一句没有「轻轻一步」的记号 → 往前找一句有的;都没有就用 coreInsight */
-    var line = null;
-    if (fromLast) line = last;
-    else {
-      for (var i = sents.length - 2; i >= 1; i--) {
-        var s = stripLead(sents[i]);
-        if (hasCue(s)) { line = s; break; }
+  /* 把文案切成子句。顺序保留,但【位置不参与评分】—— 这是这一版与上一版最大的差别。 */
+  var LEAD = ["所以", "因此", "于是", "这时候", "有些时候", "有时候", "只是当", "只是",
+    "而且", "另外", "对你来说", "如果最近刚好遇到这种情况"];
+  function stripLead(s) {
+    var out = String(s || "").trim();
+    for (var i = 0; i < LEAD.length; i++) {
+      if (out.indexOf(LEAD[i]) === 0) {
+        out = out.slice(LEAD[i].length).replace(/^[，、,]\s*/, "");
+        break;
       }
     }
-    var source = line ? "gentle-direction" : "core-insight";
-    if (!line) line = String(copy.coreInsight || "").trim();
-    line = tighten(line, 36);
-    if (len(line) < 6) return null;
+    return out;
+  }
+  function clauses(text) {
+    return String(text || "").split(/[。！？；，]/)
+      .map(function (x) { return x.trim(); }).filter(function (x) { return len(x) >= 3; });
+  }
 
-    /* 支撑句:认得出来的那个画面,取第一句。可有可无。 */
-    var support = sents.length > 1 ? stripLead(sents[0]) : "";
-    if (len(support) > 30 || support === line) support = "";
+  /* ──────────────────────────────────────────────────────────
+     一个方向 → 一个候选锚点
+     ────────────────────────────────────────────────────────── */
+  function sentences(t) {
+    return String(t || "").split(/(?<=[。！？])/).map(function (x) { return x.trim(); })
+      .filter(function (x) { return len(x) >= 4; });
+  }
+
+  function candidateFor(dirKey, copy) {
+    if (!copy || !copy.explanation) return null;
+    var srcFields = ["coreInsight", "explanation"];
+    var sents = sentences(copy.explanation);
+    if (!sents.length) return null;
+
+    /* ① 先找「往哪里看」。它决定这句锚点有没有用。
+       取整句里从那个子句到句末 —— 半截的动作(「也许可以先看看。」)说了等于没说。 */
+    var mov = null, movScore = -1, movSentIdx = -1, movClauseIdx = -1;
+    sents.forEach(function (sent, si) {
+      var cls = clauses(stripLead(sent));
+      cls.forEach(function (c, ci) {
+        if (!has(c, MOVE_GENTLE)) return;
+        var span = cls.slice(ci).join("，");
+        if (len(span) > 30) span = cls.slice(ci, ci + 2).join("，");
+        var sc = 2 + (has(span, MOVE_LOOK) ? 2 : 0) - (len(span) > 26 ? 1 : 0);
+        if (sc > movScore) { movScore = sc; mov = span; movSentIdx = si; movClauseIdx = ci; }
+      });
+    });
+    if (!mov) return null;      // 这个方向给不出可以带走的话
+
+    /* ② 再找「什么时候」。
+       优先跟动作【同一句】而且在它前面 —— v1.2 本来就把场合与那一步写在同一句里。
+       同一句里没有,才退回全篇最好的一个。 */
+    function sitScoreOf(c) {
+      if (!has(c, SITUATION_RECURRING)) return -1;
+      return 2 - (has(c, SITUATION_ONCE) ? 1 : 0)
+               - (len(c) > 18 ? 1 : 0) + (len(c) >= 6 ? 1 : 0);
+    }
+    var sit = null, sitScore = -1, sitSameSentence = false;
+    clauses(stripLead(sents[movSentIdx])).slice(0, movClauseIdx).forEach(function (c) {
+      var sc = sitScoreOf(c);
+      if (sc > sitScore) { sitScore = sc; sit = c; sitSameSentence = true; }
+    });
+    if (!sit) {
+      var all = clauses(copy.coreInsight).concat(
+        sents.map(function (x) { return clauses(stripLead(x)); })
+             .reduce(function (a2, b2) { return a2.concat(b2); }, []));
+      all.forEach(function (c) {
+        if (c === mov) return;
+        var sc = sitScoreOf(c);
+        if (sc > sitScore) { sitScore = sc; sit = c; }
+      });
+    }
+
+    var line = (sit ? sit + "，" : "") + mov;
+    if (!/[。！？]$/.test(line)) line += "。";
+
+    /* 功能:看这句话在讲什么,不是看它来自哪个方向 */
+    var fn = "notice", fnBest = 0;
+    FUNCTIONS.forEach(function (f) {
+      var n = hits(line, f.cues).length;
+      if (n > fnBest) { fnBest = n; fn = f.id; }
+    });
 
     return {
       direction: dirKey,
       line: line,
-      support: support,
-      derivedFrom: source,
-      /* 两件事决定一句话适不适合带走:
-           1. 它本来就是写来给人带走的(有「轻轻一步」的记号)
-           2. 短到记得住 */
-      _score: (fromLast || source === "gentle-direction" ? 2 : 0) +
-              (len(line) <= 24 ? 1 : 0),
-      _len: len(line)
+      situation: sit, move: mov, sameSentence: sitSameSentence,
+      "function": fn,
+      sourceFields: srcFields,
+      _sit: sitScore, _mov: movScore, _len: len(line), _fnHits: fnBest
     };
   }
 
-  /* 从四个方向挑三句:先看适不适合带走,再避免彼此重复。
-     完全确定性 —— 同一份 Compass 永远得到同一组。 */
+  /* ──────────────────────────────────────────────────────────
+     评分。顺序就是任务书第 7 节的优先顺序。
+     长度【只】在最后当微调,不会把更有用的一句挤掉。
+     ────────────────────────────────────────────────────────── */
+  function scoreCandidate(c) {
+    var t = c.line;
+    var fidelity = 1;                                   // 由 verifyDerived 把关,这里是结构分
+    var reusable = (c.situation && has(c.situation, SITUATION_RECURRING) ? 2 : 0) +
+                   (c.situation && has(c.situation, SITUATION_ONCE) ? -1 : 0);
+    var actionable = (has(t, MOVE_LOOK) ? 2 : 0) + (has(t, MOVE_GENTLE) ? 1 : 0) -
+                     (has(t, COMMANDING) ? 5 : 0);
+    var specific = has(t, GENERIC) ? -4 : (c._fnHits >= 2 ? 1 : 0);
+    var memorable = c._len <= 22 ? 0.6 : (c._len <= 34 ? 0.3 : 0);
+    return {
+      fidelity: fidelity, reusability: reusable, actionability: actionable,
+      specificity: specific, memorability: memorable,
+      total: fidelity * 2 + reusable * 2 + actionable * 1.5 + specific * 1.5 + memorable
+    };
+  }
+
+  /* 互补:先补上还没出现的功能,再看字面别太像 */
   function derive(copies, opts) {
     opts = opts || {};
     var order = opts.order || ["grounds", "moves", "drains", "calls"];
@@ -138,41 +196,41 @@
     order.forEach(function (k) {
       if (!copies || !copies[k]) return;
       var c = candidateFor(k, copies[k]);
-      if (c) pool.push(c);
+      if (!c) return;
+      c.score = scoreCandidate(c);
+      pool.push(c);
     });
     if (pool.length < ANCHOR_COUNT) {
-      /* 不够三句就如实说不够 —— 不硬凑、不重复用同一句 */
       return { status: "insufficient", version: VERSION, anchors: [],
-               available: pool.length, note: "accepted Compass 不足以取出三句锚点" };
+               available: pool.length, dropped: [],
+               note: "accepted Compass 不足以取出三句可以重复使用的提醒" };
     }
 
-    /* 重复要付代价,但【只有真的重复才算】。
-       0.02 与 0.05 的差别是杂讯,不该拿来决定留谁 —— 所以设一个地板,
-       低于它一律当成「不重复」,改由分数与方向顺序决定。 */
-    var REDUNDANCY_FLOOR = 0.15;
-    var picked = [], dropped = [];
+    var picked = [], usedFn = {};
     while (picked.length < ANCHOR_COUNT && pool.length) {
       var best = null, bestVal = -Infinity, bestIdx = -1;
       pool.forEach(function (c, i) {
-        var red = picked.reduce(function (m, p) {
-          return Math.max(m, similarity(p.line + p.support, c.line + c.support));
-        }, 0);
-        var over = Math.max(0, red - REDUNDANCY_FLOOR);
-        var val = c._score - over * 8;
-        /* 同分时按方向顺序,不靠阵列顺序碰运气 */
+        var red = picked.reduce(function (m, p) { return Math.max(m, similarity(p.line, c.line)); }, 0);
+        var val = c.score.total
+          + (usedFn[c["function"]] ? 0 : 2.5)          // 补上还没出现的功能
+          - Math.max(0, red - 0.15) * 8;              // 只有真的像才扣分
         if (val > bestVal + 1e-9) { bestVal = val; best = c; bestIdx = i; }
       });
+      best.selectionReason = (usedFn[best["function"]] ? "" : "补上「" + fnZh(best["function"]) + "」这个功能;") +
+        "reusability=" + best.score.reusability + " actionability=" + best.score.actionability +
+        " specificity=" + best.score.specificity;
+      usedFn[best["function"]] = true;
       picked.push(best);
       pool.splice(bestIdx, 1);
     }
-    /* 被留下来的那些:说得出为什么 —— 取舍要能被检查 */
-    pool.forEach(function (c) {
-      var red = picked.reduce(function (m, p) {
-        return Math.max(m, similarity(p.line + p.support, c.line + c.support));
-      }, 0);
-      dropped.push({ direction: c.direction, line: c.line,
-        reason: red > REDUNDANCY_FLOOR ? "与已选的一句太接近(" + Math.round(red * 100) / 100 + ")"
-          : (c._len > 24 ? "比较长,不容易记住(" + c._len + " 字)" : "三句已经足够,依方向顺序排在后面") });
+
+    var dropped = pool.map(function (c) {
+      var red = picked.reduce(function (m, p) { return Math.max(m, similarity(p.line, c.line)); }, 0);
+      return { direction: c.direction, line: c.line, "function": c["function"],
+        reason: red > 0.15 ? "与已选的一句太接近(" + Math.round(red * 100) / 100 + ")"
+          : (usedFn[c["function"]] ? "「" + fnZh(c["function"]) + "」已经有人选了,而且它的分数比较低("
+              + round1(c.score.total) + ")"
+            : "分数比较低(" + round1(c.score.total) + ")") };
     });
 
     var worst = 0;
@@ -181,36 +239,61 @@
         worst = Math.max(worst, similarity(picked[i].line, picked[j].line));
 
     return {
-      status: "ok",
-      version: VERSION,
+      status: "ok", version: VERSION,
       anchors: picked.map(function (p) {
-        return { line: p.line, support: p.support, direction: p.direction,
-                 derivedFrom: p.derivedFrom };
+        return {
+          line: p.line,
+          /* 以下一律【只给开发追溯】,不进画面 */
+          sourceDirection: p.direction, sourceFields: p.sourceFields,
+          "function": p["function"], selectionReason: p.selectionReason,
+          score: p.score
+        };
       }),
+      functionsCovered: Object.keys(usedFn),
       maxSimilarity: Math.round(worst * 1000) / 1000,
       dropped: dropped
     };
   }
+  function fnZh(id) {
+    var f = FUNCTIONS.filter(function (x) { return x.id === id; })[0];
+    return f ? f.zh : id;
+  }
+  function round1(x) { return Math.round(x * 10) / 10; }
 
-  /* 每一句锚点都必须真的来自已接受的文案 —— 不是重新写的。
-     这是这一层最重要的一条自检。 */
+  /* ──────────────────────────────────────────────────────────
+     溯源验证(语意压缩版)
+     ------------------------------------------------------------
+     上一版只检查「整句是不是原文的子字串」——那样只能做截取,不能压缩。
+     这一版改成【逐个相邻两字回查】:锚点可以重新组合、可以删,
+     但不可以出现来源里没有的字词。也就是:
+       可以压缩   ✓
+       可以换顺序 ✓
+       可以新增讯息 ✗
+     完全确定性,不需要第二个模型。
+     ────────────────────────────────────────────────────────── */
   function verifyDerived(result, copies) {
     if (!result || result.status !== "ok") return { ok: true, offenders: [] };
-    var blob = Object.keys(copies || {}).map(function (k) {
-      return copies[k].coreInsight + copies[k].explanation;
-    }).join("");
-    var flat = blob.replace(CJK, "");
-    var bad = result.anchors.filter(function (a) {
-      var core = a.line.replace(CJK, "").replace(/。$/, "");
-      return flat.indexOf(core) < 0;
+    var bad = [];
+    result.anchors.forEach(function (a) {
+      var src = copies && copies[a.sourceDirection];
+      if (!src) { bad.push({ line: a.line, why: "找不到来源方向" }); return; }
+      if (!a.sourceFields || !a.sourceFields.length) { bad.push({ line: a.line, why: "没有记录来源栏位" }); return; }
+      var blob = a.sourceFields.map(function (f) { return src[f] || ""; }).join("");
+      var pool = bigrams(blob);
+      var unknown = Object.keys(bigrams(a.line)).filter(function (g) { return !pool[g]; });
+      /* 接起来的地方会产生一两个新的相邻字对(例如场合与动作之间的接缝),
+         那是压缩的必然结果,不是新讯息。超过这个数就是真的加了东西。 */
+      if (unknown.length > 2) bad.push({ line: a.line, why: "出现来源里没有的字词", tokens: unknown.slice(0, 6) });
+      if (has(a.line, COMMANDING)) bad.push({ line: a.line, why: "变成命令句" });
     });
-    return { ok: !bad.length, offenders: bad.map(function (a) { return a.line; }) };
+    return { ok: !bad.length, offenders: bad };
   }
 
   return {
-    VERSION: VERSION, ANCHOR_COUNT: ANCHOR_COUNT,
-    GENTLE_CUES: GENTLE_CUES,
+    VERSION: VERSION, ANCHOR_COUNT: ANCHOR_COUNT, FUNCTIONS: FUNCTIONS,
+    SITUATION_RECURRING: SITUATION_RECURRING, MOVE_GENTLE: MOVE_GENTLE,
+    MOVE_LOOK: MOVE_LOOK, GENERIC: GENERIC,
     derive: derive, verifyDerived: verifyDerived,
-    candidateFor: candidateFor, similarity: similarity, tighten: tighten
+    candidateFor: candidateFor, scoreCandidate: scoreCandidate, similarity: similarity
   };
 });

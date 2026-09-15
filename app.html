@@ -2698,15 +2698,15 @@
     #dpage.compass-page .cp-dir .tx{font-size:14px;line-height:1.92;max-width:none}
     #dpage.compass-page .cp-keep-grid{grid-template-columns:1fr;gap:12px}
     #dpage.compass-page .cp-keep-card{padding:20px 18px}
-    /* 心情:窄萤幕上横向滑动,不硬挤成好几行 */
+    /* 心情:窄萤幕上换行排满,八个要一眼全部看得到 —— 藏在卷动里的选项等于不存在 */
     #dpage.compass-page .cp-moods{
-      flex-wrap:nowrap;overflow-x:auto;justify-content:flex-start;
-      scrollbar-width:none;-webkit-overflow-scrolling:touch;
-      padding:2px 20px 6px;margin-left:-20px;margin-right:-20px;
-      max-width:none;width:calc(100% + 40px)
+      flex-wrap:wrap;overflow-x:visible;justify-content:center;
+      gap:8px;padding:0;margin-left:auto;margin-right:auto;
+      max-width:none;width:auto
     }
-    #dpage.compass-page .cp-moods::-webkit-scrollbar{display:none}
-    #dpage.compass-page .cp-mood{flex:none;min-height:40px}
+    #dpage.compass-page .cp-mood{
+      flex:0 1 auto;min-height:40px;padding:9px 13px;font-size:12.5px;letter-spacing:.02em
+    }
     #dpage.compass-page .cp-ta{max-width:none;font-size:15px;padding:15px 16px}
     #dpage.compass-page .cp-act{gap:12px}
     #dpage.compass-page .cp-act .dp-cta{min-height:44px;display:inline-flex;align-items:center}
@@ -2900,6 +2900,16 @@
     #dpage.compass-page .cp-devbar details > summary::-webkit-details-marker{display:none}
   }
 
+  /* 桌机:标题 → ✦ → 四张卡之间原本留得太开,整段收掉约 20%。
+     手机维持原样(下面 767px 的规则本来就另外写过)。 */
+  @media(min-width:768px){
+    #dpage.compass-page .dp-hero{padding-bottom:clamp(48px,6.4vw,90px)}
+    #dpage.compass-page .dp-body{padding-top:clamp(24px,3.2vw,43px)}
+    #dpage.compass-page .cp-compass .cp-h{margin-top:11px}
+    #dpage.compass-page .cp-rose-wrap{margin-top:clamp(24px,3.2vw,38px)}
+    #dpage.compass-page .cp-grid4{margin-top:clamp(22px,2.9vw,35px)}
+  }
+
   /* ============================================================
      正式页面的完整体验(Phase 8)
      ------------------------------------------------------------
@@ -2977,9 +2987,6 @@
   #dpage.compass-page .cp-anchor .ln{
     margin:0;font-family:var(--dp-serif);font-weight:500;
     font-size:clamp(16px,1.9vw,19px);line-height:1.95;color:var(--dp-ink)
-  }
-  #dpage.compass-page .cp-anchor .sp{
-    margin:9px 0 0;font-size:13.5px;line-height:1.95;color:rgba(119,119,138,.95);font-weight:300
   }
 
   /* 记录:展开长在自己下面 */
@@ -5400,8 +5407,15 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
             reflectionPrompt: String(c.reflectionPrompt || "")
           };
         });
+        /* 只有 line 会进画面。其余是取舍过程的纪录,给开发追溯用,不显示。 */
         (r.anchors || []).slice(0, 3).forEach(function (a) {
-          if (a && a.line) out.anchors.push({ line: String(a.line), support: String(a.support || "") });
+          if (!a || !a.line) return;
+          out.anchors.push({
+            line: String(a.line),
+            sourceDirection: String(a.sourceDirection || ""),
+            "function": String(a["function"] || ""),
+            selectionReason: String(a.selectionReason || "")
+          });
         });
         return out;
       }
@@ -9110,8 +9124,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       (list.length
         ? '<div class="cp-anchors">' + list.map(function (a) {
             return '<div class="cp-anchor"><span class="st" aria-hidden="true">✦</span>' +
-              '<p class="ln">' + esc0(a.line) + "</p>" +
-              (a.support ? '<p class="sp">' + esc0(a.support) + "</p>" : "") + "</div>";
+              '<p class="ln">' + esc0(a.line) + "</p></div>";
           }).join("") + "</div>"
         : '<p class="cp-pending">' +
           esc0(dpT("等上面的内在指南生成之后，这里会留下三句你可以带走的话。",

@@ -2345,8 +2345,6 @@ function testCompassProductPage() {
     /coreInsight: String\(c\.coreInsight\)/.test(store) &&
     /explanation: String\(c\.explanation/.test(store) &&
     /reflectionPrompt: String\(c\.reflectionPrompt/.test(store), true);
-  /* 注:锚点自己有一个 support 栏位(那一句支撑话),那不是证据 support。
-     要挡的是机制 / 证据 support[] / 分数 / prompt 这一类开发资料。 */
   checkEq("[prod] 快取不存机制 / 证据 support / 分数 / prompt",
     /\bmechanism\b|support\[|\.domain|selectionScore|systemPrompt|patternKey|tension/i.test(store), false);
 
@@ -2386,6 +2384,114 @@ function testCompassProductPage() {
   checkEq("[prod] 心情由使用者自己选", /data-mood=/.test(page), true);
 }
 
+
+/* ---------- 25. 想留给自己的几句话 · 取舍的依据(Personal Anchors v2) ----------
+   这一段守的不是措辞,是【取舍的理由】:
+     · 选哪一句,看它在讲什么功能、能不能重复用、能不能做,
+       不是看它排在第几句、有多短、来自哪个方向
+     · 四个方向一律平等 —— Calls 赢得了就该被选上
+     · 压缩可以,新增不行
+     · 这一层永远不会产生第二次请求
+   ------------------------------------------------------------------- */
+function testCompassAnchorSelection() {
+  const fs = require("fs");
+  const AN = require(path.join(__dirname, "..", "assets", "compass-anchors.js"));
+  const RC = require(path.join(__dirname, "..", "assets", "compass-recorded.js"));
+  const html = fs.readFileSync(path.join(__dirname, "..", "app.html"), "utf8");
+  const live = RC.RAW_V12.C1;
+
+  /* —— 合成样本:Calls 这一句最能重复用、最做得到,而 Moves 明显弱一些。 ——
+     它存在的唯一理由,就是证明这个引擎【不会】永远变成 Grounds + Moves + Drains。 */
+  function d(ci, ex) {
+    return { coreInsight: ci, explanation: ex, reflectionPrompt: "你希望这件事把你带到哪里？" };
+  }
+  const CALLS_WINS = {
+    grounds: d("你在安静的地方比较容易想清楚。",
+      "很多人以为要想清楚就得多讨论。对你来说不是这样。事情刚发生的时候，先让自己安静一会儿就够了。"),
+    moves: d("你需要一个说得通的理由才走得动。",
+      "没有理由的时候你会停住。这不是拖延。最近如果比较没力气，也可能只是那个理由暂时不见了。"),
+    drains: d("反覆确认会把你的力气用掉。",
+      "这一次你一直在重新检查，刚才那一轮其实就够了。"),
+    calls: d("你对还没看完的事情特别放不下。",
+      "每次有一件事你一直绕回去想，可以先看看，它到底还有哪一层没被你看完，而不是先怪自己分心。")
+  };
+  const w = AN.derive(CALLS_WINS);
+  const wDirs = w.anchors.map(function (a) { return a.sourceDirection; });
+  checkEq("[anc] Calls 也可能被选上", wDirs.indexOf("calls") >= 0, true);
+  checkEq("[anc] Calls 够强的时候排在最前面", wDirs[0], "calls");
+  checkEq("[anc] 被换掉的是比较弱的那个方向", w.dropped.map(function (x) { return x.direction; }).join(","), "moves");
+  checkEq("[anc] 不是固定的 Grounds + Moves + Drains",
+    wDirs.slice().sort().join(",") === "drains,grounds,moves", false);
+  checkEq("[anc] 合成样本也回查得过来", AN.verifyDerived(w, CALLS_WINS).offenders.length, 0);
+
+  /* 长度只是最后的微调:最长的一句赢过最短的一句,因为它真的更有用 */
+  const byLen = w.anchors.slice().sort(function (a, b) { return b.line.length - a.line.length; });
+  checkEq("[anc] 最长的一句没有因为长被刷掉", byLen[0].sourceDirection, "calls");
+  checkEq("[anc] 分数不是靠长度堆出来的",
+    w.anchors.every(function (a) { return a.score.memorability <= 0.6; }), true);
+
+  /* 选的是【功能互补】,不是方向顺序 */
+  const r = AN.derive(live);
+  checkEq("[anc] 三句的功能彼此不同",
+    new Set(r.anchors.map(function (a) { return a["function"]; })).size, 3);
+  checkEq("[anc] 不是照 grounds→moves→drains 的顺序挑",
+    r.anchors.map(function (a) { return a.sourceDirection; }).join(",") === "grounds,moves,drains", false);
+  checkEq("[anc] 每一句都说得出为什么留下它",
+    r.anchors.every(function (a) { return a.selectionReason && a.selectionReason.length > 8; }), true);
+  checkEq("[anc] 每一句都留得住来源(只给开发追溯)",
+    r.anchors.every(function (a) { return !!a.sourceDirection && !!a.sourceFields.length; }), true);
+
+  /* 不同的输入 → 不同的锚点。同一份输入 → 完全一样。 */
+  checkEq("[anc] 不同的 Compass 给出不同的三句",
+    r.anchors.map(function (a) { return a.line; }).join("|") ===
+    w.anchors.map(function (a) { return a.line; }).join("|"), false);
+  checkEq("[anc] 同一份 Compass 永远一样",
+    JSON.stringify(AN.derive(live)), JSON.stringify(r));
+
+  /* 没有万用句。宁可说不够,也不给谁都适用的话。 */
+  const generic = r.anchors.concat(w.anchors).filter(function (a) {
+    return AN.GENERIC.some(function (g) { return a.line.indexOf(g) >= 0; });
+  });
+  checkEq("[anc] 没有谁都适用的万用句", generic.length, 0);
+  checkEq("[anc] 一个方向也凑不出三句就说不够", AN.derive({ calls: live.calls }).status, "insufficient");
+  checkEq("[anc] 不够的时候一句都不给", AN.derive({ calls: live.calls }).anchors.length, 0);
+
+  /* 压缩可以,新增不行 —— 把一个来源里没有的词塞进去,回查必须挡下来 */
+  const tampered = JSON.parse(JSON.stringify(r));
+  tampered.anchors[0].line = "在你被原生家庭影响的时候，可以先看看那个理由还在不在。";
+  checkEq("[anc] 加进新说法会被挡下来", AN.verifyDerived(tampered, live).ok, false);
+  const bossy = JSON.parse(JSON.stringify(r));
+  bossy.anchors[0].line = "你应该先看看那个理由还在不在。";
+  checkEq("[anc] 变成命令句会被挡下来", AN.verifyDerived(bossy, live).ok, false);
+
+  /* 这一层不会产生任何请求 —— 把 fetch 换掉,derive 照样跑得完 */
+  const realFetch = global.fetch, realXHR = global.XMLHttpRequest;
+  let called = 0;
+  global.fetch = function () { called++; throw new Error("anchors must not call out"); };
+  global.XMLHttpRequest = function () { called++; throw new Error("anchors must not call out"); };
+  try {
+    checkEq("[anc] 推导过程不发任何请求", AN.derive(live).status, "ok");
+    checkEq("[anc] fetch 一次都没被碰到", called, 0);
+  } finally { global.fetch = realFetch; global.XMLHttpRequest = realXHR; }
+
+  /* 画面上只剩那三句话 —— 灰色的来源说明已经拿掉 */
+  const fn = html.slice(html.indexOf("function compassAnchorsHtml()"),
+                        html.indexOf("function compassNowHtml()"));
+  checkEq("[anc] 画面不再显示灰色的来源说明", /cp-anchor[\s\S]*?class="sp"/.test(fn), false);
+  checkEq("[anc] 画面不显示来源方向 / 功能 / 取舍理由",
+    /sourceDirection|selectionReason|sourceFields|score|function"\]/.test(fn), false);
+  checkEq("[anc] 画面只印那一句话", /esc0\(a\.line\)/.test(fn), true);
+  checkEq("[anc] .sp 的样式也一起收掉",
+    /#dpage\.compass-page \.cp-anchor \.sp\{/.test(html), false);
+
+  /* 手机上八个心情要全部看得到,不靠横向卷动 */
+  const mob = html.slice(html.indexOf("@media(max-width:767px)"),
+                         html.indexOf("正式页面的完整体验(Phase 8)"));
+  const moodCss = mob.slice(mob.indexOf("#dpage.compass-page .cp-moods{"));
+  checkEq("[anc] 手机上心情换行显示", /flex-wrap:wrap/.test(moodCss.slice(0, 260)), true);
+  checkEq("[anc] 手机上心情不横向卷动", /overflow-x:auto/.test(moodCss.slice(0, 260)), false);
+}
+
 /* ---------- 跑 ---------- */
 function main() {
   testTimezones();
@@ -2411,6 +2517,7 @@ function main() {
   testCompassLiveAuthPath();
   testCompassShadowPermission();
   testCompassProductPage();
+  testCompassAnchorSelection();
   testCompassZhOnlyLabels();
   return Promise.all([genJobs, liveJobs, voiceJobs, v12Jobs]).then(function () { return testPlaces(); }).then(function () {
     console.log("\n对照来源:" + REF.reference);
