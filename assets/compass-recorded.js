@@ -141,10 +141,41 @@
     }
   };
 
+  /* ── compass-v1.2 的校准样本(Phase 6.3)─────────────────────
+     只修三件事:方向那一句不要变成「所以 + 建议」的模板、
+     不替使用者判断现实、calls 真正回答「我会往哪里靠近」。
+     同样是依 v1.2 的 prompt 实际写的,同样【不是】HTTP API 回应。 */
+  var R12 = {
+    C1: {
+      grounds: {
+        coreInsight: "你不是不想说，多半只是还没把自己整理好。",
+        explanation: "事情刚发生的时候，你通常讲不清楚，也不太想讲。你需要先把外面的声音关小一点，让心里的东西慢慢沉下来，变成一句讲得出口的话，你才比较容易开口，也才重新想靠近人。有些时候，先让自己安静一会儿就够了，不一定要马上解释。",
+        reflectionPrompt: "最近有没有一件事，你其实还没想清楚，就被要求先说出来了？"
+      },
+      moves: {
+        coreInsight: "你会投入很久的事，通常是你说得出为什么要做的那一种。",
+        explanation: "当你知道这件事为什么要做、会把你带到哪里，你可以在上面做很久，也不觉得勉强。一旦只剩下交出去就好这个理由，同样的事情会突然变得很难推动。没力气的时候，可以先看看那个自己认同的理由还在不在，而不是先怀疑自己不够努力。",
+        reflectionPrompt: "最近有没有一件事，你忽然发现自己说不出为什么还在做它？"
+      },
+      drains: {
+        coreInsight: "真正让你累的，可能不是靠近，而是靠近之前那一次次的确认。",
+        explanation: "你通常是先说一点，停下来看看对方怎么接；没问题，再多说一点。这样一段一段来，你会觉得比较稳，可是每一段之间都要重新掂量一次，那个反覆掂量本身就很花力气。慢一点没有关系。只是当你发现自己一直停在再确认一下，也许可以先看看，现在到底是什么让你放不下心。",
+        reflectionPrompt: "最近有没有一段关系，让你发现自己一直在等一个可以放心的感觉？"
+      },
+      calls: {
+        coreInsight: "你容易被那些还有另一层可以理解的东西吸引。",
+        explanation: "对你来说，新鲜不一定来自换一件事。有时候是原本熟悉的东西突然多出一个解释，或者你发现它后面还连着一个更大的问题。只要还有东西可以继续理解，你通常就还会往里面走，就算没有人要求你。如果最近有件事你一直绕回去想，那不一定是分心，也可能只是它还有一层没被你看完。",
+        reflectionPrompt: "最近有没有什么事，你明明没有非做不可，却还是一直回去想它？"
+      }
+    }
+  };
+
   /* 包成 transport 可以吃的形状 —— 与真实 API 回来的文字格式完全一致,
      这样验证管线跑的是同一条路径。 */
   function textFor(caseId, version) {
-    var m = (version === "compass-v1.1" && R11[caseId]) ? R11[caseId] : R[caseId];
+    var byVersion = { "compass-v1.1": R11, "compass-v1.2": R12 };
+    var pick = byVersion[version];
+    var m = (pick && pick[caseId]) ? pick[caseId] : R[caseId];
     if (!m) return null;
     return JSON.stringify({
       directions: Object.keys(m).map(function (k) {
@@ -163,8 +194,8 @@
 
   return {
     PROMPT_VERSION: PROMPT_VERSION, MODEL: MODEL,
-    CASES: Object.keys(R), RAW: R, RAW_V11: R11,
-    CASES_V11: Object.keys(R11),
+    CASES: Object.keys(R), RAW: R, RAW_V11: R11, RAW_V12: R12,
+    CASES_V11: Object.keys(R11), CASES_V12: Object.keys(R12),
     textFor: textFor, transportFor: transportFor,
     isRecorded: true
   };

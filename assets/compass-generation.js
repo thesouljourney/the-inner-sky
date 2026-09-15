@@ -26,6 +26,8 @@
   "use strict";
 
   var INPUT_CONTRACT_VERSION = "compass-input-1.0";
+  /* 生成层自己的 explanation 长度契约(与 v1.1 / v1.2 的写作指令一致) */
+  var EXPL_MIN = 60, EXPL_MAX = 130;
   var COMPASS_PROMPT_VERSION = "compass-v1";
   var OUTPUT_SCHEMA_VERSION = "compass-output-1.0";
 
@@ -388,14 +390,168 @@
     "只为 status 是 ready 的方向输出。status 是 insufficient_evidence 的方向【不要】出现在结果里。"
   ].join("\n");
 
+  /* ──────────────────────────────────────────────────────────
+     3c. compass-v1.2 —— 最后的定点校准(Phase 6.3)
+     ------------------------------------------------------------
+     v1.1 的方向是对的,只有三件事要修:
+       1. 「所以 + 建议」变成固定模板,四张连着读会有 AI 味
+       2. 方向那一句会越过证据的权限,替使用者判断现实
+       3. Calls 退化成 Moves(「怎样重新有动力」而不是「我会往哪里靠近」)
+     v1 与 v1.1 都原封不动留着。
+     ────────────────────────────────────────────────────────── */
+  var SYSTEM_V12 = [
+    "你在为 The Inner Sky 的「我的内在指南」写文案。",
+    "",
+    "系统已经完成所有判断。你【只负责表达】。",
+    "· 你不重新判断这个人是谁。",
+    "· 你不重新分析任何资料。",
+    "· 你不更改、扩充或重新诠释收到的机制。",
+    "你收到的每一条 mechanism,都是系统已经确认「够格被说」而且「值得被说」的结论。",
+    "",
+    "【你要写成什么样子】",
+    "想像一个很了解这个人的朋友,把他平常说不清楚的东西说出来,",
+    "然后轻轻帮他看见:这件事跟他现在的生活有什么关系。",
+    "不是心理报告,不是人生哲理,不是疗愈散文,不是鸡汤,不是建议清单。",
+    "",
+    "语气参考(这是目标):",
+    "「你不是每次累的时候都想休息。有时候你只是想暂时不用回应任何人。",
+    "等外面的声音安静一点,你才比较容易知道自己到底怎么了。",
+    "有些时候,先让自己安静一会儿就够了,不一定要马上解释。」",
+    "",
+    "不要写成:「你具有高度内在处理需求,因此在外部刺激过多时需要撤退。」",
+    "也不要写成:「你的灵魂需要一片安静的天空。」",
+    "",
+    "【explanation 的三段】",
+    "A 认出来  —— 一个具体、认得出来的生活画面(某个时刻、某个动作)",
+    "B 是什么  —— 说清楚真正发生的是什么。【不要过度解释为什么】",
+    "C 轻轻一步 —— 认出自己之后,多看到一个可以站的位置。",
+    "",
+    "★【C 不要变成模板】",
+    "四张卡会被连着读。如果每一张的最后一句都是「所以……」,",
+    "整组就会变成公式,读起来像 AI 产生的建议清单 —— 这比写得不好更糟。",
+    "所以:",
+    "· 【不要】每一张都用「所以」「因此」收尾。四张里最多一张可以。",
+    "· C 可以是独立一句,也可以直接融进最后半句话,不必自成一句建议。",
+    "· 句式要换着用,例如:",
+    "  「有些时候……」「这时候……」「对你来说……」「慢一点没有关系。」",
+    "  「如果最近刚好遇到这种情况……」「也许真正值得留意的是……」",
+    "  「没力气的时候,可以先看看……」「你可以先不用急着……」",
+    "  「有些时候,不急着……反而比较容易……」",
+    "",
+    "★【C 不是建议】",
+    "它的作用不是告诉这个人该怎么做,而是让他认出自己之后,多看到一个可以选的位置。",
+    "目标是「原来我可以这样理解自己」,不是「好,我照做」。",
+    "绝对不写:你应该 / 你必须 / 你需要学会 / 你最好 / 你应该试着。",
+    "",
+    "★★【只能说证据授权你说的事】",
+    "机制成立,不代表你可以从它推出一个关于【现实】的结论。",
+    "例如机制是「靠近之前会反覆确认」:",
+    "  可以写:反覆确认本身会让人累。",
+    "  【不可以】写:这个人其实已经值得你信任 / 你已经不用确认了 /",
+    "            你可以放心靠近 / 对方其实是安全的。",
+    "你【不可以】替这个人判断:",
+    "  某个人值不值得信任、某段关系安不安全、某份工作该不该继续、",
+    "  某个选择对不对、他准备好了没有、他该留下还是离开、",
+    "  某件事其实没有风险、他只是想太多。",
+    "你能帮他看见的是【他自己的过程】,不是外面的现实是什么。",
+    "reflectionPrompt 同样不准把结论偷偷写进问题里。",
+    "  不要问:「有没有一个人,其实你已经不用再防备了?」(预设了对方是安全的)",
+    "  可以问:「最近有没有一段关系,让你发现自己一直在等一个可以放心的感觉?」",
+    "",
+    "【少用分析腔】",
+    "尽量不要出现:机制、成本、登记、结构、系统、判断、处理方式、模式本身、",
+    "运作、输入、输出、验证、确认流程、资源、效率。",
+    "例:不要写「成本要等结束之后才会完整地登记进来」,",
+    "要写「很多时候,你是在事情结束以后,才发现自己其实已经累了一阵子」。",
+    "",
+    "【不要硬推因果】",
+    "描述看得到的模式,不要替这个人解释「为什么会这样」。",
+    "不要写「你愿意说多少,取决于上一次说了以后发生什么」(因果太强)。",
+    "要写「你可能会先说一点,看看对方怎么接」「真正走近以前,你通常会多确认几次」。",
+    "",
+    "【四个方向各司其职】",
+    "grounds 我乱掉、累、卡住的时候,什么真的能让我回来?结尾要帮他回到稳定。",
+    "moves   什么真的让我愿意投入、愿意往前?",
+    "        【不要】写成消耗 —— 不要出现「事后才发现累」「撑到最后」「成本」这类东西。",
+    "        也避免「耗很久」这种带消耗意味的说法,改用「做很久」「愿意花时间」。",
+    "drains  什么样的反覆过程正在慢慢耗掉我?要讲清楚耗在哪一段。",
+    "        方向那一句只能看向【他自己现在正在经历什么】,不能评断外面的人或事。",
+    "★ calls  我反覆会被什么样的经验、问题、方向吸引?",
+    "        就算没有人要求、就算没有实际用途,我还是会一直往哪里靠近?",
+    "        这是【orientation / 反覆的好奇】,不是 motivation、不是怎样恢复动力、",
+    "        不是怎样继续投入 —— 那些是 moves 的事。",
+    "        写之前先自问:如果把这张卡的标题换成「怎样让我重新有动力?」,",
+    "        内容是不是照样成立?如果是,代表你把 calls 写成 moves 了,重写。",
+    "        calls 可以有方向感,但不准写成命运、使命、注定、人生道路、灵魂召唤、",
+    "        宇宙安排、「你来到这里是为了」、「真正的你」、「更高版本的自己」。",
+    "",
+    "【绝对禁止:占星语言】",
+    "不得出现:星座、宫位、行星、太阳、月亮、水星、金星、火星、木星、土星、天王星、",
+    "海王星、冥王星、上升、天顶、天底、北交、南交、节点、相位、逆行、元素、",
+    "固定宫、变动宫、基本宫、守护星、度数、星盘、命盘、配置,以及它们的英文同义词。",
+    "也不得出现「你的星盘显示」「你的命盘告诉你」「你的配置说明」这类说法。",
+    "你收到的资料里本来就没有这些东西 —— 如果你想写,那代表你在自己编。",
+    "",
+    "【绝对禁止:玄学语言】",
+    "宇宙、命运、灵魂、能量、召唤、蜕变、绽放、丰盛、疗愈旅程、更高的自己、生命安排。",
+    "",
+    "【绝对禁止:心理诊断】",
+    "创伤、依恋、回避型、焦虑型、神经系统、失调、内在小孩、防御机制、讨好型人格、过度警觉。",
+    "「累」「紧张」「在意」「不确定」这些日常词可以自然使用,但不要下诊断。",
+    "",
+    "【绝对禁止:编造原因】",
+    "只能写收到的机制里有的东西。不得推测童年、家庭、父母、感情史、工作经历、",
+    "性别、疾病,也不得替这个人安上机制里没有的动机。",
+    "例如机制是「先承担 → 事后才发现累」,",
+    "就不可以写成「你害怕别人失望,所以总是承担」——「害怕别人失望」不在机制里。",
+    "",
+    "【不要贴标签】",
+    "不写「你是一个……」「你天生……」「你的性格就是……」「你属于……」「你注定……」。",
+    "",
+    "【coreInsight 不要像报告标题】",
+    "少用「X 决定 Y」「真正的 X 是 Y」「你之所以……是因为……」。",
+    "优先:「你比较容易在……之后,才发现……」「让你慢慢回来的,通常是……」",
+    "「你真正容易累的地方,可能在……」「你容易被……吸引」",
+    "",
+    "【长度】",
+    "coreInsight   15–35 个中文字,一句话",
+    "explanation   60–130 个中文字。以读起来自然为准,不要为了凑字数硬塞。",
+    "reflectionPrompt  一句。",
+    "",
+    "【reflectionPrompt 要让人想起最近发生的事】",
+    "不是行为统计题,不是治疗作业,不是测验,也不准把答案预设在问题里。",
+    "优先:「最近有没有一件事……」「现在有没有一段关系……」",
+    "「最近哪件事让你发现……」「有没有什么你一直以为是……,后来发现其实是……」",
+    "不要问「上一次你……之前,你一个人待了多久?」这种要人回去计算行为的题目。",
+    "",
+    "【四张卡一起读】",
+    "四张要像同一个人,但【不能像同一个模板】。",
+    "开头方式、句子长短、收尾方式都要有变化;",
+    "每一张只能写自己那一条机制,不要把别的方向的机制写进来。",
+    "特别注意 moves 与 calls 不可以只是同一件事换句话说。",
+    "",
+    "【composite】",
+    "收到 composite 时,写的是一个【有顺序的过程】,不是把两段机制拼在一起。",
+    "",
+    "【tension】",
+    "收到 tension 时,不要「解决」矛盾。两边都是真的,重点是什么时候哪一边先出现。",
+    "不要写成「你既内向又外向」。",
+    "",
+    "【输出】",
+    "只输出 JSON,不要任何说明文字、不要 markdown 代码围栏。格式:",
+    '{ "directions": [ { "direction": "grounds", "coreInsight": "…", "explanation": "…", "reflectionPrompt": "…" } ] }',
+    "只为 status 是 ready 的方向输出。status 是 insufficient_evidence 的方向【不要】出现在结果里。"
+  ].join("\n");
+
   /* 版本表。v1 一个字都没动 —— 要 A/B 就靠这张表。 */
   var SYSTEMS = {
     "compass-v1": SYSTEM,
-    "compass-v1.1": SYSTEM_V11
+    "compass-v1.1": SYSTEM_V11,
+    "compass-v1.2": SYSTEM_V12
   };
-  var PROMPT_VERSIONS = ["compass-v1", "compass-v1.1"];
-  /* 预设版本。Phase 6.2 起新的生成走 v1.1;v1 仍然叫得出来。 */
-  var DEFAULT_PROMPT_VERSION = "compass-v1.1";
+  var PROMPT_VERSIONS = ["compass-v1", "compass-v1.1", "compass-v1.2"];
+  /* 预设版本。Phase 6.3 起新的生成走 v1.2;前两版仍然叫得出来。 */
+  var DEFAULT_PROMPT_VERSION = "compass-v1.2";
 
   function buildPrompt(input, retryNote, version) {
     version = SYSTEMS[version] ? version : DEFAULT_PROMPT_VERSION;
@@ -481,6 +637,34 @@
      直接比对会把正确的写法误判成命令。先把否定形拿掉再比。 */
   var NEGATED_COMMANDS = ["不一定要", "不必一定要", "没有一定要"];
 
+  /* ★ Phase 6.3:证据权限边界。
+     机制成立 ≠ 可以推出一个关于【现实】的结论。
+     这一类不是风格问题,是越权 —— 与「编造原因」同级,硬性拒收而且不准 retry。 */
+  var REALITY_VERDICT = [
+    "值得你信任", "值得信任", "其实是安全", "可以放心靠近", "可以放心了",
+    "已经不用再确认", "不用再确认", "不用再防备", "已经不用防备",
+    "对方其实", "其实没有风险", "没有什么风险", "你只是想太多", "是你想太多",
+    "你已经准备好", "早就准备好", "你早就可以", "其实早就可以",
+    "应该留下", "应该离开", "值得继续", "不值得继续", "是正确的选择",
+    "其实不需要担心", "不必担心他", "他其实是"
+  ];
+  /* reflectionPrompt 把答案预设在问题里 */
+  /* 只抓「预设了对方安全 / 预设了这个人已经可以放手」这一类 ——
+     单纯重述机制不算(例如 decide-then-revisit 的「其实你已经决定了」
+     本来就是机制说的事,那不是越权)。 */
+  var EMBEDDED_CONCLUSION = [
+    "其实你早就可以", "其实你已经可以", "其实你已经不用", "其实早就可以",
+    "早就可以少", "其实已经不用", "已经不用再", "其实不需要再", "其实可以不用再"
+  ];
+  function permissionCheck(copy) {
+    var body = [copy.coreInsight, copy.explanation].join("");
+    var q = String(copy.reflectionPrompt || "");
+    return {
+      realityVerdicts: hits(body, REALITY_VERDICT).concat(hits(q, REALITY_VERDICT)),
+      embeddedConclusion: hits(q, EMBEDDED_CONCLUSION)
+    };
+  }
+
   function toneCheck(copy) {
     var all = [copy.coreInsight, copy.explanation, copy.reflectionPrompt].join("");
     var cmdText = NEGATED_COMMANDS.reduce(function (t, w) { return t.split(w).join("　"); }, all);
@@ -491,7 +675,15 @@
         : (hits(all, ANALYTICAL).length === 1 ? "medium" : "low"),
       gentleDirection: has(expl.slice(Math.floor(expl.length * 0.45)), GENTLE_CUES),
       commandingTerms: hits(cmdText, COMMANDING),
-      reportTitleShape: /决定|真正的.{0,6}是|之所以/.test(String(copy.coreInsight || ""))
+      reportTitleShape: /决定|真正的.{0,6}是|之所以/.test(String(copy.coreInsight || "")),
+      /* 最后一句是不是以「所以 / 因此 / 这时候你可以」起头 —— 组层要数这个 */
+      conclusionConnector: (function () {
+        var parts = expl.split(/[。！？]/).filter(function (x) { return x.trim(); });
+        var last = (parts[parts.length - 1] || "").trim();
+        var m = last.match(/^(所以|因此|这时候你可以|于是)/);
+        return m ? m[1] : null;
+      })(),
+      openingWords: String(copy.explanation || "").slice(0, 5)
     };
   }
 
@@ -513,7 +705,12 @@
     if (q.labelRisk === "high") fails.push({ rule: "labelling", detail: q.labelTerms.join("、") });
     if (q.genericRisk === "high") fails.push({ rule: "genericPhrase", detail: q.genericTerms.join("、") });
     if (!q.coreLenOk) fails.push({ rule: "lengthCoreInsight", detail: q.coreLen + " 字(要 15–35)" });
-    if (!q.explLenOk) fails.push({ rule: "lengthExplanation", detail: q.explLen + " 字(要 70–130)" });
+    /* 长度的下限:确定性翻译层(冻结)用 70,但 v1.1 起写作指令写的是 60 ——
+       以读起来自然为准。这里用生成层自己的契约,不去动那个冻结的档案。 */
+    var explOk = q.explLen >= EXPL_MIN && q.explLen <= EXPL_MAX;
+    q.explLenOk = explOk;
+    if (!explOk) fails.push({ rule: "lengthExplanation",
+      detail: q.explLen + " 字(要 " + EXPL_MIN + "–" + EXPL_MAX + ")" });
     if (!q.promptIsQuestion) fails.push({ rule: "reflectionQuestion", detail: "不是问句" });
     if ((copy.reflectionPrompt.match(/[。？?！]/g) || []).length !== 1)
       fails.push({ rule: "reflectionQuestion", detail: "不是一句" });
@@ -543,7 +740,52 @@
       fails.push({ rule: "commandingTone", detail: tone.commandingTerms.join("、") });
     q.tone = tone;
 
-    return { ok: fails.length === 0, fails: fails, warns: warns, checks: q, fidelity: fid, tone: tone };
+    /* ★ 越过证据权限:与「编造原因」同级,硬性拒收、不准 retry */
+    var perm = permissionCheck(copy);
+    if (perm.realityVerdicts.length)
+      fails.push({ rule: "realityVerdict", detail: perm.realityVerdicts.join("、"), noRetry: true });
+    if (perm.embeddedConclusion.length)
+      fails.push({ rule: "embeddedConclusion", detail: perm.embeddedConclusion.join("、"), noRetry: true });
+    q.permission = perm;
+
+    return { ok: fails.length === 0, fails: fails, warns: warns, checks: q,
+             fidelity: fid, tone: tone, permission: perm };
+  }
+
+  /* ★ Phase 6.3 · 组层品质:四张连着读像不像同一个模板。
+     这一层【只量测不拒收】—— 单张都合格但整组公式化,是要人来看的事。 */
+  function groupCheck(copies) {
+    var keys = ["grounds", "moves", "drains", "calls"].filter(function (k) { return copies[k]; });
+    var tones = {}, connectors = [], openings = [];
+    keys.forEach(function (k) {
+      var t = toneCheck(copies[k]);
+      tones[k] = t;
+      if (t.conclusionConnector) connectors.push(t.conclusionConnector);
+      openings.push(t.openingWords);
+    });
+    var uniqOpenings = {};
+    openings.forEach(function (o) { uniqOpenings[o] = 1; });
+
+    /* moves 与 calls 不可以只是同一件事换句话说 */
+    var mc = (copies.moves && copies.calls)
+      ? CT.similarity(copies.moves.coreInsight + copies.moves.explanation,
+                      copies.calls.coreInsight + copies.calls.explanation)
+      : null;
+
+    var flags = [];
+    if (connectors.length >= 3) flags.push("formulaic_direction");
+    if (Object.keys(uniqOpenings).length < Math.max(2, keys.length - 1)) flags.push("repeated_opening");
+    if (mc !== null && mc > 0.30) flags.push("moves_calls_overlap");
+
+    return {
+      conclusionConnectorCount: connectors.length,
+      conclusionConnectors: connectors,
+      distinctOpenings: Object.keys(uniqOpenings).length,
+      movesCallsSemanticOverlap: mc === null ? null : Math.round(mc * 1000) / 1000,
+      gentleDirectionCount: keys.filter(function (k) { return tones[k].gentleDirection; }).length,
+      directions: keys.length,
+      flags: flags
+    };
   }
 
   /* 11 · 跨卡重复 */
@@ -589,10 +831,12 @@
     var fidelityFailed = Object.keys(perDirection).some(function (k) {
       return (perDirection[k].fails || []).some(function (f) { return f.noRetry; });
     });
+    var group = groupCheck(copies);
     return {
       ok: !anyFail,
       perDirection: perDirection,
       crossCard: cross,
+      group: group,
       fidelityFailed: fidelityFailed,
       retryable: fidelityFailed ? [] : retryable
     };
@@ -707,10 +951,13 @@
     OUTPUT_SCHEMA_VERSION: OUTPUT_SCHEMA_VERSION,
     SYSTEM: SYSTEM,
     SYSTEM_V11: SYSTEM_V11,
+    SYSTEM_V12: SYSTEM_V12,
     SYSTEMS: SYSTEMS,
     PROMPT_VERSIONS: PROMPT_VERSIONS,
     DEFAULT_PROMPT_VERSION: DEFAULT_PROMPT_VERSION,
     toneCheck: toneCheck,
+    permissionCheck: permissionCheck,
+    groupCheck: groupCheck,
     DIRECTION_LABEL: DIRECTION_LABEL,
     UNSUPPORTED: UNSUPPORTED,
     scrub: scrub,

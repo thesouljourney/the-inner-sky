@@ -1486,7 +1486,7 @@ function testCompassGenerationAsync(K) {
     let n = 0;
     return function () {
       n++;
-      return Promise.resolve(n === 1 ? "不是 JSON" : RC.textFor("C1"));
+      return Promise.resolve(n === 1 ? "不是 JSON" : RC.textFor("C1", G.DEFAULT_PROMPT_VERSION));
     };
   })();
   jobs.push(G.generate(PV.buildCase("C1"), badOnce).then(r => {
@@ -1709,7 +1709,7 @@ function testCompassLivePathAsync(K) {
     const u = JSON.stringify(body);
     const id = RC.CASES.filter(c => u.indexOf(
       G.buildInput(PV.buildCase(c)).directions.grounds.selectedPattern.key) >= 0)[0];
-    return RC.textFor(id || "C1");
+    return RC.textFor(id || "C1", G.DEFAULT_PROMPT_VERSION);
   });
 
   return shim.serveEdgeFunction(edgePath, { env: { ANTHROPIC_API_KEY: "test-only-not-a-real-key" } })
@@ -1807,8 +1807,8 @@ function testCompassVoiceV11() {
   checkEq("[v11] compass-v1 仍然存在且未被覆盖", G.SYSTEMS["compass-v1"] === G.SYSTEM, true);
   checkEq("[v11] v1 的写作指令内容没有变",
     require("crypto").createHash("sha256").update(G.SYSTEM).digest("hex").slice(0, 16), "df3b0a8385d86155");
-  checkEq("[v11] 两个版本都在", G.PROMPT_VERSIONS.join(","), "compass-v1,compass-v1.1");
-  checkEq("[v11] 预设走 v1.1", G.DEFAULT_PROMPT_VERSION, "compass-v1.1");
+  checkEq("[v11] 三个版本都在", G.PROMPT_VERSIONS.join(","), "compass-v1,compass-v1.1,compass-v1.2");
+  checkEq("[v11] 预设走 v1.2", G.DEFAULT_PROMPT_VERSION, "compass-v1.2");
   checkEq("[v11] v1 与 v1.1 不是同一份", G.SYSTEM === G.SYSTEM_V11, false);
 
   // 2 · v1.1 里写进了这一阶段的三件事
@@ -1855,12 +1855,20 @@ function testCompassVoiceV11() {
   )).then(rows => {
     const by = {};
     rows.forEach(x => { by[x.v] = x.r; });
-    checkEq("[v11] v1 与 v1.1 都通过验证",
-      rows.filter(x => x.r.status !== "ok").map(x => x.v).join(","), "");
+    /* Phase 6.3 起,v1 与 v1.1 的样本都会被新的「证据权限」规则挡下 ——
+       那正是 6.3 要修的缺陷,所以这里断言它们【确实会红】,而不是假装没事。 */
+    checkEq("[v11] v1 与 v1.1 的样本会被 6.3 的权限规则挡下",
+      rows.filter(x => x.r.status !== "ok").map(x => x.v).join(","),
+      "compass-v1,compass-v1.1");
     checkEq("[v11] 生成结果记录的是被要求的那个版本",
       rows.map(x => x.r.meta.promptVersion).join(","), "compass-v1,compass-v1.1");
+    checkEq("[v11] 两版被挡下的都是 drains,而且是同一个原因",
+      rows.map(x => Object.keys(x.r.validation.perDirection)
+        .filter(k => !x.r.validation.perDirection[k].ok).join("+")).join(" / "),
+      "drains / drains");
 
     const v1 = by["compass-v1"], v11 = by["compass-v1.1"];
+    /* status 失败时 copies 是 null(刻意的),但 perDirection 的检查结果仍在 */
     const tone = (r, k) => r.validation.perDirection[k].checks.tone;
     const dirs = ["grounds", "moves", "drains", "calls"];
     checkEq("[v11] v1.1 四个方向都有「轻轻一步」",
@@ -1881,11 +1889,12 @@ function testCompassVoiceV11() {
       dirs.filter(k => (v11.validation.perDirection[k].fidelity.unsupported || []).length).join(","), "");
     checkEq("[v11] v1.1 四张卡仍然彼此不重复",
       v11.validation.crossCard.pairs[0].similarity < 0.35, true);
+    checkEq("[v11] v1.1 的 4/4「所以」正是 6.3 要修的模板感",
+      v11.validation.group.conclusionConnectorCount, 4);
     /* 反思句要能想起最近的事,不是行为统计题 */
+    const raw11 = RC.RAW_V11.C1;
     checkEq("[v11] v1.1 的反思句都指向最近 / 现在",
-      dirs.filter(k => !/最近|现在|这一?周|今天/.test(v11.copies[k].reflectionPrompt)).join(","), "");
-    checkEq("[v11] v1.1 没有「上一次…多久」这种统计题",
-      dirs.filter(k => /多久|几次[^，。？]*\?|几天/.test(v11.copies[k].reflectionPrompt)).join(","), "");
+      dirs.filter(k => !/最近|现在|这一?周|今天/.test(raw11[k].reflectionPrompt)).join(","), "");
     /* 机制没有被改掉 */
     checkEq("[v11] 两个版本选中的机制完全相同",
       dirs.map(k => v1.input.directions[k].selectedPattern.key).join(","),
@@ -1914,6 +1923,127 @@ function testCompassZhOnlyLabels() {
   });
 }
 
+/* ---------- 21. 内在指南 Phase 6.3 · 定点校准 v1.2 ----------
+   只修三件事:方向那一句不要变成模板、不替使用者判断现实、calls 不是 moves。 */
+function testCompassVoiceV12() {
+  const fs = require("fs");
+  const G = require(path.join(__dirname, "..", "assets", "compass-generation.js"));
+  const PV = require(path.join(__dirname, "..", "assets", "compass-preview.js"));
+  const RC = require(path.join(__dirname, "..", "assets", "compass-recorded.js"));
+  const edge = fs.readFileSync(path.join(__dirname, "..", "docs", "edge", "compass-generate.ts"), "utf8");
+  const crypto = require("crypto");
+  const h = (t) => crypto.createHash("sha256").update(t).digest("hex").slice(0, 16);
+
+  // 1 · 前两版原封不动
+  checkEq("[v12] compass-v1 未被改动", h(G.SYSTEMS["compass-v1"]), "df3b0a8385d86155");
+  checkEq("[v12] compass-v1.1 未被改动", G.SYSTEMS["compass-v1.1"] === G.SYSTEM_V11, true);
+  checkEq("[v12] v1.2 不是 v1.1 的复制品", G.SYSTEM_V11 === G.SYSTEM_V12, false);
+  const m12 = edge.match(/const COMPASS_SYSTEM_V12 = `([\s\S]*?)`;/);
+  checkEq("[v12] 服务端的 v1.2 与前端逐字相同", m12 ? m12[1] : "", G.SYSTEM_V12);
+
+  // 2 · v1.2 写进了这一阶段的三条规则
+  checkEq("[v12] 写明不要每张都用「所以」收尾", /不要】每一张都用「所以」/.test(G.SYSTEM_V12), true);
+  checkEq("[v12] 写明只能说证据授权的事", /只能说证据授权你说的事/.test(G.SYSTEM_V12), true);
+  checkEq("[v12] 写明不准替使用者判断现实",
+    /不可以】替这个人判断[\s\S]{0,120}值不值得信任/.test(G.SYSTEM_V12), true);
+  checkEq("[v12] 写明 calls 不是 moves",
+    /怎样让我重新有动力[\s\S]{0,80}写成 moves/.test(G.SYSTEM_V12), true);
+  checkEq("[v12] calls 仍然禁止命运 / 使命",
+    /不准写成命运、使命、注定/.test(G.SYSTEM_V12), true);
+  checkEq("[v12] moves 不准写成消耗,也避开「耗很久」",
+    /避免「耗很久」/.test(G.SYSTEM_V12), true);
+  checkEq("[v12] v1.1 建立的东西一条都没丢",
+    ["认出来", "是什么", "轻轻一步", "绝对禁止:占星语言", "绝对禁止:玄学语言",
+     "绝对禁止:心理诊断", "绝对禁止:编造原因", "不要贴标签", "少用分析腔"]
+      .filter(x => G.SYSTEM_V12.indexOf(x) < 0).join(","), "");
+
+  // 3 · 证据权限:硬性拒收,而且不准 retry
+  const bad = { coreInsight: "真正让你累的是反覆确认。",
+    explanation: "你会一段一段靠近。慢一点没关系，只是也可以先看看，有些人是不是其实已经不用再确认了。",
+    reflectionPrompt: "现在有没有一个人，其实你早就可以少确认几次了？" };
+  const pc = G.permissionCheck(bad);
+  checkEq("[v12] 替使用者判断现实会被抓到", pc.realityVerdicts.length > 0, true);
+  checkEq("[v12] 把结论预设在问句里会被抓到", pc.embeddedConclusion.length > 0, true);
+  const di = G.buildInput(PV.buildCase("C1")).directions.drains;
+  const f = (G.validateOne(bad, di).fails || []);
+  checkEq("[v12] 越权是硬性拒收", f.filter(x => x.rule === "realityVerdict").length, 1);
+  checkEq("[v12] 越权不准 retry", (f.filter(x => x.rule === "realityVerdict")[0] || {}).noRetry, true);
+  /* 只是重述机制的问句不算越权 */
+  checkEq("[v12] 重述机制不算越权",
+    G.permissionCheck({ coreInsight: "", explanation: "",
+      reflectionPrompt: "有没有一件事，其实你已经决定了，只是还没让它过去？" }).embeddedConclusion.length, 0);
+
+  // 4 · 组层量测:只 flag 不拒收
+  const g11 = G.groupCheck(RC.RAW_V11.C1), g12 = G.groupCheck(RC.RAW_V12.C1);
+  checkEq("[v12] v1.1 的四张都以「所以」收尾", g11.conclusionConnectorCount, 4);
+  checkEq("[v12] v1.1 会被标成模板化", g11.flags.indexOf("formulaic_direction") >= 0, true);
+  checkEq("[v12] v1.2 不再机械收尾", g12.conclusionConnectorCount <= 1, true);
+  checkEq("[v12] v1.2 没有任何组层旗标", g12.flags.join(","), "");
+  checkEq("[v12] v1.2 四张的开头各不相同", g12.distinctOpenings, 4);
+  checkEq("[v12] v1.2 四张都还有「轻轻一步」", g12.gentleDirectionCount, 4);
+  checkEq("[v12] moves 与 calls 不是同一件事换句话说",
+    g12.movesCallsSemanticOverlap < 0.30, true);
+  checkEq("[v12] 组层旗标不会让验证直接失败",
+    /flags/.test(JSON.stringify((G.validate(RC.RAW_V11.C1,
+      G.buildInput(PV.buildCase("C1"))).group || {}))), true);
+
+  // 5 · calls 真的变成 orientation 了
+  const calls12 = RC.RAW_V12.C1.calls, calls11 = RC.RAW_V11.C1.calls;
+  checkEq("[v12] v1.1 的 calls 还在讲「重新有兴趣」",
+    /重新有兴趣|恢复|动力/.test(calls11.coreInsight + calls11.explanation), true);
+  checkEq("[v12] v1.2 的 calls 讲的是「会往哪里靠近」",
+    /吸引|往里面走|继续理解/.test(calls12.coreInsight + calls12.explanation), true);
+  checkEq("[v12] v1.2 的 calls 没有动力 / 恢复这类字眼",
+    /重新有兴趣|恢复动力|提不起劲/.test(calls12.coreInsight), false);
+  checkEq("[v12] v1.2 的 calls 没有命运 / 使命",
+    /命运|使命|注定|人生道路|召唤|真正的你/.test(calls12.coreInsight + calls12.explanation), false);
+
+  // 6 · moves 不带消耗词
+  const moves12 = RC.RAW_V12.C1.moves;
+  checkEq("[v12] moves 不出现「耗」这类消耗意味的字",
+    /耗|成本|撑到最后|事后才发现累/.test(moves12.coreInsight + moves12.explanation), false);
+
+  // 7 · 长度契约由生成层自己定(60–130),没有去动被冻结的翻译层
+  const CT = require(path.join(__dirname, "..", "assets", "compass-translation.js"));
+  checkEq("[v12] 翻译层的 70–130 契约没有被改",
+    CT.checkCopy({ coreInsight: "一二三四五六七八九十一二三四五",
+      explanation: "一".repeat(65), reflectionPrompt: "好吗？" }).explLenOk, false);
+  checkEq("[v12] 生成层允许 60 字",
+    (G.validateOne(Object.assign({}, RC.RAW_V12.C1.grounds,
+      { explanation: RC.RAW_V12.C1.grounds.explanation.slice(0, 78) }), di).fails || [])
+      .filter(x => x.rule === "lengthExplanation").length, 0);
+
+  // 8 · 三个版本跑同一组机制:只有 v1.2 全过
+  return Promise.all(["compass-v1", "compass-v1.1", "compass-v1.2"].map(v =>
+    G.generate(PV.buildCase("C1"), RC.transportFor("C1"), { promptVersion: v }).then(r => ({ v, r }))
+  )).then(rows => {
+    const by = {}; rows.forEach(x => { by[x.v] = x.r; });
+    checkEq("[v12] 只有 v1.2 完全通过",
+      rows.filter(x => x.r.status === "ok").map(x => x.v).join(","), "compass-v1.2");
+    checkEq("[v12] v1 与 v1.2 选中的机制完全相同",
+      ["grounds", "moves", "drains", "calls"]
+        .map(k => by["compass-v1"].input.directions[k].selectedPattern.key).join(","),
+      ["grounds", "moves", "drains", "calls"]
+        .map(k => by["compass-v1.2"].input.directions[k].selectedPattern.key).join(","));
+    const v12 = by["compass-v1.2"], V = v12.validation;
+    ["grounds", "moves", "drains", "calls"].forEach(k => {
+      const q = V.perDirection[k].checks;
+      checkEq("[v12] " + k + " 没有占星 / 诊断外漏", q.astrologyLeak || q.diagnosticLeak, false);
+      checkEq("[v12] " + k + " 没有越权判断现实", q.permission.realityVerdicts.length, 0);
+      checkEq("[v12] " + k + " 没有命令句", q.tone.commandingTerms.length, 0);
+      checkEq("[v12] " + k + " 没有分析腔", q.tone.analyticalTone === "high", false);
+      checkEq("[v12] " + k + " 的 coreInsight 不是报告标题", q.tone.reportTitleShape, false);
+    });
+    checkEq("[v12] v1.2 没有编造原因",
+      ["grounds", "moves", "drains", "calls"]
+        .filter(k => (V.perDirection[k].fidelity.unsupported || []).length).join(","), "");
+    checkEq("[v12] v1.2 四张卡彼此不重复", V.crossCard.pairs[0].similarity < 0.35, true);
+    checkEq("[v12] v1.2 的反思句都不预设结论",
+      ["grounds", "moves", "drains", "calls"]
+        .filter(k => V.perDirection[k].checks.permission.embeddedConclusion.length).join(","), "");
+  });
+}
+
 /* ---------- 跑 ---------- */
 function main() {
   testTimezones();
@@ -1935,8 +2065,9 @@ function main() {
   const genJobs = testCompassGeneration();
   const liveJobs = testCompassLivePath();
   const voiceJobs = testCompassVoiceV11();
+  const v12Jobs = testCompassVoiceV12();
   testCompassZhOnlyLabels();
-  return Promise.all([genJobs, liveJobs, voiceJobs]).then(function () { return testPlaces(); }).then(function () {
+  return Promise.all([genJobs, liveJobs, voiceJobs, v12Jobs]).then(function () { return testPlaces(); }).then(function () {
     console.log("\n对照来源:" + REF.reference);
     console.log("设置:" + JSON.stringify(REF.settings));
     console.log("\n通过 " + pass + " / 失败 " + fail);
