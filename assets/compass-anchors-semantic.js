@@ -50,8 +50,40 @@
 })(typeof self !== "undefined" ? self : this, function (AN) {
   "use strict";
 
-  var VERSION = "anchors-3.1";
-  var ANCHOR_COUNT = 3;
+  var VERSION = "anchors-3.2";
+
+  /* ── Personal Anchors v1.1 / anchors-3.2 ──────────────────
+     与 3.1 唯一的行为差别:【最少几句才算数】由 3 降到 1。
+
+       1 句 → 给 1 句    2 句 → 给 2 句    3 句 → 给 3 句    0 句 → insufficient
+
+     为什么:产品裁定「1 或 2 句是可以接受的」,但 3.1 少于三句一律回 0,
+     两条规则互相矛盾。这一版只解决那个矛盾。
+
+     ⚠ 已锁的 2.2(compass-anchors.js)的下限【仍然是 3】,一个字都没动。
+       那是刻意的:3.x 只要 2.2 回 ok 就把整份原样交给它。若 2.2 的下限
+       也降到 1,它会用【一句】抽取候选赢走短路,blended 池永远不会被建起来
+       —— 实测同一份文案会从 3 句掉到 1 句。所以下限只在这一支改。
+
+     其余一律继承 3.1:概念词典、句型、授权、评分、互补、取舍、安全守则、
+     verifySemantic —— 全部逐字未动。已经给得出三句的文案,输出逐字相同。 */
+  var MIN_ANCHORS = 1;
+  var MAX_ANCHORS = 3;
+  var ANCHOR_COUNT = MAX_ANCHORS;          // 对外介面保持不变
+
+  var ANCHORS_V11_BASELINE = {
+    name: "Personal Anchors v1.1",
+    version: VERSION,
+    status: "LOCKED",
+    lockedAt: "2026-09-16",
+    lockedBy: "human product ruling",
+    lockReason: "narrow behavioral revision: minimum valid output count 3 → 1",
+    inherits: "anchors-3.1",
+    note: "只改下限。措辞、授权、概念、评分、互补、句型、取舍逻辑、安全守则一律继承,不得就地修改。",
+    unchanged: ["CONCEPTS", "TEMPLATES", "licensedVariants", "candidateFor",
+                "value/scoring", "complementarity", "verifySemantic",
+                "compass-anchors.js (anchors-2.2)"]
+  };
 
   /* ── 句型:手写,而且刻意只有六个 ─────────────────────────
      三句并排的时候,句型重复比功能重复更容易让人觉得「这是模具压的」,
@@ -304,14 +336,15 @@
       }
       if (c) pool.push(c);
     });
-    if (pool.length < ANCHOR_COUNT) {
+    /* v1.1:一句都取不出来才算不够。取得出几句就给几句,【绝不】凑数。 */
+    if (pool.length < MIN_ANCHORS) {
       return { status: "insufficient", version: VERSION, mode: "semantic", anchors: [],
                available: pool.length, dropped: [],
-               note: "accepted Compass 不足以取出三句可以重复使用的提醒" };
+               note: "accepted Compass 里一句可以重复使用的提醒都取不出来" };
     }
 
     var picked = [], usedTpl = {}, usedFn = {};
-    while (picked.length < ANCHOR_COUNT && pool.length) {
+    while (picked.length < MAX_ANCHORS && pool.length) {
       var best = null, bestVal = -Infinity, bestIdx = -1;
       pool.forEach(function (c, i) {
         var v = value(c, usedTpl, usedFn, picked);
@@ -398,6 +431,8 @@
 
   return {
     VERSION: VERSION, ANCHOR_COUNT: ANCHOR_COUNT,
+    MIN_ANCHORS: MIN_ANCHORS, MAX_ANCHORS: MAX_ANCHORS,
+    ANCHORS_V11_BASELINE: ANCHORS_V11_BASELINE,
     CONCEPTS: CONCEPTS, TEMPLATES: TEMPLATES,
     derive: derive, verifySemantic: verifySemantic,
     candidateFor: candidateFor, licensedVariants: licensedVariants,
