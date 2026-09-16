@@ -2923,18 +2923,22 @@ function testCompassPreLaunchFixes() {
 }
 
 
-/* ---------- 30. 描述型来源的锚点(anchors-3.0)----------
-   compass-v1 那一代的文案只有描述与归纳,没有一句收在「那下次可以怎么办」,
-   已锁的 2.2 对它一句都取不出来。这一层用【框架】补上那一句邀请,
-   而且除了那句邀请,一个字都不能是我们自己加的。
+
+/* ---------- 30. 语意衍生层(anchors-3.1)----------
+   compass-v1 那一代的文案只有描述与归纳,已锁的 2.2 一句都取不出来。
+   3.1 换的是单位:不再要求每个【字】在来源里,而是要求每个【主张】在来源里。
+   安全性靠三件事:概念授权、输出空间有限可枚举、词典静态稽核。
    ------------------------------------------------------------------- */
-function testCompassAnchorsDescriptive() {
+function testCompassAnchorsSemantic() {
+  const crypto = require("crypto");
+  const fs = require("fs");
   const AN = require(path.join(__dirname, "..", "assets", "compass-anchors.js"));
-  const D = require(path.join(__dirname, "..", "assets", "compass-anchors-descriptive.js"));
+  const S = require(path.join(__dirname, "..", "assets", "compass-anchors-semantic.js"));
   const RC = require(path.join(__dirname, "..", "assets", "compass-recorded.js"));
+  const h = (o) => crypto.createHash("sha256")
+    .update(typeof o === "string" ? o : JSON.stringify(o)).digest("hex").slice(0, 16);
   function d(ci, ex) { return { coreInsight: ci, explanation: ex, reflectionPrompt: "" }; }
 
-  /* 使用者线上那一份(compass-v1 形状,2.2 取不出任何东西) */
   const LIVE = {
     grounds: d("让你回来的，是一个有顺序的过程，不是一个地方",
       "有时候你需要的不是陪伴，而是先让外面安静一会儿。不是因为不想接触，而是在那之前，你得先把自己整理一下。有些感受在说出来之前是散的，说出来之后才会停下来占据你的注意力。等那一步完成，你才会真的想靠近人。这个顺序对你来说不是习惯，更像是一个必要的步骤。"),
@@ -2945,138 +2949,179 @@ function testCompassAnchorsDescriptive() {
     calls: d("你容易被「换一个角度再看」这件事吸引",
       "同样的事做太久，你的注意力会散掉——不是因为难，而是因为不变。换一个切入点，有时比休息更有用。你也容易对一件事背后的更大的问题感兴趣，那个「再往外一层看」的冲动，不太需要理由，就是会一直出现。")
   };
+  const lines = (r) => (r.anchors || []).map(function (a) { return a.line; });
 
-  /* —— 1. 已锁的 2.2 对这一份确实取不出东西(这就是它当初空白的原因)—— */
-  checkEq("[desc] 2.2 对描述型文案取不出东西", AN.derive(LIVE).status, "insufficient");
+  /* —— 2. 案例 A:人工 Voice Review 定案的那三句 —— */
+  checkEq("[sem] 2.2 对描述型文案仍然取不出东西", AN.derive(LIVE).status, "insufficient");
+  const A = S.derive(LIVE);
+  checkEq("[sem] A 取得出结果", A.status, "ok");
+  checkEq("[sem] A 走语意层", A.mode, "semantic");
+  checkEq("[sem] A 就是定案的那三句", lines(A).join("|"),
+    "先让外面安静一会儿，等自己理顺了，再靠近也不迟。|" +
+    "事情开始推不动的时候，也许可以回来看看，它对自己还有没有意义。|" +
+    "有时候不是需要休息，只是需要换一个切入点。");
+  checkEq("[sem] A 第三席给了 Calls,不是 Drains",
+    A.anchors[2].sourceDirection, "calls");
+  checkEq("[sem] A 逐句重新授权得起来", S.verifySemantic(A, LIVE).offenders.length, 0);
+  checkEq("[sem] A 同一份文案永远同一组", JSON.stringify(S.derive(LIVE)), JSON.stringify(A));
 
-  /* —— 2. 3.0 取得出三句,而且逐字回查得过 —— */
-  const r = D.derive(LIVE);
-  checkEq("[desc] 3.0 取得出结果", r.status, "ok");
-  checkEq("[desc] 走的是框架那一条路", r.mode, "framed");
-  checkEq("[desc] 正好三句", r.anchors.length, 3);
-  checkEq("[desc] 三句逐段回查得过", D.verifyFramed(r, LIVE).offenders.length, 0);
-  checkEq("[desc] 三句就是这三句",
-    r.anchors.map(function (a) { return a.line; }).join("|"),
-    "动力会消失的时候，可以先看看「这件事还有没有意义」。|" +
-    "注意力会散掉的时候，可以先看看「换一个角度再看」。|" +
-    "先让外面安静一会儿，也没关系。");
-  checkEq("[desc] 三句的功能彼此不同",
-    new Set(r.anchors.map(function (a) { return a["function"]; })).size, 3);
-  checkEq("[desc] 同一份文案永远同一组", JSON.stringify(D.derive(LIVE)), JSON.stringify(r));
+  /* —— 7. 功能互补是偏好,不是硬性规定 —— */
+  checkEq("[sem] A 只覆盖两种功能,照样成立", new Set(A.anchors.map(function (a) { return a["function"]; })).size, 2);
+  checkEq("[sem] Drains 那一句其实做得出来,只是没被选上",
+    !!S.candidateFor("drains", LIVE.drains), true);
+  checkEq("[sem] 它被换掉的理由记下来了",
+    (A.dropped[0] || {}).direction, "drains");
 
-  /* —— 3. 只有那句固定的邀请是新的 —— */
-  const flat = (s2) => String(s2).replace(/[，。！？；：、（）「」“”\s—…]/g, "");
-  r.anchors.forEach(function (a) {
-    const src = flat(LIVE[a.sourceDirection].coreInsight + LIVE[a.sourceDirection].explanation);
-    if (a.situation) checkEq("[desc] 场合来自原文:" + a.situation, src.indexOf(flat(a.situation)) >= 0, true);
-    checkEq("[desc] 重点来自原文:" + a.move, src.indexOf(flat(a.move)) >= 0, true);
+  /* —— 6. 句型多样性 ——
+     跟功能互补一样是【偏好】而不是硬性规定:有别的句型可选就一定换,
+     整份文案只授权得到同一种句型时,不会为了换句型去挑一句更差的。
+     底线是:三句不可以全部同一个句型。 */
+  const CASES = [["A", A, LIVE], ["C4", S.derive(RC.RAW.C4), RC.RAW.C4],
+                 ["C6", S.derive(RC.RAW.C6), RC.RAW.C6], ["C10", S.derive(RC.RAW.C10), RC.RAW.C10]];
+  CASES.forEach(function (x) {
+    if (x[1].status !== "ok") return;
+    const used = new Set(x[1].anchors.map(function (a) { return a.template; }));
+    checkEq("[sem] " + x[0] + " 三句不会全部同一个句型", used.size >= 2, true);
+    /* 有第三种句型可选的时候,就一定会用上 */
+    const avail = new Set(["grounds", "moves", "drains", "calls"]
+      .map(function (k) { return x[2][k] && S.candidateFor(k, x[2][k]); })
+      .filter(Boolean).map(function (c) { return c.template; }));
+    checkEq("[sem] " + x[0] + " 有几种句型就用上几种(上限三)",
+      used.size, Math.min(3, avail.size));
   });
-  checkEq("[desc] 框架是封闭的一小段话",
-    Object.keys(D.FRAME).sort().join(","), "look,permit");
-  checkEq("[desc] 框架本身不对人做任何主张",
-    /你|我|应该|必须|因为|所以/.test(D.FRAME_TOKENS), false);
+  /* 句型重复的扣分确实大过功能互补的加分 —— 这就是「多样性排在互补前面」 */
+  checkEq("[sem] 句型重复扣的分比功能互补加的分多",
+    (function () {
+      const src = fs.readFileSync(path.join(__dirname, "..", "assets", "compass-anchors-semantic.js"), "utf8");
+      const tpl = /usedTpl\[c\.template\] \? ([\d.]+) : 0/.exec(src);
+      const fnb = /usedFn\[c\["function"\]\] \? 0 : ([\d.]+)/.exec(src);
+      return tpl && fnb && parseFloat(tpl[1]) > parseFloat(fnb[1]);
+    })(), true);
 
-  /* —— 4. 不替代价与拉力发许可 ——
-     「什么正在消耗我」「我正在被什么吸引」那两段描述的是代价与拉力,
-     替它们说「先做某件事也没关系」等于说了原文没说的话。 */
-  ["drains", "calls", "moves"].forEach(function (k) {
-    const c = D.framedCandidate(k, LIVE[k]);
-    if (c) checkEq("[desc] " + k + " 不会变成许可句", c.frame, "look");
+  /* —— 3. 另外三份 fixture —— */
+  const C4 = S.derive(RC.RAW.C4);
+  checkEq("[sem] C4 的三句", lines(C4).join("|"),
+    "乱起来的时候，先把外面挡一挡，等自己理顺了，再找人也不迟。|" +
+    "撑不下去的时候，也许可以回来看看，这件事对你还成不成立。|" +
+    "累的常常不是那件事，是做完以后还要顾有多少人在看。");
+  const C6 = S.derive(RC.RAW.C6);
+  checkEq("[sem] C6 的三句", lines(C6).join("|"),
+    "想往后站的时候，不是想离开，是需要知道退一步还在。|" +
+    "累的常常不是事情本身，是被看着的时候多顾的那一层。|" +
+    "一天被排满的时候，留一小块自己说了算的，就又转得动了。");
+  const C10 = S.derive(RC.RAW.C10);
+  checkEq("[sem] C10 的三句(这一份只有三个方向)", lines(C10).join("|"),
+    "知道自己随时可以走，你才待得住。|" +
+    "花力气的常常不是那个决定，是决定完以后那段没关上的检查。|" +
+    "要等到可以说点真的东西，你才会真的靠过去。");
+  [["C4", C4, RC.RAW.C4], ["C6", C6, RC.RAW.C6], ["C10", C10, RC.RAW.C10]].forEach(function (x) {
+    checkEq("[sem] " + x[0] + " 逐句重新授权得起来", S.verifySemantic(x[1], x[2]).offenders.length, 0);
   });
-  const BAD = {
-    grounds: d("你在被看见的时候会先绷起来。", "事情被摊开的时候，你会先绷起来。"),
-    moves: d("你会走神。", "同一个流程做到第三遍，你会开始走神。"),
-    drains: d("你会绷起来。", "被看到的时候，你会先绷起来，而不是松一口气。"),
-    calls: d("你会走神。", "重复久了，你会开始走神。")
-  };
-  const bad = D.derive(BAD);
-  checkEq("[desc] 不会产生「先绷起来，也没关系」这种句子",
-    /绷起来，也没关系|走神，也没关系/.test(JSON.stringify(bad.anchors || [])), false);
+  checkEq("[sem] 四份的三句彼此都不一样",
+    new Set([lines(A).join("|"), lines(C4).join("|"), lines(C6).join("|"), lines(C10).join("|")]).size, 4);
 
-  /* —— 5. 换一个人 → 换一组句子 —— */
-  const OTHER = RC.RAW.C4;
-  const r2 = D.derive(OTHER);
-  checkEq("[desc] 另一个人也取得出三句", r2.status, "ok");
-  checkEq("[desc] 另一个人的三句完全不一样",
-    r2.anchors.map(function (a) { return a.line; }).join("|") ===
-    r.anchors.map(function (a) { return a.line; }).join("|"), false);
-  checkEq("[desc] 另一个人的三句也回查得过", D.verifyFramed(r2, OTHER).offenders.length, 0);
-  checkEq("[desc] 不是把使用者那三句写死",
-    /动力会消失|换一个角度再看|先让外面安静一会儿/.test(
-      require("fs").readFileSync(path.join(__dirname, "..", "assets", "compass-anchors-descriptive.js"), "utf8")
-    ), false);
+  /* —— 4. Voice Review 决定三:保留原文的不确定 —— */
+  const wake = S.candidateFor("calls", RC.RAW.C6.calls);
+  checkEq("[sem] C6 用的是比较弱的「人比较容易回来」",
+    wake.line.indexOf("人比较容易回来") >= 0, true);
+  checkEq("[sem] C6 没有写成「人就回来了」",
+    JSON.stringify(S.allPossibleLines()).indexOf("人就回来了") >= 0, false);
 
-  /* —— 6. 真的不够就说不够,不凑 —— */
+  /* —— 5. Voice Review 决定二:不加原文没给的宽慰 —— */
+  checkEq("[sem] D5 没有「人不多没关系」",
+    JSON.stringify(S.allPossibleLines()).indexOf("人不多没关系") >= 0, false);
+  checkEq("[sem] D5 用的是原文支持得住的说法",
+    lines(C10).join("|").indexOf("要等到可以说点真的东西，你才会真的靠过去") >= 0, true);
+
+  /* —— 输出空间有限、可枚举、已审、已钉住 —— */
+  const all = S.allPossibleLines();
+  checkEq("[sem] 所有可能被说出口的句子共 19 句", all.length, 19);
+  checkEq("[sem] 枚举清单逐字未动", h(all), "95f8abb7e7c55009");
+  checkEq("[sem] 概念词典逐字未动", h(S.CONCEPTS), "ba31ce40024aec21");
+  checkEq("[sem] 句型逐字未动",
+    h(Object.keys(S.TEMPLATES).sort().map(function (k) { return k + ":" + S.TEMPLATES[k].need.join("+"); })),
+    "b9f9a5aea5974d3d");
+
+  /* —— 词典静态稽核:一次涵盖所有使用者 —— */
+  const corpus = all.map(function (x) { return x.line; }).join("\n");
+  const AUDIT = [
+    ["新的人格主张", /你是一个|你天生|你就是|你的性格|你属于|你注定/],
+    ["新的心理机制", /创伤|依恋|神经系统|防御机制|应对机制|失调|解离|回避型|焦虑型/],
+    ["新的成因", /因为你|所以你才|是因为你|从小|童年|原生家庭/],
+    ["新的情绪命名", /焦虑|抑郁|恐惧|愤怒|羞耻|悲伤/],
+    ["星盘用语", /星座|宫位|行星|相位|逆行|上升|星盘|本命/],
+    ["玄学用语", /灵魂|宇宙|命运|能量|疗愈|显化|高我/],
+    ["万用句", /相信自己|慢慢来|照顾好自己|加油|顺其自然|活在当下|爱自己|做真实的自己/],
+    ["命令句", /你应该|你必须|你需要学会|你最好|请你|记得要/]
+  ];
+  AUDIT.forEach(function (a) {
+    checkEq("[sem] 整本词典没有" + a[0], a[1].test(corpus), false);
+  });
+  checkEq("[sem] 每一句都是完整句",
+    all.filter(function (x) { return !/[。]$/.test(x.line); }).length, 0);
+  checkEq("[sem] 每一句都不长",
+    all.filter(function (x) { return x.line.replace(/[，。：「」]/g, "").length > 32; }).length, 0);
+
+  /* —— 8. 认不出来就说认不出来,不凑 —— */
   const THIN = {
     grounds: d("你比较慢热。", "你需要一点时间。"),
     moves: d("你需要理由。", "没有理由你就停住。"),
     drains: d("你容易累。", "太多人看着你会累。"),
     calls: d("你喜欢深的东西。", "浅的东西留不住你。")
   };
-  const thin = D.derive(THIN);
-  checkEq("[desc] 取不出来就说取不出来", thin.status, "insufficient");
-  checkEq("[desc] 取不出来时一句都不给", thin.anchors.length, 0);
-  checkEq("[desc] 取不出来时不给万用句", JSON.stringify(thin.anchors), "[]");
-  /* compass-v1 的已录制样本里,取不出来的那几份也照实回报 */
-  ["C1", "C6", "C10"].forEach(function (k) {
-    const x = D.derive(RC.RAW[k]);
-    checkEq("[desc] RAW." + k + " 不硬凑", x.status === "ok" ? x.anchors.length : 0,
-      x.status === "ok" ? 3 : 0);
-  });
+  const thin = S.derive(THIN);
+  checkEq("[sem] 认不出来就回 insufficient", thin.status, "insufficient");
+  checkEq("[sem] 认不出来时一句都不给", (thin.anchors || []).length, 0);
+  checkEq("[sem] 认不出来时不给万用句", JSON.stringify(thin.anchors), "[]");
+  checkEq("[sem] RAW.C1 授权不足也照实回报",
+    S.derive(RC.RAW.C1).status === "ok" ? (S.derive(RC.RAW.C1).anchors.length === 3) : true, true);
 
-  /* —— 7. 已锁的 2.2 一个字都没动 —— */
-  const v12 = D.derive(RC.RAW_V12.C1);
-  checkEq("[desc] v1.2 的文案原样交给已锁的 2.2", v12.mode, "extract");
-  checkEq("[desc] v1.2 的结果与 2.2 逐字相同",
+  /* —— 概念授权真的是个人化的:别人的概念不会跑到你身上 —— */
+  const mine = new Set(S.licensedVariants(LIVE.drains).map(function (x) { return x.concept; }));
+  checkEq("[sem] 「被看见的代价」没有出现在你的文案里", mine.has("extra_layer_tires"), false);
+  const theirs = new Set(S.licensedVariants(RC.RAW.C4.drains).map(function (x) { return x.concept; }));
+  checkEq("[sem] 它出现在 C4 的文案里", theirs.has("extra_layer_tires"), true);
+
+  /* —— 10. 已锁的 2.2 一个字都没动 —— */
+  const v12 = S.derive(RC.RAW_V12.C1);
+  checkEq("[sem] v1.2 的文案原样交给已锁的 2.2", v12.mode, "extract");
+  checkEq("[sem] v1.2 的结果与 2.2 逐字相同",
     JSON.stringify(v12.anchors), JSON.stringify(AN.derive(RC.RAW_V12.C1).anchors));
-  checkEq("[desc] 交回来的时候有记是哪一支算的", v12.engine, AN.VERSION);
-  checkEq("[desc] 已锁基准没有被碰过", AN.ANCHORS_BASELINE.version, "anchors-2.2");
+  checkEq("[sem] 已锁基准没有被碰过", AN.ANCHORS_BASELINE.version, "anchors-2.2");
 
-  /* —— 8. 这一层永远不呼叫 API —— */
-  const fs = require("fs");
-  const src = fs.readFileSync(path.join(__dirname, "..", "assets", "compass-anchors-descriptive.js"), "utf8")
+  /* —— 这一层永远不呼叫 API —— */
+  const src = fs.readFileSync(path.join(__dirname, "..", "assets", "compass-anchors-semantic.js"), "utf8")
     .replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
-  checkEq("[desc] 没有任何网路呼叫",
-    /fetch\(|XMLHttpRequest|anthropic|supabase/i.test(src), false);
-  checkEq("[desc] 不碰星盘 / 机制 / 分数 / 日记",
+  checkEq("[sem] 没有任何网路呼叫", /fetch\(|XMLHttpRequest|anthropic|supabase/i.test(src), false);
+  checkEq("[sem] 不碰星盘 / 机制 / 分数 / 日记",
     /planets|cusps|\bmechanism\b|selectionScore|patternKey|journal|mood|favs/i.test(src), false);
   const realFetch = global.fetch, realXHR = global.XMLHttpRequest;
   let called = 0;
   global.fetch = function () { called++; throw new Error("no"); };
   global.XMLHttpRequest = function () { called++; throw new Error("no"); };
   try {
-    checkEq("[desc] 推导过程不发请求", D.derive(LIVE).status, "ok");
-    checkEq("[desc] fetch 一次都没被碰到", called, 0);
+    checkEq("[sem] 推导过程不发请求", S.derive(LIVE).status, "ok");
+    checkEq("[sem] fetch 一次都没被碰到", called, 0);
   } finally { global.fetch = realFetch; global.XMLHttpRequest = realXHR; }
 
-  /* —— 9. 页面改成渲染时现算,既有的空阵列自己会好 —— */
+  /* —— 9. 页面:渲染时现算,既有的空阵列自己会好 —— */
   const html = fs.readFileSync(path.join(__dirname, "..", "app.html"), "utf8");
   const fn = html.slice(html.indexOf("function compassAnchorsFor(saved)"),
                         html.indexOf("function compassNowHtml()"));
-  checkEq("[desc] 渲染时从已存的四段文案现算",
-    /AN3\.derive\(saved\.directions\)/.test(fn), true);
-  checkEq("[desc] 现算的结果要回查过才给", /verifyFramed\(r, saved\.directions\)/.test(fn) &&
-    /if \(v\.ok\) list = r\.anchors/.test(fn), true);
-  checkEq("[desc] 现算不出来才退回快取里那一份",
-    /if \(!list\.length && saved\.anchors/.test(fn), true);
-  checkEq("[desc] 现算有记忆化,不会每次重画都重算",
-    /compassAnchorCache\.key === key/.test(fn), true);
-  checkEq("[desc] 已经生成过就不再说「等生成之后」",
-    /这一份指南里，还没有可以单独带走的句子/.test(fn), true);
-  /* 补载:进到 #/compass 而且已经有一份指南时才载,而且只载锚点那两支 */
+  checkEq("[sem] 渲染时从已存的四段文案现算", /AN3\.derive\(saved\.directions\)/.test(fn), true);
+  checkEq("[sem] 现算的结果要重新授权过才给",
+    /verifySemantic\(r, saved\.directions\)/.test(fn) && /if \(v\.ok\) list = r\.anchors/.test(fn), true);
+  checkEq("[sem] 现算不出来才退回快取里那一份", /if \(!list\.length && saved\.anchors/.test(fn), true);
+  checkEq("[sem] 现算有记忆化", /compassAnchorCache\.key === key/.test(fn), true);
   const ens = html.slice(html.indexOf("function compassEnsureAnchors()"),
                          html.indexOf("function compassAnchorsFor(saved)"));
-  checkEq("[desc] 有指南时会把锚点模组补载进来",
-    /if \(window\.Compass\.result\.get\(compassOwner\(\)\)\) compassEnsureAnchors\(\);/.test(html), true);
-  checkEq("[desc] 只补载锚点那两支,不碰 evidence / selection / generation",
+  checkEq("[sem] 只补载锚点那两支",
     /compass-evidence|compass-selection|compass-generation|compass-preview|compass-recorded/.test(ens), false);
-  checkEq("[desc] 载完会重画一次", /compassRepaint\(\)/.test(ens), true);
-  checkEq("[desc] 载不到也不让页面挂掉", /\.catch\(function \(\) \{ compassAnchorLoading = false; \}\)/.test(ens), true);
-  checkEq("[desc] 不会重复载", /if \(window\.CompassAnchorsDescriptive \|\| compassAnchorLoading\) return;/.test(ens), true);
-
-  checkEq("[desc] 正式页面会载入这一支",
-    /assets\/compass-anchors-descriptive\.js/.test(
+  checkEq("[sem] 正式页面会载入 3.1",
+    /assets\/compass-anchors-semantic\.js/.test(
       html.slice(html.indexOf("const CP_PROD_SRC"), html.indexOf("];", html.indexOf("const CP_PROD_SRC")))), true);
+  checkEq("[sem] 3.0 已经被取代,不再有参照",
+    /compass-anchors-descriptive|CompassAnchorsDescriptive/.test(html), false);
 }
 
 /* ---------- 跑 ---------- */
@@ -3109,7 +3154,7 @@ function main() {
   testCompassAnchorReusability();
   testCompassAnchorsLock();
   testCompassPreLaunchFixes();
-  testCompassAnchorsDescriptive();
+  testCompassAnchorsSemantic();
   testCompassZhOnlyLabels();
   return Promise.all([genJobs, liveJobs, voiceJobs, v12Jobs]).then(function () { return testPlaces(); }).then(function () {
     console.log("\n对照来源:" + REF.reference);

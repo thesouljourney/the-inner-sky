@@ -8057,7 +8057,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     "assets/compass-preview.js",
     "assets/compass-generation.js",
     "assets/compass-anchors.js",
-    "assets/compass-anchors-descriptive.js"
+    "assets/compass-anchors-semantic.js"
   ];
   const cpPvGenCache = {};          // key = caseId|mode|promptVersion
   /* 生成端点。预设指向这个专案的 Edge Function;
@@ -9139,9 +9139,9 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
      刻意【不】顺便载入 evidence / selection / generation:
      这一段用不到它们,也不该为了三句话去碰那几层。 */
   function compassEnsureAnchors() {
-    if (window.CompassAnchorsDescriptive || compassAnchorLoading) return;
+    if (window.CompassAnchorsSemantic || compassAnchorLoading) return;
     compassAnchorLoading = true;
-    ["assets/compass-anchors.js", "assets/compass-anchors-descriptive.js"]
+    ["assets/compass-anchors.js", "assets/compass-anchors-semantic.js"]
       .reduce(function (chain, src) {
         return chain.then(function () { return cpPvLoadOne(src); });
       }, Promise.resolve())
@@ -9158,10 +9158,10 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     if (compassAnchorCache.key === key) return compassAnchorCache.list;
     var list = [];
     try {
-      var AN3 = window.CompassAnchorsDescriptive, AN = window.CompassAnchors;
+      var AN3 = window.CompassAnchorsSemantic, AN = window.CompassAnchors;
       var r = AN3 ? AN3.derive(saved.directions) : (AN ? AN.derive(saved.directions) : null);
       if (r && r.status === "ok") {
-        var v = AN3 ? AN3.verifyFramed(r, saved.directions) : AN.verifyDerived(r, saved.directions);
+        var v = AN3 ? AN3.verifySemantic(r, saved.directions) : AN.verifyDerived(r, saved.directions);
         if (v.ok) list = r.anchors;          // 回查不过就当作没有 —— 宁可空着,也不给没根据的句子
       }
     } catch (e) { list = []; }
@@ -10006,7 +10006,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
           _pre: (payload = G.buildInput(vm)) })
         .then(function (r) {
           if (r.status !== "ok" || !r.copies) throw new Error(r.reason || r.status);
-          const AN3 = window.CompassAnchorsDescriptive;
+          const AN3 = window.CompassAnchorsSemantic;
           const an = (AN3 ? AN3 : AN).derive(r.copies);
           window.Compass.result.set(compassOwner(), {
             promptVersion: r.meta.promptVersion,
