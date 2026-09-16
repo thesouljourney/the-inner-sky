@@ -17,14 +17,21 @@ create table if not exists public.compass_entries (
   mood        text,
   body        text,
   kind        text not null default 'note',
+  -- 那天的问题:只有「回答了今天的问题」那一种记录才有,其余是 null。
+  -- 这里【只】收问题本身,不收任何机制 / 分数 / prompt。
+  question    text,
   constraint compass_kind_chk check (kind in ('note','answer')),
   constraint compass_body_len_chk check (char_length(coalesce(body,'')) <= 4000),
   constraint compass_mood_len_chk check (char_length(coalesce(mood,'')) <= 40),
+  constraint compass_question_len_chk check (char_length(coalesce(question,'')) <= 160),
   -- 一则记录至少要有一样东西,不收全空的列
   constraint compass_not_empty_chk check (
     coalesce(body,'') <> '' or coalesce(mood,'') <> ''
   )
 );
+
+-- ⚠ 这张表如果【已经建过】,上面的 create table if not exists 不会补上 question 这一栏。
+--    请改跑 docs/sql/compass_entries_add_question.sql —— 那是一段只加栏位的安全迁移。
 
 -- 读的时候永远是「我自己的、由新到旧」,直接照这个形状建索引
 create index if not exists compass_entries_user_created_idx
