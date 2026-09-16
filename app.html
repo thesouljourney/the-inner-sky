@@ -8056,7 +8056,8 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     "assets/compass-cases.js",
     "assets/compass-preview.js",
     "assets/compass-generation.js",
-    "assets/compass-anchors.js"
+    "assets/compass-anchors.js",
+    "assets/compass-anchors-descriptive.js"
   ];
   const cpPvGenCache = {};          // key = caseId|mode|promptVersion
   /* 生成端点。预设指向这个专案的 Edge Function;
@@ -9125,9 +9126,54 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   /* ── 想留给自己的几句话 ──────────────────────────────────
      不是第二次解读。三句话全部是从【已经接受的四段文案】里截出来的,
      不重新写、不读星盘、不呼叫 API。四个方向只取三句 —— 取舍才有用。 */
+  /* 三句话是【四段文案的纯函式】:不读星盘、不呼叫 API、同一份文案永远同一组。
+     所以这里在【渲染时现算】,不去相信快取里那个阵列 ——
+     那个阵列是生成的当下用当时那一版演算法算完就冻结进去的,
+     演算法后来改了它不会跟着变,而且当年若算不出来就永远是空的,
+     使用者又没有第二个重新生成的入口,等于永久卡住。
+     现算之后:锚点层每一次改版都会【回溯】对所有既有使用者生效,而且 0 次请求。 */
+  var compassAnchorCache = { key: null, list: null };
+  var compassAnchorLoading = false;
+  /* 锚点那两支很小,而且不读星盘、不发任何请求 ——
+     页面上已经有一份生成好的指南时就把它们补载进来,载完重画一次。
+     刻意【不】顺便载入 evidence / selection / generation:
+     这一段用不到它们,也不该为了三句话去碰那几层。 */
+  function compassEnsureAnchors() {
+    if (window.CompassAnchorsDescriptive || compassAnchorLoading) return;
+    compassAnchorLoading = true;
+    ["assets/compass-anchors.js", "assets/compass-anchors-descriptive.js"]
+      .reduce(function (chain, src) {
+        return chain.then(function () { return cpPvLoadOne(src); });
+      }, Promise.resolve())
+      .then(function () {
+        compassAnchorLoading = false;
+        compassAnchorCache = { key: null, list: null };
+        if (curRoute && curRoute.k === "compass") compassRepaint();
+      })
+      .catch(function () { compassAnchorLoading = false; });   // 载不到就维持原样,不让页面挂掉
+  }
+  function compassAnchorsFor(saved) {
+    if (!saved || !saved.directions) return [];
+    var key = (saved.generatedAt || "") + "|" + (saved.promptVersion || "");
+    if (compassAnchorCache.key === key) return compassAnchorCache.list;
+    var list = [];
+    try {
+      var AN3 = window.CompassAnchorsDescriptive, AN = window.CompassAnchors;
+      var r = AN3 ? AN3.derive(saved.directions) : (AN ? AN.derive(saved.directions) : null);
+      if (r && r.status === "ok") {
+        var v = AN3 ? AN3.verifyFramed(r, saved.directions) : AN.verifyDerived(r, saved.directions);
+        if (v.ok) list = r.anchors;          // 回查不过就当作没有 —— 宁可空着,也不给没根据的句子
+      }
+    } catch (e) { list = []; }
+    /* 现算不出来的时候,才退回快取里那一份(旧版算过、已经看过的那三句) */
+    if (!list.length && saved.anchors && saved.anchors.length) list = saved.anchors;
+    compassAnchorCache = { key: key, list: list };
+    return list;
+  }
+
   function compassAnchorsHtml() {
     const saved = window.Compass.result.get(compassOwner());
-    const list = (saved && saved.anchors) || [];
+    const list = compassAnchorsFor(saved);
     return '<section class="cp-sec cp-keep">' +
       compassEyebrow(dpT("想留给自己的几句话", "Worth Keeping"), "WORTH KEEPING") +
       (list.length
@@ -9136,8 +9182,12 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
               '<p class="ln">' + esc0(a.line) + "</p></div>";
           }).join("") + "</div>"
         : '<p class="cp-pending">' +
-          esc0(dpT("等上面的内在指南生成之后，这里会留下三句你可以带走的话。",
-                   "Once your compass is drawn, three lines worth keeping will settle here.")) +
+          esc0(saved
+            /* 已经生成过,只是这一份文案里没有可以重复带走的句子 —— 照实说,不编 */
+            ? dpT("这一份指南里，还没有可以单独带走的句子。",
+                  "This compass doesn’t yet hold a line that stands on its own.")
+            : dpT("等上面的内在指南生成之后，这里会留下三句你可以带走的话。",
+                  "Once your compass is drawn, three lines worth keeping will settle here.")) +
           "</p>") +
       "</section>";
   }
@@ -9956,7 +10006,8 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
           _pre: (payload = G.buildInput(vm)) })
         .then(function (r) {
           if (r.status !== "ok" || !r.copies) throw new Error(r.reason || r.status);
-          const an = AN.derive(r.copies);
+          const AN3 = window.CompassAnchorsDescriptive;
+          const an = (AN3 ? AN3 : AN).derive(r.copies);
           window.Compass.result.set(compassOwner(), {
             promptVersion: r.meta.promptVersion,
             generatedAt: r.meta.generatedAt,
@@ -10105,6 +10156,9 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
         });
       });
     });
+
+    /* 已经有一份指南,就把三句话现算出来 —— 这是既有使用者自己会好起来的那一步 */
+    if (window.Compass.result.get(compassOwner())) compassEnsureAnchors();
 
     const skip = document.getElementById("cpSkip");
     if (skip) skip.addEventListener("click", function () {

@@ -2320,8 +2320,12 @@ function testCompassProductPage() {
     /window\.Compass\.result\.get\(compassOwner\(\)\)/.test(page), true);
   checkEq("[prod] 没有生成过就如实说,不拿示例冒充",
     /cp-empty4[\s\S]{0,400}你的内在指南还没有生成/.test(page), true);
+  /* 两种空的情形都要照实说,而且都不编:
+     还没生成过 → 「等上面的内在指南生成之后…」
+     生成过但这份文案里取不出可以带走的句子 → 「这一份指南里，还没有…」 */
   checkEq("[prod] 锚点没有资料时也不编",
-    /cp-keep[\s\S]{0,600}等上面的内在指南生成之后/.test(page), true);
+    /cp-keep[\s\S]{0,1400}等上面的内在指南生成之后/.test(page) &&
+    /cp-keep[\s\S]{0,1400}这一份指南里，还没有可以单独带走的句子/.test(page), true);
   checkEq("[prod] 今天的问题来自已通过验证的 reflectionPrompt",
     /saved\.directions\[k\] && saved\.directions\[k\]\.reflectionPrompt/.test(page), true);
   checkEq("[prod] 一次只有一个问题",
@@ -2918,6 +2922,163 @@ function testCompassPreLaunchFixes() {
     }).join(","), "");
 }
 
+
+/* ---------- 30. 描述型来源的锚点(anchors-3.0)----------
+   compass-v1 那一代的文案只有描述与归纳,没有一句收在「那下次可以怎么办」,
+   已锁的 2.2 对它一句都取不出来。这一层用【框架】补上那一句邀请,
+   而且除了那句邀请,一个字都不能是我们自己加的。
+   ------------------------------------------------------------------- */
+function testCompassAnchorsDescriptive() {
+  const AN = require(path.join(__dirname, "..", "assets", "compass-anchors.js"));
+  const D = require(path.join(__dirname, "..", "assets", "compass-anchors-descriptive.js"));
+  const RC = require(path.join(__dirname, "..", "assets", "compass-recorded.js"));
+  function d(ci, ex) { return { coreInsight: ci, explanation: ex, reflectionPrompt: "" }; }
+
+  /* 使用者线上那一份(compass-v1 形状,2.2 取不出任何东西) */
+  const LIVE = {
+    grounds: d("让你回来的，是一个有顺序的过程，不是一个地方",
+      "有时候你需要的不是陪伴，而是先让外面安静一会儿。不是因为不想接触，而是在那之前，你得先把自己整理一下。有些感受在说出来之前是散的，说出来之后才会停下来占据你的注意力。等那一步完成，你才会真的想靠近人。这个顺序对你来说不是习惯，更像是一个必要的步骤。"),
+    moves: d("让你愿意投入的，是「这件事还有没有意义」",
+      "事情重不重要，不是你真正在评估的。你在评估的是：做这件事的时候，有没有什么是真实的。只要那个感觉还在，你可以做很久。但如果变成纯粹照步骤走的事，动力会消失得比想象中快。有些事你会接下来，是因为当时感觉值得，而不是因为你非接不可。"),
+    drains: d("你真正容易耗掉的地方，在靠近之前那一段反覆确认的过程",
+      "你不会一下子全说。通常是先说一点，看看接下来发生什么，再决定要不要继续。这个过程本身不是问题，但它需要持续花力气。对你来说，想深入和觉得现在还不到时候，这两件事往往同时都是真的——先出现的那个，通常是「再确认一次」。"),
+    calls: d("你容易被「换一个角度再看」这件事吸引",
+      "同样的事做太久，你的注意力会散掉——不是因为难，而是因为不变。换一个切入点，有时比休息更有用。你也容易对一件事背后的更大的问题感兴趣，那个「再往外一层看」的冲动，不太需要理由，就是会一直出现。")
+  };
+
+  /* —— 1. 已锁的 2.2 对这一份确实取不出东西(这就是它当初空白的原因)—— */
+  checkEq("[desc] 2.2 对描述型文案取不出东西", AN.derive(LIVE).status, "insufficient");
+
+  /* —— 2. 3.0 取得出三句,而且逐字回查得过 —— */
+  const r = D.derive(LIVE);
+  checkEq("[desc] 3.0 取得出结果", r.status, "ok");
+  checkEq("[desc] 走的是框架那一条路", r.mode, "framed");
+  checkEq("[desc] 正好三句", r.anchors.length, 3);
+  checkEq("[desc] 三句逐段回查得过", D.verifyFramed(r, LIVE).offenders.length, 0);
+  checkEq("[desc] 三句就是这三句",
+    r.anchors.map(function (a) { return a.line; }).join("|"),
+    "动力会消失的时候，可以先看看「这件事还有没有意义」。|" +
+    "注意力会散掉的时候，可以先看看「换一个角度再看」。|" +
+    "先让外面安静一会儿，也没关系。");
+  checkEq("[desc] 三句的功能彼此不同",
+    new Set(r.anchors.map(function (a) { return a["function"]; })).size, 3);
+  checkEq("[desc] 同一份文案永远同一组", JSON.stringify(D.derive(LIVE)), JSON.stringify(r));
+
+  /* —— 3. 只有那句固定的邀请是新的 —— */
+  const flat = (s2) => String(s2).replace(/[，。！？；：、（）「」“”\s—…]/g, "");
+  r.anchors.forEach(function (a) {
+    const src = flat(LIVE[a.sourceDirection].coreInsight + LIVE[a.sourceDirection].explanation);
+    if (a.situation) checkEq("[desc] 场合来自原文:" + a.situation, src.indexOf(flat(a.situation)) >= 0, true);
+    checkEq("[desc] 重点来自原文:" + a.move, src.indexOf(flat(a.move)) >= 0, true);
+  });
+  checkEq("[desc] 框架是封闭的一小段话",
+    Object.keys(D.FRAME).sort().join(","), "look,permit");
+  checkEq("[desc] 框架本身不对人做任何主张",
+    /你|我|应该|必须|因为|所以/.test(D.FRAME_TOKENS), false);
+
+  /* —— 4. 不替代价与拉力发许可 ——
+     「什么正在消耗我」「我正在被什么吸引」那两段描述的是代价与拉力,
+     替它们说「先做某件事也没关系」等于说了原文没说的话。 */
+  ["drains", "calls", "moves"].forEach(function (k) {
+    const c = D.framedCandidate(k, LIVE[k]);
+    if (c) checkEq("[desc] " + k + " 不会变成许可句", c.frame, "look");
+  });
+  const BAD = {
+    grounds: d("你在被看见的时候会先绷起来。", "事情被摊开的时候，你会先绷起来。"),
+    moves: d("你会走神。", "同一个流程做到第三遍，你会开始走神。"),
+    drains: d("你会绷起来。", "被看到的时候，你会先绷起来，而不是松一口气。"),
+    calls: d("你会走神。", "重复久了，你会开始走神。")
+  };
+  const bad = D.derive(BAD);
+  checkEq("[desc] 不会产生「先绷起来，也没关系」这种句子",
+    /绷起来，也没关系|走神，也没关系/.test(JSON.stringify(bad.anchors || [])), false);
+
+  /* —— 5. 换一个人 → 换一组句子 —— */
+  const OTHER = RC.RAW.C4;
+  const r2 = D.derive(OTHER);
+  checkEq("[desc] 另一个人也取得出三句", r2.status, "ok");
+  checkEq("[desc] 另一个人的三句完全不一样",
+    r2.anchors.map(function (a) { return a.line; }).join("|") ===
+    r.anchors.map(function (a) { return a.line; }).join("|"), false);
+  checkEq("[desc] 另一个人的三句也回查得过", D.verifyFramed(r2, OTHER).offenders.length, 0);
+  checkEq("[desc] 不是把使用者那三句写死",
+    /动力会消失|换一个角度再看|先让外面安静一会儿/.test(
+      require("fs").readFileSync(path.join(__dirname, "..", "assets", "compass-anchors-descriptive.js"), "utf8")
+    ), false);
+
+  /* —— 6. 真的不够就说不够,不凑 —— */
+  const THIN = {
+    grounds: d("你比较慢热。", "你需要一点时间。"),
+    moves: d("你需要理由。", "没有理由你就停住。"),
+    drains: d("你容易累。", "太多人看着你会累。"),
+    calls: d("你喜欢深的东西。", "浅的东西留不住你。")
+  };
+  const thin = D.derive(THIN);
+  checkEq("[desc] 取不出来就说取不出来", thin.status, "insufficient");
+  checkEq("[desc] 取不出来时一句都不给", thin.anchors.length, 0);
+  checkEq("[desc] 取不出来时不给万用句", JSON.stringify(thin.anchors), "[]");
+  /* compass-v1 的已录制样本里,取不出来的那几份也照实回报 */
+  ["C1", "C6", "C10"].forEach(function (k) {
+    const x = D.derive(RC.RAW[k]);
+    checkEq("[desc] RAW." + k + " 不硬凑", x.status === "ok" ? x.anchors.length : 0,
+      x.status === "ok" ? 3 : 0);
+  });
+
+  /* —— 7. 已锁的 2.2 一个字都没动 —— */
+  const v12 = D.derive(RC.RAW_V12.C1);
+  checkEq("[desc] v1.2 的文案原样交给已锁的 2.2", v12.mode, "extract");
+  checkEq("[desc] v1.2 的结果与 2.2 逐字相同",
+    JSON.stringify(v12.anchors), JSON.stringify(AN.derive(RC.RAW_V12.C1).anchors));
+  checkEq("[desc] 交回来的时候有记是哪一支算的", v12.engine, AN.VERSION);
+  checkEq("[desc] 已锁基准没有被碰过", AN.ANCHORS_BASELINE.version, "anchors-2.2");
+
+  /* —— 8. 这一层永远不呼叫 API —— */
+  const fs = require("fs");
+  const src = fs.readFileSync(path.join(__dirname, "..", "assets", "compass-anchors-descriptive.js"), "utf8")
+    .replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+  checkEq("[desc] 没有任何网路呼叫",
+    /fetch\(|XMLHttpRequest|anthropic|supabase/i.test(src), false);
+  checkEq("[desc] 不碰星盘 / 机制 / 分数 / 日记",
+    /planets|cusps|\bmechanism\b|selectionScore|patternKey|journal|mood|favs/i.test(src), false);
+  const realFetch = global.fetch, realXHR = global.XMLHttpRequest;
+  let called = 0;
+  global.fetch = function () { called++; throw new Error("no"); };
+  global.XMLHttpRequest = function () { called++; throw new Error("no"); };
+  try {
+    checkEq("[desc] 推导过程不发请求", D.derive(LIVE).status, "ok");
+    checkEq("[desc] fetch 一次都没被碰到", called, 0);
+  } finally { global.fetch = realFetch; global.XMLHttpRequest = realXHR; }
+
+  /* —— 9. 页面改成渲染时现算,既有的空阵列自己会好 —— */
+  const html = fs.readFileSync(path.join(__dirname, "..", "app.html"), "utf8");
+  const fn = html.slice(html.indexOf("function compassAnchorsFor(saved)"),
+                        html.indexOf("function compassNowHtml()"));
+  checkEq("[desc] 渲染时从已存的四段文案现算",
+    /AN3\.derive\(saved\.directions\)/.test(fn), true);
+  checkEq("[desc] 现算的结果要回查过才给", /verifyFramed\(r, saved\.directions\)/.test(fn) &&
+    /if \(v\.ok\) list = r\.anchors/.test(fn), true);
+  checkEq("[desc] 现算不出来才退回快取里那一份",
+    /if \(!list\.length && saved\.anchors/.test(fn), true);
+  checkEq("[desc] 现算有记忆化,不会每次重画都重算",
+    /compassAnchorCache\.key === key/.test(fn), true);
+  checkEq("[desc] 已经生成过就不再说「等生成之后」",
+    /这一份指南里，还没有可以单独带走的句子/.test(fn), true);
+  /* 补载:进到 #/compass 而且已经有一份指南时才载,而且只载锚点那两支 */
+  const ens = html.slice(html.indexOf("function compassEnsureAnchors()"),
+                         html.indexOf("function compassAnchorsFor(saved)"));
+  checkEq("[desc] 有指南时会把锚点模组补载进来",
+    /if \(window\.Compass\.result\.get\(compassOwner\(\)\)\) compassEnsureAnchors\(\);/.test(html), true);
+  checkEq("[desc] 只补载锚点那两支,不碰 evidence / selection / generation",
+    /compass-evidence|compass-selection|compass-generation|compass-preview|compass-recorded/.test(ens), false);
+  checkEq("[desc] 载完会重画一次", /compassRepaint\(\)/.test(ens), true);
+  checkEq("[desc] 载不到也不让页面挂掉", /\.catch\(function \(\) \{ compassAnchorLoading = false; \}\)/.test(ens), true);
+  checkEq("[desc] 不会重复载", /if \(window\.CompassAnchorsDescriptive \|\| compassAnchorLoading\) return;/.test(ens), true);
+
+  checkEq("[desc] 正式页面会载入这一支",
+    /assets\/compass-anchors-descriptive\.js/.test(
+      html.slice(html.indexOf("const CP_PROD_SRC"), html.indexOf("];", html.indexOf("const CP_PROD_SRC")))), true);
+}
+
 /* ---------- 跑 ---------- */
 function main() {
   testTimezones();
@@ -2948,6 +3109,7 @@ function main() {
   testCompassAnchorReusability();
   testCompassAnchorsLock();
   testCompassPreLaunchFixes();
+  testCompassAnchorsDescriptive();
   testCompassZhOnlyLabels();
   return Promise.all([genJobs, liveJobs, voiceJobs, v12Jobs]).then(function () { return testPlaces(); }).then(function () {
     console.log("\n对照来源:" + REF.reference);
