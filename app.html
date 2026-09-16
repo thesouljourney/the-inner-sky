@@ -2989,6 +2989,118 @@
     font-size:clamp(16px,1.9vw,19px);line-height:1.95;color:var(--dp-ink)
   }
 
+  /* ============================================================
+     方向指南(Inner Guide)—— 今天的方向 + 星空记录
+     ------------------------------------------------------------
+     两种状态:
+       还没做今天的输入 → 两组选项,像在问一句话,不像问卷
+       做完 → 完全没有表单的阅读体验:标题 → 正文 → 三段小节
+     用的是既有的珍珠白 / 深蓝 / 香槟 / 淡薰衣草,没有新的视觉语言。
+     ============================================================ */
+  #dpage.compass-page .gd-q{
+    margin:clamp(30px,3.6vw,42px) 0 0;text-align:center;
+    font-family:var(--dp-serif);font-weight:400;
+    font-size:clamp(15px,1.7vw,17px);line-height:1.9;color:#33324a
+  }
+  #dpage.compass-page .gd-pills{
+    display:flex;flex-wrap:wrap;justify-content:center;gap:9px;
+    margin:clamp(14px,1.8vw,18px) auto 0;max-width:min(100%,640px)
+  }
+  #dpage.compass-page .gd-pill{
+    font-family:var(--dp-sans);font-weight:300;font-size:13px;letter-spacing:.04em;
+    color:#5b596e;cursor:pointer;padding:9px 16px;min-height:38px;border-radius:20px;
+    background:rgba(255,253,250,.7);border:1px solid rgba(150,130,180,.16);
+    transition:border-color .3s ease,color .3s ease,background .3s ease
+  }
+  @media(hover:hover){
+    #dpage.compass-page .gd-pill:hover{border-color:rgba(154,106,52,.3);color:#3d3b55}
+  }
+  #dpage.compass-page .gd-pill.on{
+    color:#3a3455;border-color:rgba(154,140,205,.55);background:rgba(170,160,213,.12)
+  }
+  #dpage.compass-page .gd-pill:focus-visible{outline:1px solid rgba(129,118,173,.7);outline-offset:3px}
+  #dpage.compass-page .gd-note{margin-top:clamp(22px,2.6vw,30px)}
+  #dpage.compass-page .gd-act{justify-content:center;margin-top:22px}
+  #dpage.compass-page .dp-cta[disabled]{opacity:.45;cursor:default;box-shadow:none}
+
+  /* —— 做完以后:一份属于今天的私人指南 —— */
+  #dpage.compass-page .gd-head{
+    max-width:min(100%,var(--dp-text));margin:clamp(22px,2.8vw,32px) auto 0;text-align:center;
+    font-family:var(--dp-serif);font-weight:600;
+    font-size:clamp(19px,2.3vw,26px);line-height:1.75;letter-spacing:.01em;color:var(--dp-ink)
+  }
+  #dpage.compass-page .gd-body{
+    max-width:min(100%,var(--dp-text));margin:clamp(16px,2vw,22px) auto 0;
+    font-size:clamp(15px,1.7vw,16.5px);line-height:2.15;color:#44425c;font-weight:300
+  }
+  #dpage.compass-page .gd-part{
+    max-width:min(100%,var(--dp-text));margin:clamp(40px,4.6vw,58px) auto 0;
+    padding-top:clamp(26px,3vw,34px);border-top:1px solid rgba(154,106,52,.14)
+  }
+  #dpage.compass-page .gd-cap{
+    display:block;font-family:var(--dp-sans);font-weight:300;font-size:11.5px;
+    letter-spacing:.22em;color:rgba(154,106,52,.85)
+  }
+  #dpage.compass-page .gd-part .gd-body{margin-top:12px}
+  #dpage.compass-page .gd-label{
+    margin:12px 0 0;font-family:var(--dp-serif);font-weight:600;
+    font-size:clamp(17px,2vw,21px);line-height:1.7;color:var(--dp-ink)
+  }
+  #dpage.compass-page .gd-step{
+    background:var(--dp-cloud);border:1px solid rgba(154,140,205,.15);border-top:0;
+    border-radius:20px;padding:clamp(24px,2.8vw,32px) clamp(20px,2.4vw,30px);
+    box-shadow:0 18px 44px -36px rgba(9,18,46,.38)
+  }
+  #dpage.compass-page .gd-step .gd-body{margin-top:12px;color:var(--dp-ink)}
+  #dpage.compass-page .gd-mine{
+    max-width:min(100%,var(--dp-text));margin:clamp(30px,3.4vw,40px) auto 0;
+    font-size:14px;line-height:2.05;color:rgba(119,119,138,.95);font-weight:300
+  }
+  #dpage.compass-page .gd-mine span{
+    display:block;font-family:var(--dp-sans);font-size:11.5px;letter-spacing:.18em;
+    color:rgba(154,106,52,.7);margin-bottom:8px
+  }
+  #dpage.compass-page .gd-act2{justify-content:center;margin-top:clamp(34px,4vw,46px)}
+
+  /* —— 星空记录:他自己的方向记录 —— */
+  #dpage.compass-page .gd-log{
+    max-width:min(100%,var(--dp-text));margin:clamp(26px,3.2vw,38px) auto 0;
+    display:grid;gap:clamp(20px,2.4vw,28px)
+  }
+  #dpage.compass-page .gd-row{
+    position:relative;padding-bottom:clamp(20px,2.4vw,28px);
+    border-bottom:1px solid rgba(154,106,52,.12)
+  }
+  #dpage.compass-page .gd-row:last-child{border-bottom:0;padding-bottom:0}
+  #dpage.compass-page .gd-row .dt{
+    font-family:var(--dp-sans);font-weight:300;font-size:11.5px;letter-spacing:.16em;
+    color:rgba(154,106,52,.8)
+  }
+  #dpage.compass-page .gd-row .lb{
+    margin-left:12px;font-family:var(--dp-sans);font-size:11.5px;letter-spacing:.06em;
+    color:rgba(129,118,173,.95)
+  }
+  #dpage.compass-page .gd-row .hd{
+    margin:10px 0 0;font-family:var(--dp-serif);font-weight:500;
+    font-size:clamp(15.5px,1.8vw,17.5px);line-height:1.95;color:var(--dp-ink)
+  }
+  #dpage.compass-page .gd-row .nt{
+    margin:8px 0 0;font-size:13.5px;line-height:1.95;color:rgba(119,119,138,.95);font-weight:300
+  }
+  #dpage.compass-page .gd-row .cp-del{position:absolute;right:0;top:-4px;margin-left:0}
+
+  @media(max-width:767px){
+    #dpage.compass-page .gd-pills{gap:8px}
+    #dpage.compass-page .gd-pill{padding:9px 13px;font-size:12.5px;letter-spacing:.02em;min-height:40px}
+    #dpage.compass-page .gd-head{font-size:19px;line-height:1.75}
+    #dpage.compass-page .gd-body{font-size:15px;line-height:2.1}
+    #dpage.compass-page .gd-part{margin-top:34px;padding-top:22px}
+    #dpage.compass-page .gd-step{padding:22px 18px;border-radius:18px}
+    #dpage.compass-page .gd-log{gap:18px}
+    #dpage.compass-page .gd-row .hd{font-size:15.5px}
+    #dpage.compass-page .gd-row .cp-del{position:static;display:block;margin-top:10px}
+  }
+
   /* 记录:展开长在自己下面 */
   #dpage.compass-page .cp-sky-card.open{background:var(--dp-cloud)}
   #dpage.compass-page .cp-sky-card .qz{
@@ -5443,6 +5555,94 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     })(),
     TABLE: TABLE,
     LIMITS: { text: MAX_TEXT, mood: MAX_MOOD, localRows: MAX_ROWS_LOCAL, page: PAGE_SIZE }
+  };
+})();
+</script>
+<script>
+/* ============================================================
+   我的内在指南 · 方向指南的储存层(Guide)
+   ------------------------------------------------------------
+   存三样东西,全部在这台装置上:
+
+     profile   长期标签。只算【一次】,之后每天都不再读星盘。
+     history   每天完成之后留下的一笔方向记录(最新在前)。
+     today     其实就是 history[0] —— 日期等于今天的那一笔。
+
+   ⚠ 这一层不呼叫任何 API。
+     重整、换心情、看历史,一律 0 次请求。
+   ============================================================ */
+window.Guide = (function () {
+  "use strict";
+  var P_KEY = "inner_sky_guide_profile_v1";
+  var H_KEY = "inner_sky_guide_history_v1";
+  var MAX_ROWS = 120, MAX_NOTE = 2000;
+
+  function read(k) { try { return JSON.parse(localStorage.getItem(k) || "{}") || {}; } catch (e) { return {}; } }
+  function write(k, o) { try { localStorage.setItem(k, JSON.stringify(o)); return true; } catch (e) { return false; } }
+  function today() { return new Date().toISOString().slice(0, 10); }
+
+  /* 只留白名单栏位 —— 多传进来的一律丢掉,不是信任呼叫端 */
+  function cleanProfile(t) {
+    var arr = function (a, n) {
+      return (Array.isArray(a) ? a : []).slice(0, n).map(function (x) { return String(x); });
+    };
+    return { version: String((t && t.version) || ""),
+             computedAt: String((t && t.computedAt) || new Date().toISOString()),
+             movement_style: arr(t && t.movement_style, 2),
+             stuck_pattern: arr(t && t.stuck_pattern, 3),
+             direction_need: arr(t && t.direction_need, 3) };
+  }
+  function cleanEntry(e) {
+    e = e || {};
+    return { date: String(e.date || today()).slice(0, 10),
+             mood: String(e.mood || ""), topic: String(e.topic || ""),
+             direction: String(e.direction || ""), label: String(e.label || ""),
+             variantId: String(e.variantId || ""),
+             headline: String(e.headline || ""), step: String(e.step || ""),
+             note: String(e.note || "").trim().slice(0, MAX_NOTE) };
+  }
+
+  return {
+    today: today,
+    profile: {
+      get: function (owner) {
+        var r = read(P_KEY)[owner || "anon"];
+        return (r && (r.direction_need || []).length) ? r : null;
+      },
+      set: function (owner, t) {
+        var all = read(P_KEY); all[owner || "anon"] = cleanProfile(t);
+        return write(P_KEY, all) ? all[owner || "anon"] : null;
+      },
+      clear: function (owner) { var all = read(P_KEY); delete all[owner || "anon"]; write(P_KEY, all); },
+      _key: P_KEY
+    },
+    history: {
+      list: function (owner) {
+        var a = read(H_KEY)[owner || "anon"];
+        return Array.isArray(a) ? a : [];
+      },
+      /* 同一天再做一次就覆盖那一天,不会留下两笔 */
+      save: function (owner, entry) {
+        var all = read(H_KEY), key = owner || "anon";
+        var rows = Array.isArray(all[key]) ? all[key] : [];
+        var e = cleanEntry(entry);
+        rows = rows.filter(function (r) { return r.date !== e.date; });
+        rows.unshift(e);
+        all[key] = rows.slice(0, MAX_ROWS);
+        return write(H_KEY, all) ? e : null;
+      },
+      remove: function (owner, date) {
+        var all = read(H_KEY), key = owner || "anon";
+        all[key] = (Array.isArray(all[key]) ? all[key] : [])
+          .filter(function (r) { return r.date !== String(date); });
+        write(H_KEY, all);
+      },
+      todayOf: function (owner) {
+        var rows = this.list(owner);
+        return (rows[0] && rows[0].date === today()) ? rows[0] : null;
+      },
+      _key: H_KEY
+    }
   };
 })();
 </script>
@@ -8009,13 +8209,10 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
 
   /* 我的内在指南:页面的 UI 状态。跟其他模块级宣告一样必须写在首次渲染之前,
      否则冷启动直接带 #/compass 进来会踩进 TDZ。 */
-  let compassMood = "";          // 此刻选中的心情
-  let compassEntries = null;     // 已载入的记录;null = 还没载到
-  let compassAll = false;        // 「查看全部」是否展开
-  let compassOpen = "";          // 目前展开的那一则记录 id
-  let compassDelAsk = "";        // 正在等确认删除的那一则 id
-  let compassGenBusy = false;    // 正式页面的生成中
-  let compassBusy = false;
+  var guideMood = "";            // 今天选中的状态
+  var guideTopic = "";           // 今天选中的主题
+  let compassDelAsk = "";        // 正在等确认删除的那一天
+  let compassAll = false;        // 星空记录是否展开全部
 
   /* Dev Preview(#/compass/preview)的 UI 状态。同样必须写在首次渲染之前。
      这一组只有在开发预览路由下才会被读到,正式的 #/compass 完全不碰。 */
@@ -8047,18 +8244,6 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
      必须一眼看得出是哪一类,而不是笼统的「生成失败」。
      纪录里【永远】不含任何凭证 —— 只有网址、状态码、耗时、错误讯息。 */
   let cpPvHttpLog = [];
-  /* 正式页面生成需要的那几支。刻意【不】含 compass-recorded.js ——
-     那是开发用的 fixture,不该出现在使用者的浏览器里。 */
-  const CP_PROD_SRC = [
-    "assets/compass-evidence.js",
-    "assets/compass-selection.js",
-    "assets/compass-translation.js",
-    "assets/compass-cases.js",
-    "assets/compass-preview.js",
-    "assets/compass-generation.js",
-    "assets/compass-anchors.js",
-    "assets/compass-anchors-semantic.js"
-  ];
   const cpPvGenCache = {};          // key = caseId|mode|promptVersion
   /* 生成端点。预设指向这个专案的 Edge Function;
      开发时可以用 localStorage 指到别的地方(例如本机跑的那一份)——
@@ -9038,25 +9223,6 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   function compassOwner() {
     return window.Cloud.userId() || "anon";
   }
-  /* 今天的问题:跟着「使用者 + 日期」轮换 —— 同一天回来是同一题,
-     不同的人不会永远看到同一题。 */
-  function compassSeed() {
-    return compassOwner() + "|" + new Date().toISOString().slice(0, 10);
-  }
-  function compassDate(iso) {
-    const d = new Date(iso);
-    if (isNaN(d)) return String(iso || "").slice(0, 10);
-    const mm = ["01","02","03","04","05","06","07","08","09","10","11","12"][d.getMonth()];
-    return window.I18N.isEN()
-      ? d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
-      : d.getFullYear() + "." + mm + "." + ("0" + d.getDate()).slice(-2);
-  }
-  /* 示例标记:这一段还不是按你的星盘生成的 —— 说清楚,不假装 */
-  function compassStub(on) {
-    if (!on) return "";
-    return '<span class="cp-stub">' +
-      esc0(dpT("示例 · 尚未接上你的星盘", "Sample · not yet drawn from your chart")) + "</span>";
-  }
   /* §6.2-1:中文模式只显示中文。英文小标是英文版才有的东西 ——
      中文使用者读到 "YOUR INNER COMPASS" 只是噪音。
      英文模式行为完全不变(zh 与 en 本来就是同一句话的两种语言)。 */
@@ -9090,233 +9256,147 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
      内容【只】来自已经生成、已经通过验证的那一份(存在本机快取里)。
      没有生成过就如实说没有,不拿示例文字冒充个人化内容。
      这一段自己【不】呼叫任何 API —— 生成只由使用者按按钮触发一次。 */
-  function compassDirectionsHtml(chart) {
-    const saved = window.Compass.result.get(compassOwner());
-    const DIRS = window.Compass.DIRECTIONS;
-    const KEYS = { ground: "grounds", move: "moves", drain: "drains", call: "calls" };
-
-    let body;
-    if (saved) {
-      body = '<div class="cp-grid4">' + DIRS.map(function (d, i) {
-        const c = saved.directions[KEYS[d.key]];
-        return '<article class="cp-dir d' + (i + 1) + (c ? "" : " none") + '">' +
-          '<span class="no">' + esc0(d.no) + "</span>" +
-          (window.I18N.isEN() ? '<span class="en">' + esc0(d.en) + "</span>" : "") +
-          '<b class="zh">' + esc0(dpT(d.zh, d.en)) + "</b>" +
-          (c
-            ? '<p class="ci">' + esc0(c.coreInsight) + "</p>" +
-              '<p class="tx">' + esc0(c.explanation) + "</p>"
-            : '<p class="tx none">' + esc0(dpT("这个方向目前没有足够的线索。",
-                "There isn’t enough to say about this direction yet.")) + "</p>") +
-          "</article>";
-      }).join("") + "</div>";
-    } else {
-      body = '<div class="cp-empty4">' +
-        '<p class="cp-pending">' +
-        esc0(dpT("你的内在指南还没有生成。", "Your compass hasn’t been drawn yet.")) + "</p>" +
-        '<div class="cp-act"><button type="button" class="dp-cta" id="cpGenBtn">' +
-        esc0(dpT("生成我的内在指南", "Draw my compass")) + "</button>" +
-        '<span class="cp-hint" id="cpGenHint" aria-live="polite"></span></div></div>';
-    }
-    return '<section class="cp-sec cp-compass">' +
-      compassEyebrow(dpT("我的内在指南", "My Inner Compass"), "MY INNER COMPASS") +
-      '<div class="cp-rose-wrap">' + compassRoseSvg() + "</div>" + body + "</section>";
-  }
-
-  /* ── 想留给自己的几句话 ──────────────────────────────────
-     不是第二次解读。三句话全部是从【已经接受的四段文案】里截出来的,
-     不重新写、不读星盘、不呼叫 API。四个方向只取三句 —— 取舍才有用。 */
-  /* 三句话是【四段文案的纯函式】:不读星盘、不呼叫 API、同一份文案永远同一组。
-     所以这里在【渲染时现算】,不去相信快取里那个阵列 ——
-     那个阵列是生成的当下用当时那一版演算法算完就冻结进去的,
-     演算法后来改了它不会跟着变,而且当年若算不出来就永远是空的,
-     使用者又没有第二个重新生成的入口,等于永久卡住。
-     现算之后:锚点层每一次改版都会【回溯】对所有既有使用者生效,而且 0 次请求。 */
-  var compassAnchorCache = { key: null, list: null };
-  var compassAnchorLoading = false;
-  /* 锚点那两支很小,而且不读星盘、不发任何请求 ——
-     页面上已经有一份生成好的指南时就把它们补载进来,载完重画一次。
-     刻意【不】顺便载入 evidence / selection / generation:
-     这一段用不到它们,也不该为了三句话去碰那几层。 */
-  function compassEnsureAnchors() {
-    if (window.CompassAnchorsSemantic || compassAnchorLoading) return;
-    compassAnchorLoading = true;
-    ["assets/compass-anchors.js", "assets/compass-anchors-semantic.js"]
-      .reduce(function (chain, src) {
-        return chain.then(function () { return cpPvLoadOne(src); });
-      }, Promise.resolve())
+  /* ── 方向指南:载入需要的模组 ────────────────────────────
+     平常只需要内容库与规则引擎(两支很小,而且不发任何请求)。
+     只有【第一次】、profile 还没算过的时候,才额外载入证据层
+     去算一次长期标签 —— 算完存起来,之后再也不读星盘。 */
+  var guideLoading = false;
+  var GUIDE_SRC = ["assets/guide-content.js", "assets/guide-engine.js"];
+  /* 算标签只需要【证据层】。刻意不载入 selection / translation / cases ——
+     这一层不做选择、不翻译、不比对测试盘,只把已接受的机制拿来投票。 */
+  var GUIDE_TAG_SRC = ["assets/compass-evidence.js", "assets/guide-tags.js"];
+  function guideEnsure() {
+    if (guideLoading) return;
+    var needTags = !window.Guide.profile.get(compassOwner());
+    if (window.GuideEngine && !(needTags && !window.GuideTags)) { guideComputeProfile(); return; }
+    guideLoading = true;
+    GUIDE_SRC.concat(needTags ? GUIDE_TAG_SRC : [])
+      .reduce(function (chain, src) { return chain.then(function () { return cpPvLoadOne(src); }); },
+              Promise.resolve())
       .then(function () {
-        compassAnchorLoading = false;
-        compassAnchorCache = { key: null, list: null };
+        guideLoading = false;
+        guideComputeProfile();
         if (curRoute && curRoute.k === "compass") compassRepaint();
       })
-      .catch(function () { compassAnchorLoading = false; });   // 载不到就维持原样,不让页面挂掉
+      .catch(function () { guideLoading = false; });   // 载不到就维持原样,不让页面挂掉
   }
-  function compassAnchorsFor(saved) {
-    if (!saved || !saved.directions) return [];
-    var key = (saved.generatedAt || "") + "|" + (saved.promptVersion || "");
-    if (compassAnchorCache.key === key) return compassAnchorCache.list;
-    var list = [];
+
+  /* 长期标签只算【一次】。星盘只在这一个函式里出现,而且是后台 ——
+     算完存进 profile,之后每天都不再读盘、不再重算。 */
+  function guideComputeProfile() {
+    var owner = compassOwner();
+    if (window.Guide.profile.get(owner)) return;
+    if (!window.GuideTags || !window.CompassEvidence || !curResult || !curResult.planets) return;
     try {
-      var AN3 = window.CompassAnchorsSemantic, AN = window.CompassAnchors;
-      var r = AN3 ? AN3.derive(saved.directions) : (AN ? AN.derive(saved.directions) : null);
-      if (r && r.status === "ok") {
-        var v = AN3 ? AN3.verifySemantic(r, saved.directions) : AN.verifyDerived(r, saved.directions);
-        if (v.ok) list = r.anchors;          // 回查不过就当作没有 —— 宁可空着,也不给没根据的句子
-      }
-    } catch (e) { list = []; }
-    /* 现算不出来的时候,才退回快取里那一份(旧版算过、已经看过的那三句) */
-    if (!list.length && saved.anchors && saved.anchors.length) list = saved.anchors;
-    compassAnchorCache = { key: key, list: list };
-    return list;
+      var report = window.CompassEvidence.build({
+        evidence: { chart: curResult, themes: {} }, context: {} });
+      var t = window.GuideTags.fromReport(report);
+      if (t.status === "ok") window.Guide.profile.set(owner, t);
+    } catch (e) { /* 算不出来就先不存,下次进页面再试 */ }
   }
 
-  function compassAnchorsHtml() {
-    const saved = window.Compass.result.get(compassOwner());
-    const list = compassAnchorsFor(saved);
-    return '<section class="cp-sec cp-keep">' +
-      compassEyebrow(dpT("想留给自己的几句话", "Worth Keeping"), "WORTH KEEPING") +
-      (list.length
-        ? '<div class="cp-anchors">' + list.map(function (a) {
-            return '<div class="cp-anchor"><span class="st" aria-hidden="true">✦</span>' +
-              '<p class="ln">' + esc0(a.line) + "</p></div>";
-          }).join("") + "</div>"
-        : '<p class="cp-pending">' +
-          esc0(saved
-            /* 已经生成过,只是这一份文案里没有可以重复带走的句子 —— 照实说,不编 */
-            ? dpT("这一份指南里，还没有可以单独带走的句子。",
-                  "This compass doesn’t yet hold a line that stands on its own.")
-            : dpT("等上面的内在指南生成之后，这里会留下三句你可以带走的话。",
-                  "Once your compass is drawn, three lines worth keeping will settle here.")) +
-          "</p>") +
+  /* ── 今天的方向 ─────────────────────────────────────
+     已经做过今天的输入,就从存下来的那一笔把内容找回来 ——
+     纯查表,不重新匹配,也不发任何请求。 */
+  function guideToday() {
+    var owner = compassOwner();
+    var saved = window.Guide.history.todayOf(owner);
+    if (!saved) return null;
+    if (!window.GuideContent) return { entry: saved, guide: null };
+    var lib = window.GuideContent.LIBRARY[saved.direction] || [];
+    var v = lib.filter(function (x) { return x.id === saved.variantId; })[0] || lib[0];
+    if (!v) return { entry: saved, guide: null };
+    return { entry: saved, guide: {
+      direction: saved.direction,
+      label: saved.label || window.GuideContent.LABELS[saved.direction],
+      headline: v.headline, body: v.body, toward: v.toward, notYet: v.notYet, step: v.step } };
+  }
+
+  function guidePill(kind, id, zh, on) {
+    return '<button type="button" class="gd-pill' + (on ? " on" : "") +
+      '" data-' + kind + '="' + esc0(id) + '" aria-pressed="' + (on ? "true" : "false") + '">' +
+      esc0(zh) + "</button>";
+  }
+
+  /* ── 还没做今天的输入 ─────────────────────────────── */
+  function guideEntryHtml() {
+    var M = (window.GuideEngine && window.GuideEngine.MOODS) || [];
+    var T = (window.GuideEngine && window.GuideEngine.TOPICS) || [];
+    if (!M.length) return '<section class="cp-sec gd-entry"><p class="cp-pending">' +
+      esc0(dpT("正在准备…", "Getting ready…")) + "</p></section>";
+    return '<section class="cp-sec gd-entry">' +
+      compassEyebrow(dpT("今天，你想从哪里开始？", "Where would you like to start today?"), "START HERE") +
+      '<p class="gd-q">' + esc0(dpT("此刻的我", "Right now")) + "</p>" +
+      '<div class="gd-pills" role="group" aria-label="' + esc0(dpT("此刻的我", "Right now")) + '">' +
+      M.map(function (m) { return guidePill("mood", m.id, m.zh, guideMood === m.id); }).join("") + "</div>" +
+      '<p class="gd-q gd-q2">' + esc0(dpT("今天什么事情最占据你的心？",
+        "What is taking up the most room today?")) + "</p>" +
+      '<div class="gd-pills" role="group" aria-label="' + esc0(dpT("今天的主题", "Today’s theme")) + '">' +
+      T.map(function (t) { return guidePill("topic", t.id, t.zh, guideTopic === t.id); }).join("") + "</div>" +
+      '<textarea id="gdNote" class="cp-ta gd-note" rows="3" placeholder="' +
+      esc0(dpT("如果你愿意，也可以写下一句话。", "If you like, you can write a line.")) + '"></textarea>' +
+      '<div class="cp-act gd-act"><button type="button" class="dp-cta" id="gdGo"' +
+      ((guideMood && guideTopic) ? "" : " disabled") + ">" +
+      esc0(dpT("看看今天的方向", "See today’s direction")) + "</button>" +
+      '<span class="cp-hint" id="gdHint" aria-live="polite">' +
+      esc0((guideMood && guideTopic) ? "" : dpT("两个都选好，就可以了。", "Pick one from each.")) +
+      "</span></div></section>";
+  }
+
+  /* ── 今天的指南:四段。生成之后不再有表单感。 ───────── */
+  function guideReadingHtml(t) {
+    var g = t.guide, e = t.entry;
+    if (!g) return '<section class="cp-sec gd-read"><p class="cp-pending">' +
+      esc0(dpT("正在准备今天的方向…", "Getting today’s direction ready…")) + "</p></section>";
+    return '<section class="cp-sec gd-read">' +
+      compassEyebrow(dpT("今天的方向", "Today’s direction"), "TODAY’S DIRECTION") +
+      '<p class="gd-head">' + esc0(g.headline) + "</p>" +
+      '<p class="gd-body">' + esc0(g.body) + "</p>" +
+      '<div class="gd-part">' +
+      '<span class="gd-cap">' + esc0(dpT("接下来，可以往这里靠近", "Where you can move toward")) + "</span>" +
+      '<p class="gd-label">' + esc0(g.label) + "</p>" +
+      '<p class="gd-body">' + esc0(g.toward) + "</p></div>" +
+      '<div class="gd-part">' +
+      '<span class="gd-cap">' + esc0(dpT("现在先不用急着", "No rush on this")) + "</span>" +
+      '<p class="gd-body">' + esc0(g.notYet) + "</p></div>" +
+      '<div class="gd-part gd-step">' +
+      '<span class="gd-cap">' + esc0(dpT("今天的一小步", "One small step today")) + "</span>" +
+      '<p class="gd-body">' + esc0(g.step) + "</p></div>" +
+      (e.note ? '<p class="gd-mine"><span>' + esc0(dpT("你今天写下的", "What you wrote")) + "</span>" +
+        esc0(e.note) + "</p>" : "") +
+      '<div class="cp-act gd-act2"><button type="button" class="cp-skip" id="gdRedo">' +
+      esc0(dpT("换一个状态，再看一次 →", "Change how I feel →")) + "</button></div>" +
       "</section>";
   }
 
-  function compassNowHtml() {
-    return '<section class="cp-sec cp-now">' +
-      compassEyebrow(dpT("此刻的我", "Right Now"), "RIGHT NOW") +
-      '<p class="cp-q">' + esc0(dpT("今天的天空怎么样？", "How is your sky today?")) + "</p>" +
-      '<div class="cp-moods" role="group" aria-label="' +
-      esc0(dpT("今天的心情", "Today’s weather")) + '">' +
-      window.Compass.MOODS.map(function (m) {
-        const label = dpT(m[0], m[1]);
-        return '<button type="button" class="cp-mood' + (compassMood === label ? " on" : "") +
-          '" data-mood="' + esc0(label) + '" aria-pressed="' +
-          (compassMood === label ? "true" : "false") + '">' + esc0(label) + "</button>";
-      }).join("") + "</div>" +
-      '<p class="cp-q cp-q2">' +
-      esc0(dpT("今天有什么事情，一直停留在你心里？",
-               "What has been staying with you today?")) + "</p>" +
-      '<textarea id="cpNote" class="cp-ta" rows="4" placeholder="' +
-      esc0(dpT("写一点也可以，不需要把它整理得很好。",
-               "A few words is enough. It doesn’t need to be tidy.")) + '"></textarea>' +
-      '<div class="cp-act"><button type="button" class="dp-cta" id="cpSave">' +
-      esc0(dpT("写下此刻的想法", "Keep this moment")) + "</button>" +
-      '<span class="cp-hint" id="cpHint" aria-live="polite"></span></div>' +
-      "</section>";
+  /* ── 我的星空记录:这是他自己的方向记录,不是星盘资料 ── */
+  function guideDate(d) {
+    var p = String(d || "").split("-");
+    return p.length === 3 ? p[0] + "." + p[1] + "." + p[2] : String(d || "");
   }
-
-  /* ── 今天想问自己的一个问题 ──────────────────────────────
-     一次只有一个。优先用【已经生成、已经通过验证】的那四句 reflectionPrompt,
-     依「使用者 + 日期」轮换 —— 同一天回来是同一题,换一天换一题,
-     而且【重整页面不会产生任何请求】。 */
-  function compassTodayQuestion() {
-    const saved = window.Compass.result.get(compassOwner());
-    const order = ["grounds", "moves", "drains", "calls"];
-    const pool = saved
-      ? order.map(function (k) { return saved.directions[k] && saved.directions[k].reflectionPrompt; })
-             .filter(Boolean)
-      : [];
-    if (!pool.length) return { source: "placeholder", text: null };
-    return { source: "generated",
-             /* rotateIndex(len, seed) —— 参数顺序是 (长度, 种子),不要写反 */
-             text: pool[window.Compass.rotateIndex(pool.length, compassSeed())] };
-  }
-
-  function compassQuestionHtml(chart) {
-    const q = compassTodayQuestion();
-    if (q.source !== "generated") {
-      return '<section class="cp-sec cp-ask">' +
-        compassEyebrow(dpT("今天想问自己的一个问题", "One Question"), "ONE QUESTION") +
-        '<p class="cp-pending">' +
-        esc0(dpT("等内在指南生成之后，这里每天会有一个属于你的问题。",
-                 "Once your compass is drawn, a question of your own will appear here each day.")) +
-        "</p></section>";
-    }
-    return '<section class="cp-sec cp-ask">' +
-      compassEyebrow(dpT("今天想问自己的一个问题", "One Question"), "ONE QUESTION") +
-      '<div class="cp-ask-card"><span class="mk" aria-hidden="true">✦</span>' +
-      '<p class="qt">' + esc0(q.text).replace(/\n/g, "<br>") + "</p>" +
-      '<textarea id="cpAnswer" class="cp-ta" rows="3" placeholder="' +
-      esc0(dpT("写下你的回答……", "Write your answer…")) + '"></textarea>' +
-      '<div class="cp-act"><button type="button" class="dp-cta" id="cpSaveAnswer">' +
-      esc0(dpT("留下这个回答", "Keep this answer")) + "</button>" +
-      '<button type="button" class="cp-skip" id="cpSkip">' +
-      esc0(dpT("今天先不回答 →", "Not today →")) + "</button></div></div></section>";
-  }
-
-  /* 这些记录到底存在哪里 —— 如实说,不让人误会。
-     store 自己会去探测:资料表在就上云,不在就留在这台装置上。 */
-  function compassStoreNote() {
-    const mode = window.Compass.storeMode();
-    if (mode === "table") return "";           // 已经跟着帐号走,不需要特别说明
-    if (mode === "unknown") return "";         // 还没探测完,先不写,免得话说反了
-    return '<p class="cp-local">' +
-      esc0(dpT("目前这些记录只存在这台装置上。", "For now these stay on this device only.")) +
-      "</p>";
-  }
-  function compassSkyHtml() {   /* section 会挂 cp-sky */
-    const rows = compassEntries;
-    let inner;
-    if (rows === null) {
-      inner = '<div class="cp-empty"><span class="st" aria-hidden="true">✦</span><p>' +
-        esc0(dpT("正在读取…", "Loading…")) + "</p></div>";
-    } else if (!rows.length) {
-      inner = '<div class="cp-empty"><span class="st" aria-hidden="true">✦</span>' +
-        '<p>' + esc0(dpT("这里会慢慢留下属于你的天空。",
-                         "Your own sky will gather here, slowly.")) + "</p>" +
-        '<span class="sub">' + esc0(dpT("从上面写下第一个此刻开始。",
-                                        "Start with the moment above.")) + "</span></div>";
-    } else {
-      const shown = compassAll ? rows : rows.slice(0, 6);
-      inner = '<div class="cp-sky-grid">' + shown.map(function (r) {
-        const t = String(r.text || "");
-        const open = compassOpen === r.id;
-        /* 收起时只给一小段预览;点开的内容长在【这一张卡自己下面】,
-           不会跳到整页最下方(手机上这一点最重要)。 */
-        const preview = t.length > 42 ? t.slice(0, 42) + "…" : t;
-        return '<article class="cp-sky-card' + (open ? " open" : "") +
-          '" data-entry="' + esc0(r.id) + '"><div class="hd">' +
-          '<span class="dt">' + esc0(compassDate(r.ts)) + "</span>" +
-          (r.mood ? '<span class="md">' + esc0(r.mood) + "</span>" : "") + "</div>" +
-          (t ? '<p class="bd">' + esc0(open ? t : preview) + "</p>" : "") +
-          (r.kind === "answer"
-            ? '<span class="kd">' + esc0(dpT("回答了今天的问题", "Answered today’s question")) + "</span>"
-            : "") +
-          (open && r.question
-            ? '<p class="qz">' + esc0(dpT("那天的问题：", "That day’s question: ")) +
-              esc0(r.question) + "</p>"
-            : "") +
-          '<div class="cp-sky-act">' +
-          (t.length > 42 || r.question
-            ? '<button type="button" class="cp-open" data-open="' + esc0(r.id) + '">' +
-              esc0(open ? dpT("收起", "Close") : dpT("展开", "Open")) + "</button>"
-            : "") +
-          '<button type="button" class="cp-del" data-del="' + esc0(r.id) + '">' +
-          esc0(compassDelAsk === r.id ? dpT("确定删除？", "Delete for good?") : dpT("删除", "Delete")) +
-          "</button></div></article>";
-      }).join("") + "</div>" +
-      (rows.length > 6
-        ? '<div class="cp-more"><button type="button" class="cp-skip" id="cpAll">' +
+  function guideSkyHtml() {
+    var rows = window.Guide.history.list(compassOwner());
+    var shown = compassAll ? rows : rows.slice(0, 8);
+    var inner = rows.length
+      ? '<div class="gd-log">' + shown.map(function (r) {
+          return '<article class="gd-row">' +
+            '<span class="dt">' + esc0(guideDate(r.date)) + "</span>" +
+            '<span class="lb">' + esc0(r.label) + "</span>" +
+            '<p class="hd">' + esc0(r.headline) + "</p>" +
+            (r.note ? '<p class="nt">' + esc0(r.note) + "</p>" : "") +
+            '<button type="button" class="cp-del" data-delday="' + esc0(r.date) + '">' +
+            esc0(compassDelAsk === r.date ? dpT("确定删除？", "Delete for good?") : dpT("删除", "Delete")) +
+            "</button></article>";
+        }).join("") + "</div>" +
+        (rows.length > 8 ? '<div class="cp-more"><button type="button" class="cp-skip" id="cpAll">' +
           esc0(compassAll ? dpT("收起", "Show less")
                           : dpT("查看全部 (" + rows.length + ") →", "View all (" + rows.length + ") →")) +
-          "</button></div>"
-        : "");
-    }
-    return '<section class="cp-sec cp-sky">' +
-      compassEyebrow(dpT("我的星空记录", "My Record"), "MY RECORD") +
-      compassStoreNote() +
-      inner + "</section>";
+          "</button></div>" : "")
+      : '<div class="cp-empty"><span class="st" aria-hidden="true">✦</span><p>' +
+        esc0(dpT("这里会慢慢留下你自己的方向。", "Your own directions will gather here, slowly.")) + "</p>" +
+        '<span class="sub">' + esc0(dpT("从上面的今天开始。", "Start with today, above.")) + "</span></div>";
+    return '<section class="cp-sec cp-sky gd-sky">' +
+      compassEyebrow(dpT("我的星空记录", "My Record"), "MY RECORD") + inner + "</section>";
   }
 
   /* ============================================================
@@ -9967,64 +10047,6 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     requestAnimationFrame(function () { window.scrollTo(0, y); });
   }
 
-  /* ── 正式页面的生成(只有按钮会触发一次)────────────────
-     刻意与 dev preview 分开:
-       · 只载入正式需要的那几支,【不】载入 compass-recorded.js(那是开发 fixture)
-       · 只走 live,没有模式选择器、没有已录制、没有确定性模板
-       · 成功之后把【使用者会看到的部分】写进本机快取 —— 之后重整、
-         展开卡片、选心情、写日记、看旧记录,一律 0 次请求
-       · 失败就说失败,不拿示例文字顶替 */
-  function cpProdLoad() {
-    return CP_PROD_SRC.reduce(function (chain, src) {
-      return chain.then(function () { return cpPvLoadOne(src); });
-    }, Promise.resolve());
-  }
-  function cpProdGenerate() {
-    if (compassGenBusy) return;
-    const hint = document.getElementById("cpGenHint");
-    const btn = document.getElementById("cpGenBtn");
-    const say = function (t) { if (hint) hint.textContent = t; };
-    if (!curResult) return say(dpT("还没有算好你的星盘。", "Your chart isn’t ready yet."));
-    if (!cpLiveSession())
-      return say(dpT("请先登入再生成。", "Please sign in first."));
-
-    compassGenBusy = true;
-    if (btn) { btn.disabled = true; btn.textContent = dpT("正在生成…", "Drawing…"); }
-    say(dpT("这会花一点时间。", "This takes a moment."));
-
-    cpProdLoad().then(function () {
-      const G = window.CompassGeneration, PV = window.CompassPreview, AN = window.CompassAnchors;
-      if (!G || !PV || !AN) throw new Error("modules unavailable");
-      window.Compass.setNatal(curResult);
-      const vm = PV.buildCurrent(curResult);
-      if (!vm) throw new Error("no chart");
-      const live = cpLiveTransport();
-      let payload = null;
-      return G.generate(vm, function (p) { p._input = payload; return live(p); },
-        { promptVersion: G.DEFAULT_PROMPT_VERSION,
-          /* buildInput 会在 generate 里跑;这里先算一份给 transport 当 body */
-          _pre: (payload = G.buildInput(vm)) })
-        .then(function (r) {
-          if (r.status !== "ok" || !r.copies) throw new Error(r.reason || r.status);
-          const AN3 = window.CompassAnchorsSemantic;
-          const an = (AN3 ? AN3 : AN).derive(r.copies);
-          window.Compass.result.set(compassOwner(), {
-            promptVersion: r.meta.promptVersion,
-            generatedAt: r.meta.generatedAt,
-            directions: r.copies,
-            anchors: an.status === "ok" ? an.anchors : []
-          });
-          compassGenBusy = false;
-          if (curRoute && curRoute.k === "compass") routeRefresh();
-        });
-    }).catch(function (e) {
-      compassGenBusy = false;
-      if (btn) { btn.disabled = false; btn.textContent = dpT("再试一次", "Try again"); }
-      say(dpT("这次没有生成成功。", "That didn’t work this time.") +
-          "(" + String((e && e.message) || e).slice(0, 60) + ")");
-    });
-  }
-
   function renderCompassPage() {
     const c = activeChart();
     const dev = !!(curRoute && curRoute.dev);
@@ -10036,12 +10058,14 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       window.Compass.setNatal(curResult);
       /* 开发预览:只有「你的内在指南」这一段吃原型输出,其余 section 原样保留。
          正式的 #/compass 走的是原本那一行,一个字都没变。 */
+      /* 正式页面只有两段:今天的方向 + 星空记录。
+         「四个方向 / 几句话 / 今天的问题」那些认识自己的内容属于前面的章节,
+         这一页不重复 —— 这里回答的是「知道这些以后,我可以往哪里走」。 */
+      var gtoday = guideToday();
       body = '<div class="cp-flow">' +
-        (dev ? cpPvSectionHtml() : compassDirectionsHtml(c)) +
-        compassAnchorsHtml() +
-        compassNowHtml() +
-        compassQuestionHtml(c) +
-        compassSkyHtml() +
+        (dev ? cpPvSectionHtml() : "") +
+        (gtoday ? guideReadingHtml(gtoday) : guideEntryHtml()) +
+        guideSkyHtml() +
         "</div>";
     }
     dpScaffold({
@@ -10070,101 +10094,77 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       else cpPvPaint();
     }
 
-    // 第一次进来才去读记录;之后重画沿用已经载到的那一份
-    if (compassEntries === null && !compassBusy) {
-      compassBusy = true;
-      window.Compass.store.list(compassOwner()).then(function (rows) {
-        compassBusy = false;
-        compassEntries = rows || [];
-        if (curRoute && curRoute.k === "compass") routeRefresh();
-      }).catch(function () { compassBusy = false; compassEntries = []; });
-    }
+    /* 进到这一页就把方向指南需要的模组备好(很小,而且不发任何请求) */
+    guideEnsure();
 
+    /* ── 今天的输入:两组选项 ── */
     const host = $("dpage");
-    // 心情:单选,再点一次取消
-    host.querySelectorAll(".cp-mood").forEach(function (b) {
-      b.addEventListener("click", function () {
-        const v = b.getAttribute("data-mood");
-        compassMood = (compassMood === v) ? "" : v;
-        host.querySelectorAll(".cp-mood").forEach(function (x) {
-          const on = x.getAttribute("data-mood") === compassMood;
-          x.classList.toggle("on", on);
-          x.setAttribute("aria-pressed", on ? "true" : "false");
+    function refreshGo() {
+      const go = document.getElementById("gdGo");
+      const hint = document.getElementById("gdHint");
+      const ready = !!(guideMood && guideTopic);
+      if (go) go.disabled = !ready;
+      if (hint) hint.textContent = ready ? "" : dpT("两个都选好，就可以了。", "Pick one from each.");
+    }
+    function bindPills(attr, get, set) {
+      host.querySelectorAll("[data-" + attr + "]").forEach(function (b) {
+        b.addEventListener("click", function () {
+          const v = b.getAttribute("data-" + attr);
+          set(get() === v ? "" : v);
+          host.querySelectorAll("[data-" + attr + "]").forEach(function (x) {
+            const on = x.getAttribute("data-" + attr) === get();
+            x.classList.toggle("on", on);
+            x.setAttribute("aria-pressed", on ? "true" : "false");
+          });
+          refreshGo();
         });
       });
+    }
+    bindPills("mood", function () { return guideMood; }, function (v) { guideMood = v; });
+    bindPills("topic", function () { return guideTopic; }, function (v) { guideTopic = v; });
+
+    /* ── 看看今天的方向:纯规则,0 次请求 ── */
+    const go = document.getElementById("gdGo");
+    if (go) go.addEventListener("click", function () {
+      const hint = document.getElementById("gdHint");
+      const say = function (t) { if (hint) hint.textContent = t; };
+      if (!guideMood || !guideTopic) return say(dpT("两个都选好，就可以了。", "Pick one from each."));
+      if (!window.GuideEngine) { guideEnsure(); return say(dpT("正在准备…", "Getting ready…")); }
+      const owner = compassOwner();
+      const note = (document.getElementById("gdNote") || {}).value || "";
+      const g = window.GuideEngine.guideFor({
+        mood: guideMood, topic: guideTopic,
+        tags: window.Guide.profile.get(owner) || {},
+        date: window.Guide.today(), owner: owner,
+        history: window.Guide.history.list(owner)
+      });
+      if (!g || g.status !== "ok") return say(dpT("今天先这样也可以。", "Today can stay as it is."));
+      const entry = window.GuideEngine.historyEntry(g);
+      entry.note = note;
+      window.Guide.history.save(owner, entry);
+      guideMood = ""; guideTopic = "";
+      compassRepaint();
     });
 
-    function keep(kind, taId, btnId) {
-      const btn = document.getElementById(btnId), ta = document.getElementById(taId);
-      if (!btn || !ta) return;
-      btn.addEventListener("click", function () {
-        const text = ta.value.trim();
-        const mood = kind === "note" ? compassMood : "";
-        if (!text && !mood) {
-          const h = document.getElementById("cpHint");
-          if (h) h.textContent = dpT("写一点，或先选一个今天的天空。",
-                                     "Add a few words, or pick today’s weather.");
-          return;
-        }
-        btn.disabled = true;
-        const q = kind === "answer" ? compassTodayQuestion() : null;
-        window.Compass.store.add(compassOwner(), {
-          mood: mood, text: text, kind: kind,
-          /* 记录里保留当天的问题,之后回来看才知道自己在回答什么。
-             【不存】机制、support、分数、prompt、模型推理 —— 这是日记,不是 AI log。 */
-          question: (q && q.source === "generated") ? q.text : ""
-        })
-          .then(function (row) {
-            compassEntries = [row].concat(compassEntries || []);
-            compassMood = "";
-            if (curRoute && curRoute.k === "compass") routeRefresh();
-          })
-          .catch(function () {
-            btn.disabled = false;
-            const h = document.getElementById("cpHint");
-            if (h) h.textContent = dpT("这次没有存成功，再试一次。", "That didn’t save — try once more.");
-          });
-      });
-    }
-    keep("note", "cpNote", "cpSave");
-    keep("answer", "cpAnswer", "cpSaveAnswer");
+    /* ── 换一个状态再看一次:只清掉今天那一笔,历史不动 ── */
+    const redo = document.getElementById("gdRedo");
+    if (redo) redo.addEventListener("click", function () {
+      window.Guide.history.remove(compassOwner(), window.Guide.today());
+      compassDelAsk = "";
+      compassRepaint();
+    });
 
-    const genBtn = document.getElementById("cpGenBtn");
-    if (genBtn) genBtn.addEventListener("click", cpProdGenerate);
-
-    /* 记录:展开 / 删除。展开的内容长在被点的那一张卡下面。 */
-    host.querySelectorAll(".cp-open").forEach(function (b2) {
-      b2.addEventListener("click", function () {
-        const id = b2.getAttribute("data-open");
-        compassOpen = (compassOpen === id) ? "" : id;
+    /* ── 星空记录:删除要按两次 ── */
+    host.querySelectorAll("[data-delday]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        const day = b.getAttribute("data-delday");
+        if (compassDelAsk !== day) { compassDelAsk = day; compassRepaint(); return; }
         compassDelAsk = "";
+        window.Guide.history.remove(compassOwner(), day);
         compassRepaint();
       });
     });
-    host.querySelectorAll(".cp-del").forEach(function (b3) {
-      b3.addEventListener("click", function () {
-        const id = b3.getAttribute("data-del");
-        if (compassDelAsk !== id) {          // 第一下只是问,第二下才真的删
-          compassDelAsk = id;
-          compassRepaint();
-          return;
-        }
-        compassDelAsk = "";
-        window.Compass.store.remove(compassOwner(), id).then(function () {
-          compassEntries = (compassEntries || []).filter(function (r) { return r.id !== id; });
-          compassRepaint();
-        });
-      });
-    });
 
-    /* 已经有一份指南,就把三句话现算出来 —— 这是既有使用者自己会好起来的那一步 */
-    if (window.Compass.result.get(compassOwner())) compassEnsureAnchors();
-
-    const skip = document.getElementById("cpSkip");
-    if (skip) skip.addEventListener("click", function () {
-      const card = skip.closest(".cp-ask-card");
-      if (card) card.classList.add("skipped");
-    });
     const all = document.getElementById("cpAll");
     if (all) all.addEventListener("click", function () {
       compassAll = !compassAll;
