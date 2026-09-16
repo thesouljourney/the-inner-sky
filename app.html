@@ -2851,8 +2851,9 @@
      以指南盘为中心的五段(01–05)
      ------------------------------------------------------------
      章节标题:编号 → 标题 → 一句引言。编号是版面的节奏,不是步骤。
-     01 指南盘在中间,四个方向围着它;每张卡先只给一句核心,
-        说明收在「展开」底下,在原地长出来。
+     01 指南盘在中间,四个入口围着它。入口是【个人化的情境】,
+        点开才给那几句;原本的 coreInsight / explanation 收在
+        「为什么这适合我？」底下,一字不改。
      02 三句话:编号清单,没有卡片、没有来源标签。
      04 问题是唯一的主角。05 尽量只剩使用者自己的字。
      ============================================================ */
@@ -2881,63 +2882,94 @@
     display:grid;gap:clamp(18px,2.4vw,28px);align-items:start;
     max-width:min(100%,var(--dp-wide));margin:clamp(28px,3.6vw,44px) auto 0
   }
-  #dpage.compass-page .cp-wd{
-    text-align:left;min-width:0;
-    padding:clamp(22px,2.6vw,30px) clamp(20px,2.4vw,28px);border-radius:20px;
+  /* 入口:四个。有情境的印情境,没有的印方向身分 —— 两种刻意长得不一样 */
+  #dpage.compass-page .cp-ent{
+    display:block;width:100%;text-align:left;min-width:0;cursor:pointer;
+    padding:clamp(18px,2.2vw,24px) clamp(18px,2.2vw,24px);border-radius:18px;
     background:var(--dp-cloud);border:1px solid rgba(154,140,205,.15);
-    box-shadow:0 18px 44px -36px rgba(9,18,46,.38)
+    box-shadow:0 18px 44px -38px rgba(9,18,46,.34);
+    transition:border-color .3s ease,box-shadow .3s ease,background .3s ease
   }
-  #dpage.compass-page .cp-wd.none{background:rgba(248,242,237,.6);box-shadow:none}
-  #dpage.compass-page .cp-wd .no{
-    font-family:var(--dp-display);font-size:13px;letter-spacing:.3em;
-    color:rgba(154,106,52,.6);line-height:1
+  #dpage.compass-page .cp-ent .sit{
+    display:block;font-family:var(--dp-serif);font-weight:500;
+    font-size:clamp(15.5px,1.75vw,18px);line-height:1.8;color:var(--dp-ink);letter-spacing:.02em
   }
-  #dpage.compass-page .cp-wd .en{
-    display:block;margin-top:9px;font-family:var(--dp-sans);font-weight:300;
-    font-size:10.5px;letter-spacing:.24em;color:rgba(129,118,173,.8)
+  #dpage.compass-page .cp-ent.plain{background:rgba(255,253,250,.6);box-shadow:none}
+  #dpage.compass-page .cp-ent .no{
+    display:block;font-family:var(--dp-display);font-size:14px;letter-spacing:.2em;
+    color:rgba(154,106,52,.7);line-height:1
   }
-  #dpage.compass-page .cp-wd .zh{
-    display:block;margin-top:8px;font-family:var(--dp-serif);font-weight:500;
-    font-size:clamp(16px,1.8vw,19px);letter-spacing:.04em;color:var(--dp-ink)
+  #dpage.compass-page .cp-ent .go{
+    display:block;margin-top:10px;font-family:var(--dp-sans);font-weight:300;
+    font-size:13px;letter-spacing:.08em;color:#7a6fa8
   }
-  #dpage.compass-page .cp-wd .ci{
+  @media(hover:hover){
+    #dpage.compass-page .cp-ent:hover{border-color:rgba(154,106,52,.3)}
+  }
+  #dpage.compass-page .cp-ent.on{
+    border-color:rgba(154,140,205,.55);background:rgba(170,160,213,.1)
+  }
+  #dpage.compass-page .cp-ent:focus-visible{outline:2px solid rgba(154,140,205,.8);outline-offset:3px}
+
+  /* 共用的内容区。桌机在盘下方,手机由 order 挪到被点的那一列底下。 */
+  #dpage.compass-page .cp-panel{
+    position:relative;text-align:left;
+    padding:clamp(24px,2.8vw,34px) clamp(20px,2.4vw,30px);border-radius:20px;
+    background:var(--dp-cloud);border:1px solid rgba(154,140,205,.18);
+    box-shadow:0 18px 44px -34px rgba(9,18,46,.4)
+  }
+  #dpage.compass-page .cp-panel .hd{
+    margin:0;font-family:var(--dp-serif);font-weight:600;
+    font-size:clamp(16.5px,1.9vw,20px);line-height:1.8;color:var(--dp-ink);letter-spacing:.02em
+  }
+  #dpage.compass-page .cp-panel .bd{
+    margin:14px 0 0;font-size:15px;line-height:2.1;font-weight:300;color:rgba(34,35,58,.88)
+  }
+  /* 第二句:只是轻一点的同一段话,没有标签、没有图示,也不占位 */
+  #dpage.compass-page .cp-panel .bd.sub{margin-top:10px;color:rgba(34,35,58,.72)}
+  #dpage.compass-page .cp-panel .ci{
     margin:14px 0 0;font-family:var(--dp-serif);font-weight:500;
-    font-size:clamp(15.5px,1.7vw,17.5px);line-height:1.95;color:var(--dp-ink)
+    font-size:clamp(15px,1.7vw,17px);line-height:1.95;color:var(--dp-ink)
   }
-  #dpage.compass-page .cp-wd .tx{
+  #dpage.compass-page .cp-panel .tx{
     margin:12px 0 0;font-size:14.5px;line-height:2.1;font-weight:300;color:rgba(34,35,58,.84)
   }
-  #dpage.compass-page .cp-wd .tx.none{color:rgba(119,119,138,.85)}
-  #dpage.compass-page .cp-wd-body[hidden]{display:none}
-  #dpage.compass-page .cp-wd-more{
-    display:inline-flex;align-items:center;gap:6px;margin-top:14px;padding:6px 0;min-height:36px;
-    background:none;border:0;cursor:pointer;
-    font-family:var(--dp-sans);font-weight:300;font-size:12.5px;letter-spacing:.12em;
-    color:#7a6fa8;transition:color .18s
+  #dpage.compass-page .cp-why{margin-top:clamp(18px,2.2vw,24px)}
+  #dpage.compass-page .cp-why > summary{
+    display:inline-flex;align-items:center;gap:6px;cursor:pointer;list-style:none;
+    font-family:var(--dp-sans);font-weight:300;font-size:12.5px;letter-spacing:.1em;
+    color:#7a6fa8;min-height:34px
   }
-  #dpage.compass-page .cp-wd-more::after{content:"↓";font-size:11px;transition:transform .25s}
-  #dpage.compass-page .cp-wd.open .cp-wd-more::after{transform:rotate(180deg)}
-  @media(hover:hover){#dpage.compass-page .cp-wd-more:hover{color:#4c4470}}
-  #dpage.compass-page .cp-wd-more:focus-visible{outline:2px solid rgba(154,140,205,.8);outline-offset:3px}
+  #dpage.compass-page .cp-why > summary::-webkit-details-marker{display:none}
+  #dpage.compass-page .cp-why > summary::after{content:"↓";font-size:11px}
+  #dpage.compass-page .cp-why[open] > summary::after{content:"↑"}
+  #dpage.compass-page .cp-why > summary:focus-visible{outline:2px solid rgba(154,140,205,.8);outline-offset:3px}
+  #dpage.compass-page .cp-close{
+    margin-top:clamp(16px,2vw,22px);padding:6px 0;min-height:36px;
+    background:none;border:0;cursor:pointer;
+    font-family:var(--dp-sans);font-weight:300;font-size:12.5px;letter-spacing:.12em;color:#7a6fa8
+  }
+  #dpage.compass-page .cp-close:focus-visible{outline:2px solid rgba(154,140,205,.8);outline-offset:3px}
 
-  /* 桌机:三栏,盘面在中间跨两列;四张卡左右各两张,文字一律靠左 */
+  /* 桌机:三栏,盘面在中间跨两列;四个入口左右各两个;内容区在盘下方整列 */
   @media(min-width:1025px){
     #dpage.compass-page .cp-wheel{
-      grid-template-columns:1fr minmax(230px,290px) 1fr;grid-template-rows:auto auto;
+      grid-template-columns:1fr minmax(230px,290px) 1fr;
       column-gap:clamp(24px,3vw,44px);row-gap:clamp(20px,2.4vw,30px);align-items:center
     }
     #dpage.compass-page .cp-wheel-core{grid-column:2;grid-row:1/3}
-    #dpage.compass-page .cp-wd.d1{grid-column:1;grid-row:1}
-    #dpage.compass-page .cp-wd.d2{grid-column:3;grid-row:1}
-    #dpage.compass-page .cp-wd.d3{grid-column:1;grid-row:2}
-    #dpage.compass-page .cp-wd.d4{grid-column:3;grid-row:2}
+    #dpage.compass-page .cp-ent.d1{grid-column:1;grid-row:1}
+    #dpage.compass-page .cp-ent.d2{grid-column:3;grid-row:1}
+    #dpage.compass-page .cp-ent.d3{grid-column:1;grid-row:2}
+    #dpage.compass-page .cp-ent.d4{grid-column:3;grid-row:2}
+    #dpage.compass-page .cp-panel{grid-column:1/-1;grid-row:3}
   }
-  /* 平板:盘面在上,四张卡 2×2 */
+  /* 平板:盘面在上,四个入口 2×2,内容区在最下面整列 */
   @media(max-width:1024px){
     #dpage.compass-page .cp-wheel{grid-template-columns:repeat(2,minmax(0,1fr))}
     #dpage.compass-page .cp-wheel-core{grid-column:1/-1;margin-bottom:clamp(6px,1vw,12px)}
+    #dpage.compass-page .cp-panel{grid-column:1/-1}
   }
-
   /* —— 02 三句话:编号清单,没有卡片 —— */
   #dpage.compass-page .cp-lines{
     list-style:none;margin:clamp(30px,3.8vw,46px) auto 0;padding:0;
@@ -2967,10 +2999,23 @@
     #dpage.compass-page .cp-wheel .cp-rose,
     #dpage.compass-page .cp-wheel-solo .cp-rose{width:min(56vw,200px)}
     #dpage.compass-page .cp-rose-l{display:none}       /* 手机上收掉 N/E/S/W */
-    #dpage.compass-page .cp-wd{padding:20px 18px;border-radius:18px}
-    #dpage.compass-page .cp-wd .ci{font-size:15.5px}
-    #dpage.compass-page .cp-wd .tx{font-size:14px;line-height:2.05}
-    #dpage.compass-page .cp-wd-more{min-height:40px}
+    #dpage.compass-page .cp-ent{padding:16px 18px;border-radius:16px;min-height:56px}
+    #dpage.compass-page .cp-ent .sit{font-size:15.5px}
+    #dpage.compass-page .cp-panel{padding:20px 18px;border-radius:18px}
+    #dpage.compass-page .cp-panel .bd{font-size:14.5px;line-height:2.05}
+    #dpage.compass-page .cp-panel .tx{font-size:14px;line-height:2.05}
+    /* 手机:内容区长在【被点的那一列】底下,不是跳到整段最下面。
+       DOM 里内容区永远在最后,这里只用 order 把它挪上去。 */
+    #dpage.compass-page .cp-wheel-core{order:0}
+    #dpage.compass-page .cp-ent.d1{order:10}
+    #dpage.compass-page .cp-ent.d2{order:20}
+    #dpage.compass-page .cp-ent.d3{order:30}
+    #dpage.compass-page .cp-ent.d4{order:40}
+    #dpage.compass-page .cp-panel{order:50}
+    #dpage.compass-page .cp-wheel[data-active="ground"] .cp-panel{order:15}
+    #dpage.compass-page .cp-wheel[data-active="move"]   .cp-panel{order:25}
+    #dpage.compass-page .cp-wheel[data-active="drain"]  .cp-panel{order:35}
+    #dpage.compass-page .cp-wheel[data-active="call"]   .cp-panel{order:45}
     #dpage.compass-page .cp-lines{margin-top:24px}
     #dpage.compass-page .cp-line{grid-template-columns:36px 1fr;column-gap:10px;padding:18px 0}
     #dpage.compass-page .cp-line .ln{font-size:16px}
@@ -8081,7 +8126,7 @@ window.Guide = (function () {
   let compassDelAsk = "";        // 正在等确认删除的那一则 id
   let compassGenBusy = false;    // 正式页面的生成中
   let compassBusy = false;
-  var compassDirOpen = {};       // 01 里哪几个方向已经展开(key → true)
+  var compassDirOpen = "";       // 01 里目前打开的那一个方向(一次只有一个)
 
   /* Dev Preview(#/compass/preview)的 UI 状态。同样必须写在首次渲染之前。
      这一组只有在开发预览路由下才会被读到,正式的 #/compass 完全不碰。 */
@@ -9179,48 +9224,85 @@ window.Guide = (function () {
      内容【只】来自已经生成、已经通过验证的那一份(存在本机快取里)。
      没有生成过就如实说没有,不拿示例文字冒充个人化内容。
      这一段自己【不】呼叫任何 API —— 生成只由使用者按按钮触发一次。 */
+  /* 短名:中性入口用的方向身分。四个方向在版面上永远都在,
+     只是有没有个人化情境的差别 —— 使用者不会看到「无法识别」这类字眼。 */
+  var CP_SHORT = { ground: ["安定", "Return"], move: ["前进", "Move"],
+                   drain: ["消耗", "Notice"], call: ["吸引", "Follow"] };
+
   function compassDirectionsHtml(chart) {
     const saved = window.Compass.result.get(compassOwner());
     const DIRS = window.Compass.DIRECTIONS;
     const KEYS = { ground: "grounds", move: "moves", drain: "drains", call: "calls" };
     const core = '<div class="cp-wheel-core">' + compassRoseSvg() + "</div>";
 
-    let body;
-    if (saved) {
-      /* 四个方向围着盘面。每一张卡先只给一句核心(coreInsight),
-         说明(explanation)收在「展开」底下,在原地长出来 —— 不跳页、不开弹窗。 */
-      body = '<div class="cp-wheel">' + core + DIRS.map(function (d, i) {
-        const c = saved.directions[KEYS[d.key]];
-        const open = !!compassDirOpen[d.key];
-        const bid = "cpWd-" + d.key;
-        return '<article class="cp-wd d' + (i + 1) + (c ? "" : " none") + (open ? " open" : "") +
-          '" data-dir="' + esc0(d.key) + '">' +
-          '<span class="no">' + esc0(d.no) + "</span>" +
-          (window.I18N.isEN() ? '<span class="en">' + esc0(d.en) + "</span>" : "") +
-          '<b class="zh">' + esc0(dpT(d.zh, d.en)) + "</b>" +
-          (c
-            ? '<p class="ci">' + esc0(c.coreInsight) + "</p>" +
-              '<div class="cp-wd-body" id="' + bid + '"' + (open ? "" : " hidden") + ">" +
-              '<p class="tx">' + esc0(c.explanation) + "</p></div>" +
-              '<button type="button" class="cp-wd-more" data-more="' + esc0(d.key) +
-              '" aria-expanded="' + (open ? "true" : "false") + '" aria-controls="' + bid + '">' +
-              esc0(open ? dpT("收起", "Less") : dpT("展开", "More")) + "</button>"
-            : '<p class="tx none">' + esc0(dpT("这个方向目前没有足够的线索。",
-                "There isn’t enough to say about this direction yet.")) + "</p>") +
-          "</article>";
-      }).join("") + "</div>";
-    } else {
-      body = '<div class="cp-wheel-solo">' + core + "</div>" +
-        '<div class="cp-empty4">' +
-        '<p class="cp-pending">' +
+    if (!saved) {
+      return '<section class="cp-sec cp-compass">' +
+        compassSecHead("01", dpT("我的内在指南", "My Inner Compass"), "MY INNER COMPASS") +
+        '<div class="cp-wheel-solo">' + core + "</div>" +
+        '<div class="cp-empty4"><p class="cp-pending">' +
         esc0(dpT("你的内在指南还没有生成。", "Your compass hasn’t been drawn yet.")) + "</p>" +
         '<div class="cp-act"><button type="button" class="dp-cta" id="cpGenBtn">' +
         esc0(dpT("生成我的内在指南", "Draw my compass")) + "</button>" +
-        '<span class="cp-hint" id="cpGenHint" aria-live="polite"></span></div></div>';
+        '<span class="cp-hint" id="cpGenHint" aria-live="polite"></span></div></div></section>';
     }
+
+    const sits = compassSituationsFor(saved);
+    const active = compassDirOpen;
+
+    /* 入口:一次只有一个是开的。有情境的印情境,没有的印方向身分 —— 
+       两种长得不一样是【诚实】,系统撑不起来的事就不要假装撑得起来。 */
+    const ents = DIRS.map(function (d, i) {
+      const sk = KEYS[d.key];
+      const st = sits[sk];
+      const on = active === d.key;
+      const short = CP_SHORT[d.key] || ["", ""];
+      return '<button type="button" class="cp-ent d' + (i + 1) + (st ? "" : " plain") +
+        (on ? " on" : "") + '" data-dir="' + esc0(d.key) + '"' +
+        ' aria-expanded="' + (on ? "true" : "false") + '" aria-controls="cpPanel">' +
+        (st
+          ? '<span class="sit">' + esc0(st.situation) + "</span>"
+          : '<span class="no">' + esc0(d.no) + " · " + esc0(dpT(short[0], short[1])) + "</span>" +
+            '<span class="go">' + esc0(dpT("看看这个方向", "Look at this one")) + "</span>") +
+        "</button>";
+    }).join("");
+
+    /* 一块共用的内容区。桌机在盘下方,手机由 CSS order 挪到被点的那一列底下。 */
+    let panel = "";
+    if (active) {
+      const sk = KEYS[active];
+      const c = saved.directions[sk];
+      const st = sits[sk];
+      const dm = DIRS.filter(function (x) { return x.key === active; })[0] || { zh: "", en: "" };
+      if (!c) {
+        panel = '<p class="cp-pending">' +
+          esc0(dpT("这个方向目前没有足够的线索。",
+                   "There isn’t enough to say about this direction yet.")) + "</p>";
+      } else if (st) {
+        /* 情境 → 那几句 → 可选的第二句(没有就什么都不出,不留空位)
+           → 「为什么这适合我？」里是【原本那两段,一字不改】 */
+        panel = '<p class="hd">' + esc0(st.situation) + "</p>" +
+          '<p class="bd">' + esc0(st.text) + "</p>" +
+          (st.micro ? '<p class="bd sub">' + esc0(st.micro) + "</p>" : "") +
+          '<details class="cp-why"><summary>' +
+          esc0(dpT("为什么这适合我？", "Why this fits me")) + "</summary>" +
+          '<p class="ci">' + esc0(c.coreInsight) + "</p>" +
+          '<p class="tx">' + esc0(c.explanation) + "</p></details>";
+      } else {
+        /* 中性入口:直接把既有的两段给他看,不编情境、不编指引、不编一小步,
+           也【不】告诉他这是退而求其次的做法。 */
+        panel = '<p class="hd">' + esc0(dpT(dm.zh, dm.en)) + "</p>" +
+          '<p class="ci">' + esc0(c.coreInsight) + "</p>" +
+          '<p class="tx">' + esc0(c.explanation) + "</p>";
+      }
+      panel = '<div class="cp-panel" id="cpPanel" data-for="' + esc0(active) + '">' +
+        panel + '<button type="button" class="cp-close" id="cpPanelClose">' +
+        esc0(dpT("收起", "Close")) + "</button></div>";
+    }
+
     return '<section class="cp-sec cp-compass">' +
       compassSecHead("01", dpT("我的内在指南", "My Inner Compass"), "MY INNER COMPASS") +
-      body + "</section>";
+      '<div class="cp-wheel" data-active="' + esc0(active || "") + '">' +
+      core + ents + panel + "</div></section>";
   }
 
   /* ── 想留给自己的几句话 ──────────────────────────────────
@@ -9239,15 +9321,17 @@ window.Guide = (function () {
      刻意【不】顺便载入 evidence / selection / generation:
      这一段用不到它们,也不该为了三句话去碰那几层。 */
   function compassEnsureAnchors() {
-    if (window.CompassAnchorsSemantic || compassAnchorLoading) return;
+    if ((window.CompassAnchorsSemantic && window.CompassSituations) || compassAnchorLoading) return;
     compassAnchorLoading = true;
-    ["assets/compass-anchors.js", "assets/compass-anchors-semantic.js"]
+    ["assets/compass-anchors.js", "assets/compass-anchors-semantic.js",
+     "assets/compass-situations.js"]
       .reduce(function (chain, src) {
         return chain.then(function () { return cpPvLoadOne(src); });
       }, Promise.resolve())
       .then(function () {
         compassAnchorLoading = false;
         compassAnchorCache = { key: null, list: null };
+        compassSitCache = { key: null, map: null };
         if (curRoute && curRoute.k === "compass") compassRepaint();
       })
       .catch(function () { compassAnchorLoading = false; });   // 载不到就维持原样,不让页面挂掉
@@ -9267,8 +9351,56 @@ window.Guide = (function () {
     } catch (e) { list = []; }
     /* 现算不出来的时候,才退回快取里那一份(旧版算过、已经看过的那三句) */
     if (!list.length && saved.anchors && saved.anchors.length) list = saved.anchors;
+    /* Guard A:01 已经说过的话,02 不再说第二次。
+       只比【字面】(bigram),不建语意引擎 —— 那是刻意的取舍,已记录为已知限制。
+       比不过的就丢掉,【不】补句、【不】改写、【不】另外编一句凑三句。
+       剩一两句是可以接受的结果。 */
+    list = compassAnchorGuard(list, saved);
     compassAnchorCache = { key: key, list: list };
     return list;
+  }
+  var CP_GUARD_A = 0.35;
+  function compassAnchorGuard(list, saved) {
+    if (!list || !list.length) return list || [];
+    var AN3 = window.CompassAnchorsSemantic;
+    var sits = compassSituationsFor(saved);
+    var shown = [];
+    Object.keys(sits).forEach(function (k) {
+      shown.push(sits[k].text);
+      if (sits[k].micro) shown.push(sits[k].micro);
+    });
+    if (!AN3 || !shown.length) return list;
+    return list.filter(function (a) {
+      return !shown.some(function (t) { return AN3.similarity(a.line, t) >= CP_GUARD_A; });
+    });
+  }
+
+  /* ── 个人情境(Personal Situations v1)─────────────────────
+     与三句锚点同一个做法:在【渲染时现算】,不去相信快取里的东西。
+     输入只有已经接受的四段文案,不读星盘、不发任何请求,
+     而且【只读】—— 不写回快取、不动 generatedAt / promptVersion。
+     所以既有使用者不需要重新生成,也不会被改到一个字。 */
+  var compassSitCache = { key: null, map: null };
+  function compassSituationsFor(saved) {
+    if (!saved || !saved.directions) return {};
+    var key = (saved.generatedAt || "") + "|" + (saved.promptVersion || "");
+    if (compassSitCache.key === key && compassSitCache.map) return compassSitCache.map;
+    var map = {};
+    try {
+      var S = window.CompassSituations;
+      if (S) {
+        var r = S.derive(saved.directions);
+        /* 回查不过就整份当作没有 —— 宁可四个方向都走中性入口,
+           也不给一句没根据的话 */
+        if (r.status === "ok" && S.verify(r, saved.directions).ok) {
+          Object.keys(r.situations).forEach(function (k) {
+            if (r.situations[k]) map[k] = r.situations[k];
+          });
+        }
+      }
+    } catch (e) { map = {}; }
+    compassSitCache = { key: key, map: map };
+    return map;
   }
 
   function compassAnchorsHtml() {
@@ -10236,21 +10368,33 @@ window.Guide = (function () {
     const genBtn = document.getElementById("cpGenBtn");
     if (genBtn) genBtn.addEventListener("click", cpProdGenerate);
 
-    /* 01 的展开 / 收起:只切这一张卡自己的 class,不重画整页 —— 卷动位置不动,
-       其他三张卡也不动。状态记在 compassDirOpen,之后重画会保住。 */
-    host.querySelectorAll(".cp-wd-more").forEach(function (b0) {
-      b0.addEventListener("click", function () {
-        const k = b0.getAttribute("data-more");
-        const card = b0.closest(".cp-wd");
-        const bodyEl = card && card.querySelector(".cp-wd-body");
-        const open = !compassDirOpen[k];
-        compassDirOpen[k] = open;
-        if (card) card.classList.toggle("open", open);
-        if (bodyEl) bodyEl.hidden = !open;
-        b0.setAttribute("aria-expanded", open ? "true" : "false");
-        b0.textContent = open ? dpT("收起", "Less") : dpT("展开", "More");
+    /* 01 的入口:一次只有一个是开的,再点一次收起。
+       这里【重画的是 section 01 自己】,不是整页 —— 而且重画之后把卷动补回去,
+       让被点的那一列留在原地(手机上内容会长在它下面,位置会变)。 */
+    function cpSelect(k) {
+      const btn = host.querySelector('.cp-ent[data-dir="' + k + '"]');
+      const before = btn ? btn.getBoundingClientRect().top : null;
+      compassDirOpen = (compassDirOpen === k) ? "" : k;
+      const sec = host.querySelector(".cp-compass");
+      if (!sec) { compassRepaint(); return; }
+      const holder = document.createElement("div");
+      holder.innerHTML = compassDirectionsHtml(activeChart());
+      const fresh = holder.firstChild;
+      sec.parentNode.replaceChild(fresh, sec);
+      cpBindDirections();
+      if (before !== null) {
+        const now = host.querySelector('.cp-ent[data-dir="' + k + '"]');
+        if (now) window.scrollBy(0, now.getBoundingClientRect().top - before);
+      }
+    }
+    function cpBindDirections() {
+      host.querySelectorAll(".cp-ent").forEach(function (b0) {
+        b0.addEventListener("click", function () { cpSelect(b0.getAttribute("data-dir")); });
       });
-    });
+      const cl = document.getElementById("cpPanelClose");
+      if (cl) cl.addEventListener("click", function () { cpSelect(compassDirOpen); });
+    }
+    cpBindDirections();
 
     /* 记录:展开 / 删除。展开的内容长在被点的那一张卡下面。 */
     host.querySelectorAll(".cp-open").forEach(function (b2) {

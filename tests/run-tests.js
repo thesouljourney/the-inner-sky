@@ -3369,14 +3369,8 @@ function testCompassCentredLayout() {
     checkEq("[layout] 三支 guide 模组仍在", fs.existsSync(path.join(__dirname, "..", "assets", f)), true);
   });
   const dir = html.slice(html.indexOf("function compassDirectionsHtml"), html.indexOf("/* ── 想留给自己的几句话"));
-  checkEq("[layout] 指南盘在四张卡中间", /cp-wheel-core/.test(dir) && /class="cp-wd d/.test(dir), true);
-  checkEq("[layout] 说明预设收起,原地展开", /cp-wd-body[\s\S]{0,80}hidden/.test(dir) && /aria-expanded/.test(dir), true);
-  checkEq("[layout] 展开不重画整页(卷动不动)",
-    (function () {
-      const a = html.indexOf('querySelectorAll(".cp-wd-more")');
-      const blk = html.slice(a, html.indexOf("\n    });", a));
-      return /card\.classList\.toggle\("open", open\)/.test(blk) && !/compassRepaint|routeRefresh/.test(blk);
-    })(), true);
+  checkEq("[layout] 指南盘在四个入口中间", /cp-wheel-core/.test(dir) && /class="cp-ent d/.test(dir), true);
+  checkEq("[layout] 一次只有一个方向是开的", /aria-expanded/.test(dir) && /const active = compassDirOpen;/.test(dir), true);
   checkEq("[layout] 没有快取时仍是「生成我的内在指南」这一个入口",
     /id="cpGenBtn"[\s\S]{0,80}生成我的内在指南/.test(dir), true);
   checkEq("[layout] 渲染流程没有自动生成",
@@ -3384,12 +3378,15 @@ function testCompassCentredLayout() {
   const css = html.slice(html.indexOf("以指南盘为中心的五段(01–05)"), html.indexOf("/* 记录:展开长在自己下面 */"));
   checkEq("[layout] 桌机三栏,盘面跨两列",
     /grid-template-columns:1fr minmax\(230px,290px\) 1fr/.test(css) && /\.cp-wheel-core\{grid-column:2;grid-row:1\/3\}/.test(css), true);
-  checkEq("[layout] 卡片文字靠左", /\.cp-wd\{\s*text-align:left/.test(css), true);
+  checkEq("[layout] 展开状态宣告成单一值(一次一个)",
+    /var compassDirOpen = "";/.test(html), true);
+  checkEq("[layout] 入口文字靠左", /\.cp-ent\{[\s\S]{0,120}text-align:left/.test(css), true);
   checkEq("[layout] 平板 2×2、手机单栏",
     /max-width:1024px\)\{\s*#dpage\.compass-page \.cp-wheel\{grid-template-columns:repeat\(2/.test(css) &&
     /max-width:767px\)\{\s*#dpage\.compass-page \.cp-wheel\{grid-template-columns:1fr/.test(css), true);
   checkEq("[layout] 手机收掉 N/E/S/W", /\.cp-rose-l\{display:none\}/.test(css), true);
-  checkEq("[layout] 旧的两栏 / 环绕规则已清掉", /cp-grid4|\.cp-dirs|cp-keep-card|\.cp-anchor\b/.test(html), false);
+  checkEq("[layout] 旧的两栏 / 环绕规则已清掉",
+    /cp-grid4|\.cp-dirs|cp-keep-card|\.cp-anchor\b|cp-wd\b/.test(html), false);
   const keep = html.slice(html.indexOf("function compassAnchorsHtml()"), html.indexOf("function compassNowHtml()"));
   checkEq("[layout] 02 是编号清单", /<ol class="cp-lines">/.test(keep) && /class="cp-line"/.test(keep), true);
   checkEq("[layout] 02 的引言是核准过的那一句", /不需要一直记得。需要的时候，再回来看看就好。/.test(keep), true);
@@ -3398,7 +3395,270 @@ function testCompassCentredLayout() {
     /window\.Compass\.store\.list\(compassOwner\(\)\)/.test(html) && !/Guide\.history/.test(
       html.slice(html.indexOf("function compassSkyHtml()"), html.indexOf("function renderFavoritesPage"))), true);
   checkEq("[layout] 展开状态宣告在首次渲染之前(不踩 TDZ)",
-    html.indexOf("var compassDirOpen = {};") < html.indexOf("\n  applyRoute();"), true);
+    html.indexOf('var compassDirOpen = "";') < html.indexOf("\n  applyRoute();"), true);
+}
+
+
+/* ---------- 33. 个人情境层(Personal Situations v1 / situations-1.0) ----------
+   这一层把【已经接受的四段文案】换成一个使用者回得来的入口。
+   它不是第二个解读引擎:不读星盘、不发请求、同一份文案永远同一组结果。
+
+   这一段【不】把覆盖率当成产品指标 —— 覆盖率只是回归量测,
+   用来在词典被改动时立刻看得出来,不是通过门槛。 */
+function testCompassSituations() {
+  const fs = require("fs");
+  const crypto = require("crypto");
+  const h = (o) => crypto.createHash("sha256").update(JSON.stringify(o)).digest("hex").slice(0, 16);
+  const S = require(path.join(__dirname, "..", "assets", "compass-situations.js"));
+  const RC = require(path.join(__dirname, "..", "assets", "compass-recorded.js"));
+  const html = fs.readFileSync(path.join(__dirname, "..", "app.html"), "utf8");
+  const src = fs.readFileSync(path.join(__dirname, "..", "assets", "compass-situations.js"), "utf8");
+  const DIRS = ["grounds", "moves", "drains", "calls"];
+
+  /* ═══ 1. 正式词典就是人工审过的那 18 条 ═══ */
+  checkEq("[sit] 正好 18 条", S.VARIANTS.length, 18);
+  checkEq("[sit] 版本与锁", S.VERSION + "/" + S.SITUATIONS_BASELINE.status, "situations-1.0/LOCKED");
+  checkEq("[sit] 锁的理由记在基准里",
+    /human voice review/.test(S.SITUATIONS_BASELINE.lockReason), true);
+  checkEq("[sit] 每个方向的条数", DIRS.map(function (d) {
+    return S.VARIANTS.filter(function (v) { return v.allowedDirection === d; }).length;
+  }).join("/"), "6/3/5/4");
+  checkEq("[sit] concept/variant 不重复",
+    new Set(S.VARIANTS.map(function (v) { return v.concept + "/" + v.variant; })).size, 18);
+  /* 三条没有来源的只做纪录,不进正式词典 */
+  checkEq("[sit] 未来候选没有混进来",
+    S.VARIANTS.filter(function (v) {
+      return ["meaning", "not_importance", "angle"].indexOf(v.variant) >= 0;
+    }).length, 0);
+  checkEq("[sit] 未来候选另外记着", S.FUTURE_CANDIDATES.length, 3);
+
+  /* ═══ 2. allowedDirection 是安全边界 ═══ */
+  checkEq("[sit] 每一条都写明 allowedDirection",
+    S.VARIANTS.every(function (v) { return DIRS.indexOf(v.allowedDirection) >= 0; }), true);
+  checkEq("[sit] 每一条都有情境与正文",
+    S.VARIANTS.every(function (v) { return !!v.situation && !!v.text; }), true);
+  /* 语言命中【但方向不符】→ 不出情境,该方向退回中性 */
+  const wrong = { coreInsight: "先让外面安静一会儿。", explanation: "把外面的声音关小。" };
+  const rWrong = S.candidateFor("calls", wrong);
+  checkEq("[sit] 方向不符就不给情境", rWrong.situation, null);
+  checkEq("[sit] 而且说得出是被方向挡下来的",
+    (rWrong.blocked[0] || {}).reason, "direction-not-allowed");
+  checkEq("[sit] 同一份文案放对方向才出得来",
+    (S.candidateFor("grounds", wrong).situation || {}).variant, "quiet");
+  checkEq("[sit] 整份推导里,四个方向都被方向契约挡住 → 全部中性",
+    S.derive({ calls: wrong }).neutral.indexOf("calls") >= 0, true);
+
+  /* ═══ 3. 确定性 ═══ */
+  const copies = RC.RAW_V12.C1;
+  const once = JSON.stringify(S.derive(copies));
+  checkEq("[sit] 同一份文案永远同一组", once, JSON.stringify(S.derive(copies)));
+  checkEq("[sit] 跑一百次都一样", (function () {
+    for (let i = 0; i < 100; i++) if (JSON.stringify(S.derive(copies)) !== once) return false;
+    return true;
+  })(), true);
+  checkEq("[sit] 回查通过", S.verify(S.derive(copies), copies).ok, true);
+  /* 回查抓得出被换掉的文字 */
+  const tampered = JSON.parse(once);
+  tampered.situations.grounds.text = "先深呼吸三次。";
+  checkEq("[sit] 回查抓得出不是审过的那一句", S.verify(tampered, copies).ok, false);
+
+  /* ═══ 4. 不读星盘 / 不发请求 / 不碰今天的问题 ═══ */
+  const code = src.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+  checkEq("[sit] 没有任何网路呼叫",
+    /fetch\(|XMLHttpRequest|anthropic|supabase/i.test(code), false);
+  checkEq("[sit] 不碰星盘 / 机制 / 分数",
+    /planets|cusps|\bmechanism\b|selectionScore|patternKey|support\[|\.domain/i.test(code), false);
+  checkEq("[sit] 不读日记 / 心情 / 收藏", /journal|mood|favs|favou?rite/i.test(code), false);
+  checkEq("[sit] 不用 reflectionPrompt(那一句专属第 04 段)",
+    /reflectionPrompt/.test(code), false);
+  checkEq("[sit] 不写任何储存", /localStorage|sessionStorage|indexedDB/i.test(code), false);
+  (function () {
+    const realFetch = global.fetch, realXHR = global.XMLHttpRequest;
+    let called = 0;
+    global.fetch = function () { called++; return Promise.reject(new Error("no")); };
+    global.XMLHttpRequest = function () { called++; };
+    try {
+      checkEq("[sit] 推导过程不发任何请求", S.derive(copies).status, "ok");
+      checkEq("[sit] fetch 一次都没被碰到", called, 0);
+    } finally { global.fetch = realFetch; global.XMLHttpRequest = realXHR; }
+  })();
+
+  /* ═══ 5. 一小步:可选,而且不是问句 ═══ */
+  const withMicro = S.VARIANTS.filter(function (v) { return v.micro; });
+  checkEq("[sit] 18 条里只有 4 条有一小步", withMicro.length, 4);
+  checkEq("[sit] 有一小步的是哪四条",
+    withMicro.map(function (v) { return v.variant; }).sort().join(","),
+    "before_closeness,not_persistence,stands_up,wake");
+  checkEq("[sit] 没有一小步的就是 null,不是空字串",
+    S.VARIANTS.every(function (v) { return v.micro === null || (typeof v.micro === "string" && v.micro.length > 0); }), true);
+  checkEq("[sit] 一小步里没有问句",
+    withMicro.filter(function (v) { return /[？?]/.test(v.micro); }).length, 0);
+  /* 消耗 = NOTICE:允许停在「认出来」,不需要出口 */
+  checkEq("[sit] 消耗那一组不给许可 / 宽慰 / 因应",
+    S.VARIANTS.filter(function (v) { return v.allowedDirection === "drains"; })
+      .filter(function (v) { return /没关系|可以试着|先放下|别担心|放轻松/.test(v.text + (v.micro || "")); }).length, 0);
+  checkEq("[sit] 四个方向的内部功能",
+    [S.FUNCTIONS.grounds, S.FUNCTIONS.moves, S.FUNCTIONS.drains, S.FUNCTIONS.calls].join("/"),
+    "RETURN/MOVE/NOTICE/FOLLOW");
+
+  /* ═══ 6. 语气守则 ═══ */
+  const all = S.allPossibleStrings();
+  checkEq("[sit] 会进画面的字一共 40 条", all.length, 40);
+  const corpus = all.join("||");
+  [["命令句", /你应该|你必须|你需要学会|你最好|请你|记得要|一定要(?!的)/],
+   ["万用空话", /相信自己|慢慢来|照顾好自己|一切都会好|放轻松|加油|顺其自然|活在当下|爱自己/],
+   ["编造成因", /童年|小时候|从小|原生家庭|父母|爸爸|妈妈|前任|伴侣|婚姻|上司|老板/],
+   ["心理诊断", /缺乏安全感|不够爱自己|依恋|创伤|焦虑症|回避型|讨好型/],
+   ["越权判定", /值得你信任|其实是安全|可以放心靠近|不用再确认|不用再防备|对方其实|你只是想太多|应该离开|应该留下/],
+   ["解读口吻的开头", /^你通常|^你容易|^你是一个|^你的模式/m]
+  ].forEach(function (x) {
+    checkEq("[sit] 词典里没有" + x[0], x[1].test(corpus), false);
+  });
+  /* 内部 schema 名称永远不可以进画面 */
+  ["RETURN", "MOVE", "NOTICE", "FOLLOW", "Recognition", "Orientation", "Permission",
+   "Cost Signal", "Micro", "一小步", "练习", "试试看"].forEach(function (t) {
+    checkEq("[sit] 画面字串里没有 " + t, corpus.indexOf(t) >= 0, false);
+  });
+  checkEq("[sit] 情境都是「……的时候」这类可观察的处境",
+    S.VARIANTS.filter(function (v) { return v.situation.indexOf("当") !== 0; }).length, 0);
+  checkEq("[sit] 情境不预设自我评判",
+    /怀疑自己|觉得自己不够|不够好|太差|失败者/.test(
+      S.VARIANTS.map(function (v) { return v.situation; }).join("")), false);
+
+  /* ═══ 7. 保留字 ═══ */
+  checkEq("[sit] 标了保留字的就一定还在",
+    S.VARIANTS.filter(function (v) {
+      return v.hedges.some(function (x) { return v.text.indexOf(x) < 0; });
+    }).length, 0);
+  checkEq("[sit] 该有保留字的那几条都标了",
+    ["quiet", "not_hiding", "unformed", "relationship", "group",
+     "before_closeness", "after", "watched", "wake", "loop_back"]
+      .filter(function (k) {
+        const v = S.VARIANTS.filter(function (x) { return x.variant === k; })[0];
+        return !v || !v.hedges.length;
+      }).join(","), "");
+  checkEq("[sit] loop_back 两个保留字都在",
+    S.VARIANTS.filter(function (v) { return v.variant === "loop_back"; })[0].hedges.join(","),
+    "不一定,也可能");
+
+  /* ═══ 8. 指纹:审过的那一份,一个字都不可以动 ═══ */
+  checkEq("[sit] 词典逐字未动", h(S.VARIANTS), "ac3bdac8b93b8ad0");
+  checkEq("[sit] 会进画面的每一句逐字未动", h(all), "54dc613f03338253");
+  checkEq("[sit] 已锁基准逐字未动", h(S.SITUATIONS_BASELINE), "e0434dec520defe2");
+
+  /* ═══ 9. 覆盖率:回归量测,不是通过门槛 ═══ */
+  const sets = [["v1", RC.RAW], ["v1.1", RC.RAW_V11], ["v1.2", RC.RAW_V12]];
+  let total = 0, matched = 0;
+  const shape = [];
+  sets.forEach(function (pair) {
+    Object.keys(pair[1]).forEach(function (id) {
+      const cs = pair[1][id], r = S.derive(cs);
+      checkEq("[sit] " + pair[0] + " " + id + " 回查通过", S.verify(r, cs).ok, true);
+      DIRS.forEach(function (k) {
+        if (!cs[k] || !cs[k].coreInsight) return;
+        total++;
+        if (r.situations[k]) matched++;
+      });
+      shape.push(pair[0] + " " + id + ":" + DIRS.map(function (k) {
+        return r.situations[k] ? r.situations[k].variant : "-";
+      }).join("/"));
+    });
+  });
+  checkEq("[sit] 已录语料的覆盖(回归量测,非门槛)", matched + "/" + total, "19/23");
+  checkEq("[sit] 每一张盘选到哪一条,逐字钉住", h(shape), "0c8657634f88cac1");
+  checkEq("[sit] v1.2 C1 的四个方向",
+    DIRS.map(function (k) {
+      const x = S.derive(RC.RAW_V12.C1).situations[k];
+      return k + "=" + (x ? x.variant : "中性");
+    }).join(" "),
+    "grounds=quiet moves=中性 drains=before_closeness calls=loop_back");
+
+  /* ═══ 10. 页面 ═══ */
+  const dir = html.slice(html.indexOf("function compassDirectionsHtml"),
+                         html.indexOf("/* ── 想留给自己的几句话"));
+  checkEq("[sit] 页面在渲染时现算,不信快取",
+    /function compassSituationsFor\(saved\)/.test(html) &&
+    /compassSitCache = \{ key: key, map: map \}/.test(html), true);
+  checkEq("[sit] 用既有的 generatedAt\\|promptVersion 当记忆键",
+    /var key = \(saved\.generatedAt \|\| ""\) \+ "\|" \+ \(saved\.promptVersion \|\| ""\);/
+      .test(html.slice(html.indexOf("function compassSituationsFor"))), true);
+  checkEq("[sit] 推导是唯读的,不写回快取",
+    /Compass\.result\.set|saved\.directions\s*=|saved\.generatedAt\s*=|saved\.promptVersion\s*=/
+      .test(html.slice(html.indexOf("function compassSituationsFor"),
+                       html.indexOf("function compassAnchorsHtml"))), false);
+  checkEq("[sit] 回查不过就整份不用",
+    /S\.verify\(r, saved\.directions\)\.ok/.test(html), true);
+  checkEq("[sit] 情境层跟着锚点层一起懒载入",
+    /assets\/compass-situations\.js/.test(html), true);
+  checkEq("[sit] 有情境就印情境,没有就印方向身分 + 看看这个方向",
+    /class="sit"/.test(dir) && /看看这个方向/.test(dir), true);
+  checkEq("[sit] 中性入口不告诉使用者这是退而求其次",
+    /无法识别|覆盖率|fallback|证据不足|insufficient/.test(dir), false);
+  checkEq("[sit] 四个方向永远都在", /DIRS\.map\(function \(d, i\)/.test(dir), true);
+  checkEq("[sit] 「为什么这适合我？」里是原本那两段",
+    /cp-why[\s\S]{0,400}c\.coreInsight[\s\S]{0,120}c\.explanation/.test(dir), true);
+  /* 只看【真的会被组进 HTML 的字】,注解不算 */
+  const dirCode = dir.replace(/\/\*[\s\S]*?\*\//g, "");
+  checkEq("[sit] 画面上没有 schema 标签",
+    /一小步|Micro-action|试试看|练习|Cost Signal|Recognition|Orientation|RETURN|NOTICE|FOLLOW/
+      .test(dirCode), false);
+  checkEq("[sit] 没有一小步就什么都不出,不留空位",
+    /st\.micro \? '<p class="bd sub">' \+ esc0\(st\.micro\) \+ "<\/p>" : ""/.test(dir), true);
+  checkEq("[sit] 一次只有一个方向是开的",
+    /compassDirOpen = \(compassDirOpen === k\) \? "" : k;/.test(html), true);
+  checkEq("[sit] 可以回到什么都没开的状态", /id="cpPanelClose"/.test(dir), true);
+  checkEq("[sit] 只重画 section 01,不重画整页",
+    /sec\.parentNode\.replaceChild\(fresh, sec\)/.test(html), true);
+  checkEq("[sit] 换方向之后把被点的那一列留在原地",
+    /window\.scrollBy\(0, now\.getBoundingClientRect\(\)\.top - before\)/.test(html), true);
+  const css = html.slice(html.indexOf("以指南盘为中心的五段(01–05)"),
+                         html.indexOf("/* 记录:展开长在自己下面 */"));
+  checkEq("[sit] 桌机:内容区在盘下方整列",
+    /\.cp-panel\{grid-column:1\/-1;grid-row:3\}/.test(css), true);
+  checkEq("[sit] 手机:内容区长在被点的那一列底下",
+    /\[data-active="ground"\] \.cp-panel\{order:15\}/.test(css) &&
+    /\[data-active="call"\]   \.cp-panel\{order:45\}/.test(css), true);
+
+  /* ═══ 11. Guard A ═══ */
+  checkEq("[sit] Guard A 的门槛是 0.35", /var CP_GUARD_A = 0\.35;/.test(html), true);
+  checkEq("[sit] Guard A 同时比正文与一小步",
+    /shown\.push\(sits\[k\]\.text\)[\s\S]{0,120}shown\.push\(sits\[k\]\.micro\)/.test(html), true);
+  checkEq("[sit] Guard A 只丢,不补句、不改写",
+    /list\.filter\(function \(a\)/.test(html) &&
+    !/anchors\.push|\.concat\(.*fallbackLine/.test(
+      html.slice(html.indexOf("function compassAnchorGuard"),
+                 html.indexOf("function compassAnchorsHtml"))), true);
+  (function () {
+    const AN3 = require(path.join(__dirname, "..", "assets", "compass-anchors-semantic.js"));
+    const sims = [];
+    S.VARIANTS.forEach(function (v) {
+      const line = AN3.CONCEPTS.reduce(function (acc, c) {
+        if (acc) return acc;
+        const hit = c.variants.filter(function (x) {
+          return c.id === v.concept && x.key === v.variant;
+        })[0];
+        return hit ? AN3.TEMPLATES[hit.tpl].build(hit.roles) : null;
+      }, null);
+      if (!line) return;
+      sims.push({ k: v.concept + "/" + v.variant,
+                  s: Math.max(AN3.similarity(v.text, line),
+                              v.micro ? AN3.similarity(v.micro, line) : 0) });
+    });
+    const dropped = sims.filter(function (x) { return x.s >= 0.35; }).map(function (x) { return x.k; });
+    checkEq("[sit] 只有 not_hiding 会让 02 掉一句",
+      dropped.join(","), "settle_before_approach/not_hiding");
+  })();
+
+  /* ═══ 12. 既有使用者:不重生、不清快取、不碰 Guide ═══ */
+  checkEq("[sit] 没有要求 compass-v1.3", /compass-v1\.3/.test(html + src), false);
+  const page = html.slice(html.indexOf("function compassDirectionsHtml"),
+                          html.indexOf("function renderFavoritesPage"));
+  checkEq("[sit] 这一段不呼叫生成",
+    /cpProdGenerate\(\)/.test(page
+      .replace(/addEventListener\("click", cpProdGenerate\)/g, "")
+      .replace(/function cpProdGenerate\(\)/g, "")), false);
+  checkEq("[sit] 这一段不清快取 / 不碰 Guide",
+    /Compass\.result\.clear|Guide\.history\.(save|remove)|Guide\.profile\.set/.test(page), false);
 }
 
 function main() {
@@ -3433,6 +3693,7 @@ function main() {
   testCompassAnchorsSemantic();
   testGuide();
   testCompassCentredLayout();
+  testCompassSituations();
   testCompassZhOnlyLabels();
   return Promise.all([genJobs, liveJobs, voiceJobs, v12Jobs]).then(function () { return testPlaces(); }).then(function () {
     console.log("\n对照来源:" + REF.reference);
