@@ -2320,12 +2320,11 @@ function testCompassProductPage() {
     /window\.Compass\.result\.get\(compassOwner\(\)\)/.test(page), true);
   checkEq("[prod] 没有生成过就如实说,不拿示例冒充",
     /cp-empty4[\s\S]{0,400}你的内在指南还没有生成/.test(page), true);
-  /* 两种空的情形都要照实说,而且都不编:
-     还没生成过 → 「等上面的内在指南生成之后…」
-     生成过但这份文案里取不出可以带走的句子 → 「这一份指南里，还没有…」 */
-  checkEq("[prod] 锚点没有资料时也不编",
-    /cp-keep[\s\S]{0,1400}等上面的内在指南生成之后/.test(page) &&
-    /cp-keep[\s\S]{0,1400}这一份指南里，还没有可以单独带走的句子/.test(page), true);
+  /* 一句都取不出来的时候,整段【不出现】—— 不把系统内部的不足写给使用者看 */
+  checkEq("[prod] 锚点一句都没有就整段不出现",
+    /if \(!list\.length\) return "";/.test(page), true);
+  checkEq("[prod] 不再印任何「还没有可以带走的句子」",
+    /这一份指南里，还没有可以单独带走的句子|等上面的内在指南生成之后/.test(html), false);
   checkEq("[prod] 今天的问题来自已通过验证的 reflectionPrompt",
     /saved\.directions\[k\] && saved\.directions\[k\]\.reflectionPrompt/.test(page), true);
   checkEq("[prod] 一次只有一个问题",
@@ -3355,9 +3354,16 @@ function testCompassCentredLayout() {
   const html = fs.readFileSync(path.join(__dirname, "..", "app.html"), "utf8");
   checkEq("[layout] 页面按 01–05 组装",
     /compassDirectionsHtml\(c\)\) \+\n\s*compassAnchorsHtml\(\) \+\n\s*compassNowHtml\(\) \+\n\s*compassQuestionHtml\(c\) \+\n\s*compassSkyHtml\(\)/.test(html), true);
-  ["01", "02", "03", "04", "05"].forEach(function (n) {
+  /* 只有 01 与 02 有编号:02 不是每个人都有,后面的段落不可以跟着改号,
+     那等于把「你少了一段」写在画面上。03–05 不编号。 */
+  ["01", "02"].forEach(function (n) {
     checkEq("[layout] 章节编号 " + n + " 在", new RegExp('compassSecHead\\("' + n + '"').test(html), true);
   });
+  checkEq("[layout] 03–05 没有编号",
+    /compassSecHead\("0[345]"/.test(html), false);
+  checkEq("[layout] 03–05 的标题还在",
+    ["此刻的我", "今天想问自己的一个问题", "我的星空记录"]
+      .filter(function (t) { return html.indexOf('compassSecHead("", dpT("' + t + '"') < 0; }).join(","), "");
   checkEq("[layout] 方向指南(Guide)不再在这一页渲染",
     /guideEntryHtml|guideReadingHtml|guideSkyHtml|guideEnsure\(/.test(html), false);
   checkEq("[layout] Guide 储存层保留,资料不动",
@@ -3377,7 +3383,7 @@ function testCompassCentredLayout() {
     /cpProdGenerate\(\)/.test(html.replace(/addEventListener\("click", cpProdGenerate\)/g, "").replace(/function cpProdGenerate\(\)/g, "")), false);
   const css = html.slice(html.indexOf("以指南盘为中心的五段(01–05)"), html.indexOf("/* 记录:展开长在自己下面 */"));
   checkEq("[layout] 桌机三栏,盘面跨两列",
-    /grid-template-columns:1fr minmax\(230px,290px\) 1fr/.test(css) && /\.cp-wheel-core\{grid-column:2;grid-row:1\/3\}/.test(css), true);
+    /grid-template-columns:1fr minmax\(210px,260px\) 1fr/.test(css) && /\.cp-wheel-core\{grid-column:2;grid-row:1\/3\}/.test(css), true);
   checkEq("[layout] 展开状态宣告成单一值(一次一个)",
     /var compassDirOpen = "";/.test(html), true);
   checkEq("[layout] 入口文字靠左", /\.cp-ent\{[\s\S]{0,120}text-align:left/.test(css), true);
@@ -3388,7 +3394,9 @@ function testCompassCentredLayout() {
   checkEq("[layout] 旧的两栏 / 环绕规则已清掉",
     /cp-grid4|\.cp-dirs|cp-keep-card|\.cp-anchor\b|cp-wd\b/.test(html), false);
   const keep = html.slice(html.indexOf("function compassAnchorsHtml()"), html.indexOf("function compassNowHtml()"));
-  checkEq("[layout] 02 是编号清单", /<ol class="cp-lines">/.test(keep) && /class="cp-line"/.test(keep), true);
+  checkEq("[layout] 02 没有编号,一句就是一句",
+    /<div class="cp-lines">/.test(keep) && /class="cp-line"/.test(keep) &&
+    !/class="n"/.test(keep), true);
   checkEq("[layout] 02 的引言是核准过的那一句", /不需要一直记得。需要的时候，再回来看看就好。/.test(keep), true);
   checkEq("[layout] 02 没有语境标签 / 来源", /sourceDirection|function"\]|selectionReason/.test(keep), false);
   checkEq("[layout] 05 只读 Compass.store",
@@ -3590,15 +3598,24 @@ function testCompassSituations() {
     /S\.verify\(r, saved\.directions\)\.ok/.test(html), true);
   checkEq("[sit] 情境层跟着锚点层一起懒载入",
     /assets\/compass-situations\.js/.test(html), true);
-  checkEq("[sit] 有情境就印情境,没有就印方向身分 + 看看这个方向",
-    /class="sit"/.test(dir) && /看看这个方向/.test(dir), true);
+  /* 只看【真的会被组进 HTML 的字】,注解不算 */
+  const dirCode = dir.replace(/\/\*[\s\S]*?\*\//g, "");
+  /* 个人情境【不是】内容的门槛:认不出来的方向,入口印的是他自己的 coreInsight */
+  checkEq("[sit] 认不出情境就用他自己的 coreInsight 当入口",
+    /const lead = st \? st\.situation : \(c \? c\.coreInsight/.test(dir), true);
+  checkEq("[sit] 两种状态的入口结构完全一样(分辨不出来)",
+    (dirCode.match(/class="cp-ent d/g) || []).length, 1);
+  checkEq("[sit] 画面上没有「看看这个方向」这种空的入口",
+    /看看这个方向|Look at this one/.test(html), false);
+  checkEq("[sit] 也没有任何技术性的退路字眼",
+    /无法识别|内容不足|待生成|fallback|coverage/.test(dirCode), false);
   checkEq("[sit] 中性入口不告诉使用者这是退而求其次",
     /无法识别|覆盖率|fallback|证据不足|insufficient/.test(dir), false);
   checkEq("[sit] 四个方向永远都在", /DIRS\.map\(function \(d, i\)/.test(dir), true);
-  checkEq("[sit] 「为什么这适合我？」里是原本那两段",
-    /cp-why[\s\S]{0,400}c\.coreInsight[\s\S]{0,120}c\.explanation/.test(dir), true);
-  /* 只看【真的会被组进 HTML 的字】,注解不算 */
-  const dirCode = dir.replace(/\/\*[\s\S]*?\*\//g, "");
+  checkEq("[sit] 有情境时,披露里是原本那两段",
+    /why\('<p class="ci">' \+ esc0\(c\.coreInsight\)[\s\S]{0,160}c\.explanation/.test(dir), true);
+  checkEq("[sit] 没有情境时,coreInsight 当主角、explanation 收进披露",
+    /'<p class="hd">' \+ esc0\(c\.coreInsight\) \+ "<\/p>" \+\n\s*why\('<p class="tx">' \+ esc0\(c\.explanation\)/.test(dir), true);
   checkEq("[sit] 画面上没有 schema 标签",
     /一小步|Micro-action|试试看|练习|Cost Signal|Recognition|Orientation|RETURN|NOTICE|FOLLOW/
       .test(dirCode), false);
@@ -3614,7 +3631,7 @@ function testCompassSituations() {
   const css = html.slice(html.indexOf("以指南盘为中心的五段(01–05)"),
                          html.indexOf("/* 记录:展开长在自己下面 */"));
   checkEq("[sit] 桌机:内容区在盘下方整列",
-    /\.cp-panel\{grid-column:1\/-1;grid-row:3\}/.test(css), true);
+    /\.cp-panel\{grid-column:1\/-1;grid-row:3;/.test(css), true);
   checkEq("[sit] 手机:内容区长在被点的那一列底下",
     /\[data-active="ground"\] \.cp-panel\{order:15\}/.test(css) &&
     /\[data-active="call"\]   \.cp-panel\{order:45\}/.test(css), true);
@@ -3661,6 +3678,115 @@ function testCompassSituations() {
     /Compass\.result\.clear|Guide\.history\.(save|remove)|Guide\.profile\.set/.test(page), false);
 }
 
+
+/* ---------- 34. Personal Anchors v1.1(anchors-3.2)+ 渲染模型 v2 ----------
+   v1.1 唯一的行为差别:最少几句才算数,由 3 降到 1。
+   渲染模型 v2:个人情境是【加值】,不是内容的门槛。 */
+function testAnchorsV11AndRenderV2() {
+  const fs = require("fs");
+  const A3 = require(path.join(__dirname, "..", "assets", "compass-anchors-semantic.js"));
+  const AN = require(path.join(__dirname, "..", "assets", "compass-anchors.js"));
+  const S = require(path.join(__dirname, "..", "assets", "compass-situations.js"));
+  const RC = require(path.join(__dirname, "..", "assets", "compass-recorded.js"));
+  const html = fs.readFileSync(path.join(__dirname, "..", "app.html"), "utf8");
+
+  /* ═══ A. 版本与边界 ═══ */
+  checkEq("[a32] 版本", A3.VERSION, "anchors-3.2");
+  checkEq("[a32] 下限 1 上限 3", A3.MIN_ANCHORS + "/" + A3.MAX_ANCHORS, "1/3");
+  checkEq("[a32] 基准记的是「只改下限」",
+    /minimum valid output count 3 → 1/.test(A3.ANCHORS_V11_BASELINE.lockReason), true);
+  /* 2.2 的下限【必须】还是 3 —— 降了它会用一句抽取候选赢走短路,
+     blended 池永远不会被建起来,同一份文案会从 3 句掉到 1 句。 */
+  checkEq("[a32] 已锁的 2.2 下限仍然是 3", AN.ANCHOR_COUNT, 3);
+  checkEq("[a32] 2.2 的基准没有被碰过", AN.ANCHORS_BASELINE.version, "anchors-2.2");
+
+  /* ═══ B. 既有输出逐字未变 ═══ */
+  const sets = [["RAW.C1", RC.RAW.C1], ["RAW.C4", RC.RAW.C4], ["RAW.C6", RC.RAW.C6],
+                ["RAW.C10", RC.RAW.C10], ["RAW_V11.C1", RC.RAW_V11.C1], ["RAW_V12.C1", RC.RAW_V12.C1]];
+  sets.forEach(function (x) {
+    const r = A3.derive(x[1]);
+    checkEq("[a32] " + x[0] + " 仍然三句", (r.anchors || []).length, 3);
+    checkEq("[a32] " + x[0] + " 回查通过", A3.verifySemantic(r, x[1]).ok, true);
+  });
+  const crypto = require("crypto");
+  const h = (o) => crypto.createHash("sha256").update(JSON.stringify(o)).digest("hex").slice(0, 16);
+  checkEq("[a32] 六份已录文案的锚点逐字未动",
+    h(sets.map(function (x) { return A3.derive(x[1]).anchors.map(function (a) { return a.line; }); })),
+    "7a0b6020db7a71ad");
+  checkEq("[a32] 概念词典 / 句型 / 枚举清单一个字都没动",
+    h(A3.CONCEPTS) + "|" + h(A3.allPossibleLines()), "ba31ce40024aec21|95f8abb7e7c55009");
+
+  /* ═══ C. 1 / 2 / 3 / 0 ═══ */
+  const d = (a, b) => ({ coreInsight: a, explanation: b });
+  const one = { drains: RC.RAW.C1.drains };                       // 只有一个方向认得出来
+  const two = { drains: RC.RAW.C1.drains, moves: RC.RAW.C1.moves };
+  const three = { drains: RC.RAW.C1.drains, moves: RC.RAW.C1.moves, grounds: RC.RAW.C1.grounds };
+  checkEq("[a32] 1 个候选 → 1 句", A3.derive(one).anchors.length, 1);
+  checkEq("[a32] 2 个候选 → 2 句", A3.derive(two).anchors.length, 2);
+  checkEq("[a32] 3 个候选 → 3 句", A3.derive(three).anchors.length, 3);
+  checkEq("[a32] 1 句的时候不凑数", A3.derive(one).status, "ok");
+  checkEq("[a32] 1 句也回查得过", A3.verifySemantic(A3.derive(one), one).ok, true);
+  const none = { grounds: d("你需要安静。", "安静对你有用。"),
+                 calls: d("你喜欢深的东西。", "浅的东西留不住你。") };
+  checkEq("[a32] 0 个候选 → insufficient", A3.derive(none).status, "insufficient");
+  checkEq("[a32] 0 个候选一句都不给", A3.derive(none).anchors.length, 0);
+  checkEq("[a32] 一句都取不出来时的说法换掉了",
+    /一句可以重复使用的提醒都取不出来/.test(A3.derive(none).note), true);
+  /* 永远不会超过三句 */
+  checkEq("[a32] 上限仍然是三句",
+    sets.every(function (x) { return A3.derive(x[1]).anchors.length <= 3; }), true);
+
+  /* ═══ D. 页面:02 的 0 / 1 / 2 / 3 ═══ */
+  const keep = html.slice(html.indexOf("function compassAnchorsHtml()"),
+                          html.indexOf("function compassNowHtml()"));
+  checkEq("[a32] 0 句 → 整段不出现", /if \(!list\.length\) return "";/.test(keep), true);
+  checkEq("[a32] 02 不再有任何空状态文案",
+    /cp-pending|还没有可以单独带走|等上面的内在指南/.test(keep), false);
+  checkEq("[a32] 引言仍然是核准的那一句",
+    /不需要一直记得。需要的时候，再回来看看就好。/.test(keep), true);
+  checkEq("[a32] 一句一段,没有编号、没有标签",
+    /'<p class="cp-line">' \+ esc0\(a\.line\)/.test(keep) &&
+    !/练习|建议|Micro|Recognition|Cost Signal|class="n"/.test(keep), true);
+
+  /* ═══ E. 渲染模型 v2:情境不是内容的门槛 ═══ */
+  const dir = html.slice(html.indexOf("function compassDirectionsHtml"),
+                         html.indexOf("/* ── 想留给自己的几句话"));
+  checkEq("[v2] 四个方向永远都印得出一行个人化内容",
+    /st \? st\.situation : \(c \? c\.coreInsight/.test(dir), true);
+  checkEq("[v2] 两种状态共用同一个入口模板",
+    (dir.replace(/\/\*[\s\S]*?\*\//g, "").match(/class="cp-ent d/g) || []).length, 1);
+  checkEq("[v2] 入口没有卡片 / 边框 / 阴影",
+    /#dpage\.compass-page \.cp-ent\{[\s\S]{0,260}background:none;border:0;border-radius:0;box-shadow:none/.test(html), true);
+  checkEq("[v2] 细线把入口接回盘面", /\.cp-ent::after\{/.test(html), true);
+  checkEq("[v2] 指南盘没有任何填色的面",
+    /fill="url\(#cpGlow\)"|radialGradient/.test(
+      html.slice(html.indexOf("function compassRoseSvg"), html.indexOf("function compassDirectionsHtml"))), false);
+  checkEq("[v2] 指南盘只剩线与一颗小星",
+    (html.slice(html.indexOf("function compassRoseSvg"), html.indexOf("var CP_SHORT"))
+      .match(/fill="none"/g) || []).length, 3);
+  checkEq("[v2] 展开的说明一律收在披露后面",
+    (dir.match(/c\.explanation/g) || []).length === 2 &&
+    (dir.match(/class="cp-why"/g) || []).length === 1, true);
+
+  /* ═══ F. 案例 A / B / C:每个有文案的方向都看得到个人化内容 ═══ */
+  [["A 四个都认得出", RC.RAW_V12.C1], ["B 一个认得出", { drains: RC.RAW.C1.drains,
+      grounds: d("你需要一点时间才会重新有力气。", "忙完一段以后，你不会马上恢复。"),
+      moves: d("你做事情的节奏是一阵一阵的。", "有些日子你可以做很多，有些日子几乎停着。"),
+      calls: d("你会被还没被讲完的东西吸引。", "已经有结论的事，你不太会一直想。") }],
+   ["C 都认不出", { grounds: d("你需要一点时间才会重新有力气。", "忙完一段以后，你不会马上恢复。"),
+      moves: d("你做事情的节奏是一阵一阵的。", "有些日子你可以做很多，有些日子几乎停着。"),
+      drains: d("你容易在小事上耗着。", "一件小事没结束，你就一直惦记着。"),
+      calls: d("你会被还没被讲完的东西吸引。", "已经有结论的事，你不太会一直想。") }]
+  ].forEach(function (x) {
+    const r = S.derive(x[1]);
+    S.DIRECTIONS.forEach(function (k) {
+      if (!x[1][k]) return;
+      const lead = r.situations[k] ? r.situations[k].situation : x[1][k].coreInsight;
+      checkEq("[v2] " + x[0] + " · " + k + " 入口有个人化内容", !!lead && lead.length > 5, true);
+    });
+  });
+}
+
 function main() {
   testTimezones();
   testCharts();
@@ -3694,6 +3820,7 @@ function main() {
   testGuide();
   testCompassCentredLayout();
   testCompassSituations();
+  testAnchorsV11AndRenderV2();
   testCompassZhOnlyLabels();
   return Promise.all([genJobs, liveJobs, voiceJobs, v12Jobs]).then(function () { return testPlaces(); }).then(function () {
     console.log("\n对照来源:" + REF.reference);

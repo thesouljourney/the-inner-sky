@@ -150,3 +150,42 @@ Grounds + Moves + Drains。那一份里 Calls 排第一,被换掉的是 Moves,
 三句话是四段文案的**纯函式**,所以页面不相信快取里那个阵列,
 而是在渲染时现算(`compassAnchorsFor()`,以 `generatedAt` 记忆化)。
 既有使用者那个空阵列**下次开页面就自己好了** —— 不必重新生成、不必清资料、0 次请求。
+
+---
+
+## Personal Anchors v1.1 · `anchors-3.2`(2026-09-16)
+
+```
+status:       LOCKED
+lock reason:  narrow behavioral revision: minimum valid output count 3 → 1
+inherits:     anchors-3.1
+file:         assets/compass-anchors-semantic.js
+```
+
+### 唯一的行为差别
+
+```
+1 个候选 → 1 句      2 个 → 2 句      3 个 → 3 句      0 个 → insufficient
+```
+
+产品裁定「1 或 2 句是可以接受的，不要凑数」，但 3.1 少于三句一律回 0 —— 两条规则互相矛盾。
+v1.1 只解决那个矛盾。`MIN_ANCHORS = 1`、`MAX_ANCHORS = 3`，其余一律继承。
+
+### ⚠ 已锁的 2.2 下限仍然是 3，一个字都没动
+
+这是刻意的。3.x 只要 2.2 回 `ok` 就把整份原样交给它。若 2.2 的下限也降到 1，
+它会用**一句**抽取候选赢走短路，blended 池永远不会被建起来 —— 实测同一份文案会从 **3 句掉到 1 句**。
+所以下限**只在 `compass-anchors-semantic.js` 改**。
+
+### 继承、逐字未动
+
+`CONCEPTS`、`TEMPLATES`、`licensedVariants`、`candidateFor`、评分 `value()`、互补、取舍、
+`verifySemantic`、全部安全守则，以及 `compass-anchors.js`(anchors-2.2)整支。
+
+已经给得出三句的文案，输出**逐字相同** —— 六份已录文案的锚点用 sha256 钉住
+(`[a32] 六份已录文案的锚点逐字未动`)。
+
+### 画面
+
+0 句 → **第 02 段整段不出现**(不印任何空状态文案)。1–3 句 → 安静的一段，没有编号、
+没有标签、不留空位、不暗示三句才是正常。Guard A 仍可再减少最终显示的句数，绝不补句。
