@@ -2876,47 +2876,77 @@
   /* —— 01 指南盘 + 四个方向 —— */
   #dpage.compass-page .cp-wheel-solo{margin:clamp(26px,3.4vw,40px) auto 0;text-align:center}
   #dpage.compass-page .cp-wheel-core{display:flex;align-items:center;justify-content:center}
-  #dpage.compass-page .cp-wheel .cp-rose,
-  #dpage.compass-page .cp-wheel-solo .cp-rose{width:clamp(190px,21vw,250px);opacity:1}
+  /* 天体罗盘:品牌自己那张素材。它是第 01 段的视觉中心,
+     周围留足够的象牙白,让四个方向看起来是从它长出来的。 */
+  #dpage.compass-page .cp-rose{
+    display:block;width:clamp(210px,26vw,340px);aspect-ratio:1/1;
+    background:url(assets/life/compass.webp) center / contain no-repeat;
+    filter:saturate(.94)
+  }
+  #dpage.compass-page .cp-wheel-core::before{
+    content:"";position:absolute;inset:-12% 0;z-index:-1;pointer-events:none;
+    background:radial-gradient(52% 52% at 50% 50%,rgba(170,160,213,.1),rgba(170,160,213,0) 72%)
+  }
+  #dpage.compass-page .cp-wheel-core{position:relative}
   #dpage.compass-page .cp-wheel{
     display:grid;gap:clamp(18px,2.4vw,28px);align-items:start;
     max-width:min(100%,var(--dp-wide));margin:clamp(28px,3.6vw,44px) auto 0
   }
-  /* 入口:四个。没有卡片、没有边框、没有阴影 ——
-     一条细线把它接到盘面上,让指南盘去【组织】这四个方向,
-     而不是四张长方形卡片围着一个装饰物。
+  /* 入口:四个。有容器,但不是 SaaS 卡片 ——
+     半透明的象牙白、香槟色的细到几乎看不见的边、几乎没有阴影、里面留白很多。
+     目标不是「四张卡片围着一张图」,是「一个天体罗盘,它的四个方向里
+     刚好放着我的个人化内容」。
      ⚠ 认得出情境与认不出情境的入口,样式完全一样。 */
   #dpage.compass-page .cp-ent{
     display:block;width:100%;text-align:left;min-width:0;cursor:pointer;
-    background:none;border:0;border-radius:0;box-shadow:none;
-    padding:clamp(14px,1.7vw,18px) 0;position:relative;
-    transition:color .3s ease
+    padding:clamp(20px,2.3vw,26px) clamp(20px,2.2vw,26px);
+    border-radius:18px;
+    background:rgba(255,253,250,.5);
+    border:1px solid rgba(154,106,52,.13);
+    box-shadow:0 2px 14px -10px rgba(9,18,46,.14);
+    transition:background .35s ease,border-color .35s ease
   }
-  #dpage.compass-page .cp-ent .no{
-    display:block;font-family:var(--dp-sans);font-weight:300;
-    font-size:10.5px;letter-spacing:.22em;color:rgba(154,106,52,.62);line-height:1
+  #dpage.compass-page .cp-ent .gl{
+    display:block;width:20px;height:20px;line-height:0
   }
-  #dpage.compass-page .cp-ent .no i{font-style:normal;margin:0 .5em;opacity:.7}
+  #dpage.compass-page .cp-ent .gl svg{
+    width:20px;height:20px;fill:none;
+    stroke:rgba(154,106,52,.62);stroke-width:1;
+    stroke-linecap:round;stroke-linejoin:round
+  }
+  #dpage.compass-page .cp-ent .en{
+    display:block;margin-top:13px;font-family:var(--dp-sans);font-weight:300;
+    font-size:10.5px;letter-spacing:.2em;color:rgba(129,118,173,.8)
+  }
+  #dpage.compass-page .cp-ent .zh{
+    display:block;margin-top:13px;
+    font-family:var(--dp-serif);font-weight:600;
+    font-size:clamp(15.5px,1.7vw,17.5px);line-height:1.6;letter-spacing:.03em;
+    color:var(--dp-ink)
+  }
   #dpage.compass-page .cp-ent .sit{
     display:block;margin-top:11px;
-    font-family:var(--dp-serif);font-weight:500;
-    font-size:clamp(15.5px,1.75vw,18px);line-height:1.85;letter-spacing:.02em;
-    color:rgba(34,35,58,.82);transition:color .3s ease
+    font-size:clamp(13.5px,1.5vw,14.5px);line-height:2;font-weight:300;
+    color:rgba(34,35,58,.78);transition:color .3s ease
   }
   @media(hover:hover){
-    #dpage.compass-page .cp-ent:hover .sit{color:var(--dp-ink)}
-    #dpage.compass-page .cp-ent:hover::after{background:rgba(154,106,52,.4)}
+    #dpage.compass-page .cp-ent:hover{
+      background:rgba(255,253,250,.78);border-color:rgba(154,106,52,.24)
+    }
+    #dpage.compass-page .cp-ent:hover .sit{color:rgba(34,35,58,.92)}
+  }
+  #dpage.compass-page .cp-ent.on{
+    background:rgba(255,253,250,.9);border-color:rgba(154,106,52,.3)
   }
   #dpage.compass-page .cp-ent.on .sit{color:var(--dp-ink)}
-  #dpage.compass-page .cp-ent.on .no{color:rgba(154,106,52,.95)}
-  #dpage.compass-page .cp-ent:focus-visible{outline:1px solid rgba(154,140,205,.7);outline-offset:6px}
+  #dpage.compass-page .cp-ent:focus-visible{outline:1px solid rgba(154,140,205,.7);outline-offset:4px}
 
   /* 共用的内容区。桌机在盘下方,手机由 order 挪到被点的那一列底下。 */
   #dpage.compass-page .cp-panel{
     position:relative;text-align:left;
-    padding:clamp(24px,2.8vw,34px) clamp(20px,2.4vw,30px);border-radius:20px;
-    background:var(--dp-cloud);border:1px solid rgba(154,140,205,.18);
-    box-shadow:0 18px 44px -34px rgba(9,18,46,.4)
+    padding:clamp(26px,3vw,38px) clamp(22px,2.6vw,34px);border-radius:20px;
+    background:rgba(255,253,250,.72);border:1px solid rgba(154,106,52,.14);
+    box-shadow:0 3px 20px -14px rgba(9,18,46,.2)
   }
   #dpage.compass-page .cp-panel .hd{
     margin:0;font-family:var(--dp-serif);font-weight:600;
@@ -2951,37 +2981,26 @@
   }
   #dpage.compass-page .cp-close:focus-visible{outline:2px solid rgba(154,140,205,.8);outline-offset:3px}
 
-  /* 桌机:三栏,盘面在中间跨两列;四个入口左右各两个;内容区在盘下方整列。
-     每个入口在【面向盘面】的那一侧有一条细线,把它接回环上。 */
+  /* 桌机:三栏,罗盘在中间跨两列;四个方向左右各两个;内容区在盘下方整列。
+     不再画连接线 —— 罗盘本身够有分量,它自己就把四个方向组织起来了。 */
   @media(min-width:1025px){
     #dpage.compass-page .cp-wheel{
-      grid-template-columns:1fr minmax(210px,260px) 1fr;
-      column-gap:clamp(28px,3.4vw,52px);row-gap:clamp(10px,1.4vw,18px);align-items:center
+      grid-template-columns:1fr minmax(210px,340px) 1fr;
+      column-gap:clamp(30px,3.6vw,56px);row-gap:clamp(18px,2.2vw,28px);align-items:center
     }
     #dpage.compass-page .cp-wheel-core{grid-column:2;grid-row:1/3}
     #dpage.compass-page .cp-ent.d1{grid-column:1;grid-row:1}
     #dpage.compass-page .cp-ent.d2{grid-column:3;grid-row:1}
     #dpage.compass-page .cp-ent.d3{grid-column:1;grid-row:2}
     #dpage.compass-page .cp-ent.d4{grid-column:3;grid-row:2}
-    #dpage.compass-page .cp-panel{grid-column:1/-1;grid-row:3;margin-top:clamp(20px,2.6vw,34px)}
-    /* 左栏:线在右边;右栏:线在左边 —— 两侧都朝着盘面 */
-    #dpage.compass-page .cp-ent::after{
-      content:"";position:absolute;top:clamp(14px,1.7vw,18px);bottom:clamp(14px,1.7vw,18px);
-      width:1px;background:rgba(154,140,205,.22);transition:background .3s ease
-    }
-    #dpage.compass-page .cp-ent.d1::after,
-    #dpage.compass-page .cp-ent.d3::after{right:calc(clamp(28px,3.4vw,52px) / -2)}
-    #dpage.compass-page .cp-ent.d2::after,
-    #dpage.compass-page .cp-ent.d4::after{left:calc(clamp(28px,3.4vw,52px) / -2)}
-    #dpage.compass-page .cp-ent.d1,
-    #dpage.compass-page .cp-ent.d3{text-align:right}
-    #dpage.compass-page .cp-ent.on::after{background:rgba(154,106,52,.55)}
+    #dpage.compass-page .cp-panel{grid-column:1/-1;grid-row:3;margin-top:clamp(22px,2.8vw,36px)}
   }
   /* 平板:盘面在上,四个入口 2×2,内容区在最下面整列 */
   @media(max-width:1024px){
     #dpage.compass-page .cp-wheel{grid-template-columns:repeat(2,minmax(0,1fr));
       column-gap:clamp(22px,3vw,34px)}
-    #dpage.compass-page .cp-wheel-core{grid-column:1/-1;margin-bottom:clamp(10px,1.6vw,18px)}
+    #dpage.compass-page .cp-wheel-core{grid-column:1/-1;margin-bottom:clamp(14px,2vw,22px)}
+    #dpage.compass-page .cp-rose{width:clamp(180px,26vw,230px)}
     #dpage.compass-page .cp-panel{grid-column:1/-1;margin-top:8px}
     #dpage.compass-page .cp-ent{border-top:1px solid rgba(154,140,205,.16)}
   }
@@ -2998,20 +3017,26 @@
   }
   #dpage.compass-page .cp-line:last-child{border-bottom:1px solid rgba(154,106,52,.14)}
 
-  /* 04:问题是这一段唯一的主角 */
+  /* 04:一张安静的天空卡。问题是这一段唯一的主角,其余什么都不抢。 */
+  #dpage.compass-page .cp-ask-card{
+    background:
+      radial-gradient(78% 60% at 50% 0%,rgba(255,253,250,.86),rgba(255,253,250,.94) 62%),
+      url(assets/life/foot-sky.webp) center 62% / cover no-repeat,
+      var(--dp-cloud);
+    border-color:rgba(154,106,52,.14);
+    box-shadow:0 3px 22px -16px rgba(9,18,46,.24)
+  }
   #dpage.compass-page .cp-ask-card .qt{font-size:clamp(18px,2.3vw,24px);line-height:1.95}
   /* 05:安静的存档 */
   #dpage.compass-page .cp-sky-card{background:rgba(255,253,250,.62);border-color:rgba(150,130,180,.08)}
 
   @media(max-width:767px){
-    #dpage.compass-page .cp-wheel{grid-template-columns:1fr;gap:14px;margin-top:22px}
-    #dpage.compass-page .cp-wheel .cp-rose,
-    #dpage.compass-page .cp-wheel-solo .cp-rose{width:min(46vw,160px)}
-    #dpage.compass-page .cp-rose-l{display:none}       /* 手机上收掉 N/E/S/W */
-    #dpage.compass-page .cp-ent{padding:15px 0;min-height:62px;border-top:1px solid rgba(154,140,205,.16)}
-    #dpage.compass-page .cp-ent .sit{font-size:15.5px;margin-top:9px}
-    #dpage.compass-page .cp-ent.d1{border-top:0}
-    #dpage.compass-page .cp-panel{padding:20px 18px;border-radius:18px}
+    #dpage.compass-page .cp-wheel{grid-template-columns:1fr;gap:12px;margin-top:20px}
+    #dpage.compass-page .cp-rose{width:min(48vw,172px);margin-bottom:6px}
+    #dpage.compass-page .cp-ent{padding:18px;border-radius:16px;min-height:62px}
+    #dpage.compass-page .cp-ent .zh{margin-top:11px;font-size:15.5px}
+    #dpage.compass-page .cp-ent .sit{font-size:14.5px;margin-top:9px;line-height:1.95}
+    #dpage.compass-page .cp-panel{padding:22px 18px;border-radius:16px}
     #dpage.compass-page .cp-panel .bd{font-size:14.5px;line-height:2.05}
     #dpage.compass-page .cp-panel .tx{font-size:14px;line-height:2.05}
     /* 手机:内容区长在【被点的那一列】底下,不是跳到整段最下面。
@@ -9200,29 +9225,27 @@ window.Guide = (function () {
       "</div>";
   }
 
-  /* 指南盘:只有线,没有面。
-     它的工作是把四个方向【组织】起来,不是当页面上最大的一块颜色 ——
-     所以这里没有任何填色的圆,只有很淡的薰衣草细线、一点香槟刻度,
-     和中心那一颗小小的 ✦(与整站同一个符号)。 */
+  /* 指南盘:用的是品牌自己那张天体罗盘(assets/life/compass.webp)——
+     香槟细线、淡紫星芒、几颗小月亮与绕着走的珍珠。
+     它本来只在「生命脉络」那一页当 48px 的小记号,这里放回它该有的尺寸,
+     当第 01 段真正的视觉中心。
+     ⚠ 不是装饰:四个方向是绕着它长出来的,它负责把那四段【组织】起来。 */
   function compassRoseSvg() {
-    const L = 'font-family="Cormorant Garamond,Georgia,serif" font-size="10" letter-spacing="1.5" fill="rgba(129,118,173,.5)" text-anchor="middle"';
-    return '<svg class="cp-rose" viewBox="0 0 240 240" aria-hidden="true" focusable="false">' +
-      /* 三圈同心细线 —— 由外而内越来越淡 */
-      '<circle cx="120" cy="120" r="104" fill="none" stroke="rgba(154,140,205,.2)" stroke-width=".7"/>' +
-      '<circle cx="120" cy="120" r="78" fill="none" stroke="rgba(154,106,52,.14)" stroke-width=".6" stroke-dasharray="1 6"/>' +
-      '<circle cx="120" cy="120" r="46" fill="none" stroke="rgba(154,140,205,.14)" stroke-width=".6"/>' +
-      /* 四个方位的短刻度:只在最外圈内外,不穿过盘面 */
-      '<path d="M120 8v16M120 216v16M8 120h16M216 120h16" stroke="rgba(154,140,205,.32)" stroke-width=".8"/>' +
-      '<path d="M120 96v10M120 134v10M96 120h10M134 120h10" stroke="rgba(154,106,52,.24)" stroke-width=".6"/>' +
-      /* 斜向四个几乎看不见的小点 —— 细节,不是装饰 */
-      '<g fill="rgba(154,106,52,.26)"><circle cx="46" cy="46" r="1"/><circle cx="194" cy="46" r="1"/>' +
-      '<circle cx="46" cy="194" r="1"/><circle cx="194" cy="194" r="1"/></g>' +
-      '<g class="cp-rose-l"><text x="120" y="17" ' + L + '>N</text><text x="120" y="230" ' + L + '>S</text>' +
-      '<text x="13" y="124" ' + L + '>W</text><text x="227" y="124" ' + L + '>E</text></g>' +
-      /* 中心的星:小 */
-      '<path fill="rgba(232,211,162,.9)" d="M120 112c.2 4 3.8 7.6 8 8-4.2.4-7.8 4-8 8-.2-4-3.8-7.6-8-8 4.2-.4 7.8-4 8-8Z"/>' +
-      "</svg>";
+    return '<div class="cp-rose" role="presentation"></div>';
   }
+
+  /* 四个方向的小记号:香槟细线,20×20。
+     它们只是【视觉身分】—— 不带任何语意,不是新的内容,也不可以被读成结论。 */
+  var CP_GLYPH = {
+    /* 安定:两座山 */
+    ground: '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M2 15l4.6-6.4L10 13l3-4.2L18 15Z"/><path d="M6.6 8.6 9 5.2"/></svg>',
+    /* 前进:一颗太阳 */
+    move: '<svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="3.6"/><path d="M10 2.2v1.8M10 16v1.8M2.2 10h1.8M16 10h1.8M4.6 4.6l1.3 1.3M14.1 14.1l1.3 1.3M15.4 4.6l-1.3 1.3M5.9 14.1l-1.3 1.3"/></svg>',
+    /* 消耗:一朵云 */
+    drain: '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5.6 13.4a2.9 2.9 0 0 1 .3-5.8 4 4 0 0 1 7.7-.9 2.9 2.9 0 0 1 .5 5.8Z"/><path d="M7.4 16.2l-.6 1.4M10.4 16.2l-.6 1.4M13.4 16.2l-.6 1.4"/></svg>',
+    /* 吸引:一颗星 */
+    call: '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2.6c.3 3.7 3.7 7.1 7.4 7.4-3.7.3-7.1 3.7-7.4 7.4-.3-3.7-3.7-7.1-7.4-7.4 3.7-.3 7.1-3.7 7.4-7.4Z"/></svg>'
+  };
 
   /* ── 四个方向 ────────────────────────────────────────────
      内容【只】来自已经生成、已经通过验证的那一份(存在本机快取里)。
@@ -9230,12 +9253,6 @@ window.Guide = (function () {
      这一段自己【不】呼叫任何 API —— 生成只由使用者按按钮触发一次。 */
   /* 短名:中性入口用的方向身分。四个方向在版面上永远都在,
      只是有没有个人化情境的差别 —— 使用者不会看到「无法识别」这类字眼。 */
-  /* 方向的身分:四个方向永远都在,身分也永远印得出来。
-     它不是「没有情境时的替代品」—— 认得出情境的那一个也印同一行,
-     否则使用者一眼就看得出哪一个「有对上」、哪一个没有。 */
-  var CP_SHORT = { ground: ["安定", "Return"], move: ["前进", "Move"],
-                   drain: ["消耗", "Notice"], call: ["吸引", "Follow"] };
-
   /* ── 01 我的内在指南 ─────────────────────────────────────
      三层:
 
@@ -9268,18 +9285,20 @@ window.Guide = (function () {
     const sits = compassSituationsFor(saved);
     const active = compassDirOpen;
 
-    /* 入口:眉标 +【一行】。那一行是情境,或者是他自己的 coreInsight。 */
+    /* 入口:小记号 + 方向的名字 + 那一行。
+       那一行是情境,或者是他自己的 coreInsight —— 两种都是个人化内容,
+       版面上一个字的差别都没有。
+       §6.2-1:方向的名字在中文模式只印中文,英文名是英文版才有的东西。 */
     const ents = DIRS.map(function (d, i) {
       const c = saved.directions[KEYS[d.key]];
       const st = sits[KEYS[d.key]];
       const on = active === d.key;
-      const short = CP_SHORT[d.key] || ["", ""];
       const lead = st ? st.situation : (c ? c.coreInsight : dpT(d.zh, d.en));
       return '<button type="button" class="cp-ent d' + (i + 1) + (on ? " on" : "") +
         '" data-dir="' + esc0(d.key) + '"' +
         ' aria-expanded="' + (on ? "true" : "false") + '" aria-controls="cpPanel">' +
-        '<span class="no">' + esc0(d.no) + '<i aria-hidden="true">·</i>' +
-        esc0(dpT(short[0], short[1])) + "</span>" +
+        '<span class="gl" aria-hidden="true">' + (CP_GLYPH[d.key] || "") + "</span>" +
+        '<b class="zh">' + esc0(dpT(d.zh, d.en)) + "</b>" +
         '<span class="sit">' + esc0(lead) + "</span></button>";
     }).join("");
 

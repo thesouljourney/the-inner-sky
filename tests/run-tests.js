@@ -1938,10 +1938,18 @@ function testCompassZhOnlyLabels() {
   checkEq("[zh] 英文小标只在英文模式出现",
     /window\.I18N\.isEN\(\)\s*\n?\s*\?\s*'<div class="cp-eyebrow">/.test(html), true);
   checkEq("[zh] 中文模式的小标只剩一颗星", /cp-eyebrow zh-only/.test(html), true);
+  /* ⚠ 这个切片原本指向 compassRemindersHtml —— 那支函式早就不存在了,
+     indexOf 回 -1,整个检查等于对着【全档】比对,永远会通过。
+     改成真正的边界:只看 compassDirectionsHtml 自己那一段。 */
   const dirBlock = html.slice(html.indexOf("function compassDirectionsHtml"),
-                              html.indexOf("function compassRemindersHtml"));
-  checkEq("[zh] 正式页四方向的英文名只在英文模式印",
-    /window\.I18N\.isEN\(\) \? '<span class="en">' \+ esc0\(d\.en\)/.test(dirBlock), true);
+                              html.indexOf("/* ── 想留给自己的几句话"));
+  checkEq("[zh] 找得到真正的方向区块", dirBlock.length > 500 && dirBlock.length < 6000, true);
+  checkEq("[zh] 正式页四方向的名字走 dpT —— 中文模式只会印中文",
+    /'<b class="zh">' \+ esc0\(dpT\(d\.zh, d\.en\)\)/.test(dirBlock), true);
+  checkEq("[zh] 方向区块里没有任何一定会印出来的英文名",
+    /<span class="en">/.test(dirBlock), false);
+  checkEq("[zh] 概念图的双语处理没有被搬进中文模式",
+    /What grounds me|What moves me|What drains me|What calls me/.test(dirBlock), false);
   const cardBlock = html.slice(html.indexOf("function cpPvCardHtml"), html.indexOf("function cpPvGridHtml"));
   checkEq("[zh] 预览四方向的英文名也只在英文模式印",
     /window\.I18N\.isEN\(\) \? '<span class="en">' \+ esc0\(d\.en\)/.test(cardBlock), true);
@@ -3383,14 +3391,17 @@ function testCompassCentredLayout() {
     /cpProdGenerate\(\)/.test(html.replace(/addEventListener\("click", cpProdGenerate\)/g, "").replace(/function cpProdGenerate\(\)/g, "")), false);
   const css = html.slice(html.indexOf("以指南盘为中心的五段(01–05)"), html.indexOf("/* 记录:展开长在自己下面 */"));
   checkEq("[layout] 桌机三栏,盘面跨两列",
-    /grid-template-columns:1fr minmax\(210px,260px\) 1fr/.test(css) && /\.cp-wheel-core\{grid-column:2;grid-row:1\/3\}/.test(css), true);
+    /grid-template-columns:1fr minmax\(210px,340px\) 1fr/.test(css) && /\.cp-wheel-core\{grid-column:2;grid-row:1\/3\}/.test(css), true);
   checkEq("[layout] 展开状态宣告成单一值(一次一个)",
     /var compassDirOpen = "";/.test(html), true);
   checkEq("[layout] 入口文字靠左", /\.cp-ent\{[\s\S]{0,120}text-align:left/.test(css), true);
   checkEq("[layout] 平板 2×2、手机单栏",
     /max-width:1024px\)\{\s*#dpage\.compass-page \.cp-wheel\{grid-template-columns:repeat\(2/.test(css) &&
     /max-width:767px\)\{\s*#dpage\.compass-page \.cp-wheel\{grid-template-columns:1fr/.test(css), true);
-  checkEq("[layout] 手机收掉 N/E/S/W", /\.cp-rose-l\{display:none\}/.test(css), true);
+  /* 罗盘改用品牌自己那张天体素材,不再是手画的线稿 */
+  checkEq("[layout] 罗盘用的是品牌的天体素材",
+    /background:url\(assets\/life\/compass\.webp\)/.test(css), true);
+  checkEq("[layout] 手机上罗盘缩小", /\.cp-rose\{width:min\(48vw,172px\)/.test(css), true);
   checkEq("[layout] 旧的两栏 / 环绕规则已清掉",
     /cp-grid4|\.cp-dirs|cp-keep-card|\.cp-anchor\b|cp-wd\b/.test(html), false);
   const keep = html.slice(html.indexOf("function compassAnchorsHtml()"), html.indexOf("function compassNowHtml()"));
@@ -3755,9 +3766,26 @@ function testAnchorsV11AndRenderV2() {
     /st \? st\.situation : \(c \? c\.coreInsight/.test(dir), true);
   checkEq("[v2] 两种状态共用同一个入口模板",
     (dir.replace(/\/\*[\s\S]*?\*\//g, "").match(/class="cp-ent d/g) || []).length, 1);
-  checkEq("[v2] 入口没有卡片 / 边框 / 阴影",
-    /#dpage\.compass-page \.cp-ent\{[\s\S]{0,260}background:none;border:0;border-radius:0;box-shadow:none/.test(html), true);
-  checkEq("[v2] 细线把入口接回盘面", /\.cp-ent::after\{/.test(html), true);
+  /* 入口有柔和的象牙白容器,但【不是】SaaS 卡片:半透明、香槟细边、几乎没有阴影 */
+  const entCss = html.slice(html.indexOf("#dpage.compass-page .cp-ent{"),
+                            html.indexOf("#dpage.compass-page .cp-ent .gl{"));
+  checkEq("[v2] 入口是半透明的象牙白,不是纯白",
+    /background:rgba\(255,253,250,\.5\)/.test(entCss), true);
+  checkEq("[v2] 香槟色的细边", /border:1px solid rgba\(154,106,52,\.13\)/.test(entCss), true);
+  checkEq("[v2] 几乎没有阴影",
+    /box-shadow:0 2px 14px -10px/.test(entCss), true);
+  checkEq("[v2] 不再画连接线 —— 罗盘自己组织四个方向",
+    /\.cp-ent::after\{/.test(html), false);
+  checkEq("[v2] 四个方向各有一个香槟细线的小记号",
+    /var CP_GLYPH = \{/.test(html) &&
+    ["ground", "move", "drain", "call"].every(function (k) {
+      return new RegExp(k + ": '<svg viewBox=\"0 0 20 20\"").test(html);
+    }), true);
+  checkEq("[v2] 小记号只是视觉身分,不带文字",
+    /CP_GLYPH\[d\.key\] \|\| ""/.test(html) &&
+    !/<text/.test(html.slice(html.indexOf("var CP_GLYPH"), html.indexOf("function compassDirectionsHtml"))), true);
+  checkEq("[v2] 方向的名字回来了(中文模式只印中文)",
+    /'<b class="zh">' \+ esc0\(dpT\(d\.zh, d\.en\)\)/.test(html), true);
   checkEq("[v2] 指南盘没有任何填色的面",
     /fill="url\(#cpGlow\)"|radialGradient/.test(
       html.slice(html.indexOf("function compassRoseSvg"), html.indexOf("function compassDirectionsHtml"))), false);
