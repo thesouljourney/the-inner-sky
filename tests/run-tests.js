@@ -493,12 +493,10 @@ function testInnerCompass() {
   checkEq("[compass] 找得到页面实作", page.length > 2000, true);
   /* Phase 8 起:四个方向来自【已生成并通过验证】的本机快取,
      锚点与今天的问题都是从那一份推出来的 —— 页面自己不写任何内容。 */
-  checkEq("[compass] 四个方向来自已生成的结果,不是写死在页面里",
-    /window\.Compass\.result\.get\(compassOwner\(\)\)/.test(page), true);
-  checkEq("[compass] 锚点与今天的问题也来自同一份",
-    (page.match(/window\.Compass\.result\.get\(/g) || []).length >= 3, true);
-  checkEq("[compass] 还没接上生成逻辑时会标示「示例」",
-    /compassStub\(/.test(page) && /示例 · 尚未接上你的星盘/.test(page), true);
+  /* 方向指南这一页不再渲染四个方向 / 锚点 / 今天的问题 ——
+     那些「认识自己」的内容属于前面的章节。这里只看方向指南自己。 */
+  checkEq("[compass] 页面只组装今天的方向与星空记录",
+    /\(gtoday \? guideReadingHtml\(gtoday\) : guideEntryHtml\(\)\) \+\n\s*guideSkyHtml\(\)/.test(html), true);
 
   // Compass 模组本身:placeholder 边界要说得出自己是 placeholder
   const mod = (function () {
@@ -1075,8 +1073,9 @@ function testCompassSelection() {
      而且只能透过 CP_PV_SRC 这一张清单动态载入,不得写成静态 <script src>。 */
   checkEq("[sel] 选择层没有被写成 app.html 的静态 script",
     /<script[^>]+compass-selection/.test(html), false);
-  checkEq("[sel] 选择层只出现在两张载入清单里(开发预览 + 正式生成)",
-    (html.match(/compass-selection\.js/g) || []).length, 2);
+  /* 选择层现在只有两个用途:开发预览,以及方向指南算一次长期标签 */
+  checkEq("[sel] 选择层只出现在开发预览的载入清单里",
+    (html.match(/compass-selection\.js/g) || []).length, 1);
   checkEq("[sel] 生命脉络与九个主题的 Prompt 仍未改动",
     /把前面读过的所有理解连起来/.test(ts) && /现在写【第二部分 · 主题探索】中的一章/.test(ts), true);
 
@@ -1222,8 +1221,9 @@ function testCompassTranslation() {
   const ts = fs.readFileSync(path.join(__dirname, "..", "docs", "edge", "read-chart.ts"), "utf8");
   checkEq("[tr] 翻译层没有被写成 app.html 的静态 script",
     /<script[^>]+compass-translation/.test(html), false);
-  checkEq("[tr] 翻译层只出现在两张载入清单里(开发预览 + 正式生成)",
-    (html.match(/compass-translation\.js/g) || []).length, 2);
+  /* 翻译层现在只有开发预览会载入 —— 方向指南那一页不碰它 */
+  checkEq("[tr] 翻译层只出现在开发预览的载入清单里",
+    (html.match(/compass-translation\.js/g) || []).length, 1);
   checkEq("[tr] 服务端仍然没有 kind=compass", ts.indexOf('kind === "compass"') < 0, true);
   const core = CE.PATTERN_RULES.filter(r => r.family !== "GUARD");
   checkEq("[tr] 27 条核心规则 + 2 条护栏仍未改动",
@@ -1378,8 +1378,8 @@ function testCompassDevPreview() {
   });
   checkEq("[pv] 预览是自己一条路由,不是改写 #/compass",
     /h === "#\/compass\/preview"/.test(html) && /h === "#\/compass"\) return \{ k: "compass" \}/.test(html), true);
-  checkEq("[pv] 没有 dev 旗标时,画面走的仍然是原本那一支",
-    /\(dev \? cpPvSectionHtml\(\) : compassDirectionsHtml\(c\)\)/.test(html), true);
+  checkEq("[pv] 只有 dev 旗标才会走开发预览那一支",
+    /\(dev \? cpPvSectionHtml\(\) : ""\)/.test(html), true);
 
   // 17 · 顶部导览没有多一个入口(预览不该出现在正式选单里)
   const nav = html.slice(html.indexOf("function dpNavItems"), html.indexOf("function dpNavItems") + 1400);
@@ -1593,7 +1593,9 @@ function testCompassGenerationAsync(K) {
   checkEq("[gen] 同一 case + 模式 + promptVersion 会被快取",
     /cpPvGenCache\[cpGenKey\(/.test(pvBlock) && /caseId \+ "\|" \+ cpPvMode \+ "\|" \+ cpPvVersion\(\)/.test(pvBlock), true);
   checkEq("[gen] 正式 #\/compass 不会碰到生成层",
-    /\(dev \? cpPvSectionHtml\(\) : compassDirectionsHtml\(c\)\)/.test(html), true);
+    /CompassGeneration|compass-generation\.js/.test(
+      html.slice(html.indexOf("function guideEnsure()"),
+                 html.indexOf("function guideSkyHtml()"))), false);
   checkEq("[gen] read-chart 仍然没有 kind=compass", rc.indexOf('kind === "compass"') < 0, true);
   checkEq("[gen] read-chart 没有被这一阶段改动",
     h(rc.length + ":" + rc.slice(0, 200)), h(rc.length + ":" + rc.slice(0, 200)));
@@ -1940,8 +1942,9 @@ function testCompassZhOnlyLabels() {
   checkEq("[zh] 中文模式的小标只剩一颗星", /cp-eyebrow zh-only/.test(html), true);
   const dirBlock = html.slice(html.indexOf("function compassDirectionsHtml"),
                               html.indexOf("function compassRemindersHtml"));
-  checkEq("[zh] 正式页四方向的英文名只在英文模式印",
-    /window\.I18N\.isEN\(\) \? '<span class="en">' \+ esc0\(d\.en\)/.test(dirBlock), true);
+  checkEq("[zh] 方向指南的段落标题在中文模式不印英文",
+    /compassEyebrow\(dpT\("今天的方向"/.test(html) &&
+    /cp-eyebrow zh-only/.test(html), true);
   const cardBlock = html.slice(html.indexOf("function cpPvCardHtml"), html.indexOf("function cpPvGridHtml"));
   checkEq("[zh] 预览四方向的英文名也只在英文模式印",
     /window\.I18N\.isEN\(\) \? '<span class="en">' \+ esc0\(d\.en\)/.test(cardBlock), true);
@@ -2275,120 +2278,6 @@ function testCompassShadowPermission() {
       .join(","), "");
 }
 
-/* ---------- 24. 我的内在指南 · 完整产品页(Phase 8) ---------- */
-function testCompassProductPage() {
-  const fs = require("fs");
-  const AN = require(path.join(__dirname, "..", "assets", "compass-anchors.js"));
-  const RC = require(path.join(__dirname, "..", "assets", "compass-recorded.js"));
-  const html = fs.readFileSync(path.join(__dirname, "..", "app.html"), "utf8");
-  const asrc = fs.readFileSync(path.join(__dirname, "..", "assets", "compass-anchors.js"), "utf8");
-  const code = asrc.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
-  const copies = RC.RAW_V12.C1;
-
-  // —— 想留给自己的几句话:三句,而且每一句都出自已接受的文案 ——
-  const r = AN.derive(copies);
-  checkEq("[prod] 正好三句锚点", r.anchors.length, 3);
-  checkEq("[prod] 不是一个方向一句(四取三)", r.dropped.length, 1);
-  checkEq("[prod] 被留下的那一句说得出原因", !!(r.dropped[0] && r.dropped[0].reason), true);
-  checkEq("[prod] 每一句都能在已接受的文案里找到",
-    AN.verifyDerived(r, copies).offenders.join(","), "");
-  checkEq("[prod] 三句之间不重复", r.maxSimilarity < 0.35, true);
-  checkEq("[prod] 同一份 Compass 永远得到同一组",
-    JSON.stringify(AN.derive(copies)), JSON.stringify(r));
-  /* 少于三个方向就如实说不够,不重复用同一句凑数 */
-  const thin = AN.derive({ grounds: copies.grounds, moves: copies.moves });
-  checkEq("[prod] 不够三句就说不够", thin.status, "insufficient");
-  checkEq("[prod] 不够的时候不硬凑", thin.anchors.length, 0);
-
-  // 这一层不读星盘、不呼叫 API、不产生新主张
-  checkEq("[prod] 锚点层没有任何网路呼叫",
-    /fetch\(|XMLHttpRequest|anthropic|supabase/i.test(code), false);
-  checkEq("[prod] 锚点层不碰星盘 / 机制 / 分数",
-    /planets|cusps|\bmechanism\b|selectionScore|patternKey|support\[|\.domain/i.test(code), false);
-  checkEq("[prod] 锚点层不读日记 / 心情 / 收藏",
-    /journal|mood|favs|favou?rite/i.test(code), false);
-
-  // —— 正式页面 ——
-  const page = (function () {
-    const i = html.indexOf("页面:我的内在指南(#/compass)");
-    const j = html.indexOf("function renderFavoritesPage()", i);
-    const w = html.slice(i, j);
-    const a = w.indexOf("function cpPvLoadOne"), b = w.indexOf("function compassRepaint");
-    return (a > 0 && b > a) ? w.slice(0, a) + w.slice(b) : w;
-  })();
-  checkEq("[prod] 四个方向来自已生成的快取",
-    /window\.Compass\.result\.get\(compassOwner\(\)\)/.test(page), true);
-  checkEq("[prod] 没有生成过就如实说,不拿示例冒充",
-    /cp-empty4[\s\S]{0,400}你的内在指南还没有生成/.test(page), true);
-  /* 两种空的情形都要照实说,而且都不编:
-     还没生成过 → 「等上面的内在指南生成之后…」
-     生成过但这份文案里取不出可以带走的句子 → 「这一份指南里，还没有…」 */
-  checkEq("[prod] 锚点没有资料时也不编",
-    /cp-keep[\s\S]{0,1400}等上面的内在指南生成之后/.test(page) &&
-    /cp-keep[\s\S]{0,1400}这一份指南里，还没有可以单独带走的句子/.test(page), true);
-  checkEq("[prod] 今天的问题来自已通过验证的 reflectionPrompt",
-    /saved\.directions\[k\] && saved\.directions\[k\]\.reflectionPrompt/.test(page), true);
-  checkEq("[prod] 一次只有一个问题",
-    /pool\[window\.Compass\.rotateIndex\(pool\.length, compassSeed\(\)\)\]/.test(page), true);
-
-  // 生成只由按钮触发
-  checkEq("[prod] 生成只绑在按钮上",
-    /getElementById\("cpGenBtn"\)[\s\S]{0,120}addEventListener\("click", cpProdGenerate\)/.test(page), true);
-  checkEq("[prod] 渲染流程里没有自动生成",
-    /cpProdGenerate\(\)/.test(page
-      .replace(/addEventListener\("click", cpProdGenerate\)/g, "")
-      .replace(/function cpProdGenerate\(\)/g, "")), false);
-  checkEq("[prod] 正式页面不载入开发用的已录制 fixture",
-    /compass-recorded/.test(html.slice(html.indexOf("const CP_PROD_SRC"),
-      html.indexOf("];", html.indexOf("const CP_PROD_SRC")))), false);
-
-  // 快取只存使用者看得到的东西
-  const rs = html.indexOf("result: (function () {");
-  const store = html.slice(rs, html.indexOf("})(),", rs));
-  checkEq("[prod] 快取只收白名单栏位",
-    /coreInsight: String\(c\.coreInsight\)/.test(store) &&
-    /explanation: String\(c\.explanation/.test(store) &&
-    /reflectionPrompt: String\(c\.reflectionPrompt/.test(store), true);
-  checkEq("[prod] 快取不存机制 / 证据 support / 分数 / prompt",
-    /\bmechanism\b|support\[|\.domain|selectionScore|systemPrompt|patternKey|tension/i.test(store), false);
-
-  // 日记:存当天的问题,不存任何诊断
-  const shape = html.slice(html.indexOf("function shape(entry, keep)"), html.indexOf("function isEmpty"));
-  checkEq("[prod] 记录会存下当天的问题", /question: String\(e\.question/.test(shape), true);
-  checkEq("[prod] 记录不存机制 / 分数 / prompt / 模型推理",
-    /mechanism|support|score|prompt(?!\b)|reasoning/i.test(shape.replace(/question/g, "")), false);
-
-  // 展开长在自己下面 + 删除要确认
-  checkEq("[prod] 展开的内容长在被点的那一张卡里",
-    /data-entry="' \+ esc0\(r\.id\)/.test(page) && /open \? t : preview/.test(page), true);
-  checkEq("[prod] 原地互动会保住卷动位置",
-    /function compassRepaint\(\)/.test(html) && /window\.scrollTo\(0, y\)/.test(html), true);
-  checkEq("[prod] 删除要按两次(第一下只是问)",
-    /if \(compassDelAsk !== id\)/.test(html), true);
-
-  /* 使用者真正看得到的东西,只由这几支产生 —— 只检查它们,
-     不要把「按钮按下去才跑」的生成函式也算进画面。 */
-  const render = ["compassDirectionsHtml", "compassAnchorsHtml", "compassNowHtml",
-                  "compassQuestionHtml", "compassSkyHtml"].map(function (fn) {
-    const a = html.indexOf("function " + fn + "(");
-    return a < 0 ? "" : html.slice(a, html.indexOf("\n  function ", a + 10));
-  }).join("\n");
-  checkEq("[prod] 找得到五个渲染函式", render.length > 3000, true);
-  ["cp-devbar", "cp-mode", "cp-casebtn", "cp-devdt", "patternKey", "promptVersion",
-   "SHADOW", "selectionScore", "mechanism"].forEach(function (t) {
-    checkEq("[prod] 画面上没有 " + t, render.indexOf(t) >= 0, false);
-  });
-  checkEq("[prod] 中文模式没有英文小标",
-    /YOUR INNER COMPASS|THINGS TO REMEMBER|A QUESTION FOR YOU|MY SKY/.test(render), false);
-
-  // 此刻的我:日常说法,不诊断
-  const moods = html.slice(html.indexOf("const MOODS = ["), html.indexOf("];", html.indexOf("const MOODS = [")));
-  checkEq("[prod] 心情选项不使用临床词汇",
-    /焦虑|抑郁|创伤|解离|失调|障碍/.test(moods), false);
-  checkEq("[prod] 心情由使用者自己选", /data-mood=/.test(page), true);
-}
-
-
 /* ---------- 25. 想留给自己的几句话 · 取舍的依据(Personal Anchors v2) ----------
    这一段守的不是措辞,是【取舍的理由】:
      · 选哪一句,看它在讲什么功能、能不能重复用、能不能做,
@@ -2491,22 +2380,8 @@ function testCompassAnchorSelection() {
     checkEq("[anc] fetch 一次都没被碰到", called, 0);
   } finally { global.fetch = realFetch; global.XMLHttpRequest = realXHR; }
 
-  /* 画面上只剩那三句话 —— 灰色的来源说明已经拿掉 */
-  const fn = html.slice(html.indexOf("function compassAnchorsHtml()"),
-                        html.indexOf("function compassNowHtml()"));
-  checkEq("[anc] 画面不再显示灰色的来源说明", /cp-anchor[\s\S]*?class="sp"/.test(fn), false);
-  checkEq("[anc] 画面不显示来源方向 / 功能 / 取舍理由",
-    /sourceDirection|selectionReason|sourceFields|score|function"\]/.test(fn), false);
-  checkEq("[anc] 画面只印那一句话", /esc0\(a\.line\)/.test(fn), true);
-  checkEq("[anc] .sp 的样式也一起收掉",
-    /#dpage\.compass-page \.cp-anchor \.sp\{/.test(html), false);
-
-  /* 手机上八个心情要全部看得到,不靠横向卷动 */
-  const mob = html.slice(html.indexOf("@media(max-width:767px)"),
-                         html.indexOf("正式页面的完整体验(Phase 8)"));
-  const moodCss = mob.slice(mob.indexOf("#dpage.compass-page .cp-moods{"));
-  checkEq("[anc] 手机上心情换行显示", /flex-wrap:wrap/.test(moodCss.slice(0, 260)), true);
-  checkEq("[anc] 手机上心情不横向卷动", /overflow-x:auto/.test(moodCss.slice(0, 260)), false);
+  /* 锚点这一层目前不在正式页面上:模组与已锁基准保留,画面不再渲染它。 */
+  checkEq("[anc] 锚点模组与已锁基准仍然保留", AN.ANCHORS_BASELINE.version, "anchors-2.2");
 }
 
 
@@ -2897,9 +2772,9 @@ function testCompassPreLaunchFixes() {
     const a = html.indexOf("function compassSkyHtml()");
     return html.slice(a, html.indexOf("\n  /*", a + 10));
   })();
-  checkEq("[F1] 没有值就不印「那天的问题」", /open && r\.question/.test(skyFn), true);
-  checkEq("[F1] 不会替旧记录编一个问题出来",
-    /r\.question \|\| *["']那|placeholder|示例/.test(skyFn), false);
+  /* 那天的问题不再出现在方向指南这一页上,但储存层仍然来回带得动它 ——
+     旧记录与云端资料完全不受影响。 */
+  checkEq("[F1] 储存层仍然读得回 question", /question: r\.question \|\| ""/.test(rowIn), true);
 
   /* —— F2:只有内在指南这一页换页尾 —— */
   const foot = html.slice(html.indexOf("function dpReturnFoot("), html.indexOf("// ---------- 页面:九大主题"));
@@ -3104,24 +2979,266 @@ function testCompassAnchorsSemantic() {
     checkEq("[sem] fetch 一次都没被碰到", called, 0);
   } finally { global.fetch = realFetch; global.XMLHttpRequest = realXHR; }
 
-  /* —— 9. 页面:渲染时现算,既有的空阵列自己会好 —— */
+  /* —— 9. 这一层目前不在正式页面上 ——
+     方向指南改版之后,#/compass 不再渲染四个方向与锚点。
+     模组、已锁基准与指纹全部保留,行为也没有变 —— 只是暂时没有画面在用它。 */
   const html = fs.readFileSync(path.join(__dirname, "..", "app.html"), "utf8");
-  const fn = html.slice(html.indexOf("function compassAnchorsFor(saved)"),
-                        html.indexOf("function compassNowHtml()"));
-  checkEq("[sem] 渲染时从已存的四段文案现算", /AN3\.derive\(saved\.directions\)/.test(fn), true);
-  checkEq("[sem] 现算的结果要重新授权过才给",
-    /verifySemantic\(r, saved\.directions\)/.test(fn) && /if \(v\.ok\) list = r\.anchors/.test(fn), true);
-  checkEq("[sem] 现算不出来才退回快取里那一份", /if \(!list\.length && saved\.anchors/.test(fn), true);
-  checkEq("[sem] 现算有记忆化", /compassAnchorCache\.key === key/.test(fn), true);
-  const ens = html.slice(html.indexOf("function compassEnsureAnchors()"),
-                         html.indexOf("function compassAnchorsFor(saved)"));
-  checkEq("[sem] 只补载锚点那两支",
-    /compass-evidence|compass-selection|compass-generation|compass-preview|compass-recorded/.test(ens), false);
-  checkEq("[sem] 正式页面会载入 3.1",
-    /assets\/compass-anchors-semantic\.js/.test(
-      html.slice(html.indexOf("const CP_PROD_SRC"), html.indexOf("];", html.indexOf("const CP_PROD_SRC")))), true);
+  checkEq("[sem] 页面不再渲染锚点", /compassAnchorsHtml|compassAnchorsFor/.test(html), false);
   checkEq("[sem] 3.0 已经被取代,不再有参照",
     /compass-anchors-descriptive|CompassAnchorsDescriptive/.test(html), false);
+}
+
+
+/* ---------- 31. 我的内在指南 · 方向指南(Rule-based Direction Guide) ----------
+   这个功能不是继续解读星盘,也不是每天呼叫 AI。
+   它回答的是「知道这些以后,我可以往哪里走」。
+   品质来自:好的匹配逻辑 + 写好的内容,不是来自频繁生成。
+   ------------------------------------------------------------------- */
+function testGuide() {
+  const crypto = require("crypto");
+  const fs = require("fs");
+  const T = require(path.join(__dirname, "..", "assets", "guide-tags.js"));
+  const C = require(path.join(__dirname, "..", "assets", "guide-content.js"));
+  const E = require(path.join(__dirname, "..", "assets", "guide-engine.js"));
+  const PV = require(path.join(__dirname, "..", "assets", "compass-preview.js"));
+  const CA = require(path.join(__dirname, "..", "assets", "compass-cases.js"));
+  const html = fs.readFileSync(path.join(__dirname, "..", "app.html"), "utf8");
+  const h = (o) => crypto.createHash("sha256")
+    .update(typeof o === "string" ? o : JSON.stringify(o)).digest("hex").slice(0, 16);
+  const ids = (CA.CASES || []).map(function (c) { return c.id; });
+
+  /* ═══ A. 长期标签:星盘只在后台出现一次 ═══ */
+  const tagsOf = {};
+  ids.forEach(function (id) { tagsOf[id] = T.fromReport(PV.buildCase(id).report); });
+  checkEq("[guide] 十张测试盘都算得出标签",
+    ids.filter(function (id) { return tagsOf[id].status !== "ok"; }).join(","), "");
+  checkEq("[guide] 每张盘的标签组合不完全一样",
+    new Set(ids.map(function (id) {
+      const t = tagsOf[id];
+      return t.movement_style.join() + "|" + t.stuck_pattern.join() + "|" + t.direction_need.join();
+    })).size >= 7, true);
+  ids.forEach(function (id) {
+    const t = tagsOf[id];
+    checkEq("[guide] " + id + " 标签数量在规格内",
+      t.movement_style.length <= 2 && t.movement_style.length >= 1 &&
+      t.stuck_pattern.length <= 3 && t.direction_need.length <= 3, true);
+  });
+  checkEq("[guide] 标签只用白名单里的值",
+    ids.every(function (id) {
+      const t = tagsOf[id];
+      return t.movement_style.every(function (x) { return T.MOVEMENT.indexOf(x) >= 0; }) &&
+             t.stuck_pattern.every(function (x) { return T.STUCK.indexOf(x) >= 0; }) &&
+             t.direction_need.every(function (x) { return T.NEED.indexOf(x) >= 0; });
+    }), true);
+  checkEq("[guide] 同一张盘永远得到同一组标签",
+    JSON.stringify(T.fromReport(PV.buildCase("C1").report)), JSON.stringify(tagsOf.C1));
+  checkEq("[guide] 只看已接受的机制,不看被否决的",
+    T.fromAccepted([{ patternKey: "solitude-then-contact", strength: 1 }]).direction_need.join(","),
+    "space,rest");
+  /* 被否决 / 暂列的机制不可以影响标签 —— 直接喂一份混着的 report */
+  checkEq("[guide] 被否决的机制不会进标签",
+    JSON.stringify(T.fromReport({ candidates: [
+      { patternKey: "solitude-then-contact", strength: 1, status: "accepted" },
+      { patternKey: "autonomy-or-stall", strength: 9, status: "rejected" },
+      { patternKey: "novelty-over-repetition", strength: 9, status: "provisional" }
+    ] })),
+    JSON.stringify(T.fromAccepted([{ patternKey: "solitude-then-contact", strength: 1 }])));
+  checkEq("[guide] 27 条机制 + 2 条护栏全部对照得到", Object.keys(T.MAP).length, 29);
+  const tagSrc = fs.readFileSync(path.join(__dirname, "..", "assets", "guide-tags.js"), "utf8");
+  checkEq("[guide] 标签层不发请求", /fetch\(|XMLHttpRequest|anthropic|supabase/i.test(tagSrc), false);
+
+  /* ═══ B. 内容库 ═══ */
+  const dirs = Object.keys(C.LIBRARY);
+  checkEq("[guide] 11 个方向", dirs.length, 11);
+  checkEq("[guide] 每个方向都有标签", dirs.every(function (d) { return !!C.LABELS[d]; }), true);
+  checkEq("[guide] 每个方向至少 5 个版本",
+    dirs.filter(function (d) { return C.LIBRARY[d].length < 5; }).join(","), "");
+  const all = dirs.reduce(function (a, d) { return a.concat(C.LIBRARY[d]); }, []);
+  checkEq("[guide] 一共 55 个版本", all.length, 55);
+  checkEq("[guide] 每个版本四段都在",
+    all.every(function (v) { return v.headline && v.body && v.toward && v.notYet && v.step; }), true);
+  checkEq("[guide] id / headline / 一小步都不重复",
+    new Set(all.map(function (v) { return v.id; })).size === 55 &&
+    new Set(all.map(function (v) { return v.headline; })).size === 55 &&
+    new Set(all.map(function (v) { return v.step; })).size === 55, true);
+  const corpus = all.map(function (v) {
+    return [v.headline, v.body, v.toward, v.notYet, v.step].join("\n");
+  }).join("\n");
+  [["星盘用语", /太阳|月亮|上升|宫位|相位|行星|星座|命主星|元素|星盘|本命|逆行|天顶|天底|北交|南交/],
+   ["「因为你的星盘」这类说法", /因为你的星盘|你的星盘|你的月亮|你的太阳|你的上升|你的第.宫/],
+   ["人格断言", /你是一个|你天生|你就是一个|你的性格|你属于|你注定/],
+   /* 注:方向标签「更相信自己判断的状态」是规格定的,不算鸡汤 —— 这里只扫变体内容 */
+   ["鸡汤", /^相信自己|。相信自己|勇敢做自己|跟随内心|宇宙会给你|一切都会变好|你值得最好|学会爱自己|活在当下|顺其自然|加油吧|要加油/],
+   ["命令句", /你应该|你必须|你需要学会|请你|记得要/],
+   ["临床词汇", /创伤|依恋|神经系统|失调|解离|回避型|焦虑型|防御机制/]
+  ].forEach(function (a) {
+    checkEq("[guide] 内容库没有" + a[0], a[1].test(corpus), false);
+  });
+  checkEq("[guide] 内容库逐字未动", h(C.LIBRARY), "2881f852cd473ae6");
+  checkEq("[guide] 方向标签逐字未动", h(C.LABELS), "fe9c93493accc506");
+
+  /* ═══ C. 匹配逻辑 ═══ */
+  checkEq("[guide] 八种状态 / 八种主题", E.MOODS.length === 8 && E.TOPICS.length === 8, true);
+  [["tired", "work", "rest,choice,meaning"],
+   ["confused", "decision", "clarity,choice,space"],
+   ["anxious", "future", "stability,clarity,space"],
+   ["stuck", "work", "experimentation,clarity,choice"],
+   ["empty", "energy", "rest,space"],
+   ["hopeful", "change", "experimentation,self_trust"],
+   ["restart", "future", "experimentation,choice,clarity"]
+  ].forEach(function (x) {
+    checkEq("[guide] " + x[0] + " + " + x[1] + " 的优先序",
+      E.baseCandidates(x[0], x[1]).join(","), x[2]);
+  });
+  /* 规格的两个加权范例 */
+  const r1 = E.rank({ mood: "confused", topic: "decision",
+    tags: { stuck_pattern: ["should_over_want"], direction_need: ["choice"], movement_style: [] } });
+  checkEq("[guide] should_over_want + need=choice → choice 权重最高", r1[0].direction, "choice");
+  const withTag = E.rank({ mood: "stuck", topic: "work",
+    tags: { stuck_pattern: ["overthinking"], movement_style: ["experiment_first"], direction_need: [] } });
+  const noTag = E.rank({ mood: "stuck", topic: "work", tags: {} });
+  const sc = function (rows, d) { const r = rows.filter(function (x) { return x.direction === d; })[0]; return r ? r.score : 0; };
+  checkEq("[guide] overthinking + experiment_first → experimentation 与 clarity 都被拉高",
+    sc(withTag, "experimentation") > sc(noTag, "experimentation") &&
+    sc(withTag, "clarity") > sc(noTag, "clarity"), true);
+  /* 每一格都给得出结果,而且【只有一个】方向 */
+  let cells = 0, bad = [];
+  E.MOODS.forEach(function (m) {
+    E.TOPICS.forEach(function (t) {
+      cells++;
+      const g = E.guideFor({ mood: m.id, topic: t.id, tags: tagsOf.C1,
+        date: "2026-09-16", owner: "u1", history: [] });
+      if (g.status !== "ok" || !g.direction || !g.headline || !g.step) bad.push(m.id + "+" + t.id);
+      if (g.direction && !C.LIBRARY[g.direction]) bad.push(m.id + "+" + t.id + " 方向不存在");
+    });
+  });
+  checkEq("[guide] 64 种组合全部给得出一个方向", cells + "/" + bad.join(","), "64/");
+  const one = E.guideFor({ mood: "tired", topic: "work", tags: tagsOf.C1, date: "2026-09-16", owner: "u1", history: [] });
+  checkEq("[guide] 一天只给一个方向,不给四五个",
+    typeof one.direction === "string" && !Array.isArray(one.direction), true);
+  checkEq("[guide] 同一天同一组输入永远一样",
+    JSON.stringify(E.guideFor({ mood: "tired", topic: "work", tags: tagsOf.C1, date: "2026-09-16", owner: "u1", history: [] })),
+    JSON.stringify(one));
+  checkEq("[guide] 不同的人不会永远拿到同一版",
+    new Set(["u1", "u2", "u3", "u4", "u5", "u6"].map(function (o) {
+      return E.guideFor({ mood: "calm", topic: "self", tags: tagsOf.C1, date: "2026-09-16", owner: o, history: [] }).variantId;
+    })).size > 1, true);
+  checkEq("[guide] 缺一个输入就不给方向",
+    E.guideFor({ mood: "tired", tags: tagsOf.C1, date: "2026-09-16", owner: "u1", history: [] }).status, "need_input");
+
+  /* ═══ D. 避免重复 ═══ */
+  function runDays(n, pick) {
+    let hist = [], rows = [];
+    for (let d = 0; d < n; d++) {
+      const date = new Date(Date.UTC(2026, 9, 1 + d)).toISOString().slice(0, 10);
+      const inp = pick(d);
+      const g = E.guideFor({ mood: inp[0], topic: inp[1], tags: tagsOf.C1,
+        date: date, owner: "u1", history: hist });
+      rows.push(g); hist.unshift(E.historyEntry(g));
+    }
+    let hb = 0, sb = 0, consec = 0;
+    for (let i = 0; i < hist.length; i++) for (let j = i + 1; j < hist.length; j++) {
+      const gap = Math.round((Date.parse(hist[i].date) - Date.parse(hist[j].date)) / 86400000);
+      if (hist[i].headline === hist[j].headline && gap < E.HEADLINE_DAYS) hb++;
+      if (hist[i].step === hist[j].step && gap < E.STEP_DAYS) sb++;
+    }
+    for (let i = 1; i < hist.length; i++) if (hist[i - 1].variantId === hist[i].variantId) consec++;
+    return { hb: hb, sb: sb, consec: consec, dirs: new Set(hist.map(function (x) { return x.direction; })).size };
+  }
+  const same = runDays(45, function () { return ["confused", "decision"]; });
+  checkEq("[guide] 连续 45 天同一组输入:30 天内 headline 不重复", same.hb, 0);
+  checkEq("[guide] 连续 45 天同一组输入:14 天内一小步不重复", same.sb, 0);
+  checkEq("[guide] 连续两天不会是同一版", same.consec, 0);
+  checkEq("[guide] 同一组输入也会换方向,不会一直卡在一个", same.dirs >= 4, true);
+  const M = E.MOODS.map(function (m) { return m.id; }), TP = E.TOPICS.map(function (t) { return t.id; });
+  const vary = runDays(45, function (d) { return [M[d % 8], TP[(d * 3) % 8]]; });
+  checkEq("[guide] 每天换输入:30 天内 headline 不重复", vary.hb, 0);
+  checkEq("[guide] 每天换输入:14 天内一小步不重复", vary.sb, 0);
+  /* 14 天的一小步去重要真的会挡:喂一笔【标题不同、但一小步一样】的历史。
+     目前每一版的标题与一小步是一对一的,所以这条规则平常不会单独生效 ——
+     它挡的是内容库改版之后、旧记录里那些还留着的一小步。 */
+  checkEq("[guide] 14 天内同一个一小步会被挡下来",
+    (function () {
+      const v = C.LIBRARY.clarity[0];
+      const hist = [{ date: "2026-10-05", direction: "clarity", variantId: "old-x",
+                      headline: "这一句以前的标题，跟现在的都不一样。", step: v.step }];
+      const g = E.guideFor({ mood: "confused", topic: "decision", tags: tagsOf.C1,
+        date: "2026-10-10", owner: "u1", history: hist });
+      return g.step !== v.step;
+    })(), true);
+  checkEq("[guide] 超过 14 天以后同一个一小步就可以再出现",
+    (function () {
+      const v = C.LIBRARY.clarity[0];
+      const hist = [{ date: "2026-09-01", direction: "clarity", variantId: "old-x",
+                      headline: "这一句以前的标题，跟现在的都不一样。", step: v.step }];
+      let seen = false;
+      for (let d = 0; d < 6; d++) {
+        const g = E.guideFor({ mood: "confused", topic: "decision", tags: tagsOf.C1,
+          date: "2026-10-1" + d, owner: "u" + d, history: hist });
+        if (g.step === v.step) seen = true;
+      }
+      return seen;
+    })(), true);
+
+  checkEq("[guide] 连续同一个方向时会换内容",
+    (function () {
+      const hist = [{ date: "2026-10-01", direction: "clarity", variantId: "clarity-1",
+                      headline: C.LIBRARY.clarity[0].headline, step: C.LIBRARY.clarity[0].step }];
+      const g = E.guideFor({ mood: "confused", topic: "decision", tags: tagsOf.C1,
+        date: "2026-10-02", owner: "u1", history: hist });
+      return g.variantId !== "clarity-1";
+    })(), true);
+
+  /* ═══ E. 0 次 AI ═══ */
+  const engSrc = fs.readFileSync(path.join(__dirname, "..", "assets", "guide-engine.js"), "utf8");
+  const conSrc = fs.readFileSync(path.join(__dirname, "..", "assets", "guide-content.js"), "utf8");
+  [["引擎", engSrc], ["内容库", conSrc], ["标签层", tagSrc]].forEach(function (x) {
+    checkEq("[guide] " + x[0] + "没有任何网路呼叫",
+      /fetch\(|XMLHttpRequest|anthropic|supabase|Claude/i.test(
+        x[1].replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "")), false);
+  });
+  const realFetch = global.fetch, realXHR = global.XMLHttpRequest;
+  let called = 0;
+  global.fetch = function () { called++; throw new Error("no"); };
+  global.XMLHttpRequest = function () { called++; throw new Error("no"); };
+  try {
+    checkEq("[guide] 整条路径不发请求",
+      E.guideFor({ mood: "tired", topic: "work", tags: tagsOf.C1, date: "2026-09-16", owner: "u1", history: [] }).status, "ok");
+    checkEq("[guide] fetch 一次都没被碰到", called, 0);
+  } finally { global.fetch = realFetch; global.XMLHttpRequest = realXHR; }
+
+  /* ═══ F. 页面 ═══ */
+  checkEq("[guide] 正式页面只组装今天的方向与星空记录",
+    /\(gtoday \? guideReadingHtml\(gtoday\) : guideEntryHtml\(\)\) \+/.test(html), true);
+  checkEq("[guide] 四段标题都在画面上",
+    ["今天的方向", "接下来，可以往这里靠近", "现在先不用急着", "今天的一小步"]
+      .filter(function (t) { return html.indexOf(t) < 0; }).join(","), "");
+  checkEq("[guide] 还没输入时问的是「今天，你想从哪里开始？」",
+    /今天，你想从哪里开始？/.test(html), true);
+  checkEq("[guide] 两组选项都在",
+    /'" data-' \+ kind \+ '="'/.test(html) &&
+    /bindPills\("mood"/.test(html) && /bindPills\("topic"/.test(html), true);
+  checkEq("[guide] 自由文字是选填", /如果你愿意，也可以写下一句话。/.test(html), true);
+  checkEq("[guide] 两个都选好才能按", /id="gdGo"[\s\S]{0,120}disabled/.test(html), true);
+  const guideBlock = html.slice(html.indexOf("function guideEnsure()"),
+                                html.indexOf("function guidePill(kind"));
+  checkEq("[guide] 这一页不碰生成层 / 锚点层",
+    /CompassGeneration|CompassAnchors|compass-generation\.js|compass-anchors/.test(guideBlock), false);
+  checkEq("[guide] 这一页不碰翻译层 / 测试盘",
+    /CompassTranslation|compass-translation\.js|compass-cases\.js/.test(guideBlock), false);
+  checkEq("[guide] 星盘只在算一次长期标签的那一个函式里出现",
+    (html.slice(html.indexOf("function guideComputeProfile()"),
+                html.indexOf("function guideToday()")).match(/curResult/g) || []).length, 3);
+  checkEq("[guide] 其余地方完全不碰星盘",
+    /curResult/.test(guideBlock.slice(0, guideBlock.indexOf("function guideComputeProfile()"))), false);
+  checkEq("[guide] 算过就不再算", /if \(window\.Guide\.profile\.get\(owner\)\) return;/.test(guideBlock), true);
+  checkEq("[guide] 星空记录存的是方向,不是星盘资料",
+    /date: String\(e\.date[\s\S]{0,400}headline: String\(e\.headline/.test(html), true);
+  checkEq("[guide] 星空记录不存机制 / 分数 / prompt",
+    /mechanism|patternKey|selectionScore|promptVersion|support\[/i.test(
+      html.slice(html.indexOf("function cleanEntry(e)"), html.indexOf("return {\n    today: today"))), false);
+  checkEq("[guide] 删除要按两次", /if \(compassDelAsk !== day\)/.test(html), true);
+  checkEq("[guide] 可以换一个状态再看一次", /id="gdRedo"/.test(html), true);
 }
 
 /* ---------- 跑 ---------- */
@@ -3148,13 +3265,13 @@ function main() {
   const v12Jobs = testCompassVoiceV12();
   testCompassLiveAuthPath();
   testCompassShadowPermission();
-  testCompassProductPage();
   testCompassAnchorSelection();
   testCompassAnchorScopeGuard();
   testCompassAnchorReusability();
   testCompassAnchorsLock();
   testCompassPreLaunchFixes();
   testCompassAnchorsSemantic();
+  testGuide();
   testCompassZhOnlyLabels();
   return Promise.all([genJobs, liveJobs, voiceJobs, v12Jobs]).then(function () { return testPlaces(); }).then(function () {
     console.log("\n对照来源:" + REF.reference);
