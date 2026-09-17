@@ -56,8 +56,17 @@
 
 ## 4. 存什么 / 不存什么
 
-**存**(14 个栏位):`user_id` · `prompt_version` · `generated_at` · `revision` ·
-`created_at` · `updated_at` · 四个方向 ×(`_core` / `_expl` / `_prompt`)。
+**三个不一样的数字,不要混为一谈:**
+
+| | 数量 | 内容 |
+|---|---|---|
+| 资料表栏位 | **18** | `user_id` · `prompt_version` · `generated_at` · `revision` · 12 个方向栏位 · `created_at` · `updated_at` |
+| `toRow()` 输出 | **14** | `prompt_version` · `generated_at` · 12 个方向栏位 |
+| INSERT 送出的 body | **15** | `toRow()` 的 14 个 + `user_id` |
+
+**由资料库产生、前端不送**的有四个:`revision`(default 1)、`created_at`、
+`updated_at`(default now(),另有 touch trigger)。前端连碰都不碰它们 ——
+少一个前端写得动的栏位,就少一条要稽核的路径。
 
 **不存**(每一项在表里都没有栏位):
 mechanism · livedMechanism · domain · evidence · support · tension · composite ·
@@ -152,7 +161,30 @@ A: INSERT → 201        B: INSERT → 409
 只含 `code` / `reason` / `httpStatus`,**不含**文案、user id、行内容或任何生成内部状态。
 `window.Compass.canonical.diagnostics()` 可以读回最近 20 笔。
 
-## 12. 目前不做的事
+## 12. ⚠ 上线顺序
+
+`compass_results` **不存在**的时候,PostgREST 回 404(`42P01`)。
+`fetch()` 把任何非 2xx 都归成 `error` —— **不是 `absent`** ——
+所以缺表**不会**被误读成「这个人没有指南」。实测:
+
+| 情形 | 结果 |
+|---|---|
+| 缺表 + 有本机快取 | 呈现本机那一份,不显示生成,不尝试写入,Anthropic 0 |
+| 缺表 + 没有本机快取 | 停在「正在读取…」,**不显示生成**,Anthropic 0 |
+
+**因此上线顺序是强制的,不是偏好:**
+
+```
+1. 先在 Supabase 跑 docs/sql/compass_results.sql
+2. 验证表、RLS、跨使用者读写都挡得住
+3. 才部署前端
+```
+
+倒过来的话,**没有本机快取的登入使用者会完全无法生成** ——
+他会一直停在「正在读取…」。这是刻意的安全行为(宁可等,也不要产生第二份
+不一样的指南),但它表示前端先上线 = 新使用者被挡住。
+
+## 13. 目前不做的事
 
 R2 今天的问题换日边界(UTC → 本地)· R3 anon 重新设计 · R4 星空记录日期 ·
 重新生成的 UI · 冲突选择的 UI · 候选历史的 UI。

@@ -3853,7 +3853,21 @@ function testCanonicalStorage() {
   dirty.raw = "模型原始输出";
   dirty.input = { systemPrompt: "你在为…" };
   const row = CC.toRow(dirty);
-  checkEq("[r1] 资料列只有 14 个栏位", Object.keys(row).length, 14);
+  /* 三个不一样的数字,分别钉住,不要互相冒充:
+       资料表 18 栏 / toRow() 14 个键 / INSERT body 15 个键(多一个 user_id) */
+  checkEq("[r1] toRow() 输出 14 个键", Object.keys(row).length, 14);
+  checkEq("[r1] toRow() 不碰由资料库产生的栏位",
+    ["user_id", "revision", "created_at", "updated_at"]
+      .filter(function (k) { return k in row; }).join(","), "");
+  checkEq("[r1] 资料表实际是 18 栏",
+    (sql.slice(sql.indexOf("create table if not exists public.compass_results ("),
+               sql.indexOf("\n);")).replace(/--.*$/gm, "")
+       .match(/\b([a-z_]+)\s+(uuid|text|timestamptz|smallint)\b/g) || []).length, 18);
+  checkEq("[r1] INSERT 只多送一个 user_id",
+    /var row = Cc\.toRow\(v\.result\);\s*\n\s*row\.user_id = owner;\s*\n\s*return nf\(/
+      .test(html), true);
+  checkEq("[r1] INSERT 不送 revision / created_at / updated_at",
+    /row\.(revision|created_at|updated_at)\s*=/.test(html), false);
   checkEq("[r1] 栏位名逐字固定", Object.keys(row).join(","),
     "prompt_version,generated_at,grounds_core,grounds_expl,grounds_prompt," +
     "moves_core,moves_expl,moves_prompt,drains_core,drains_expl,drains_prompt," +
