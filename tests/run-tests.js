@@ -493,10 +493,11 @@ function testInnerCompass() {
   checkEq("[compass] 找得到页面实作", page.length > 2000, true);
   /* Phase 8 起:四个方向来自【已生成并通过验证】的本机快取,
      锚点与今天的问题都是从那一份推出来的 —— 页面自己不写任何内容。 */
-  checkEq("[compass] 四个方向来自已生成的结果,不是写死在页面里",
-    /window\.Compass\.result\.get\(compassOwner\(\)\)/.test(page), true);
+  /* R1 起,页面读的是【解析过的正式那一份】,不是直接读本机快取 */
+  checkEq("[compass] 四个方向来自解析过的正式结果",
+    /const saved = compassSavedResult\(\);/.test(page), true);
   checkEq("[compass] 锚点与今天的问题也来自同一份",
-    (page.match(/window\.Compass\.result\.get\(/g) || []).length >= 3, true);
+    (page.match(/compassSavedResult\(\)/g) || []).length >= 3, true);
   checkEq("[compass] 还没接上生成逻辑时会标示「示例」",
     /compassStub\(/.test(page) && /示例 · 尚未接上你的星盘/.test(page), true);
 
@@ -1345,7 +1346,10 @@ function testCompassDevPreview() {
   const pvCode = pvBlock.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
   checkEq("[pv] 预览没有碰既有的生成端点",
     /FUNC_URL|netFetch|read-chart/.test(pvCode), false);
-  checkEq("[pv] 预览里只有一处 fetch", (pvBlock.match(/fetch\(/g) || []).length, 1);
+  /* 只数【全域的】fetch( —— 方法呼叫(例如 canonical.fetch)不算,
+     那是另一条经过稽核的路径(compass_results 的读取),不是生成端点。 */
+  checkEq("[pv] 预览里只有一处 fetch",
+    (pvBlock.match(/(^|[^.\w])fetch\(/g) || []).length, 1);
   checkEq("[pv] 那一处 fetch 只在 live transport 里",
     /function cpLiveTransport\(\)[\s\S]*?fetch\(COMPASS_GEN_URL/.test(pvBlock), true);
 
@@ -2324,8 +2328,8 @@ function testCompassProductPage() {
     const a = w.indexOf("function cpPvLoadOne"), b = w.indexOf("function compassRepaint");
     return (a > 0 && b > a) ? w.slice(0, a) + w.slice(b) : w;
   })();
-  checkEq("[prod] 四个方向来自已生成的快取",
-    /window\.Compass\.result\.get\(compassOwner\(\)\)/.test(page), true);
+  checkEq("[prod] 四个方向来自解析过的正式结果",
+    /const saved = compassSavedResult\(\);/.test(page), true);
   checkEq("[prod] 没有生成过就如实说,不拿示例冒充",
     /cp-empty4[\s\S]{0,400}你的内在指南还没有生成/.test(page), true);
   /* 一句都取不出来的时候,整段【不出现】—— 不把系统内部的不足写给使用者看 */
@@ -3815,6 +3819,210 @@ function testAnchorsV11AndRenderV2() {
   });
 }
 
+
+/* ---------- 35. R1 · 帐号层的正式内在指南(canonical-1.0) ----------
+   产品不变式:一个登入使用者 = 一份正式的内在指南。
+   第二台装置【读】它,不会自己再生成一份。
+
+   这一节用纯函式跑完 A–N 全部情形 —— 不需要浏览器、网路或资料库。 */
+function testCanonicalStorage() {
+  const fs = require("fs");
+  const CC = require(path.join(__dirname, "..", "assets", "compass-canonical.js"));
+  const html = fs.readFileSync(path.join(__dirname, "..", "app.html"), "utf8");
+  const sql = fs.readFileSync(path.join(__dirname, "..", "docs", "sql", "compass_results.sql"), "utf8");
+  const src = fs.readFileSync(path.join(__dirname, "..", "assets", "compass-canonical.js"), "utf8");
+
+  const mk = (tag, when) => ({
+    promptVersion: "compass-v1.2",
+    generatedAt: when || "2026-09-14T10:00:00.000Z",
+    directions: {
+      grounds: { coreInsight: tag + "-安定", explanation: tag + "-安定说明", reflectionPrompt: tag + "-安定问题" },
+      moves:   { coreInsight: tag + "-前进", explanation: tag + "-前进说明", reflectionPrompt: tag + "-前进问题" },
+      drains:  { coreInsight: tag + "-消耗", explanation: tag + "-消耗说明", reflectionPrompt: tag + "-消耗问题" },
+      calls:   { coreInsight: tag + "-吸引", explanation: tag + "-吸引说明", reflectionPrompt: tag + "-吸引问题" }
+    }
+  });
+  const A = mk("A"), B = mk("B");
+
+  /* ═══ 1. 窄对应与隐私边界 ═══ */
+  const dirty = JSON.parse(JSON.stringify(A));
+  dirty.anchors = [{ line: "带走的那一句", sourceDirection: "grounds", selectionReason: "内部取舍" }];
+  dirty.directions.grounds.mechanism = "regulation happens by reducing input first";
+  dirty.directions.grounds.support = [{ mechanism: "x" }];
+  dirty.trace = { patternKey: "solitude-then-contact" };
+  dirty.raw = "模型原始输出";
+  dirty.input = { systemPrompt: "你在为…" };
+  const row = CC.toRow(dirty);
+  /* 三个不一样的数字,分别钉住,不要互相冒充:
+       资料表 18 栏 / toRow() 14 个键 / INSERT body 15 个键(多一个 user_id) */
+  checkEq("[r1] toRow() 输出 14 个键", Object.keys(row).length, 14);
+  checkEq("[r1] toRow() 不碰由资料库产生的栏位",
+    ["user_id", "revision", "created_at", "updated_at"]
+      .filter(function (k) { return k in row; }).join(","), "");
+  checkEq("[r1] 资料表实际是 18 栏",
+    (sql.slice(sql.indexOf("create table if not exists public.compass_results ("),
+               sql.indexOf("\n);")).replace(/--.*$/gm, "")
+       .match(/\b([a-z_]+)\s+(uuid|text|timestamptz|smallint)\b/g) || []).length, 18);
+  checkEq("[r1] INSERT 只多送一个 user_id",
+    /var row = Cc\.toRow\(v\.result\);\s*\n\s*row\.user_id = owner;\s*\n\s*return nf\(/
+      .test(html), true);
+  checkEq("[r1] INSERT 不送 revision / created_at / updated_at",
+    /row\.(revision|created_at|updated_at)\s*=/.test(html), false);
+  checkEq("[r1] 栏位名逐字固定", Object.keys(row).join(","),
+    "prompt_version,generated_at,grounds_core,grounds_expl,grounds_prompt," +
+    "moves_core,moves_expl,moves_prompt,drains_core,drains_expl,drains_prompt," +
+    "calls_core,calls_expl,calls_prompt");
+  const blob = JSON.stringify(row);
+  ["mechanism", "livedMechanism", "support", "tension", "composite", "selectionReason",
+   "selectionScore", "structuralAnchors", "strength", "distinctiveness", "anchors",
+   "trace", "firstAttempt", "raw", "systemPrompt", "userPrompt", "input", "validation",
+   "shadow", "planets", "houses", "aspects", "cusps", "birth", "mood", "journal", "favs"
+  ].forEach(function (k) {
+    checkEq("[r1] 上云的资料里没有 " + k, blob.indexOf(k) >= 0, false);
+  });
+  checkEq("[r1] 锚点的字也没有跟上去", blob.indexOf("带走的那一句") >= 0, false);
+  checkEq("[r1] 机制的字也没有跟上去", blob.indexOf("regulation happens") >= 0, false);
+  checkEq("[r1] 往返之后文案一致", CC.sameResult(A, CC.rowOut(row)), true);
+  checkEq("[r1] 读回来的不带 anchors", "anchors" in CC.rowOut(row), false);
+  /* toRow 是白名单:快取里将来多出任何东西都上不去 */
+  checkEq("[r1] 未知栏位不会被带上云",
+    Object.keys(CC.toRow(Object.assign({ whatever: 1 }, A))).length, 14);
+
+  /* ═══ 2. 窄 schema 验证 ═══ */
+  checkEq("[r1] 正常的一列通过", CC.validateRow(row).ok, true);
+  [["少了 prompt_version", Object.assign({}, row, { prompt_version: "" }), "missing_prompt_version"],
+   ["坏掉的时间", Object.assign({}, row, { generated_at: "不是时间" }), "bad_generated_at"],
+   ["一个方向都没有", { prompt_version: "v", generated_at: A.generatedAt }, "no_direction"],
+   ["coreInsight 过长", Object.assign({}, row, { grounds_core: "字".repeat(201) }), "core_too_long"],
+   ["explanation 过长", Object.assign({}, row, { grounds_expl: "字".repeat(1201) }), "explanation_too_long"]
+  ].forEach(function (x) {
+    const v = CC.validateRow(x[1]);
+    checkEq("[r1] 挡得住:" + x[0], v.ok + "/" + v.reason, "false/" + x[2]);
+  });
+  checkEq("[r1] null 不会让它爆掉", CC.validateRow(null).ok, false);
+  checkEq("[r1] 字串不会让它爆掉", CC.validateRow("oops").ok, false);
+
+  /* ═══ 3. A–N 情形矩阵 ═══ */
+  const R = (cloud, local, authed) => CC.resolve({
+    authenticated: authed === undefined ? true : authed, cloud: cloud, local: local });
+  const L = (r, sync) => ({ result: r, sync: sync || "canonical" });
+  const cases = [
+    ["A 本机有、云端没有",      R({ status: "absent" }, L(A)),                    "ADOPT_LOCAL",        "adopt"],
+    ["B 云端有、本机没有",      R({ status: "valid", result: A }, null),          "CANONICAL",          "cache"],
+    ["C 两边都有而且一样",      R({ status: "valid", result: A }, L(A)),          "CANONICAL",          "cache"],
+    ["D 两边都有但不一样",      R({ status: "valid", result: A }, L(B)),          "CONFLICT_CANDIDATE", "cache"],
+    ["E 本机旧版本、云端没有",  R({ status: "absent" }, L(mk("A"))),              "ADOPT_LOCAL",        "adopt"],
+    ["F 云端旧版本、本机没有",  R({ status: "valid", result: A }, null),          "CANONICAL",          "cache"],
+    ["G 生成成功但上云失败",    R({ status: "absent" }, L(A, "pending-upload")),  "PENDING_UPLOAD",     "retry-upload"],
+    ["H 云端连不上、本机有",    R({ status: "error" }, L(A)),                     "CACHED_OFFLINE",     null],
+    ["J 抢先那一台赢(冲突)",  R({ status: "valid", result: A }, L(B, "pending-upload")), "CONFLICT_CANDIDATE", "cache"],
+    ["K 云端有、别台有新的",    R({ status: "valid", result: A }, L(B)),          "CONFLICT_CANDIDATE", "cache"],
+    ["L 云端那一列坏掉、有本机", R({ status: "invalid" }, L(A)),                  "INVALID_CANONICAL",  null],
+    ["L 云端那一列坏掉、没本机", R({ status: "invalid" }, null),                  "INVALID_CANONICAL",  null],
+    ["M 本机坏掉、云端没有",    R({ status: "absent" }, L({ directions: {} })),   "NONE",               null],
+    ["  云端没有、本机也没有",  R({ status: "absent" }, null),                    "NONE",               null],
+    ["  连不上、本机也没有",    R({ status: "error" }, null),                     "RESOLVING",          null]
+  ];
+  cases.forEach(function (c) {
+    checkEq("[r1] " + c[0], c[1].state, c[2]);
+    checkEq("[r1] " + c[0] + " · 动作", c[1].action, c[3]);
+  });
+
+  /* 只有 NONE 可以显示生成 */
+  CC.STATES.forEach(function (st) {
+    checkEq("[r1] " + st + " 能不能显示生成", CC.canGenerate(st), st === "NONE");
+  });
+  /* 错误 / 坏列【永远】不可以被当成「这个人没有指南」 */
+  ["error", "invalid"].forEach(function (st) {
+    [L(A), null].forEach(function (lc) {
+      checkEq("[r1] cloud=" + st + " 绝不走到 NONE", R({ status: st }, lc).state === "NONE", false);
+    });
+  });
+  /* D / K / J:云端仍然是正式那一份,本机那一份留着但不呈现 */
+  const d = R({ status: "valid", result: A }, L(B));
+  checkEq("[r1] 冲突时呈现的是云端那一份", CC.sameResult(d.result, A), true);
+  checkEq("[r1] 冲突时另一份留成候选", CC.sameResult(d.candidate, B), true);
+  checkEq("[r1] 冲突时绝不合并", d.result.directions.grounds.coreInsight.indexOf("B-") < 0, true);
+
+  /* I:anon 绝不被任何帐号认领 */
+  const anon = CC.resolve({ authenticated: false, cloud: { status: "absent" }, local: L(A) });
+  checkEq("[r1] I 未登入只看本机那一桶", anon.state, "CANONICAL");
+  checkEq("[r1] I 未登入不产生任何上云动作", anon.action, null);
+  checkEq("[r1] I 登入后不会因为 anon 有东西就采用",
+    R({ status: "absent" }, null).state, "NONE");
+
+  /* ═══ 4. 页面接线 ═══ */
+  checkEq("[r1] 只有 NONE 会显示生成按钮",
+    /if \(compassCanGenerate\(\)\) \{[\s\S]{0,400}id="cpGenBtn"/.test(html), true);
+  checkEq("[r1] 解析中显示「正在读取…」,不显示生成",
+    /return shell\('<div class="cp-empty4"><p class="cp-pending">' \+\n\s*esc0\(dpT\("正在读取…"/.test(html), true);
+  checkEq("[r1] 坏掉的那一列有自己的安静说法",
+    /暂时无法读取你的内在指南，请稍后再试。/.test(html), true);
+  checkEq("[r1] 画面上不出现任何技术字眼",
+    /localStorage|云端|快取|canonical|promptVersion|同步/.test(
+      html.slice(html.indexOf("function compassDirectionsHtml"),
+                 html.indexOf("/* ── 想留给自己的几句话")).replace(/\/\*[\s\S]*?\*\//g, "")), false);
+  checkEq("[r1] 三个读取点都走解析结果",
+    (html.match(/const saved = compassSavedResult\(\);/g) || []).length, 3);
+  checkEq("[r1] 进页面就解析", /compassResolveCanonical\(\);/.test(html), true);
+  /* 只看 canonical 这一段 —— 别处(charts)本来就有自己的 upsert,与这里无关 */
+  const canBlk = html.slice(html.indexOf("canonical: (function () {"),
+                            html.indexOf('    result: (function () {'))
+                     .replace(/\/\*[\s\S]*?\*\//g, "");   // 注解不算,只看真的会跑的字
+  checkEq("[r1] canonical 绝不用 upsert / merge-duplicates",
+    /merge-duplicates|on_conflict/.test(canBlk), false);
+  checkEq("[r1] canonical 只用 POST 建立第一份",
+    (canBlk.match(/method: "POST"/g) || []).length, 1);
+  checkEq("[r1] canonical 不做 PATCH / DELETE",
+    /method: "(PATCH|PUT|DELETE)"/.test(canBlk), false);
+  checkEq("[r1] 冲突(409)会重读,不覆盖",
+    /r\.status === 409[\s\S]{0,200}canonical_insert_conflict/.test(html), true);
+  checkEq("[r1] 生成后先写本机再上云",
+    /can\.writeLocal\(owner, accepted, "pending-upload"\);[\s\S]{0,400}can\.createFirst\(owner, accepted\)/.test(html), true);
+  checkEq("[r1] v1 快取只读,不删除",
+    /localStorage\.removeItem\(["']inner_sky_compass_result_v1/.test(html), false);
+  checkEq("[r1] v2 是另一把钥匙", /inner_sky_compass_result_v2/.test(html), true);
+  checkEq("[r1] 读 v1 时不给 anon 预设值",
+    /return all\[owner\] \|\| null;\s*\/\/ ⚠ 刻意不给预设值/.test(html), true);
+
+  /* ═══ 5. 安全诊断:只有结构,没有内容 ═══ */
+  const diagBlk = html.slice(html.indexOf("var diag = [];"), html.indexOf("_key: V2"));
+  checkEq("[r1] 诊断只收 code / reason / httpStatus",
+    /d\.reason = String\(extra\.reason\)/.test(diagBlk) &&
+    /d\.httpStatus = extra\.httpStatus/.test(diagBlk), true);
+  checkEq("[r1] 诊断不含文案 / user id / 任何生成内部状态",
+    /coreInsight|explanation|reflectionPrompt|user_id|owner|row\b|result/.test(diagBlk), false);
+  checkEq("[r1] 坏掉的那一列有专属代号", /canonical_row_invalid/.test(html), true);
+
+  /* ═══ 6. SQL ═══ */
+  checkEq("[r1] 主键就是 user_id(一个人一列)",
+    /user_id\s+uuid primary key references auth\.users\(id\) on delete cascade/.test(sql), true);
+  checkEq("[r1] RLS 打开", /alter table public\.compass_results enable row level security/.test(sql), true);
+  ["read own", "write own", "update own"].forEach(function (pol) {
+    checkEq("[r1] 有 " + pol + " 政策", new RegExp('create policy "compass result ' + pol + '"').test(sql), true);
+  });
+  checkEq("[r1] 三条政策都锁 auth.uid() = user_id",
+    (sql.match(/auth\.uid\(\) = user_id/g) || []).length, 4);
+  checkEq("[r1] 刻意没有 delete 政策", /for delete/.test(sql), false);
+  checkEq("[r1] SQL 里没有任何被禁止的栏位",
+    /mechanism|evidence|selection|support|tension|composite|planet|house|aspect|birth|prompt_text|raw_/i
+      .test(sql.replace(/^--.*$/gm, "")), false);
+  checkEq("[r1] 不碰既有的表",
+    /alter table public\.(charts|compass_entries|prefs|readings)/.test(sql), false);
+  checkEq("[r1] 十二个内容栏位都在",
+    ["grounds_core", "grounds_expl", "grounds_prompt", "moves_core", "moves_expl", "moves_prompt",
+     "drains_core", "drains_expl", "drains_prompt", "calls_core", "calls_expl", "calls_prompt"]
+      .filter(function (c) { return sql.indexOf(c) < 0; }).join(","), "");
+
+  /* ═══ 7. 这一层不碰内容智慧 ═══ */
+  const code = src.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+  checkEq("[r1] 模组没有任何网路呼叫", /fetch\(|XMLHttpRequest|anthropic|supabase/i.test(code), false);
+  checkEq("[r1] 模组不读星盘 / 机制 / 分数",
+    /planets|cusps|\bmechanism\b|selectionScore|patternKey/i.test(code), false);
+  checkEq("[r1] 模组不碰 localStorage", /localStorage/.test(code), false);
+  checkEq("[r1] 没有 service_role", /service_role/.test(html + src + sql), false);
+}
+
 function main() {
   testTimezones();
   testCharts();
@@ -3849,6 +4057,7 @@ function main() {
   testCompassCentredLayout();
   testCompassSituations();
   testAnchorsV11AndRenderV2();
+  testCanonicalStorage();
   testCompassZhOnlyLabels();
   return Promise.all([genJobs, liveJobs, voiceJobs, v12Jobs]).then(function () { return testPlaces(); }).then(function () {
     console.log("\n对照来源:" + REF.reference);
