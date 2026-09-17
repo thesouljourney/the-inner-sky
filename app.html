@@ -5445,6 +5445,150 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
 
        储存介面刻意与上面的 store 一样是三个方法,
        之后要换成 Supabase 只要换掉 resultStore 的实作。 */
+    /* ── 正式结果:帐号层的那一份(R1)──────────────────────
+       在这之前,一份已经生成并通过验证的指南只活在 localStorage 里。
+       换一台装置 = 看起来「还没生成」= 一按就产生【第二份不一样的】指南。
+
+       产品不变式:一个登入使用者 = 一份正式的内在指南。
+
+       这一层负责跟 compass_results 那张表来回,以及本机 v2 快取。
+       它【只】送那 12 个使用者看得到的字段(见 compass-canonical.js 的白名单),
+       锚点与任何生成内部状态都上不去 —— 资料库里根本没有那些栏位。
+
+       ⚠ 三态,不是布林:valid / absent / error / invalid。
+         只有 absent 可以被解读成「这个人还没有指南」。
+         连不上、逾时、未授权、解析失败、那一列坏掉 —— 一律【不是】没有。 */
+    canonical: (function () {
+      var TABLE_R = "compass_results";
+      var V2 = "inner_sky_compass_result_v2";
+      var COLS = "prompt_version,generated_at,revision,"
+        + "grounds_core,grounds_expl,grounds_prompt,moves_core,moves_expl,moves_prompt,"
+        + "drains_core,drains_expl,drains_prompt,calls_core,calls_expl,calls_prompt";
+
+      function C() { return window.CompassCanonical || null; }
+      function urlR(q) { return (cfg().url || "") + "/rest/v1/" + TABLE_R + (q || ""); }
+      function readV2() {
+        try { return JSON.parse(localStorage.getItem(V2) || "{}") || {}; } catch (e) { return {}; }
+      }
+      function writeV2(o) {
+        try { localStorage.setItem(V2, JSON.stringify(o)); return true; } catch (e) { return false; }
+      }
+
+      /* 安全诊断:只有结构性的短字串,永远不含文案、user id 或任何生成内部状态。 */
+      var diag = [];
+      function note(code, extra) {
+        var d = { code: String(code), at: new Date().toISOString() };
+        if (extra && extra.reason) d.reason = String(extra.reason);
+        if (extra && typeof extra.httpStatus === "number") d.httpStatus = extra.httpStatus;
+        diag.push(d);
+        if (diag.length > 20) diag.shift();
+        try { if (window.console && console.warn) console.warn("[compass] " + d.code,
+          d.reason || "", d.httpStatus || ""); } catch (e) { }
+      }
+
+      return {
+        _key: V2,
+        _table: TABLE_R,
+        diagnostics: function () { return diag.slice(); },
+
+        /* 本机 v2。v1 永远只读,绝不在这里被写或被删 —— 它是迁移证据。 */
+        readLocal: function (owner) {
+          var r = readV2()[owner || "anon"];
+          return (r && r.result) ? r : null;
+        },
+        writeLocal: function (owner, result, sync, revision) {
+          var all = readV2(), key = owner || "anon";
+          var prev = all[key] || {};
+          all[key] = { result: result, sync: sync || "canonical",
+                       revision: typeof revision === "number" ? revision : (prev.revision || 1),
+                       at: new Date().toISOString(),
+                       candidate: prev.candidate || null };
+          return writeV2(all) ? all[key] : null;
+        },
+        /* 另一份有效、但这一次不呈现的文案。留着,不覆盖、不合并、不呈现。 */
+        keepCandidate: function (owner, result) {
+          var all = readV2(), key = owner || "anon";
+          var prev = all[key] || {};
+          if (prev.candidate && C() && C().sameResult(prev.candidate.result, result)) return;
+          prev.candidate = { result: result, at: new Date().toISOString() };
+          all[key] = prev;
+          writeV2(all);
+        },
+        /* 旧的 v1 快取:只读。给迁移当候选用。 */
+        readV1: function (owner) {
+          try {
+            var all = JSON.parse(localStorage.getItem("inner_sky_compass_result_v1") || "{}") || {};
+            return all[owner] || null;         // ⚠ 刻意不给预设值:anon 绝不冒充任何帐号
+          } catch (e) { return null; }
+        },
+
+        /* 云端读取。永远不丢例外,永远回三态之一。 */
+        fetch: function (owner) {
+          var Cc = C();
+          if (!Cc) return Promise.resolve({ status: "error", reason: "module_unavailable" });
+          if (!cfg().url || !owner) return Promise.resolve({ status: "error", reason: "no_endpoint" });
+          return nf(urlR("?select=" + COLS + "&user_id=eq." + encodeURIComponent(owner) + "&limit=1"),
+                    { headers: authHeaders() }, 8000)
+            .then(function (r) {
+              if (!r.ok) {
+                note("canonical_fetch_failed", { httpStatus: r.status });
+                return { status: "error", reason: "http", httpStatus: r.status };
+              }
+              return r.json().then(function (rows) {
+                if (!Array.isArray(rows) || !rows.length) return { status: "absent" };
+                var v = Cc.validateRow(rows[0]);
+                if (!v.ok) {
+                  /* 资料库里【有】一列,只是读不成形状。
+                     这不是「没有指南」—— 绝不因此显示生成、绝不往上覆盖。 */
+                  note("canonical_row_invalid", { reason: v.reason });
+                  return { status: "invalid", reason: v.reason };
+                }
+                return { status: "valid", result: v.result,
+                         revision: Number(rows[0].revision) || 1 };
+              }, function () {
+                note("canonical_parse_failed");
+                return { status: "error", reason: "parse" };
+              });
+            }, function () {
+              note("canonical_fetch_failed", { reason: "network" });
+              return { status: "error", reason: "network" };
+            });
+        },
+
+        /* 第一次写入。刻意【不】用 upsert / merge-duplicates ——
+           user_id 是主键,第二台装置会拿到 409,那正是我们要的:
+           冲突必须浮出来,不可以静静地覆盖别人那一份。 */
+        createFirst: function (owner, result) {
+          var Cc = C();
+          if (!Cc) return Promise.resolve({ status: "failed", reason: "module_unavailable" });
+          var v = Cc.validateResult(result);
+          if (!v.ok) {
+            note("canonical_local_invalid", { reason: v.reason });
+            return Promise.resolve({ status: "failed", reason: v.reason });
+          }
+          var row = Cc.toRow(v.result);
+          row.user_id = owner;
+          return nf(urlR(""), { method: "POST",
+              headers: Object.assign({}, authHeaders(), { "Prefer": "return=representation" }),
+              body: JSON.stringify(row) }, 10000)
+            .then(function (r) {
+              if (r.status === 409) { note("canonical_insert_conflict"); return { status: "conflict" }; }
+              if (!r.ok) {
+                note("canonical_insert_failed", { httpStatus: r.status });
+                return { status: "failed", reason: "http", httpStatus: r.status };
+              }
+              return r.json().then(function (rows) {
+                var rev = (Array.isArray(rows) && rows[0] && Number(rows[0].revision)) || 1;
+                return { status: "created", revision: rev };
+              }, function () { return { status: "created", revision: 1 }; });
+            }, function () {
+              note("canonical_insert_failed", { reason: "network" });
+              return { status: "failed", reason: "network" };
+            });
+        }
+      };
+    })(),
+
     result: (function () {
       var KEY = "inner_sky_compass_result_v1";
       function readAll() {
@@ -8161,6 +8305,12 @@ window.Guide = (function () {
   let compassGenBusy = false;    // 正式页面的生成中
   let compassBusy = false;
   var compassDirOpen = "";       // 01 里目前打开的那一个方向(一次只有一个)
+  /* 正式结果的解析状态(R1)。UNKNOWN / RESOLVING 期间【不】显示生成按钮 ——
+     不可以让画面先闪一下「生成我的内在指南」,再被云端那一份盖掉。 */
+  var compassCanonState = "UNKNOWN";
+  var compassCanonResult = null;
+  var compassCanonBusy = false;
+  var compassCanonOwner = "";
 
   /* Dev Preview(#/compass/preview)的 UI 状态。同样必须写在首次渲染之前。
      这一组只有在开发预览路由下才会被读到,正式的 #/compass 完全不碰。 */
@@ -9266,20 +9416,34 @@ window.Guide = (function () {
        两种状态的版面结构完全一样(眉标 + 一行 + 面板:标题 / 正文 / 披露),
        使用者不应该分辨得出哪一个对上了词典。 */
   function compassDirectionsHtml(chart) {
-    const saved = window.Compass.result.get(compassOwner());
+    const saved = compassSavedResult();
     const DIRS = window.Compass.DIRECTIONS;
     const KEYS = { ground: "grounds", move: "moves", drain: "drains", call: "calls" };
     const core = '<div class="cp-wheel-core">' + compassRoseSvg() + "</div>";
-
-    if (!saved) {
+    const shell = function (inner) {
       return '<section class="cp-sec cp-compass">' +
         compassSecHead("01", dpT("我的内在指南", "My Inner Compass"), "MY INNER COMPASS") +
-        '<div class="cp-wheel-solo">' + core + "</div>" +
-        '<div class="cp-empty4"><p class="cp-pending">' +
-        esc0(dpT("你的内在指南还没有生成。", "Your compass hasn’t been drawn yet.")) + "</p>" +
-        '<div class="cp-act"><button type="button" class="dp-cta" id="cpGenBtn">' +
-        esc0(dpT("生成我的内在指南", "Draw my compass")) + "</button>" +
-        '<span class="cp-hint" id="cpGenHint" aria-live="polite"></span></div></div></section>';
+        '<div class="cp-wheel-solo">' + core + "</div>" + inner + "</section>";
+    };
+
+    if (!saved) {
+      /* ⚠ 只有 NONE 可以显示生成按钮。
+         还在解析、连不上、或资料库那一列坏掉的时候显示它,
+         等于请使用者再生成一份【不一样的】指南 —— 那正是 R1 要消灭的事。 */
+      if (compassCanGenerate()) {
+        return shell('<div class="cp-empty4"><p class="cp-pending">' +
+          esc0(dpT("你的内在指南还没有生成。", "Your compass hasn’t been drawn yet.")) + "</p>" +
+          '<div class="cp-act"><button type="button" class="dp-cta" id="cpGenBtn">' +
+          esc0(dpT("生成我的内在指南", "Draw my compass")) + "</button>" +
+          '<span class="cp-hint" id="cpGenHint" aria-live="polite"></span></div></div>');
+      }
+      if (compassCanonState === "INVALID_CANONICAL") {
+        return shell('<div class="cp-empty4"><p class="cp-pending">' +
+          esc0(dpT("暂时无法读取你的内在指南，请稍后再试。",
+                   "Your compass can’t be loaded right now. Please try again later.")) + "</p></div>");
+      }
+      return shell('<div class="cp-empty4"><p class="cp-pending">' +
+        esc0(dpT("正在读取…", "Loading…")) + "</p></div>");
     }
 
     const sits = compassSituationsFor(saved);
@@ -9410,6 +9574,115 @@ window.Guide = (function () {
     });
   }
 
+  /* ── 正式结果的解析(R1)──────────────────────────────────
+     一次解析 = 一次云端读取 + 一次本机候选检查,交给
+     CompassCanonical.resolve() 这个纯函式决定状态。
+     这里只负责 IO 与后续动作,判断逻辑全部在那一支里(所以测得动)。 */
+  function compassCanonModules() {
+    if (window.CompassCanonical) return Promise.resolve(true);
+    return cpPvLoadOne("assets/compass-canonical.js").then(function () { return true; },
+                                                          function () { return false; });
+  }
+  function compassResolveCanonical() {
+    var owner = compassOwner();
+    var authed = !!(window.Cloud && window.Cloud.hasSession && window.Cloud.hasSession()) &&
+                 owner && owner !== "anon";
+    /* 换人了就重新解析一次,不要把上一个人的状态留在画面上 */
+    if (compassCanonOwner !== owner) {
+      compassCanonOwner = owner;
+      compassCanonState = "UNKNOWN";
+      compassCanonResult = null;
+      compassCanonBusy = false;
+    }
+    if (compassCanonBusy || compassCanonState !== "UNKNOWN") return;
+    compassCanonBusy = true;
+    compassCanonState = "RESOLVING";
+
+    compassCanonModules().then(function (ok) {
+      var CC = window.CompassCanonical;
+      if (!ok || !CC) { compassCanonBusy = false; compassCanonState = "RESOLVING"; return; }
+      var can = window.Compass.canonical;
+
+      /* 未登入:R1 不改这条路。照旧只看本机那一桶,anon 绝不往帐号上搬。 */
+      if (!authed) {
+        var anon = window.Compass.result.get(owner);
+        var r0 = CC.resolve({ authenticated: false, cloud: { status: "absent" },
+                              local: anon ? { result: anon } : null });
+        compassCanonState = r0.state;
+        compassCanonResult = r0.result;
+        compassCanonBusy = false;
+        if (curRoute && curRoute.k === "compass") compassRepaint();
+        return;
+      }
+
+      /* 本机候选:先看 v2,没有再退回 v1。
+         ⚠ 两边都【只】读 owner 完全相同的那一桶 —— anon 不参与。 */
+      var v2 = can.readLocal(owner);
+      var local = v2 || (function () {
+        var old = can.readV1(owner);
+        return old ? { result: old, sync: "candidate-v1" } : null;
+      })();
+
+      can.fetch(owner).then(function (cloud) {
+        var r = CC.resolve({ authenticated: true, cloud: cloud, local: local, owner: owner });
+        compassCanonState = r.state;
+        compassCanonResult = r.result;
+
+        if (r.candidate) can.keepCandidate(owner, r.candidate);
+        if (r.action === "cache" && r.result) can.writeLocal(owner, r.result, "canonical", cloud.revision);
+
+        function finish() {
+          compassCanonBusy = false;
+          if (curRoute && curRoute.k === "compass") compassRepaint();
+        }
+
+        if (r.action === "adopt" || r.action === "retry-upload") {
+          /* 本机先留住,再试着上云。顺序刻意如此:任何写入失败都不能弄丢文案。 */
+          can.writeLocal(owner, r.result, "pending-upload");
+          can.createFirst(owner, r.result).then(function (res) {
+            if (res.status === "created") {
+              compassCanonState = "CANONICAL";
+              can.writeLocal(owner, r.result, "canonical", res.revision);
+              finish();
+            } else if (res.status === "conflict") {
+              /* 有人先写进去了。重新读一次,以【那一份】为准,
+                 我们这一份留成候选 —— 绝不覆盖。 */
+              can.fetch(owner).then(function (c2) {
+                if (c2.status === "valid") {
+                  var same = CC.sameResult(c2.result, r.result);
+                  compassCanonState = same ? "CANONICAL" : "CONFLICT_CANDIDATE";
+                  compassCanonResult = c2.result;
+                  if (!same) can.keepCandidate(owner, r.result);
+                  can.writeLocal(owner, c2.result, "canonical", c2.revision);
+                } else {
+                  compassCanonState = "PENDING_UPLOAD";
+                }
+                finish();
+              });
+            } else {
+              /* 写不上去。文案还在本机,画面照常呈现,生成按钮维持隐藏。 */
+              compassCanonState = "PENDING_UPLOAD";
+              finish();
+            }
+          });
+          return;
+        }
+        finish();
+      });
+    });
+  }
+
+  /* 画面要呈现的那一份。登入使用者一律走解析结果;
+     未登入维持既有行为(R3 另案)。 */
+  function compassSavedResult() {
+    if (compassCanonState === "UNKNOWN" || compassCanonState === "RESOLVING") return null;
+    return compassCanonResult;
+  }
+  /* 只有 NONE 可以显示「生成我的内在指南」。 */
+  function compassCanGenerate() {
+    return compassCanonState === "NONE";
+  }
+
   /* ── 个人情境(Personal Situations v1)─────────────────────
      与三句锚点同一个做法:在【渲染时现算】,不去相信快取里的东西。
      输入只有已经接受的四段文案,不读星盘、不发任何请求,
@@ -9439,7 +9712,7 @@ window.Guide = (function () {
   }
 
   function compassAnchorsHtml() {
-    const saved = window.Compass.result.get(compassOwner());
+    const saved = compassSavedResult();
     const list = compassAnchorsFor(saved);
     /* 一句都没有就【整段不出现】。不印「还没有可以带走的句子」——
        那是把系统内部的不足写给使用者看,而且他也不能拿它做什么。
@@ -9483,7 +9756,7 @@ window.Guide = (function () {
      依「使用者 + 日期」轮换 —— 同一天回来是同一题,换一天换一题,
      而且【重整页面不会产生任何请求】。 */
   function compassTodayQuestion() {
-    const saved = window.Compass.result.get(compassOwner());
+    const saved = compassSavedResult();
     const order = ["grounds", "moves", "drains", "calls"];
     const pool = saved
       ? order.map(function (k) { return saved.directions[k] && saved.directions[k].reflectionPrompt; })
@@ -10270,14 +10543,56 @@ window.Guide = (function () {
           if (r.status !== "ok" || !r.copies) throw new Error(r.reason || r.status);
           const AN3 = window.CompassAnchorsSemantic;
           const an = (AN3 ? AN3 : AN).derive(r.copies);
-          window.Compass.result.set(compassOwner(), {
+          const owner = compassOwner();
+          const accepted = {
             promptVersion: r.meta.promptVersion,
             generatedAt: r.meta.generatedAt,
             directions: r.copies,
             anchors: an.status === "ok" ? an.anchors : []
-          });
+          };
+          /* 旧的 v1 快取照写(既有行为不动),然后走帐号层那一份。 */
+          window.Compass.result.set(owner, accepted);
           compassGenBusy = false;
+
+          /* ⚠ 顺序:先留在本机,再送上云。
+             写云端失败绝不可以弄丢一份已经通过验证的文案,
+             也绝不可以因此又请使用者生成一次。 */
+          const can = window.Compass.canonical;
+          const authed = !!(window.Cloud && window.Cloud.hasSession && window.Cloud.hasSession()) &&
+                         owner && owner !== "anon";
+          compassCanonResult = accepted;
+          if (!authed) {
+            compassCanonState = "CANONICAL";
+            if (curRoute && curRoute.k === "compass") routeRefresh();
+            return;
+          }
+          can.writeLocal(owner, accepted, "pending-upload");
+          compassCanonState = "PENDING_UPLOAD";
           if (curRoute && curRoute.k === "compass") routeRefresh();
+          return can.createFirst(owner, accepted).then(function (res) {
+            const CC = window.CompassCanonical;
+            if (res.status === "created") {
+              compassCanonState = "CANONICAL";
+              can.writeLocal(owner, accepted, "canonical", res.revision);
+              if (curRoute && curRoute.k === "compass") compassRepaint();
+              return;
+            }
+            if (res.status === "conflict") {
+              /* 另一台装置先写进去了。以【那一份】为准,我们这一份留成候选。 */
+              return can.fetch(owner).then(function (c2) {
+                if (c2.status === "valid" && CC) {
+                  const same = CC.sameResult(c2.result, accepted);
+                  compassCanonState = same ? "CANONICAL" : "CONFLICT_CANDIDATE";
+                  compassCanonResult = c2.result;
+                  if (!same) can.keepCandidate(owner, accepted);
+                  can.writeLocal(owner, c2.result, "canonical", c2.revision);
+                }
+                if (curRoute && curRoute.k === "compass") compassRepaint();
+              });
+            }
+            /* 写不上去:维持 PENDING_UPLOAD,下次进页面再试一次。 */
+            if (curRoute && curRoute.k === "compass") compassRepaint();
+          });
         });
     }).catch(function (e) {
       compassGenBusy = false;
@@ -10331,6 +10646,11 @@ window.Guide = (function () {
       if (!cpPvReady) cpPvLoad();      // 原型三层只有走到这条路由才下载
       else cpPvPaint();
     }
+
+    /* 先解析「这个帐号的正式指南是哪一份」。
+       解析完成之前画面停在「正在读取…」,绝不显示生成按钮 ——
+       不可以先闪一下生成,再被云端那一份盖掉。 */
+    compassResolveCanonical();
 
     // 第一次进来才去读记录;之后重画沿用已经载到的那一份
     if (compassEntries === null && !compassBusy) {
@@ -10448,7 +10768,7 @@ window.Guide = (function () {
     });
 
     /* 已经有一份指南,就把三句话现算出来 —— 这是既有使用者自己会好起来的那一步 */
-    if (window.Compass.result.get(compassOwner())) compassEnsureAnchors();
+    if (compassSavedResult()) compassEnsureAnchors();
 
     const skip = document.getElementById("cpSkip");
     if (skip) skip.addEventListener("click", function () {
