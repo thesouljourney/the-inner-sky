@@ -1936,6 +1936,355 @@ function testCompassVoiceV11() {
 }
 
 /* §6.2-1:中文模式不再显示英文小标 */
+/* ============================================================
+   §36 · 九大主题的编辑式版面(topic-page)
+   ------------------------------------------------------------
+   这一次只改【呈现】。要守住的三件事:
+     ① 文字一个字都没有被改、被截断、被前端补写
+     ② 三十道探索题与生命蓝图仍然走 dpAnswerHtml,一个像素都没变
+     ③ 样式全锁在 #dpage.topic-page 底下,不外溢到任何其他页
+   ============================================================ */
+function testTopicLayout() {
+  const crypto = require("crypto");
+  const fs = require("fs");
+  const html = fs.readFileSync(path.join(__dirname, "..", "app.html"), "utf8");
+  const fn = function (name) {
+    const i = html.indexOf("\n  function " + name + "(");
+    if (i < 0) return "";
+    let k = html.indexOf("{", i), d = 0;
+    for (; k < html.length; k++) {
+      if (html[k] === "{") d++;
+      else if (html[k] === "}") { d--; if (!d) break; }
+    }
+    return html.slice(i, k + 1);
+  };
+
+  /* —— ① 只有九大主题换了版面 —— */
+  const topicPage = fn("renderTopicPage");
+  checkEq("[tp] 九大主题改走 dpTopicHtml",
+    /body = dpTopicHtml\(saved, tName, "theme_reading", tid\);/.test(topicPage), true);
+  checkEq("[tp] 九大主题不再走 dpAnswerHtml", /dpAnswerHtml/.test(topicPage), false);
+  checkEq("[tp] 三十道探索题仍然走 dpAnswerHtml",
+    /dpAnswerHtml\(saved, q\.q, "question"\)/.test(fn("renderQPage")), true);
+  /* dpAnswerHtml 现在只剩三十道探索题在用 —— 定义一处 + 呼叫一处 */
+  checkEq("[tp] dpAnswerHtml 只被三十道探索题呼叫",
+    (html.match(/dpAnswerHtml\(/g) || []).length, 2);
+  /* dpAnswerHtml 与生命蓝图这一页本身一个字都没动 */
+  const lock = function (name) {
+    return crypto.createHash("sha256").update(fn(name)).digest("hex").slice(0, 16);
+  };
+  checkEq("[tp] dpAnswerHtml 的内容没有被改", lock("dpAnswerHtml"), "16ecaa4faf7f07b9");
+  checkEq("[tp] 生命蓝图这一页没有被改", lock("renderReadingPage"), "61dc64f60d32f416");
+  checkEq("[tp] 三十道探索题这一页没有被改", lock("renderQPage"), "893d3c71d47ab628");
+
+  /* —— ② 文字没有被动过 —— */
+  const tp = fn("dpTopicHtml");
+  checkEq("[tp] 完整原文一直在 DOM 里(不是展开时才换进来)",
+    /dpPara\(sc\.body\)/.test(tp), true);
+  checkEq("[tp] 引子走既有的 dpLead,不是前端自己写的",
+    /dpLead\(sc, PV\["s" \+ si\]\)/.test(tp), true);
+  ["substr(", "substring(", "text-overflow", "line-clamp"].forEach(function (bad) {
+    checkEq("[tp] 正文没有被截断(" + bad + ")", tp.indexOf(bad) >= 0, false);
+  });
+  /* 两处 slice 都不碰正文:一处是 fav 的 data-text(与 dpAnswerHtml 同一行),
+     一处是段号补零。dpPara(sc.body) 送进去的永远是完整原文。 */
+  checkEq("[tp] slice 只出现在 fav 的 data-text 与段号补零",
+    (tp.match(/\.slice\([^)]*\)/g) || []).sort().join(" "), '.slice(-2) .slice(0, 300)');
+  checkEq("[tp] 收藏挂点与旧版一致",
+    /data-saveable data-source=/.test(tp) && /data-source-type=/.test(tp) &&
+    /data-section=/.test(tp), true);
+  checkEq("[tp] 段落锚点 sec-<i> 保留(深链不会断)", /id="sec-' \+ si \+ '"/.test(tp), true);
+  /* 尾段仍然是那几个共用 component,不是另外写的一套 */
+  ["dpReflectHtml", "dpKeepHtml", "dpStartHtml"].forEach(function (c) {
+    checkEq("[tp] 尾段共用 " + c, tp.indexOf(c) >= 0, true);
+  });
+  checkEq("[tp] 「留给你的思考」与「试试看」并排", /class="tp-pair"/.test(tp), true);
+
+  /* —— ③ 样式全锁在 .topic-page 底下 —— */
+  const css = html.slice(html.indexOf("九大主题(#/topic/<id>)—— 编辑式的分段版面"),
+                         html.indexOf("我的内在指南(#/compass)—— 新增页面的样式"))
+    .replace(/^[\s\S]*?={20,} \*\//, "")          // 掉开头那段说明(它没有自己的 /* )
+    .replace(/\/\*[\s\S]*?\*\//g, "")            // 其余注解
+    .replace(/\/\* ={20,}[\s\S]*$/, "");          // 下一个区块的抬头
+  checkEq("[tp] 找得到 topic-page 的样式区块", css.length > 2000, true);
+  const rules = css
+    .split("}").map(function (x) { return x.split("{")[0].trim(); })
+    .filter(function (x) { return x && x.indexOf("@") < 0 && x.indexOf(":") !== 0; });
+  const leaked = [];
+  rules.forEach(function (r) {
+    r.split(",").forEach(function (sel) {
+      sel = sel.trim();
+      if (!sel) return;
+      if (sel.indexOf("#dpage.topic-page") !== 0) leaked.push(sel);
+    });
+  });
+  checkEq("[tp] 每一条规则都带 .topic-page(没有外溢)", leaked.join(" | "), "");
+  checkEq("[tp] topic-page 这个 class 只挂在九大主题这一页",
+    /classList\.toggle\("topic-page", r\.k === "topic"\)/.test(html), true);
+
+  /* —— 插画素材:九个主题各一组,同一张图跨主题共用、同主题内不重复 —— */
+  const artBlock = html.slice(html.indexOf("  const TOPIC_SEC_ART = {"),
+                              html.indexOf("};", html.indexOf("  const TOPIC_SEC_ART = {")) + 2);
+  const SETS = {};
+  (artBlock.match(/^\s*([a-z]+):\s*\[([^\]]*)\]/gm) || []).forEach(function (line) {
+    const m = line.match(/^\s*([a-z]+):\s*\[([^\]]*)\]/);
+    SETS[m[1]] = m[2].split(",").map(function (x) { return x.trim().replace(/^"|"$/g, ""); })
+      .filter(Boolean);
+  });
+  const TIDS = ["self", "emotion", "career", "family", "love", "partner", "wealth", "study", "body"];
+  checkEq("[tp] 九个主题都有自己的一组插画", Object.keys(SETS).sort().join(","), TIDS.slice().sort().join(","));
+  /* 服务端一章固定生成 4–6 段 → 每一组至少要有 6 张,才不会在同一页里绕回来重复 */
+  checkEq("[tp] 服务端一章是 4–6 段",
+    /sections 请给 4–6 段。/.test(fs.readFileSync(path.join(__dirname, "..", "docs", "edge", "read-chart.ts"), "utf8")), true);
+  TIDS.forEach(function (t) {
+    const set = SETS[t] || [];
+    checkEq("[tp] " + t + " 至少备 6 张(最长的一章也不会重复)", set.length >= 6, true);
+    checkEq("[tp] " + t + " 同一组里没有重复", new Set(set).size, set.length);
+  });
+  /* 每一个被点到名的档案都真的在 repo 里 —— 漏一张就是线上一个破图 */
+  const missing = [];
+  Object.keys(SETS).forEach(function (t) {
+    SETS[t].forEach(function (n) {
+      if (!fs.existsSync(path.join(__dirname, "..", "assets", "topics", n + ".webp"))) missing.push(t + "/" + n);
+    });
+  });
+  checkEq("[tp] 每一张点到名的素材都在 repo 里", missing.join(" "), "");
+  checkEq("[tp] 素材放在同一个资料夹", /const TOPIC_ART_DIR = "assets\/topics\/";/.test(html), true);
+  /* 没有列到的主题 / 载入失败 → 回落到水彩圆 + 星记号,不开天窗、不留破图框 */
+  const artFn = fn("dpTopicSecArt");
+  checkEq("[tp] 没有列到的主题回落到星记号",
+    /TOPIC_SEC_ART\[tid\] \|\| \[\]/.test(artFn) &&
+    /set\.length \? set\[i % set\.length\] : ""/.test(artFn), true);
+  checkEq("[tp] 星记号一直在,图叠在上面(载不到就露出底)",
+    artFn.indexOf('<span class="gl">') < artFn.indexOf("<img src="), true);
+  checkEq("[tp] 图载不到就拿掉,不留破图框", /onerror="this\.remove\(\)"/.test(artFn), true);
+  checkEq("[tp] 插画一律是装饰,不承载内容",
+    /class="tp-art" aria-hidden="true"/.test(artFn) && /alt=""/.test(artFn), true);
+  /* TDZ:render*Page 在冷启动那一刻就会用到它 */
+  checkEq("[tp] TOPIC_SEC_ART 宣告在 applyRoute() 之前",
+    html.indexOf("const TOPIC_SEC_ART") < html.lastIndexOf("applyRoute();"), true);
+
+  /* —— Header:每个主题自己的一张实景 —— */
+  const HEROS = (html.match(/const TOPIC_HERO = \[([\s\S]*?)\];/) || [, ""])[1]
+    .split(",").map(function (x) { return x.trim().replace(/^"|"$/g, ""); }).filter(Boolean);
+  checkEq("[tp] 九个主题都有自己的 header", HEROS.slice().sort().join(","), TIDS.slice().sort().join(","));
+  /* 桌机一张宽幅、手机一张 4:3,两张都要在 —— 漏一张就是线上一块空白 */
+  const heroMissing = [];
+  HEROS.forEach(function (t) {
+    ["", "-m"].forEach(function (suf) {
+      if (!fs.existsSync(path.join(__dirname, "..", "assets", "topics", "hero", t + suf + ".webp")))
+        heroMissing.push(t + suf);
+    });
+  });
+  checkEq("[tp] 每个 header 的宽幅与 4:3 都在 repo 里", heroMissing.join(" "), "");
+  /* 尺寸对不对。⚠ 这一条挡的是「档案坏了 / 尺寸放错」,
+     挡不了「来源是缩图、被放大成目标尺寸」—— 那种情况尺寸是对的,只是糊。
+     那一关在转档时做:来源比目标小就拒绝转,不要放大。 */
+  const webpSize = function (f) {
+    const b = fs.readFileSync(f);
+    if (b.slice(0, 4).toString() !== "RIFF" || b.slice(8, 12).toString() !== "WEBP") return null;
+    const tag = b.slice(12, 16).toString();
+    if (tag === "VP8X") return [(b.readUIntLE(24, 3) + 1), (b.readUIntLE(27, 3) + 1)];
+    if (tag === "VP8L") {
+      const n = b.readUInt32LE(21);
+      return [(n & 0x3fff) + 1, ((n >> 14) & 0x3fff) + 1];
+    }
+    if (tag === "VP8 ") return [b.readUInt16LE(26) & 0x3fff, b.readUInt16LE(28) & 0x3fff];
+    return null;
+  };
+  const wrongSize = [];
+  HEROS.forEach(function (t) {
+    [["", 1600, 686], ["-m", 880, 660]].forEach(function (x) {
+      const f = path.join(__dirname, "..", "assets", "topics", "hero", t + x[0] + ".webp");
+      const d = fs.existsSync(f) ? webpSize(f) : null;
+      if (!d || d[0] !== x[1] || d[1] !== x[2])
+        wrongSize.push(t + x[0] + "=" + (d ? d.join("×") : "?"));
+    });
+  });
+  checkEq("[tp] header 尺寸正确(桌机 1600×686 / 手机 880×660)", wrongSize.join(" "), "");
+  /* 圆形插画同一套检查:一律 400×400 */
+  const wrongArt = [];
+  Object.keys(SETS).forEach(function (t) {
+    SETS[t].forEach(function (n) {
+      const f = path.join(__dirname, "..", "assets", "topics", n + ".webp");
+      const d = fs.existsSync(f) ? webpSize(f) : null;
+      if (!d || d[0] !== 400 || d[1] !== 400) wrongArt.push(n + "=" + (d ? d.join("×") : "?"));
+    });
+  });
+  checkEq("[tp] 圆形插画一律 400×400", Array.from(new Set(wrongArt)).join(" "), "");
+  checkEq("[tp] header 放在自己的资料夹",
+    /const TOPIC_HERO_DIR = "assets\/topics\/hero\/";/.test(html), true);
+  /* 底图交给 CSS 变数 → 新增主题不用改 CSS,也不会有九条写死的规则 */
+  const heroFn = fn("dpTopicHero");
+  checkEq("[tp] 底图用 CSS 变数传,不写死在 HTML 里",
+    /setProperty\("--tp-hero",/.test(heroFn) && /setProperty\("--tp-hero-m",/.test(heroFn), true);
+  checkEq("[tp] 没有素材的主题把变数清掉(回落到午夜蓝,不开天窗)",
+    /removeProperty\("--tp-hero"\)/.test(heroFn) &&
+    /setProperty\("--tp-hero-on", on \? "1" : "0"\)/.test(heroFn), true);
+  checkEq("[tp] CSS 里没有为九个主题各写一条规则",
+    TIDS.filter(function (t) { return css.indexOf("hero/" + t) >= 0; }).join(","), "");
+  checkEq("[tp] 变数没给就整层不画",
+    /background-image:var\(--tp-hero,none\)/.test(css) && /opacity:var\(--tp-hero-on,0\)/.test(css), true);
+  checkEq("[tp] 手机换 4:3 那一张",
+    /background-image:var\(--tp-hero-m,var\(--tp-hero,none\)\)/.test(css), true);
+  /* hero 里还有 logo / 导航 / 帐号选单 —— 亮色底图上必须留一层罩,不然读不到 */
+  checkEq("[tp] 底图上有一层由深到浅的罩", (css.match(/linear-gradient\(180deg,rgba\(9,18,46/g) || []).length >= 2, true);
+  checkEq("[tp] 内容压在罩子上面", /\.dp-hero > \*\{position:relative;z-index:1\}/.test(css), true);
+  checkEq("[tp] 只有主题页换 header", /renderTopicPage/.test(html.slice(html.indexOf("function dpTopicHero"), html.indexOf("function dpTopicHero") + 900)) === false, true);
+  checkEq("[tp] 进主题页时才套底图", /dpTopicHero\(tid\);/.test(topicPage), true);
+
+  /* —— 手机:编号在上,插画与标题横向并排;桌机那一套不受影响 —— */
+  /* 手机断点现在有两块(header 一块、分段版面一块),取分段版面那一块 */
+  const mq = css.slice(css.lastIndexOf("@media(max-width:767px)"));
+  checkEq("[tp] 找得到手机断点", mq.length > 400, true);
+  checkEq("[tp] 手机版是 编号 / 图+标题 / 正文 三段式",
+    /grid-template-areas:\s*"no\s+fav"\s*"art\s+title"\s*"peek\s+peek"\s*"full\s+full"/.test(mq), true);
+  checkEq("[tp] 靠 display:contents 拆层,DOM 一个节点都没动",
+    /\.tp-body,\s*#dpage\.topic-page \.tp-h-row\{display:contents\}/.test(mq), true);
+  checkEq("[tp] 没有标题时的空 span 不会乱入版面",
+    /\.tp-h-row > span:empty\{display:none\}/.test(mq), true);
+  checkEq("[tp] 插画 88–112px", /grid-template-columns:clamp\(88px,26vw,112px\)/.test(mq), true);
+  checkEq("[tp] 图与标题横向间距 12–16px",
+    (function () { const m = mq.match(/column-gap:(\d+)px/); return !!m && +m[1] >= 12 && +m[1] <= 16; })(), true);
+  checkEq("[tp] 标题与插画垂直居中", /h3\.tp-h\{[^}]*align-self:center/.test(mq), true);
+  checkEq("[tp] 标题不锁成一行(没有 nowrap / 没有截字)",
+    /white-space:nowrap|line-clamp|text-overflow/.test(mq), false);
+  checkEq("[tp] 正文占满整行", /\.tp-peek\{grid-area:peek/.test(mq) && /\.tp-full\{grid-area:full\}/.test(mq), true);
+  /* 桌机那一条完全没被动到 —— 手机版的改动一条都不能漏出 media query。
+     把所有 @media 区块整个拿掉,剩下的就是桌机真正吃到的规则。 */
+  const deskSec = (function (t) {
+    let out = "", i = 0;
+    while (i < t.length) {
+      const a = t.indexOf("@media", i);
+      if (a < 0) { out += t.slice(i); break; }
+      out += t.slice(i, a);
+      let k = t.indexOf("{", a), d = 0;
+      for (; k < t.length; k++) {
+        if (t[k] === "{") d++;
+        else if (t[k] === "}") { d--; if (!d) break; }
+      }
+      i = k + 1;
+    }
+    return out;
+  })(css);
+  checkEq("[tp] 桌机仍然是「插画一栏 + 正文一栏」",
+    /grid-template-columns:clamp\(112px,13vw,178px\) minmax\(0,1fr\)/.test(deskSec), true);
+  checkEq("[tp] 桌机没有 grid-template-areas / display:contents",
+    /grid-template-areas|display:contents/.test(deskSec), false);
+
+  /* —— 展开:只放开高度,没有任何文字被换掉 —— */
+  const bind = fn("dpBindTopicUI");
+  checkEq("[tp] 展开只改高度", /full\.style\.maxHeight = full\.scrollHeight/.test(bind), true);
+  checkEq("[tp] 展开不会写入 innerHTML", /innerHTML/.test(bind), false);
+  checkEq("[tp] 收起之后焦点回到按钮(键盘不会掉出去)", /open\.focus\(\)/.test(bind), true);
+  checkEq("[tp] aria-expanded 跟着状态走", /aria-expanded/.test(bind) && /aria-expanded/.test(tp), true);
+  checkEq("[tp] 只在九大主题这一页挂事件",
+    /classList\.contains\("topic-page"\)/.test(bind), true);
+  /* footer 这一次完全没有动 */
+  checkEq("[tp] 页尾没有被改(仍然是同一个 dpReturnFoot)",
+    /const foot = dpReturnFoot\(\);/.test(topicPage), true);
+}
+
+/* ============================================================
+   §37 · 九大主题的引子:改成阅读预览层写的,不再是正文的前几句
+   ------------------------------------------------------------
+   服务端早就有这一层(read-chart kind="preview"),「属于我的生命脉络」
+   也一直在用。这一段守住的是:
+     ① 九大主题真的接上了同一条路(不是另外长一套写作层)
+     ② 正文永远只进不出 —— 送出去的是正文,收回来的只有引子
+     ③ 没部署 / 收不到 / 验收不过 → 安静回落到本地摘录,不阻断画面
+   ============================================================ */
+function testTopicPreviews() {
+  const fs = require("fs");
+  const html = fs.readFileSync(path.join(__dirname, "..", "app.html"), "utf8");
+  const fn = function (name) {
+    const i = html.indexOf("\n  function " + name + "(");
+    if (i < 0) return "";
+    let k = html.indexOf("{", i), d = 0;
+    for (; k < html.length; k++) {
+      if (html[k] === "{") d++;
+      else if (html[k] === "}") { d--; if (!d) break; }
+    }
+    return html.slice(i, k + 1);
+  };
+
+  /* —— ① 接上的是既有那一层,不是新写的 —— */
+  const ens = fn("ensureTopicPreviews");
+  checkEq("[pv9] 九大主题会去要阅读预览", ens.length > 200, true);
+  checkEq("[pv9] 走既有的 fetchPreviews,不是另一条路",
+    /window\.Reading\.fetchPreviews\(items\)/.test(ens), true);
+  checkEq("[pv9] 版本号沿用同一个",
+    /window\.Reading\.PREVIEW_VER/.test(ens) && /window\.Reading\.PREVIEW_STYLE_ID/.test(ens), true);
+  checkEq("[pv9] 渲染主题页时才触发",
+    /ensureTopicPreviews\(c, tid, saved\);/.test(fn("renderTopicPage")), true);
+  /* 没有新的 prompt / 写作层:前端一个字都不写 */
+  ["preview:", "你可能", "其实你", "也许你"].forEach(function (bad) {
+    checkEq("[pv9] 前端没有自己写引子(" + bad + ")", ens.indexOf(bad) >= 0, false);
+  });
+
+  /* —— ② 正文只进不出 —— */
+  const items = fn("topicPvItems");
+  checkEq("[pv9] 送出去的是完整正文,不是截断",
+    /body: String\(sc\.body \|\| ""\)/.test(items), true);
+  checkEq("[pv9] 送出去的不含正文以外的东西",
+    /\{ id: "s" \+ i, kind: "section", title: sc\.title \|\| "", body: String\(sc\.body \|\| ""\) \}/.test(items), true);
+  checkEq("[pv9] 收回来的只写进 previews,不碰 sections",
+    /dst\.previews = \{/.test(ens) && /dst\.sections\s*=/.test(ens) === false, true);
+  checkEq("[pv9] 服务端一批上限 12 段,前端跟着截(指纹才对得上)",
+    /\.slice\(0, 12\)/.test(items), true);
+  checkEq("[pv9] 服务端确实截 12",
+    /\.slice\(0, 12\)/.test(fs.readFileSync(path.join(__dirname, "..", "docs", "edge", "read-chart.ts"), "utf8")), true);
+  /* 正文在这段时间被重新生成过 → 这批引子不是它的,丢掉 */
+  checkEq("[pv9] 正文换过就丢掉这批引子",
+    /String\(dst\.sections\[0\]\.body \|\| ""\) !== String\(\(t\.sections\[0\] \|\| \{\}\)\.body \|\| ""\)/.test(ens), true);
+  checkEq("[pv9] 换了星盘就不写回去", /live\.id !== c\.id/.test(ens), true);
+
+  /* —— ③ 回落:永远不阻断画面 —— */
+  checkEq("[pv9] 没有 Supabase 就不送", /window\.Reading\.hasSupabase\(\)/.test(ens), true);
+  checkEq("[pv9] 服务端没部署这一层就不送(fetchPreviews 自己挡)",
+    /serverPreviewStyle\(\)\.then\(function \(sid\) \{\s*if \(!sid\) return \{\};/.test(html), true);
+  checkEq("[pv9] 已经有就不重复要", /cur\.ver === window\.Reading\.PREVIEW_VER/.test(ens), true);
+  checkEq("[pv9] 同一时间只跑一次", /pvBusy/.test(ens), true);
+  checkEq("[pv9] 这一轮失败就不再试(不会反覆烧生成)",
+    /pvSkip\[skipKey\] = true/.test(ens) && /\.catch\(function \(\) \{ pvBusy = false; pvSkip\[skipKey\] = true; \}\)/.test(ens), true);
+  /* 旧格式接不住 previews → 根本不送,不烧一次生成再丢掉 */
+  checkEq("[pv9] 旧格式(只有 raw)不送",
+    /if \(!slot \|\| !slot\.sections \|\| !slot\.sections\.length\) return;/.test(ens), true);
+
+  /* —— 真的跑一次 dpLead:有引子用引子,没有才摘录 —— */
+  const sandbox = { DP_LEADIN: /^(而|但|不过|所以|因此|也就是说|换句话说|同时|另外|其实|这|那|它|他们|如果|当)/ };
+  const src = ["dpSents", "dpDerive", "dpLead", "dpPvMap"].map(fn).join("\n") +
+    "\nreturn { dpLead: dpLead, dpPvMap: dpPvMap };";
+  const api = new Function("DP_LEADIN", "window", src)(sandbox.DP_LEADIN,
+    { Reading: { PREVIEW_VER: 1 } });
+  const body = "在别人眼里，你常常是那个先开口的人。不是因为你话多，而是因为沉默让你不安。" +
+               "\n\n这是一种很早就学会的能力。它让你在很多场合里都不会失礼。";
+  const sc = { title: "你是一个什么样的人", body: body };
+
+  const noGen = api.dpLead(sc, undefined);
+  checkEq("[pv9] 没有引子时回落到摘录(原文的句子)", body.indexOf(noGen.preview) >= 0, true);
+  checkEq("[pv9] 摘录不算 authored", noGen.authored, false);
+
+  const gen = { preview: "你很早就学会先把气氛接住。那让你几乎不会失礼，也让你很少有机会先照顾自己。",
+                keyInsights: ["你的从容是一种很早就学会的能力。", "先接住别人，是有代价的。"] };
+  const withGen = api.dpLead(sc, gen);
+  checkEq("[pv9] 有引子就用引子", withGen.preview, gen.preview);
+  checkEq("[pv9] 引子不是原文抄回来的", body.indexOf(withGen.preview) >= 0, false);
+  checkEq("[pv9] 重点跟着一起进画面", withGen.keys.length, 2);
+  checkEq("[pv9] 引子最多三条重点", api.dpLead(sc, { preview: "x", keyInsights: ["a", "b", "c", "d"] }).keys.length, 3);
+  checkEq("[pv9] 有引子时标成 authored", withGen.authored, true);
+
+  /* 版本对不上的 previews 当作没有 —— 不会拿旧写法硬套在新写法上 */
+  checkEq("[pv9] 版本对得上才用", Object.keys(api.dpPvMap({ previews: { ver: 1, map: { s0: gen } } })).length, 1);
+  checkEq("[pv9] 版本对不上就当作没有",
+    Object.keys(api.dpPvMap({ previews: { ver: 0, map: { s0: gen } } })).length, 0);
+
+  /* 主题页真的会去读那一份 map */
+  checkEq("[pv9] 主题页把 previews 接到每一段上",
+    /const PV = dpPvMap\(data\);/.test(fn("dpTopicHtml")) &&
+    /dpLead\(sc, PV\["s" \+ si\]\)/.test(fn("dpTopicHtml")), true);
+}
+
 function testCompassZhOnlyLabels() {
   const fs = require("fs");
   const html = fs.readFileSync(path.join(__dirname, "..", "app.html"), "utf8");
@@ -4058,6 +4407,8 @@ function main() {
   testCompassSituations();
   testAnchorsV11AndRenderV2();
   testCanonicalStorage();
+  testTopicLayout();
+  testTopicPreviews();
   testCompassZhOnlyLabels();
   return Promise.all([genJobs, liveJobs, voiceJobs, v12Jobs]).then(function () { return testPlaces(); }).then(function () {
     console.log("\n对照来源:" + REF.reference);
