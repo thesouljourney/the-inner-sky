@@ -2529,17 +2529,62 @@
   #dpage.topic-page .tp-tail{margin-top:clamp(26px,3.4vw,44px)}
   #dpage.topic-page .tp-tail > * + *{margin-top:clamp(22px,2.8vw,36px)}
 
-  /* —— 平板 / 手机:插画缩小并让到标题旁边,正文永远占满一行 —— */
+  /* —— 手机:编号在上,插画与标题横向并排,正文占满整行 ——————
+     桌机那一套(插画独立一栏、正文在右)完全不受影响:
+     底下每一条规则都关在这个 max-width:767px 里。
+
+     DOM 一个节点都没有动。编号 / 标题 / 正文本来都包在 .tp-body 里,
+     这里用 display:contents 把 .tp-body 与 .tp-h-row 这两层「拆掉」,
+     让它们的小孩直接变成 .tp-sec 的 grid item,再各自认领一个 area:
+
+         ┌─────────┬──────────────┐
+         │   no    │     fav      │   编号 / 收藏
+         ├─────────┼──────────────┤
+         │   art   │    title     │   插画与标题并排、垂直居中
+         ├─────────┴──────────────┤
+         │         peek           │   正文占满整行
+         │         full           │
+         └────────────────────────┘
+     ------------------------------------------------------------ */
   @media(max-width:767px){
     #dpage.topic-page .tp-sec{
-      grid-template-columns:1fr;gap:16px;padding:26px 0
+      /* 插画 88–112px(依萤幕宽度),右边那一栏永远吃掉剩下的宽度 */
+      grid-template-columns:clamp(88px,26vw,112px) minmax(0,1fr);
+      grid-template-areas:
+        "no   fav"
+        "art  title"
+        "peek peek"
+        "full full";
+      column-gap:14px;                 /* 插画 ↔ 标题 */
+      row-gap:10px;
+      align-items:start;
+      padding:26px 0
+    }
+    #dpage.topic-page .tp-body,
+    #dpage.topic-page .tp-h-row{display:contents}
+    /* 没有标题时 dpTopicHtml 会放一个空 span 占位 —— 拆层之后它会变成
+       一个没有 area 的 grid item,被自动塞进版面里。这里让它退场。 */
+    #dpage.topic-page .tp-h-row > span:empty{display:none}
+
+    #dpage.topic-page .tp-no{
+      grid-area:no;align-self:end;margin-bottom:0
+    }
+    #dpage.topic-page .tp-h-row .fav-btn{
+      grid-area:fav;justify-self:end;align-self:start;margin-top:0
     }
     #dpage.topic-page .tp-art{
-      width:84px;aspect-ratio:1;margin:0 0 2px
+      grid-area:art;width:100%;aspect-ratio:1;margin:0
     }
     #dpage.topic-page .tp-art .gl{transform:scale(1.7)}
-    #dpage.topic-page h3.tp-h{font-size:19px;line-height:1.62}
-    #dpage.topic-page .tp-peek .pv{font-size:15px;line-height:2}
+    /* 标题跟着插画垂直居中,想换几行就换几行 —— 不锁成一行 */
+    #dpage.topic-page h3.tp-h{
+      grid-area:title;align-self:center;
+      font-size:19px;line-height:1.62
+    }
+    #dpage.topic-page .tp-peek{grid-area:peek;margin-top:10px}  /* 与标题区约 20px */
+    #dpage.topic-page .tp-full{grid-area:full}
+    #dpage.topic-page .tp-peek .pv{margin-top:0;font-size:15px;line-height:2}
+
     #dpage.topic-page .tp-open,#dpage.topic-page .tp-shut{min-height:44px;font-size:13.5px}
     #dpage.topic-page .tp-pair{grid-template-columns:1fr}
   }

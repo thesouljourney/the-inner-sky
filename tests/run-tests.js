@@ -2064,6 +2064,29 @@ function testTopicLayout() {
   checkEq("[tp] TOPIC_SEC_ART 宣告在 applyRoute() 之前",
     html.indexOf("const TOPIC_SEC_ART") < html.lastIndexOf("applyRoute();"), true);
 
+  /* —— 手机:编号在上,插画与标题横向并排;桌机那一套不受影响 —— */
+  const mq = css.slice(css.indexOf("@media(max-width:767px)"));
+  checkEq("[tp] 找得到手机断点", mq.length > 400, true);
+  checkEq("[tp] 手机版是 编号 / 图+标题 / 正文 三段式",
+    /grid-template-areas:\s*"no\s+fav"\s*"art\s+title"\s*"peek\s+peek"\s*"full\s+full"/.test(mq), true);
+  checkEq("[tp] 靠 display:contents 拆层,DOM 一个节点都没动",
+    /\.tp-body,\s*#dpage\.topic-page \.tp-h-row\{display:contents\}/.test(mq), true);
+  checkEq("[tp] 没有标题时的空 span 不会乱入版面",
+    /\.tp-h-row > span:empty\{display:none\}/.test(mq), true);
+  checkEq("[tp] 插画 88–112px", /grid-template-columns:clamp\(88px,26vw,112px\)/.test(mq), true);
+  checkEq("[tp] 图与标题横向间距 12–16px",
+    (function () { const m = mq.match(/column-gap:(\d+)px/); return !!m && +m[1] >= 12 && +m[1] <= 16; })(), true);
+  checkEq("[tp] 标题与插画垂直居中", /h3\.tp-h\{[^}]*align-self:center/.test(mq), true);
+  checkEq("[tp] 标题不锁成一行(没有 nowrap / 没有截字)",
+    /white-space:nowrap|line-clamp|text-overflow/.test(mq), false);
+  checkEq("[tp] 正文占满整行", /\.tp-peek\{grid-area:peek/.test(mq) && /\.tp-full\{grid-area:full\}/.test(mq), true);
+  /* 桌机那一条完全没被动到 —— 手机版的改动一条都不能漏出 media query */
+  const deskSec = css.slice(0, css.indexOf("@media(max-width:767px)"));
+  checkEq("[tp] 桌机仍然是「插画一栏 + 正文一栏」",
+    /grid-template-columns:clamp\(112px,13vw,178px\) minmax\(0,1fr\)/.test(deskSec), true);
+  checkEq("[tp] 桌机没有 grid-template-areas / display:contents",
+    /grid-template-areas|display:contents/.test(deskSec), false);
+
   /* —— 展开:只放开高度,没有任何文字被换掉 —— */
   const bind = fn("dpBindTopicUI");
   checkEq("[tp] 展开只改高度", /full\.style\.maxHeight = full\.scrollHeight/.test(bind), true);
