@@ -8533,15 +8533,17 @@ window.Guide = (function () {
   const TOPIC_HERO = ["self", "emotion", "career", "family", "love",
                       "partner", "wealth", "study", "body"];
   const TOPIC_SEC_ART = {
-    self:    ["cloud", "ripple", "blossom", "moon", "star", "feather"],
-    emotion: ["rose", "heart", "planet-pink", "butterfly-pink", "tulip", "rings"],
-    career:  ["plane", "mountain", "compass", "lighthouse", "star", "crystal"],
-    family:  ["tree", "leaf", "bird", "cottage", "blossom", "cloud"],
-    love:    ["tulip", "planet-pink", "shell", "jar", "rings", "heart"],
-    partner: ["crystal", "planet-blue", "butterfly-blue", "crystals", "star", "moon"],
-    wealth:  ["coin", "coins", "sprout", "jar", "sun", "compass"],
-    study:   ["feather", "plane", "crystal", "compass", "star", "cloud"],
-    body:    ["droplet", "leaves", "lotus", "sun", "ripple", "moon"]
+    /* 前四张对着设计稿那四项(方向 / 模式 / 课题 / 理想状态),
+       第五、六张是长章节才会用到的延伸。 */
+    self:    ["mirror", "ripple", "blossom", "moon", "cloud", "lantern"],
+    emotion: ["rose", "heart", "labyrinth", "butterfly-pink", "rings", "planet-pink"],
+    career:  ["signpost", "mountain", "compass", "lighthouse", "plane", "telescope"],
+    family:  ["tree", "leaf", "bird", "nest", "cottage", "cloche"],
+    love:    ["tulip", "swans", "shell", "infinity", "heart", "jar"],
+    partner: ["vial", "planet-blue", "butterfly-blue", "crystals", "star", "crystal"],
+    wealth:  ["coin", "coins", "sprout", "cornucopia", "hourglass", "planter"],
+    study:   ["scroll", "key", "feather", "telescope", "hourglass", "lantern"],
+    body:    ["droplet", "leaves", "lotus", "sun", "stones", "incense"]
   };
 
   const VOW_ORB = [
