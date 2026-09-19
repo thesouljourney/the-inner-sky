@@ -2451,7 +2451,12 @@
     box-shadow:inset 0 0 0 1px rgba(240,232,227,.9);
     overflow:hidden;margin-top:6px
   }
-  #dpage.topic-page .tp-art img{width:100%;height:100%;object-fit:cover;display:block}
+  /* 图叠在水彩圆上面。素材是去背的方形插画,所以用 contain 并留一点内缩 ——
+     不裁到边,圆圈本身还看得见一圈柔光。 */
+  #dpage.topic-page .tp-art img{
+    position:absolute;inset:9%;width:82%;height:82%;
+    object-fit:contain;display:block
+  }
   #dpage.topic-page .tp-art .gl{
     display:block;color:var(--dp-gold);opacity:.55;transform:scale(2.1);transform-origin:center
   }
@@ -8419,12 +8424,26 @@ window.Guide = (function () {
       '<path fill="currentColor" d="M9 1.6 10.2 7.8 16.4 9l-6.2 1.2L9 16.4 7.8 10.2 1.6 9l6.2-1.2Z"/></svg>'
   ];
 
-  /* 九大主题每一段左边那个圆形插画位。
-     素材还没到 —— 这里先留一个空阵列:空的时候 .tp-art 会用 CSS 的水彩圆
-     加一个星记号顶着,版面是完整的,不会开天窗。
-     素材到了之后只要把路径依序填进来(第 i 段用第 i % 长度 张),
-     其他地方一行都不用改。插画一律是装饰:aria-hidden + 空 alt。 */
-  const TOPIC_SEC_ART = [];
+  /* 九大主题每一段左边那个圆形插画位:主题 → 依序排好的素材。
+     第 i 段用第 i 张;段数比素材多就绕回来(服务端一章固定生成 4–6 段,
+     这里每个主题都备了 6 张,实际上绕不到)。
+     同一张图在【不同主题】之间共用 —— 使用者一次只读一个主题,
+     所以只要保证【同一个主题内部】不重复就好;档案因此只存一份。
+     某个主题没有列进来(或素材载入失败)→ 自动回落到 CSS 的水彩圆 +
+     星记号,版面是完整的,不会开天窗。
+     插画一律是装饰:aria-hidden + 空 alt,不承载任何内容。 */
+  const TOPIC_ART_DIR = "assets/topics/";
+  const TOPIC_SEC_ART = {
+    self:    ["cloud", "ripple", "blossom", "moon", "star", "feather"],
+    emotion: ["rose", "heart", "planet-pink", "butterfly-pink", "tulip", "rings"],
+    career:  ["plane", "mountain", "compass", "lighthouse", "star", "crystal"],
+    family:  ["tree", "leaf", "bird", "cottage", "blossom", "cloud"],
+    love:    ["tulip", "planet-pink", "shell", "jar", "rings", "heart"],
+    partner: ["crystal", "planet-blue", "butterfly-blue", "crystals", "star", "moon"],
+    wealth:  ["coin", "coins", "sprout", "jar", "sun", "compass"],
+    study:   ["feather", "plane", "crystal", "compass", "star", "cloud"],
+    body:    ["droplet", "leaves", "lotus", "sun", "ripple", "moon"]
+  };
 
   const VOW_ORB = [
     ["self", "sun"], ["emotion", "venus"], ["career", "saturn"], ["family", "moon"],
@@ -9145,15 +9164,20 @@ window.Guide = (function () {
        · 完整原文一直在 DOM 里(.tp-full),展开只是把高度放开
        · 引子走既有的 dpLead —— 生成端的 preview 优先,没有才回落到摘录
      ============================================================ */
-  function dpTopicSecArt(i) {
-    const src = TOPIC_SEC_ART[i % (TOPIC_SEC_ART.length || 1)];
+  function dpTopicSecArt(tid, i) {
+    const set = TOPIC_SEC_ART[tid] || [];
+    const name = set.length ? set[i % set.length] : "";
+    /* 星记号一直在,图叠在它上面 —— 图载不到的时候 onerror 把图拿掉,
+       露出底下的水彩圆,不会留一个破图框。 */
     return '<div class="tp-art" aria-hidden="true">' +
-      (src
-        ? '<img src="' + src + '" alt="" loading="lazy" decoding="async">'
-        : '<span class="gl">' + THREAD_NODE[i % THREAD_NODE.length] + "</span>") +
+      '<span class="gl">' + THREAD_NODE[i % THREAD_NODE.length] + "</span>" +
+      (name
+        ? '<img src="' + TOPIC_ART_DIR + name + '.webp" alt="" loading="lazy" decoding="async"' +
+          ' onerror="this.remove()">'
+        : "") +
       "</div>";
   }
-  function dpTopicHtml(data, favSource, favType) {
+  function dpTopicHtml(data, favSource, favType, tid) {
     favType = favType || "";
     const PV = dpPvMap(data);
     let h = '<div class="tp-wrap">';
@@ -9167,7 +9191,7 @@ window.Guide = (function () {
         '" data-section="' + esc0(sc.title || "") + '" title="' + esc0(T("saveIt")) + '">' + (isFaved(k) ? "★" : "☆") + "</button>";
       const d = dpLead(sc, PV["s" + si]);
       return '<section class="tp-sec" id="sec-' + si + '">' +
-        dpTopicSecArt(si) +
+        dpTopicSecArt(tid, si) +
         '<div class="tp-body">' +
         '<span class="tp-no">' + ("0" + (si + 1)).slice(-2) + "</span>" +
         '<div class="tp-h-row">' +
@@ -9355,7 +9379,7 @@ window.Guide = (function () {
     else {
       const saved = window.Reading.reviveTopic((c[window.Reading.LK("topics")] || {})[tid]);
       if (saved) {
-        body = dpTopicHtml(saved, tName, "theme_reading");
+        body = dpTopicHtml(saved, tName, "theme_reading", tid);
         markTopicRead(tid);
         ensureTopicPreviews(c, tid, saved);
       }

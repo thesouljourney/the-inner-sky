@@ -1962,7 +1962,7 @@ function testTopicLayout() {
   /* —— ① 只有九大主题换了版面 —— */
   const topicPage = fn("renderTopicPage");
   checkEq("[tp] 九大主题改走 dpTopicHtml",
-    /body = dpTopicHtml\(saved, tName, "theme_reading"\)/.test(topicPage), true);
+    /body = dpTopicHtml\(saved, tName, "theme_reading", tid\);/.test(topicPage), true);
   checkEq("[tp] 九大主题不再走 dpAnswerHtml", /dpAnswerHtml/.test(topicPage), false);
   checkEq("[tp] 三十道探索题仍然走 dpAnswerHtml",
     /dpAnswerHtml\(saved, q\.q, "question"\)/.test(fn("renderQPage")), true);
@@ -2022,13 +2022,44 @@ function testTopicLayout() {
   checkEq("[tp] topic-page 这个 class 只挂在九大主题这一页",
     /classList\.toggle\("topic-page", r\.k === "topic"\)/.test(html), true);
 
-  /* —— 插画素材位:还没到,但版面已经留好 —— */
-  checkEq("[tp] 插画位是可替换的阵列", /const TOPIC_SEC_ART = \[\];/.test(html), true);
-  checkEq("[tp] 素材还没到的时候不开天窗(回落到水彩圆 + 星记号)",
-    /src\s*\?[\s\S]{0,160}THREAD_NODE\[i % THREAD_NODE\.length\]/.test(fn("dpTopicSecArt")), true);
+  /* —— 插画素材:九个主题各一组,同一张图跨主题共用、同主题内不重复 —— */
+  const artBlock = html.slice(html.indexOf("  const TOPIC_SEC_ART = {"),
+                              html.indexOf("};", html.indexOf("  const TOPIC_SEC_ART = {")) + 2);
+  const SETS = {};
+  (artBlock.match(/^\s*([a-z]+):\s*\[([^\]]*)\]/gm) || []).forEach(function (line) {
+    const m = line.match(/^\s*([a-z]+):\s*\[([^\]]*)\]/);
+    SETS[m[1]] = m[2].split(",").map(function (x) { return x.trim().replace(/^"|"$/g, ""); })
+      .filter(Boolean);
+  });
+  const TIDS = ["self", "emotion", "career", "family", "love", "partner", "wealth", "study", "body"];
+  checkEq("[tp] 九个主题都有自己的一组插画", Object.keys(SETS).sort().join(","), TIDS.slice().sort().join(","));
+  /* 服务端一章固定生成 4–6 段 → 每一组至少要有 6 张,才不会在同一页里绕回来重复 */
+  checkEq("[tp] 服务端一章是 4–6 段",
+    /sections 请给 4–6 段。/.test(fs.readFileSync(path.join(__dirname, "..", "docs", "edge", "read-chart.ts"), "utf8")), true);
+  TIDS.forEach(function (t) {
+    const set = SETS[t] || [];
+    checkEq("[tp] " + t + " 至少备 6 张(最长的一章也不会重复)", set.length >= 6, true);
+    checkEq("[tp] " + t + " 同一组里没有重复", new Set(set).size, set.length);
+  });
+  /* 每一个被点到名的档案都真的在 repo 里 —— 漏一张就是线上一个破图 */
+  const missing = [];
+  Object.keys(SETS).forEach(function (t) {
+    SETS[t].forEach(function (n) {
+      if (!fs.existsSync(path.join(__dirname, "..", "assets", "topics", n + ".webp"))) missing.push(t + "/" + n);
+    });
+  });
+  checkEq("[tp] 每一张点到名的素材都在 repo 里", missing.join(" "), "");
+  checkEq("[tp] 素材放在同一个资料夹", /const TOPIC_ART_DIR = "assets\/topics\/";/.test(html), true);
+  /* 没有列到的主题 / 载入失败 → 回落到水彩圆 + 星记号,不开天窗、不留破图框 */
+  const artFn = fn("dpTopicSecArt");
+  checkEq("[tp] 没有列到的主题回落到星记号",
+    /TOPIC_SEC_ART\[tid\] \|\| \[\]/.test(artFn) &&
+    /set\.length \? set\[i % set\.length\] : ""/.test(artFn), true);
+  checkEq("[tp] 星记号一直在,图叠在上面(载不到就露出底)",
+    artFn.indexOf('<span class="gl">') < artFn.indexOf("<img src="), true);
+  checkEq("[tp] 图载不到就拿掉,不留破图框", /onerror="this\.remove\(\)"/.test(artFn), true);
   checkEq("[tp] 插画一律是装饰,不承载内容",
-    /class="tp-art" aria-hidden="true"/.test(fn("dpTopicSecArt")) &&
-    /alt=""/.test(fn("dpTopicSecArt")), true);
+    /class="tp-art" aria-hidden="true"/.test(artFn) && /alt=""/.test(artFn), true);
   /* TDZ:render*Page 在冷启动那一刻就会用到它 */
   checkEq("[tp] TOPIC_SEC_ART 宣告在 applyRoute() 之前",
     html.indexOf("const TOPIC_SEC_ART") < html.lastIndexOf("applyRoute();"), true);
