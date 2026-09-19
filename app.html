@@ -2409,6 +2409,53 @@
   #dpage.topic-page{--dp-wide:min(1120px,calc(100vw - 96px));background:#f7f3ef}
   @media(max-width:1024px){#dpage.topic-page{--dp-wide:100%}}
 
+  /* —— Header:每个主题自己的一张实景 ——————————————————————
+     底图由 renderTopicPage 用 --tp-hero / --tp-hero-m 传进来(每个主题一张),
+     所以这里不需要为九个主题各写一条规则,新增主题也不用改 CSS。
+     变数没给(素材缺、非主题页)→ 整层不画,回落到原本的午夜蓝 hero。
+
+     文字维持原本的浅色:hero 里还有 logo、导航与帐号选单,
+     那一整组是全站共用的,不能为了一张底图就让它们在亮处读不到。
+     所以底图上盖一层由深到浅的罩:上方最深(导航),左下次之(标题),
+     右侧最浅 —— 风景留在看得见的地方。
+     ------------------------------------------------------------ */
+  #dpage.topic-page .dp-hero{position:relative;isolation:isolate}
+  #dpage.topic-page .dp-hero::before{
+    content:"";position:absolute;inset:0;z-index:0;
+    background-image:var(--tp-hero,none);
+    background-size:cover;background-position:center 42%;
+    opacity:var(--tp-hero-on,0)
+  }
+  #dpage.topic-page .dp-hero::after{
+    content:"";position:absolute;inset:0;z-index:0;
+    opacity:var(--tp-hero-on,0);
+    background:
+      linear-gradient(180deg,rgba(9,18,46,.84) 0%,rgba(9,18,46,.34) 24%,rgba(9,18,46,.12) 46%,rgba(9,18,46,.40) 100%),
+      linear-gradient(100deg,rgba(9,18,46,.72) 0%,rgba(9,18,46,.52) 30%,rgba(9,18,46,.20) 56%,rgba(9,18,46,0) 80%)
+  }
+  /* 星点与内容都要压在罩子上面 */
+  #dpage.topic-page .dp-hero > *{position:relative;z-index:1}
+  /* 有底图时星点收一点 —— 天空已经在图里了,不需要再画一层 */
+  #dpage.topic-page .dp-hero .dp-stars i{opacity:calc(var(--o,.5) * .5)}
+  /* 行星插画与实景叠在一起太满,有底图时让给照片 */
+  #dpage.topic-page .dp-hero-art{display:none}
+  #dpage.topic-page .dp-title,
+  #dpage.topic-page .dp-sub,
+  #dpage.topic-page .dp-chip{text-shadow:0 1px 18px rgba(9,18,46,.55)}
+  @media(max-width:767px){
+    /* 手机换 4:3 那一张:同一个场景,直幅裁切,不是把宽幅硬塞进窄萤幕 */
+    #dpage.topic-page .dp-hero::before{
+      background-image:var(--tp-hero-m,var(--tp-hero,none));background-position:center 38%
+    }
+    /* 窄萤幕上标题与副标会横跨整张图,亮处一定会碰到 —— 罩子改成整片压低,
+       风景仍然看得见,但文字不会落在没有对比的地方。 */
+    #dpage.topic-page .dp-hero::after{
+      background:
+        linear-gradient(180deg,rgba(9,18,46,.86) 0%,rgba(9,18,46,.46) 22%,rgba(9,18,46,.34) 52%,rgba(9,18,46,.52) 100%),
+        linear-gradient(100deg,rgba(9,18,46,.62) 0%,rgba(9,18,46,.34) 55%,rgba(9,18,46,.16) 100%)
+    }
+  }
+
   /* 正文整体退到一张圆角白卡里(第二张参考图的做法):
      卡片本身就是「这一章有边界」的讯号,不再是一条没有尽头的长条。 */
   #dpage.topic-page .tp-wrap{
@@ -8478,6 +8525,13 @@ window.Guide = (function () {
      星记号,版面是完整的,不会开天窗。
      插画一律是装饰:aria-hidden + 空 alt,不承载任何内容。 */
   const TOPIC_ART_DIR = "assets/topics/";
+  /* 每个主题 header 的实景底图。同一个场景两种裁切:
+       <tid>.webp    宽幅,桌机
+       <tid>-m.webp  4:3,手机(不是把宽幅硬塞进窄萤幕)
+     列在这里的主题才会换 header;没列到的照旧是午夜蓝,不会开天窗。 */
+  const TOPIC_HERO_DIR = "assets/topics/hero/";
+  const TOPIC_HERO = ["self", "emotion", "career", "family", "love",
+                      "partner", "wealth", "study", "body"];
   const TOPIC_SEC_ART = {
     self:    ["cloud", "ripple", "blossom", "moon", "star", "feather"],
     emotion: ["rose", "heart", "planet-pink", "butterfly-pink", "tulip", "rings"],
@@ -9269,6 +9323,23 @@ window.Guide = (function () {
     if (tail) t += '<div class="tp-tail">' + tail + "</div>";
     return h + t + "</div>";
   }
+  /* Header 的底图:用 CSS 变数交给样式层,不在 HTML 里写死路径。
+     没有这个主题的素材就把变数清掉 —— hero 回到原本的午夜蓝,
+     不会留一块空白,也不会去要一张不存在的图。 */
+  function dpTopicHero(tid) {
+    const host = $("dpage");
+    if (!host) return;
+    const on = TOPIC_HERO.indexOf(tid) >= 0;
+    host.style.setProperty("--tp-hero-on", on ? "1" : "0");
+    if (!on) {
+      host.style.removeProperty("--tp-hero");
+      host.style.removeProperty("--tp-hero-m");
+      return;
+    }
+    host.style.setProperty("--tp-hero", 'url("' + TOPIC_HERO_DIR + tid + '.webp")');
+    host.style.setProperty("--tp-hero-m", 'url("' + TOPIC_HERO_DIR + tid + '-m.webp")');
+  }
+
   /* 收起 ↔ 展开。原文一直在 DOM 里,这里只是放开高度 ——
      与生命脉络那一页同一个做法(量 scrollHeight,展开完成后把上限拿掉)。 */
   function dpBindTopicUI() {
@@ -9442,6 +9513,7 @@ window.Guide = (function () {
     if (rt) rt.addEventListener("click", function () { topicErrs[tid] = null; generateTopic(tid); });
     /* 阅读节奏:先看引子 → 想读再展开 → 读到的是完整原文。
        原文一直在 DOM 里,展开没有替换掉任何一个字。 */
+    dpTopicHero(tid);
     dpBindTopicUI();
     // 中文首次开启:自动开始生成(与旧行为一致;英文由使用者按钮触发)
     if (c && curResult && !topicBusy && !topicErrs[tid] && !window.I18N.isEN() &&

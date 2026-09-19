@@ -2064,8 +2064,43 @@ function testTopicLayout() {
   checkEq("[tp] TOPIC_SEC_ART 宣告在 applyRoute() 之前",
     html.indexOf("const TOPIC_SEC_ART") < html.lastIndexOf("applyRoute();"), true);
 
+  /* —— Header:每个主题自己的一张实景 —— */
+  const HEROS = (html.match(/const TOPIC_HERO = \[([\s\S]*?)\];/) || [, ""])[1]
+    .split(",").map(function (x) { return x.trim().replace(/^"|"$/g, ""); }).filter(Boolean);
+  checkEq("[tp] 九个主题都有自己的 header", HEROS.slice().sort().join(","), TIDS.slice().sort().join(","));
+  /* 桌机一张宽幅、手机一张 4:3,两张都要在 —— 漏一张就是线上一块空白 */
+  const heroMissing = [];
+  HEROS.forEach(function (t) {
+    ["", "-m"].forEach(function (suf) {
+      if (!fs.existsSync(path.join(__dirname, "..", "assets", "topics", "hero", t + suf + ".webp")))
+        heroMissing.push(t + suf);
+    });
+  });
+  checkEq("[tp] 每个 header 的宽幅与 4:3 都在 repo 里", heroMissing.join(" "), "");
+  checkEq("[tp] header 放在自己的资料夹",
+    /const TOPIC_HERO_DIR = "assets\/topics\/hero\/";/.test(html), true);
+  /* 底图交给 CSS 变数 → 新增主题不用改 CSS,也不会有九条写死的规则 */
+  const heroFn = fn("dpTopicHero");
+  checkEq("[tp] 底图用 CSS 变数传,不写死在 HTML 里",
+    /setProperty\("--tp-hero",/.test(heroFn) && /setProperty\("--tp-hero-m",/.test(heroFn), true);
+  checkEq("[tp] 没有素材的主题把变数清掉(回落到午夜蓝,不开天窗)",
+    /removeProperty\("--tp-hero"\)/.test(heroFn) &&
+    /setProperty\("--tp-hero-on", on \? "1" : "0"\)/.test(heroFn), true);
+  checkEq("[tp] CSS 里没有为九个主题各写一条规则",
+    TIDS.filter(function (t) { return css.indexOf("hero/" + t) >= 0; }).join(","), "");
+  checkEq("[tp] 变数没给就整层不画",
+    /background-image:var\(--tp-hero,none\)/.test(css) && /opacity:var\(--tp-hero-on,0\)/.test(css), true);
+  checkEq("[tp] 手机换 4:3 那一张",
+    /background-image:var\(--tp-hero-m,var\(--tp-hero,none\)\)/.test(css), true);
+  /* hero 里还有 logo / 导航 / 帐号选单 —— 亮色底图上必须留一层罩,不然读不到 */
+  checkEq("[tp] 底图上有一层由深到浅的罩", (css.match(/linear-gradient\(180deg,rgba\(9,18,46/g) || []).length >= 2, true);
+  checkEq("[tp] 内容压在罩子上面", /\.dp-hero > \*\{position:relative;z-index:1\}/.test(css), true);
+  checkEq("[tp] 只有主题页换 header", /renderTopicPage/.test(html.slice(html.indexOf("function dpTopicHero"), html.indexOf("function dpTopicHero") + 900)) === false, true);
+  checkEq("[tp] 进主题页时才套底图", /dpTopicHero\(tid\);/.test(topicPage), true);
+
   /* —— 手机:编号在上,插画与标题横向并排;桌机那一套不受影响 —— */
-  const mq = css.slice(css.indexOf("@media(max-width:767px)"));
+  /* 手机断点现在有两块(header 一块、分段版面一块),取分段版面那一块 */
+  const mq = css.slice(css.lastIndexOf("@media(max-width:767px)"));
   checkEq("[tp] 找得到手机断点", mq.length > 400, true);
   checkEq("[tp] 手机版是 编号 / 图+标题 / 正文 三段式",
     /grid-template-areas:\s*"no\s+fav"\s*"art\s+title"\s*"peek\s+peek"\s*"full\s+full"/.test(mq), true);
@@ -2080,8 +2115,23 @@ function testTopicLayout() {
   checkEq("[tp] 标题不锁成一行(没有 nowrap / 没有截字)",
     /white-space:nowrap|line-clamp|text-overflow/.test(mq), false);
   checkEq("[tp] 正文占满整行", /\.tp-peek\{grid-area:peek/.test(mq) && /\.tp-full\{grid-area:full\}/.test(mq), true);
-  /* 桌机那一条完全没被动到 —— 手机版的改动一条都不能漏出 media query */
-  const deskSec = css.slice(0, css.indexOf("@media(max-width:767px)"));
+  /* 桌机那一条完全没被动到 —— 手机版的改动一条都不能漏出 media query。
+     把所有 @media 区块整个拿掉,剩下的就是桌机真正吃到的规则。 */
+  const deskSec = (function (t) {
+    let out = "", i = 0;
+    while (i < t.length) {
+      const a = t.indexOf("@media", i);
+      if (a < 0) { out += t.slice(i); break; }
+      out += t.slice(i, a);
+      let k = t.indexOf("{", a), d = 0;
+      for (; k < t.length; k++) {
+        if (t[k] === "{") d++;
+        else if (t[k] === "}") { d--; if (!d) break; }
+      }
+      i = k + 1;
+    }
+    return out;
+  })(css);
   checkEq("[tp] 桌机仍然是「插画一栏 + 正文一栏」",
     /grid-template-columns:clamp\(112px,13vw,178px\) minmax\(0,1fr\)/.test(deskSec), true);
   checkEq("[tp] 桌机没有 grid-template-areas / display:contents",
