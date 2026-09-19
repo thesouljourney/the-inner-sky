@@ -2077,6 +2077,41 @@ function testTopicLayout() {
     });
   });
   checkEq("[tp] 每个 header 的宽幅与 4:3 都在 repo 里", heroMissing.join(" "), "");
+  /* 尺寸对不对。⚠ 这一条挡的是「档案坏了 / 尺寸放错」,
+     挡不了「来源是缩图、被放大成目标尺寸」—— 那种情况尺寸是对的,只是糊。
+     那一关在转档时做:来源比目标小就拒绝转,不要放大。 */
+  const webpSize = function (f) {
+    const b = fs.readFileSync(f);
+    if (b.slice(0, 4).toString() !== "RIFF" || b.slice(8, 12).toString() !== "WEBP") return null;
+    const tag = b.slice(12, 16).toString();
+    if (tag === "VP8X") return [(b.readUIntLE(24, 3) + 1), (b.readUIntLE(27, 3) + 1)];
+    if (tag === "VP8L") {
+      const n = b.readUInt32LE(21);
+      return [(n & 0x3fff) + 1, ((n >> 14) & 0x3fff) + 1];
+    }
+    if (tag === "VP8 ") return [b.readUInt16LE(26) & 0x3fff, b.readUInt16LE(28) & 0x3fff];
+    return null;
+  };
+  const wrongSize = [];
+  HEROS.forEach(function (t) {
+    [["", 1600, 686], ["-m", 880, 660]].forEach(function (x) {
+      const f = path.join(__dirname, "..", "assets", "topics", "hero", t + x[0] + ".webp");
+      const d = fs.existsSync(f) ? webpSize(f) : null;
+      if (!d || d[0] !== x[1] || d[1] !== x[2])
+        wrongSize.push(t + x[0] + "=" + (d ? d.join("×") : "?"));
+    });
+  });
+  checkEq("[tp] header 尺寸正确(桌机 1600×686 / 手机 880×660)", wrongSize.join(" "), "");
+  /* 圆形插画同一套检查:一律 400×400 */
+  const wrongArt = [];
+  Object.keys(SETS).forEach(function (t) {
+    SETS[t].forEach(function (n) {
+      const f = path.join(__dirname, "..", "assets", "topics", n + ".webp");
+      const d = fs.existsSync(f) ? webpSize(f) : null;
+      if (!d || d[0] !== 400 || d[1] !== 400) wrongArt.push(n + "=" + (d ? d.join("×") : "?"));
+    });
+  });
+  checkEq("[tp] 圆形插画一律 400×400", Array.from(new Set(wrongArt)).join(" "), "");
   checkEq("[tp] header 放在自己的资料夹",
     /const TOPIC_HERO_DIR = "assets\/topics\/hero\/";/.test(html), true);
   /* 底图交给 CSS 变数 → 新增主题不用改 CSS,也不会有九条写死的规则 */
