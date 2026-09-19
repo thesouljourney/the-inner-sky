@@ -2046,6 +2046,106 @@ function testTopicLayout() {
     /const foot = dpReturnFoot\(\);/.test(topicPage), true);
 }
 
+/* ============================================================
+   §37 · 九大主题的引子:改成阅读预览层写的,不再是正文的前几句
+   ------------------------------------------------------------
+   服务端早就有这一层(read-chart kind="preview"),「属于我的生命脉络」
+   也一直在用。这一段守住的是:
+     ① 九大主题真的接上了同一条路(不是另外长一套写作层)
+     ② 正文永远只进不出 —— 送出去的是正文,收回来的只有引子
+     ③ 没部署 / 收不到 / 验收不过 → 安静回落到本地摘录,不阻断画面
+   ============================================================ */
+function testTopicPreviews() {
+  const fs = require("fs");
+  const html = fs.readFileSync(path.join(__dirname, "..", "app.html"), "utf8");
+  const fn = function (name) {
+    const i = html.indexOf("\n  function " + name + "(");
+    if (i < 0) return "";
+    let k = html.indexOf("{", i), d = 0;
+    for (; k < html.length; k++) {
+      if (html[k] === "{") d++;
+      else if (html[k] === "}") { d--; if (!d) break; }
+    }
+    return html.slice(i, k + 1);
+  };
+
+  /* —— ① 接上的是既有那一层,不是新写的 —— */
+  const ens = fn("ensureTopicPreviews");
+  checkEq("[pv9] 九大主题会去要阅读预览", ens.length > 200, true);
+  checkEq("[pv9] 走既有的 fetchPreviews,不是另一条路",
+    /window\.Reading\.fetchPreviews\(items\)/.test(ens), true);
+  checkEq("[pv9] 版本号沿用同一个",
+    /window\.Reading\.PREVIEW_VER/.test(ens) && /window\.Reading\.PREVIEW_STYLE_ID/.test(ens), true);
+  checkEq("[pv9] 渲染主题页时才触发",
+    /ensureTopicPreviews\(c, tid, saved\);/.test(fn("renderTopicPage")), true);
+  /* 没有新的 prompt / 写作层:前端一个字都不写 */
+  ["preview:", "你可能", "其实你", "也许你"].forEach(function (bad) {
+    checkEq("[pv9] 前端没有自己写引子(" + bad + ")", ens.indexOf(bad) >= 0, false);
+  });
+
+  /* —— ② 正文只进不出 —— */
+  const items = fn("topicPvItems");
+  checkEq("[pv9] 送出去的是完整正文,不是截断",
+    /body: String\(sc\.body \|\| ""\)/.test(items), true);
+  checkEq("[pv9] 送出去的不含正文以外的东西",
+    /\{ id: "s" \+ i, kind: "section", title: sc\.title \|\| "", body: String\(sc\.body \|\| ""\) \}/.test(items), true);
+  checkEq("[pv9] 收回来的只写进 previews,不碰 sections",
+    /dst\.previews = \{/.test(ens) && /dst\.sections\s*=/.test(ens) === false, true);
+  checkEq("[pv9] 服务端一批上限 12 段,前端跟着截(指纹才对得上)",
+    /\.slice\(0, 12\)/.test(items), true);
+  checkEq("[pv9] 服务端确实截 12",
+    /\.slice\(0, 12\)/.test(fs.readFileSync(path.join(__dirname, "..", "docs", "edge", "read-chart.ts"), "utf8")), true);
+  /* 正文在这段时间被重新生成过 → 这批引子不是它的,丢掉 */
+  checkEq("[pv9] 正文换过就丢掉这批引子",
+    /String\(dst\.sections\[0\]\.body \|\| ""\) !== String\(\(t\.sections\[0\] \|\| \{\}\)\.body \|\| ""\)/.test(ens), true);
+  checkEq("[pv9] 换了星盘就不写回去", /live\.id !== c\.id/.test(ens), true);
+
+  /* —— ③ 回落:永远不阻断画面 —— */
+  checkEq("[pv9] 没有 Supabase 就不送", /window\.Reading\.hasSupabase\(\)/.test(ens), true);
+  checkEq("[pv9] 服务端没部署这一层就不送(fetchPreviews 自己挡)",
+    /serverPreviewStyle\(\)\.then\(function \(sid\) \{\s*if \(!sid\) return \{\};/.test(html), true);
+  checkEq("[pv9] 已经有就不重复要", /cur\.ver === window\.Reading\.PREVIEW_VER/.test(ens), true);
+  checkEq("[pv9] 同一时间只跑一次", /pvBusy/.test(ens), true);
+  checkEq("[pv9] 这一轮失败就不再试(不会反覆烧生成)",
+    /pvSkip\[skipKey\] = true/.test(ens) && /\.catch\(function \(\) \{ pvBusy = false; pvSkip\[skipKey\] = true; \}\)/.test(ens), true);
+  /* 旧格式接不住 previews → 根本不送,不烧一次生成再丢掉 */
+  checkEq("[pv9] 旧格式(只有 raw)不送",
+    /if \(!slot \|\| !slot\.sections \|\| !slot\.sections\.length\) return;/.test(ens), true);
+
+  /* —— 真的跑一次 dpLead:有引子用引子,没有才摘录 —— */
+  const sandbox = { DP_LEADIN: /^(而|但|不过|所以|因此|也就是说|换句话说|同时|另外|其实|这|那|它|他们|如果|当)/ };
+  const src = ["dpSents", "dpDerive", "dpLead", "dpPvMap"].map(fn).join("\n") +
+    "\nreturn { dpLead: dpLead, dpPvMap: dpPvMap };";
+  const api = new Function("DP_LEADIN", "window", src)(sandbox.DP_LEADIN,
+    { Reading: { PREVIEW_VER: 1 } });
+  const body = "在别人眼里，你常常是那个先开口的人。不是因为你话多，而是因为沉默让你不安。" +
+               "\n\n这是一种很早就学会的能力。它让你在很多场合里都不会失礼。";
+  const sc = { title: "你是一个什么样的人", body: body };
+
+  const noGen = api.dpLead(sc, undefined);
+  checkEq("[pv9] 没有引子时回落到摘录(原文的句子)", body.indexOf(noGen.preview) >= 0, true);
+  checkEq("[pv9] 摘录不算 authored", noGen.authored, false);
+
+  const gen = { preview: "你很早就学会先把气氛接住。那让你几乎不会失礼，也让你很少有机会先照顾自己。",
+                keyInsights: ["你的从容是一种很早就学会的能力。", "先接住别人，是有代价的。"] };
+  const withGen = api.dpLead(sc, gen);
+  checkEq("[pv9] 有引子就用引子", withGen.preview, gen.preview);
+  checkEq("[pv9] 引子不是原文抄回来的", body.indexOf(withGen.preview) >= 0, false);
+  checkEq("[pv9] 重点跟着一起进画面", withGen.keys.length, 2);
+  checkEq("[pv9] 引子最多三条重点", api.dpLead(sc, { preview: "x", keyInsights: ["a", "b", "c", "d"] }).keys.length, 3);
+  checkEq("[pv9] 有引子时标成 authored", withGen.authored, true);
+
+  /* 版本对不上的 previews 当作没有 —— 不会拿旧写法硬套在新写法上 */
+  checkEq("[pv9] 版本对得上才用", Object.keys(api.dpPvMap({ previews: { ver: 1, map: { s0: gen } } })).length, 1);
+  checkEq("[pv9] 版本对不上就当作没有",
+    Object.keys(api.dpPvMap({ previews: { ver: 0, map: { s0: gen } } })).length, 0);
+
+  /* 主题页真的会去读那一份 map */
+  checkEq("[pv9] 主题页把 previews 接到每一段上",
+    /const PV = dpPvMap\(data\);/.test(fn("dpTopicHtml")) &&
+    /dpLead\(sc, PV\["s" \+ si\]\)/.test(fn("dpTopicHtml")), true);
+}
+
 function testCompassZhOnlyLabels() {
   const fs = require("fs");
   const html = fs.readFileSync(path.join(__dirname, "..", "app.html"), "utf8");
@@ -4169,6 +4269,7 @@ function main() {
   testAnchorsV11AndRenderV2();
   testCanonicalStorage();
   testTopicLayout();
+  testTopicPreviews();
   testCompassZhOnlyLabels();
   return Promise.all([genJobs, liveJobs, voiceJobs, v12Jobs]).then(function () { return testPlaces(); }).then(function () {
     console.log("\n对照来源:" + REF.reference);

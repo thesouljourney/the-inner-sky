@@ -9278,6 +9278,70 @@ window.Guide = (function () {
       '</span><a class="dp-cta" href="' + (o.href || LANDING_TOPICS) + '">' + cta + "</a>" + hint + "</div>";
   }
 
+  /* ============================================================
+     九大主题的阅读预览:引子改成「读完正文之后重新写的」
+     ------------------------------------------------------------
+     在这之前,主题页那几行引子一律来自 dpDerive —— 也就是把正文
+     开头的句子原样摘下来。它保证不会瞎编,但它只是【原文的前几句】:
+     没有重点、进不去、九段读起来长得一模一样。
+
+     服务端其实早就有这一层(read-chart kind="preview"):
+     它拿到这个人自己那一段【完整正文】,读懂之后重新写成
+       preview     = 2–4 个短句,让他先感受到一点自己
+       keyInsights = 1–3 条真正重要的洞察点
+     「属于我的生命脉络」已经在用了,九大主题一直没有接上 ——
+     这里只是把同一条路接过来,没有新的 prompt、没有新的写作层。
+
+     ⚠ 正文一个字都不会被动到:
+       · 送出去的是正文,收回来的只有 preview / keyInsights
+       · 服务端不回写、不改写 fullContent
+       · 收不到、没部署、验收不过 → 安静回落到原本的本地摘录
+     ⚠ 指纹是正文内容本身的杂凑 → 正文没变就命中服务端快取,
+       同一份解读一辈子只会真的呼叫模型一次。
+     ============================================================ */
+  function topicPvItems(t) {
+    /* 只送 sections。主题页的「从这里开始」走 dpStartHtml,整段正文本来就
+       全部呈现,不需要引子 —— 不送就不会为了一段没人看的引子多花一次生成。
+       服务端一批上限 12 段,这里跟着截,免得指纹里有、实际却被丢掉。 */
+    return (t.sections || []).slice(0, 12).map(function (sc, i) {
+      return { id: "s" + i, kind: "section", title: sc.title || "", body: String(sc.body || "") };
+    });
+  }
+  function ensureTopicPreviews(c, tid, t) {
+    if (!c || !t || !tid || pvBusy) return;
+    if (!window.Reading.hasSupabase()) return;
+    const TK = window.Reading.LK("topics");
+    const slot = (c[TK] || {})[tid];
+    /* 旧格式(只存着 raw、每次重新解析)接不住 previews:reviveTopic 会另外
+       产生一个物件,写上去也存不下来。与其烧一次生成再丢掉,不如根本不送。 */
+    if (!slot || !slot.sections || !slot.sections.length) return;
+    const skipKey = c.id + "|" + TK + "|" + tid;
+    if (pvSkip[skipKey]) return;
+    const cur = t.previews;
+    if (cur && cur.ver === window.Reading.PREVIEW_VER && cur.map && Object.keys(cur.map).length) return;
+    const items = topicPvItems(t);
+    if (!items.length) return;
+    pvBusy = true;
+    window.Reading.fetchPreviews(items).then(function (map) {
+      pvBusy = false;
+      if (!map || !Object.keys(map).length) { pvSkip[skipKey] = true; return; }
+      const live = activeChart();
+      if (!live || live.id !== c.id) return;
+      const dst = (live[TK] || {})[tid];
+      if (!dst || !dst.sections || !dst.sections.length) return;
+      // 这段时间正文被重新生成过 → 这批预览已经不是它的了,丢掉
+      if (String(dst.sections[0].body || "") !== String((t.sections[0] || {}).body || "")) return;
+      dst.previews = {
+        ver: window.Reading.PREVIEW_VER,
+        styleId: window.Reading.PREVIEW_STYLE_ID,
+        ts: new Date().toISOString().slice(0, 10),
+        map: map
+      };
+      window.Cloud.updateChart(live).catch(function () { });
+      if (location.hash.indexOf("#/topic/" + tid) === 0) routeRefresh();
+    }).catch(function () { pvBusy = false; pvSkip[skipKey] = true; });
+  }
+
   // ---------- 页面:九大主题 ----------
   function renderTopicPage(tid) {
     const t = window.Reading.findTopic(tid);
@@ -9290,7 +9354,11 @@ window.Guide = (function () {
     if (!c || !curResult) body = dpNeedChart();
     else {
       const saved = window.Reading.reviveTopic((c[window.Reading.LK("topics")] || {})[tid]);
-      if (saved) { body = dpTopicHtml(saved, tName, "theme_reading"); markTopicRead(tid); }
+      if (saved) {
+        body = dpTopicHtml(saved, tName, "theme_reading");
+        markTopicRead(tid);
+        ensureTopicPreviews(c, tid, saved);
+      }
       else if (topicBusy) body = dpLoading(dpT("正在为你整理这一章,大约需要一分钟…", "Preparing this chapter for you — about a minute…"));
       else if (topicErrs[tid]) body = dpError(topicErrs[tid], "dpRetryT");
       else if (window.I18N.isEN()) body = '<div class="dp-card">' + missingLangHtml("dpGenT") + "</div>";
