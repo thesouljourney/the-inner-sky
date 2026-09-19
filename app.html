@@ -2387,6 +2387,158 @@
     #dpage.thread-page .rise{opacity:1;transform:none;transition:none}
   }
 
+
+  /* ============================================================
+     九大主题(#/topic/<id>)—— 编辑式的分段版面
+     ------------------------------------------------------------
+     以前这一页与三十道探索题共用 dpAnswerHtml:一张很长的卡片,
+     所有段落一路往下摊开,没有任何停顿点。九个主题的正文本来就是
+     全站最长的一种,摊平之后看起来只有「长」,读者没有地方可以喘气,
+     也没有任何可以动手的地方。
+
+     现在改成一段一段的编辑式版面:
+       · 左边一个圆形插画位(素材未到之前是一个柔和的水彩圆 + 星记号)
+       · 右边是段号 / 标题 / 引子,想读再展开完整原文
+     文字一个字都没有改 —— 完整原文一直在 DOM 里(.tp-full),
+     展开只是把高度放开。引子来自既有的 dpLead(生成端的 preview,
+     没有才回落到摘录),前端不会自己写任何一句观察。
+
+     ⚠ 每一条规则都必须带 .topic-page —— 三十道探索题与生命蓝图
+     仍然走 dpAnswerHtml,一个像素都不受影响。
+     ============================================================ */
+  #dpage.topic-page{--dp-wide:min(1120px,calc(100vw - 96px));background:#f7f3ef}
+  @media(max-width:1024px){#dpage.topic-page{--dp-wide:100%}}
+
+  /* 正文整体退到一张圆角白卡里(第二张参考图的做法):
+     卡片本身就是「这一章有边界」的讯号,不再是一条没有尽头的长条。 */
+  #dpage.topic-page .tp-wrap{
+    background:var(--dp-cloud);border:1px solid var(--dp-line);
+    border-radius:clamp(20px,2.4vw,34px);
+    padding:clamp(26px,4vw,54px) clamp(20px,3.6vw,52px);
+    box-shadow:0 18px 60px -46px rgba(34,35,58,.5)
+  }
+
+  /* —— 开场引言:一个安静的方框,不是大字引号 —— */
+  #dpage.topic-page .tp-intro{
+    border:1px solid var(--dp-line);border-radius:18px;
+    background:rgba(248,242,237,.6);
+    padding:clamp(20px,2.6vw,30px) clamp(18px,3vw,36px);
+    text-align:center;margin-bottom:clamp(26px,3.4vw,44px)
+  }
+  #dpage.topic-page .tp-intro p{
+    margin:0;font-family:var(--dp-serif);font-weight:300;
+    font-size:clamp(15px,1.15vw,17px);line-height:2.15;color:var(--dp-ink)
+  }
+
+  /* —— 分段:圆形插画位 + 正文 —— */
+  #dpage.topic-page .tp-sec{
+    display:grid;grid-template-columns:clamp(112px,13vw,178px) minmax(0,1fr);
+    gap:clamp(20px,3vw,46px);align-items:start;
+    padding:clamp(26px,3.4vw,44px) 0
+  }
+  #dpage.topic-page .tp-sec + .tp-sec{border-top:1px solid var(--dp-line)}
+  #dpage.topic-page .tp-sec:first-of-type{padding-top:clamp(8px,1vw,14px)}
+
+  /* 插画位:素材还没来的时候不是开天窗,而是一个刻意做过的水彩圆。
+     src 一旦补上(TOPIC_SEC_ART),圆圈就换成那张图,版面不必再动。 */
+  #dpage.topic-page .tp-art{
+    position:relative;aspect-ratio:1;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    background:
+      radial-gradient(ellipse at 34% 28%,rgba(255,255,255,.9) 0%,rgba(255,255,255,0) 56%),
+      radial-gradient(ellipse at 72% 74%,rgba(235,196,195,.16) 0%,rgba(235,196,195,0) 64%),
+      radial-gradient(circle at 50% 50%,rgba(170,160,213,.09) 0%,rgba(248,242,237,.34) 70%,rgba(248,242,237,0) 100%);
+    box-shadow:inset 0 0 0 1px rgba(240,232,227,.9);
+    overflow:hidden;margin-top:6px
+  }
+  #dpage.topic-page .tp-art img{width:100%;height:100%;object-fit:cover;display:block}
+  #dpage.topic-page .tp-art .gl{
+    display:block;color:var(--dp-gold);opacity:.55;transform:scale(2.1);transform-origin:center
+  }
+
+  #dpage.topic-page .tp-body{min-width:0}
+  #dpage.topic-page .tp-no{
+    display:block;font-family:var(--dp-display);font-size:clamp(17px,1.5vw,21px);
+    letter-spacing:.2em;color:var(--dp-gold);margin-bottom:6px
+  }
+  #dpage.topic-page .tp-h-row{display:flex;align-items:flex-start;gap:12px}
+  #dpage.topic-page h3.tp-h{
+    flex:1;margin:0;font-family:var(--dp-serif);font-weight:600;
+    font-size:clamp(19px,1.8vw,26px);line-height:1.55;color:var(--dp-ink);letter-spacing:.01em
+  }
+  #dpage.topic-page .tp-h-row .fav-btn{flex:none;margin-top:4px}
+
+  /* 引子:收起时读到的那几句。与展开后的原文同一份资料的两种读法。 */
+  #dpage.topic-page .tp-peek .pv{
+    margin:14px 0 0;font-size:15px;line-height:2.05;color:rgba(34,35,58,.86)
+  }
+  #dpage.topic-page .tp-peek .ch-keys{margin-top:14px}
+
+  /* 展开:高度由 JS 按实际内容给,这里只负责过渡与收起状态 */
+  #dpage.topic-page .tp-full{
+    max-height:0;overflow:hidden;
+    transition:max-height .6s cubic-bezier(.22,1,.36,1),opacity .45s ease;
+    opacity:0
+  }
+  #dpage.topic-page .tp-sec.open .tp-full{opacity:1}
+  #dpage.topic-page .tp-sec.open .tp-peek .pv{display:none}
+  #dpage.topic-page .tp-sec.open .tp-peek .ch-keys{display:none}
+  #dpage.topic-page .tp-full .dp-prose{margin-top:14px}
+  #dpage.topic-page .tp-full .dp-prose p{
+    margin:0 0 18px;font-size:15px;line-height:2.08;color:rgba(34,35,58,.9)
+  }
+  #dpage.topic-page .tp-full .dp-prose p:last-child{margin-bottom:0}
+
+  #dpage.topic-page .tp-open,#dpage.topic-page .tp-shut{
+    appearance:none;background:none;border:0;cursor:pointer;padding:12px 0 0;
+    display:inline-flex;align-items:center;gap:8px;
+    font-family:var(--dp-sans);font-size:13px;letter-spacing:.08em;
+    color:#8176ad;transition:opacity .3s
+  }
+  #dpage.topic-page .tp-open:hover,#dpage.topic-page .tp-shut:hover{opacity:.72}
+  #dpage.topic-page .tp-open:focus-visible,#dpage.topic-page .tp-shut:focus-visible{
+    outline:1px solid rgba(129,118,173,.6);outline-offset:4px;border-radius:8px
+  }
+  #dpage.topic-page .tp-sec.open .tp-open{display:none}
+  #dpage.topic-page .tp-open .cv,#dpage.topic-page .tp-shut .cv{font-size:11px}
+
+  /* —— 尾段:留给你的思考 / 试试看 并排 —— */
+  #dpage.topic-page .tp-pair{
+    display:grid;grid-template-columns:1fr 1fr;gap:clamp(14px,1.8vw,24px);
+    margin-top:clamp(26px,3.4vw,44px)
+  }
+  #dpage.topic-page .tp-pair > *{margin:0}
+  #dpage.topic-page .tp-pair .dp-reflect{
+    border:1px solid var(--dp-line);border-radius:18px;
+    background:rgba(248,242,237,.55);padding:clamp(20px,2.4vw,28px);box-sizing:border-box
+  }
+  #dpage.topic-page .tp-pair .dp-reflect .eb{display:none}
+  #dpage.topic-page .tp-pair .dp-reflect .rule{display:none}
+  #dpage.topic-page .tp-pair .dp-reflect .glow{display:none}
+  #dpage.topic-page .tp-pair .dp-reflect h3.rt{
+    margin:0 0 14px;font-family:var(--dp-serif);font-weight:600;font-size:16px;color:var(--dp-ink)
+  }
+  #dpage.topic-page .tp-pair .dp-reflect .bd p{font-size:14.5px;line-height:2}
+
+  /* —— 尾段的其他共用区块:收进同一张白卡的节奏里 —— */
+  #dpage.topic-page .tp-tail{margin-top:clamp(26px,3.4vw,44px)}
+  #dpage.topic-page .tp-tail > * + *{margin-top:clamp(22px,2.8vw,36px)}
+
+  /* —— 平板 / 手机:插画缩小并让到标题旁边,正文永远占满一行 —— */
+  @media(max-width:767px){
+    #dpage.topic-page .tp-sec{
+      grid-template-columns:1fr;gap:16px;padding:26px 0
+    }
+    #dpage.topic-page .tp-art{
+      width:84px;aspect-ratio:1;margin:0 0 2px
+    }
+    #dpage.topic-page .tp-art .gl{transform:scale(1.7)}
+    #dpage.topic-page h3.tp-h{font-size:19px;line-height:1.62}
+    #dpage.topic-page .tp-peek .pv{font-size:15px;line-height:2}
+    #dpage.topic-page .tp-open,#dpage.topic-page .tp-shut{min-height:44px;font-size:13.5px}
+    #dpage.topic-page .tp-pair{grid-template-columns:1fr}
+  }
+
   /* ============================================================
      我的内在指南(#/compass)—— 新增页面的样式
      ------------------------------------------------------------
@@ -8204,6 +8356,8 @@ window.Guide = (function () {
     // 生命脉络是编辑式长文版面(生命线 / 章节号 / 插画位),同样只挂在这一页
     $("dpage").classList.toggle("thread-page", r.k === "map");
     // 内在指南同样自己一套版面,样式全锁在这个 class 底下
+    // 九大主题是编辑式的分段版面(圆形插画位 / 段号 / 可展开的原文),同样只挂在这一页
+    $("dpage").classList.toggle("topic-page", r.k === "topic");
     $("dpage").classList.toggle("compass-page", r.k === "compass");
     /* 开发预览的样式全锁在这个额外的 class 底下 —— 没有它,这一页与修改前一模一样 */
     $("dpage").classList.toggle("cp-preview", r.k === "compass" && !!r.dev);
@@ -8264,6 +8418,13 @@ window.Guide = (function () {
       '<circle cx="9" cy="9" r="7.2" fill="none" stroke="currentColor" stroke-width=".8" opacity=".5"/>' +
       '<path fill="currentColor" d="M9 1.6 10.2 7.8 16.4 9l-6.2 1.2L9 16.4 7.8 10.2 1.6 9l6.2-1.2Z"/></svg>'
   ];
+
+  /* 九大主题每一段左边那个圆形插画位。
+     素材还没到 —— 这里先留一个空阵列:空的时候 .tp-art 会用 CSS 的水彩圆
+     加一个星记号顶着,版面是完整的,不会开天窗。
+     素材到了之后只要把路径依序填进来(第 i 段用第 i % 长度 张),
+     其他地方一行都不用改。插画一律是装饰:aria-hidden + 空 alt。 */
+  const TOPIC_SEC_ART = [];
 
   const VOW_ORB = [
     ["self", "sun"], ["emotion", "venus"], ["career", "saturn"], ["family", "moon"],
@@ -8970,6 +9131,100 @@ window.Guide = (function () {
     h += dpTailBlocks(data);
     return h;
   }
+  /* ============================================================
+     九大主题的呈现层(dpTopicHtml)
+     ------------------------------------------------------------
+     资料、fav 按钮、data-saveable 的挂点、sec-<i> 的锚点、
+     尾段那几个共用 component 全部沿用 dpAnswerHtml 那一份 ——
+     这里只多包一层编辑式版面(圆形插画位 / 段号 / 可展开的原文),
+     样式全锁在 #dpage.topic-page 底下。
+
+     三十道探索题与生命蓝图仍然走 dpAnswerHtml,一个字元都没有变。
+
+     ⚠ 前端不会写出任何一句新的文字:
+       · 完整原文一直在 DOM 里(.tp-full),展开只是把高度放开
+       · 引子走既有的 dpLead —— 生成端的 preview 优先,没有才回落到摘录
+     ============================================================ */
+  function dpTopicSecArt(i) {
+    const src = TOPIC_SEC_ART[i % (TOPIC_SEC_ART.length || 1)];
+    return '<div class="tp-art" aria-hidden="true">' +
+      (src
+        ? '<img src="' + src + '" alt="" loading="lazy" decoding="async">'
+        : '<span class="gl">' + THREAD_NODE[i % THREAD_NODE.length] + "</span>") +
+      "</div>";
+  }
+  function dpTopicHtml(data, favSource, favType) {
+    favType = favType || "";
+    const PV = dpPvMap(data);
+    let h = '<div class="tp-wrap">';
+    if (data.tagline)
+      h += '<div class="tp-intro"><p>' + esc0(data.tagline) + "</p></div>";
+    h += (data.sections || []).map(function (sc, si) {
+      const k = favKey(favSource, sc.title || "", sc.body || "");
+      const btn = '<button class="fav-btn' + (isFaved(k) ? " on" : "") + '" data-fav="' + esc0(k) +
+        '" data-text="' + esc0(String(sc.body || "").slice(0, 300)) + '" data-source="' + esc0(favSource) +
+        '" data-source-type="' + esc0(favType) +
+        '" data-section="' + esc0(sc.title || "") + '" title="' + esc0(T("saveIt")) + '">' + (isFaved(k) ? "★" : "☆") + "</button>";
+      const d = dpLead(sc, PV["s" + si]);
+      return '<section class="tp-sec" id="sec-' + si + '">' +
+        dpTopicSecArt(si) +
+        '<div class="tp-body">' +
+        '<span class="tp-no">' + ("0" + (si + 1)).slice(-2) + "</span>" +
+        '<div class="tp-h-row">' +
+        (sc.title ? '<h3 class="tp-h">' + esc0(sc.title) + "</h3>" : "<span></span>") + btn + "</div>" +
+        '<div class="tp-peek">' +
+        (d.preview ? '<p class="pv">' + esc0(d.preview) + "</p>" : "") +
+        dpKeysHtml(d.keys) +
+        '<button type="button" class="tp-open" aria-expanded="false" aria-controls="tpfull-' + si + '">' +
+        '<span class="tx">' + dpT("继续读这一段", "Read this part") + '</span>' +
+        '<span class="cv" aria-hidden="true">↓</span></button></div>' +
+        '<div class="tp-full" id="tpfull-' + si + '">' +
+        '<div class="dp-prose" data-saveable data-source="' + esc0(favSource) +
+        '" data-source-type="' + esc0(favType) +
+        '" data-section="' + esc0(sc.title || "") + '">' + dpPara(sc.body) + "</div>" +
+        '<button type="button" class="tp-shut"><span class="tx">' + dpT("收起", "Close") + '</span>' +
+        '<span class="cv" aria-hidden="true">↑</span></button></div>' +
+        "</div></section>";
+    }).join("");
+    /* 尾段:「留给你的思考」与「试试看」并排 —— 两件事本来就是一组,
+       上下叠着看起来只是页面又长了一截。其余共用区块照旧往下排。 */
+    let t = "";
+    if (data.question && data.action)
+      t += '<div class="tp-pair">' + dpReflectHtml("q", data.question) +
+        dpReflectHtml("a", data.action) + "</div>";
+    else if (data.question) t += '<div class="tp-pair one">' + dpReflectHtml("q", data.question) + "</div>";
+    else if (data.action) t += '<div class="tp-pair one">' + dpReflectHtml("a", data.action) + "</div>";
+    let tail = "";
+    if (data.aha && data.aha.length) tail += dpKeepHtml(data.aha);
+    if (data.steps && data.steps.length) tail += dpStartHtml(data.steps);
+    if (tail) t += '<div class="tp-tail">' + tail + "</div>";
+    return h + t + "</div>";
+  }
+  /* 收起 ↔ 展开。原文一直在 DOM 里,这里只是放开高度 ——
+     与生命脉络那一页同一个做法(量 scrollHeight,展开完成后把上限拿掉)。 */
+  function dpBindTopicUI() {
+    const host = $("dpage");
+    if (!host || !host.classList.contains("topic-page")) return;
+    host.querySelectorAll(".tp-sec").forEach(function (sec) {
+      const open = sec.querySelector(".tp-open");
+      const shut = sec.querySelector(".tp-shut");
+      const full = sec.querySelector(".tp-full");
+      if (!open || !full) return;
+      full.addEventListener("transitionend", function (e) {
+        if (e.target !== full || e.propertyName !== "max-height") return;
+        if (full.classList.contains("on")) full.style.maxHeight = "none";
+      });
+      const set = function (on) {
+        sec.classList.toggle("open", on);
+        full.classList.toggle("on", on);
+        open.setAttribute("aria-expanded", on ? "true" : "false");
+        full.style.maxHeight = full.scrollHeight + "px";
+        if (!on) { full.getBoundingClientRect(); full.style.maxHeight = "0px"; open.focus(); }
+      };
+      open.addEventListener("click", function () { set(true); });
+      if (shut) shut.addEventListener("click", function () { set(false); });
+    });
+  }
   function dpNeedChart() {
     // 已登录但资料还在路上 → 显示等待,而不是「没有星盘」
     if (!chartsSettled && window.Cloud.hasSession()) {
@@ -9035,7 +9290,7 @@ window.Guide = (function () {
     if (!c || !curResult) body = dpNeedChart();
     else {
       const saved = window.Reading.reviveTopic((c[window.Reading.LK("topics")] || {})[tid]);
-      if (saved) { body = dpAnswerHtml(saved, tName, "theme_reading"); markTopicRead(tid); }
+      if (saved) { body = dpTopicHtml(saved, tName, "theme_reading"); markTopicRead(tid); }
       else if (topicBusy) body = dpLoading(dpT("正在为你整理这一章,大约需要一分钟…", "Preparing this chapter for you — about a minute…"));
       else if (topicErrs[tid]) body = dpError(topicErrs[tid], "dpRetryT");
       else if (window.I18N.isEN()) body = '<div class="dp-card">' + missingLangHtml("dpGenT") + "</div>";
@@ -9048,6 +9303,9 @@ window.Guide = (function () {
     if (g) g.addEventListener("click", function () { generateTopic(tid); });
     const rt = document.getElementById("dpRetryT");
     if (rt) rt.addEventListener("click", function () { topicErrs[tid] = null; generateTopic(tid); });
+    /* 阅读节奏:先看引子 → 想读再展开 → 读到的是完整原文。
+       原文一直在 DOM 里,展开没有替换掉任何一个字。 */
+    dpBindTopicUI();
     // 中文首次开启:自动开始生成(与旧行为一致;英文由使用者按钮触发)
     if (c && curResult && !topicBusy && !topicErrs[tid] && !window.I18N.isEN() &&
         !window.Reading.reviveTopic((c[window.Reading.LK("topics")] || {})[tid])) generateTopic(tid);

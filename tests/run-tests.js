@@ -1936,6 +1936,116 @@ function testCompassVoiceV11() {
 }
 
 /* §6.2-1:中文模式不再显示英文小标 */
+/* ============================================================
+   §36 · 九大主题的编辑式版面(topic-page)
+   ------------------------------------------------------------
+   这一次只改【呈现】。要守住的三件事:
+     ① 文字一个字都没有被改、被截断、被前端补写
+     ② 三十道探索题与生命蓝图仍然走 dpAnswerHtml,一个像素都没变
+     ③ 样式全锁在 #dpage.topic-page 底下,不外溢到任何其他页
+   ============================================================ */
+function testTopicLayout() {
+  const crypto = require("crypto");
+  const fs = require("fs");
+  const html = fs.readFileSync(path.join(__dirname, "..", "app.html"), "utf8");
+  const fn = function (name) {
+    const i = html.indexOf("\n  function " + name + "(");
+    if (i < 0) return "";
+    let k = html.indexOf("{", i), d = 0;
+    for (; k < html.length; k++) {
+      if (html[k] === "{") d++;
+      else if (html[k] === "}") { d--; if (!d) break; }
+    }
+    return html.slice(i, k + 1);
+  };
+
+  /* —— ① 只有九大主题换了版面 —— */
+  const topicPage = fn("renderTopicPage");
+  checkEq("[tp] 九大主题改走 dpTopicHtml",
+    /body = dpTopicHtml\(saved, tName, "theme_reading"\)/.test(topicPage), true);
+  checkEq("[tp] 九大主题不再走 dpAnswerHtml", /dpAnswerHtml/.test(topicPage), false);
+  checkEq("[tp] 三十道探索题仍然走 dpAnswerHtml",
+    /dpAnswerHtml\(saved, q\.q, "question"\)/.test(fn("renderQPage")), true);
+  /* dpAnswerHtml 现在只剩三十道探索题在用 —— 定义一处 + 呼叫一处 */
+  checkEq("[tp] dpAnswerHtml 只被三十道探索题呼叫",
+    (html.match(/dpAnswerHtml\(/g) || []).length, 2);
+  /* dpAnswerHtml 与生命蓝图这一页本身一个字都没动 */
+  const lock = function (name) {
+    return crypto.createHash("sha256").update(fn(name)).digest("hex").slice(0, 16);
+  };
+  checkEq("[tp] dpAnswerHtml 的内容没有被改", lock("dpAnswerHtml"), "16ecaa4faf7f07b9");
+  checkEq("[tp] 生命蓝图这一页没有被改", lock("renderReadingPage"), "61dc64f60d32f416");
+  checkEq("[tp] 三十道探索题这一页没有被改", lock("renderQPage"), "893d3c71d47ab628");
+
+  /* —— ② 文字没有被动过 —— */
+  const tp = fn("dpTopicHtml");
+  checkEq("[tp] 完整原文一直在 DOM 里(不是展开时才换进来)",
+    /dpPara\(sc\.body\)/.test(tp), true);
+  checkEq("[tp] 引子走既有的 dpLead,不是前端自己写的",
+    /dpLead\(sc, PV\["s" \+ si\]\)/.test(tp), true);
+  ["substr(", "substring(", "text-overflow", "line-clamp"].forEach(function (bad) {
+    checkEq("[tp] 正文没有被截断(" + bad + ")", tp.indexOf(bad) >= 0, false);
+  });
+  /* 两处 slice 都不碰正文:一处是 fav 的 data-text(与 dpAnswerHtml 同一行),
+     一处是段号补零。dpPara(sc.body) 送进去的永远是完整原文。 */
+  checkEq("[tp] slice 只出现在 fav 的 data-text 与段号补零",
+    (tp.match(/\.slice\([^)]*\)/g) || []).sort().join(" "), '.slice(-2) .slice(0, 300)');
+  checkEq("[tp] 收藏挂点与旧版一致",
+    /data-saveable data-source=/.test(tp) && /data-source-type=/.test(tp) &&
+    /data-section=/.test(tp), true);
+  checkEq("[tp] 段落锚点 sec-<i> 保留(深链不会断)", /id="sec-' \+ si \+ '"/.test(tp), true);
+  /* 尾段仍然是那几个共用 component,不是另外写的一套 */
+  ["dpReflectHtml", "dpKeepHtml", "dpStartHtml"].forEach(function (c) {
+    checkEq("[tp] 尾段共用 " + c, tp.indexOf(c) >= 0, true);
+  });
+  checkEq("[tp] 「留给你的思考」与「试试看」并排", /class="tp-pair"/.test(tp), true);
+
+  /* —— ③ 样式全锁在 .topic-page 底下 —— */
+  const css = html.slice(html.indexOf("九大主题(#/topic/<id>)—— 编辑式的分段版面"),
+                         html.indexOf("我的内在指南(#/compass)—— 新增页面的样式"))
+    .replace(/^[\s\S]*?={20,} \*\//, "")          // 掉开头那段说明(它没有自己的 /* )
+    .replace(/\/\*[\s\S]*?\*\//g, "")            // 其余注解
+    .replace(/\/\* ={20,}[\s\S]*$/, "");          // 下一个区块的抬头
+  checkEq("[tp] 找得到 topic-page 的样式区块", css.length > 2000, true);
+  const rules = css
+    .split("}").map(function (x) { return x.split("{")[0].trim(); })
+    .filter(function (x) { return x && x.indexOf("@") < 0 && x.indexOf(":") !== 0; });
+  const leaked = [];
+  rules.forEach(function (r) {
+    r.split(",").forEach(function (sel) {
+      sel = sel.trim();
+      if (!sel) return;
+      if (sel.indexOf("#dpage.topic-page") !== 0) leaked.push(sel);
+    });
+  });
+  checkEq("[tp] 每一条规则都带 .topic-page(没有外溢)", leaked.join(" | "), "");
+  checkEq("[tp] topic-page 这个 class 只挂在九大主题这一页",
+    /classList\.toggle\("topic-page", r\.k === "topic"\)/.test(html), true);
+
+  /* —— 插画素材位:还没到,但版面已经留好 —— */
+  checkEq("[tp] 插画位是可替换的阵列", /const TOPIC_SEC_ART = \[\];/.test(html), true);
+  checkEq("[tp] 素材还没到的时候不开天窗(回落到水彩圆 + 星记号)",
+    /src\s*\?[\s\S]{0,160}THREAD_NODE\[i % THREAD_NODE\.length\]/.test(fn("dpTopicSecArt")), true);
+  checkEq("[tp] 插画一律是装饰,不承载内容",
+    /class="tp-art" aria-hidden="true"/.test(fn("dpTopicSecArt")) &&
+    /alt=""/.test(fn("dpTopicSecArt")), true);
+  /* TDZ:render*Page 在冷启动那一刻就会用到它 */
+  checkEq("[tp] TOPIC_SEC_ART 宣告在 applyRoute() 之前",
+    html.indexOf("const TOPIC_SEC_ART") < html.lastIndexOf("applyRoute();"), true);
+
+  /* —— 展开:只放开高度,没有任何文字被换掉 —— */
+  const bind = fn("dpBindTopicUI");
+  checkEq("[tp] 展开只改高度", /full\.style\.maxHeight = full\.scrollHeight/.test(bind), true);
+  checkEq("[tp] 展开不会写入 innerHTML", /innerHTML/.test(bind), false);
+  checkEq("[tp] 收起之后焦点回到按钮(键盘不会掉出去)", /open\.focus\(\)/.test(bind), true);
+  checkEq("[tp] aria-expanded 跟着状态走", /aria-expanded/.test(bind) && /aria-expanded/.test(tp), true);
+  checkEq("[tp] 只在九大主题这一页挂事件",
+    /classList\.contains\("topic-page"\)/.test(bind), true);
+  /* footer 这一次完全没有动 */
+  checkEq("[tp] 页尾没有被改(仍然是同一个 dpReturnFoot)",
+    /const foot = dpReturnFoot\(\);/.test(topicPage), true);
+}
+
 function testCompassZhOnlyLabels() {
   const fs = require("fs");
   const html = fs.readFileSync(path.join(__dirname, "..", "app.html"), "utf8");
@@ -4058,6 +4168,7 @@ function main() {
   testCompassSituations();
   testAnchorsV11AndRenderV2();
   testCanonicalStorage();
+  testTopicLayout();
   testCompassZhOnlyLabels();
   return Promise.all([genJobs, liveJobs, voiceJobs, v12Jobs]).then(function () { return testPlaces(); }).then(function () {
     console.log("\n对照来源:" + REF.reference);
