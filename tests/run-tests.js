@@ -2041,6 +2041,13 @@ function testTopicLayout() {
     checkEq("[tp] " + t + " 至少备 6 张(最长的一章也不会重复)", set.length >= 6, true);
     checkEq("[tp] " + t + " 同一组里没有重复", new Set(set).size, set.length);
   });
+  /* ⚠ 54 个位置全部用不一样的图 —— 跨主题也不共用。
+     素材池不够的时候这一条会红,那是刻意的:要嘛补素材,要嘛明确决定共用。 */
+  const flat = TIDS.reduce(function (a, t) { return a.concat(SETS[t] || []); }, []);
+  const dupes = Object.keys(flat.reduce(function (m, n) { m[n] = (m[n] || 0) + 1; return m; }, {}))
+    .filter(function (n) { return flat.filter(function (x) { return x === n; }).length > 1; });
+  checkEq("[tp] 54 个位置没有任何一张图重复", dupes.sort().join(" "), "");
+  checkEq("[tp] 位置数就是 54", flat.length, 54);
   /* 每一个被点到名的档案都真的在 repo 里 —— 漏一张就是线上一个破图 */
   const missing = [];
   Object.keys(SETS).forEach(function (t) {

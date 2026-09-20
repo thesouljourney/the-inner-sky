@@ -8534,15 +8534,17 @@ window.Guide = (function () {
                       "partner", "wealth", "study", "body"];
   const TOPIC_SEC_ART = {
     /* 前四张对着设计稿那四项(方向 / 模式 / 课题 / 理想状态),
-       第五、六张是长章节才会用到的延伸。 */
+       第五、六张是长章节才会用到的延伸。
+       ⚠ 54 个位置全部用不一样的图 —— 不只是同一个主题内不重复,
+         跨主题也不共用。测试逐张检查。 */
     self:    ["mirror", "ripple", "blossom", "moon", "cloud", "lantern"],
     emotion: ["rose", "heart", "labyrinth", "butterfly-pink", "rings", "planet-pink"],
     career:  ["signpost", "mountain", "compass", "lighthouse", "plane", "telescope"],
     family:  ["tree", "leaf", "bird", "nest", "cottage", "cloche"],
-    love:    ["tulip", "swans", "shell", "infinity", "heart", "jar"],
+    love:    ["tulip", "swans", "shell", "infinity", "rings-pink", "jar"],
     partner: ["vial", "planet-blue", "butterfly-blue", "crystals", "star", "crystal"],
     wealth:  ["coin", "coins", "sprout", "cornucopia", "hourglass", "planter"],
-    study:   ["scroll", "key", "feather", "telescope", "hourglass", "lantern"],
+    study:   ["book", "globe", "magnifier", "stairs", "scroll", "key"],
     body:    ["droplet", "leaves", "lotus", "sun", "stones", "incense"]
   };
 
