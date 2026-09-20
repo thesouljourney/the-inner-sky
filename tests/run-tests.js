@@ -2007,6 +2007,26 @@ function testTopicLayout() {
     .replace(/\/\*[\s\S]*?\*\//g, "")            // 其余注解
     .replace(/\/\* ={20,}[\s\S]*$/, "");          // 下一个区块的抬头
   checkEq("[tp] 找得到 topic-page 的样式区块", css.length > 2000, true);
+
+  /* —— 开场引言:金线方框 + 四角饰记 + 一对引号 —— */
+  checkEq("[tp] 开场引言有金色描边", /\.tp-intro\{[^}]*border:1px solid rgba\(232,211,162,/.test(css), true);
+  /* 四个角要四层同一张图:只给一张的话 background-position 的后三个值不会生效 —— 这是真的会发生的 CSS 坑,不是随手挑的断言 */
+  const introBlock = css.slice(css.indexOf(".tp-intro{"), css.indexOf(".tp-intro p{"));
+  const bgImgCount = (introBlock.match(/url\(/g) || []).length;
+  checkEq("[tp] 四个角各自一层背景图(不是一张图四个位置)", bgImgCount, 4);
+  checkEq("[tp] 四层用的是同一张十字饰记(维护只改一处)",
+    new Set(introBlock.match(/url\('[^']*'\)/g) || []).size, 1);
+  checkEq("[tp] 四个位置各不相同(四个角真的分开了)",
+    new Set((introBlock.match(/background-position:\s*([^;}]+)/) || [, ""])[1]
+      .split(",").map(function (x) { return x.trim(); })).size, 4);
+  checkEq("[tp] 开阖引号是 CSS 生成的,不是塞进 HTML 里的新文字",
+    /\.tp-intro::before\{content:"\\201C"/.test(css) &&
+    /\.tp-intro::after\{content:"\\201D"/.test(css), true);
+  checkEq("[tp] data.tagline 本身一个字都没被改",
+    /if \(data\.tagline\)\s*\n\s*h \+= '<div class="tp-intro"><p>' \+ esc0\(data\.tagline\) \+ "<\/p><\/div>";/.test(tp), true);
+  /* 手机上标题常常摊成两三行,引号需要额外的留白,不然会跟文字挤在一起 —— 这条守住那次修正 */
+  checkEq("[tp] 手机上开场引言另外留了垂直空间给引号(不跟文字挤在一起)",
+    /\.tp-intro\{padding:38px/.test(css), true);
   const rules = css
     .split("}").map(function (x) { return x.split("{")[0].trim(); })
     .filter(function (x) { return x && x.indexOf("@") < 0 && x.indexOf(":") !== 0; });

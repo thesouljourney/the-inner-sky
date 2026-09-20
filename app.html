@@ -2488,17 +2488,39 @@
     box-shadow:0 18px 60px -46px rgba(34,35,58,.5)
   }
 
-  /* —— 开场引言:一个安静的方框,不是大字引号 —— */
+  /* —— 开场引言:金线方框 + 四角饰记 + 一对引号 ——————————————
+     参考图那种「卡片金句」版式:细金线描边、四个角上的十字饰记、
+     开阖引号分别落在左上 / 右下。这里只做外框与装饰,文字与其余
+     版面(段落、插画、尾段)一个字都没动 —— data.tagline 照旧原样送进来。
+
+     四角饰记是同一张对称的十字线 SVG,靠 background-position 摆到
+     四个角上,不需要四张各自旋转的图。 */
   #dpage.topic-page .tp-intro{
-    border:1px solid var(--dp-line);border-radius:18px;
+    position:relative;
+    border:1px solid rgba(232,211,162,.55);border-radius:20px;
     background:rgba(248,242,237,.6);
-    padding:clamp(20px,2.6vw,30px) clamp(18px,3vw,36px);
-    text-align:center;margin-bottom:clamp(26px,3.4vw,44px)
+    padding:clamp(26px,3.2vw,38px) clamp(30px,4.2vw,52px);
+    text-align:center;margin-bottom:clamp(26px,3.4vw,44px);
+    /* 一个 background-image 对应一层,四个角要四层同一张图 ——
+       只给一张的话 background-position 只有第一个值生效,其余角落是空的。 */
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M10 2v16M2 10h16" stroke="%23e8d3a2" stroke-width="1"/></svg>'), url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M10 2v16M2 10h16" stroke="%23e8d3a2" stroke-width="1"/></svg>'), url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M10 2v16M2 10h16" stroke="%23e8d3a2" stroke-width="1"/></svg>'), url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M10 2v16M2 10h16" stroke="%23e8d3a2" stroke-width="1"/></svg>');
+    background-repeat:no-repeat;
+    background-size:14px 14px;
+    background-position:
+      top 7px left 7px, top 7px right 7px,
+      bottom 7px left 7px, bottom 7px right 7px
   }
   #dpage.topic-page .tp-intro p{
-    margin:0;font-family:var(--dp-serif);font-weight:300;
+    position:relative;margin:0;font-family:var(--dp-serif);font-weight:300;
     font-size:clamp(15px,1.15vw,17px);line-height:2.15;color:var(--dp-ink)
   }
+  #dpage.topic-page .tp-intro::before,
+  #dpage.topic-page .tp-intro::after{
+    position:absolute;font-family:var(--dp-display);line-height:1;
+    font-size:clamp(24px,2.4vw,32px);color:var(--dp-gold);opacity:.85
+  }
+  #dpage.topic-page .tp-intro::before{content:"\201C";top:clamp(10px,1.6vw,16px);left:clamp(14px,2vw,22px)}
+  #dpage.topic-page .tp-intro::after{content:"\201D";bottom:clamp(2px,.8vw,8px);right:clamp(14px,2vw,22px)}
 
   /* —— 分段:圆形插画位 + 正文 —— */
   #dpage.topic-page .tp-sec{
@@ -2654,6 +2676,13 @@
     #dpage.topic-page .tp-peek{grid-area:peek;margin-top:10px}  /* 与标题区约 20px */
     #dpage.topic-page .tp-full{grid-area:full}
     #dpage.topic-page .tp-peek .pv{margin-top:0;font-size:15px;line-height:2}
+
+    /* 开场引言的引号:手机上标题常常摊成两三行,固定的上下留白
+       不够就会跟第一 / 最后一行文字挤在一起 —— 加一点垂直留白, 让引号跟文字之间
+       永远隔得开,不管这一段引言最后换成几行。 */
+    #dpage.topic-page .tp-intro{padding:38px clamp(26px,7vw,34px) 32px}
+    #dpage.topic-page .tp-intro::before{font-size:22px;top:10px;left:16px}
+    #dpage.topic-page .tp-intro::after{font-size:22px;bottom:6px;right:16px}
 
     #dpage.topic-page .tp-open,#dpage.topic-page .tp-shut{min-height:44px;font-size:13.5px}
     #dpage.topic-page .tp-pair{grid-template-columns:1fr}
