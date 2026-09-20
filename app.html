@@ -2525,6 +2525,31 @@
   #dpage.topic-page .tp-intro::before{content:"\201C";top:clamp(10px,1.6vw,16px);left:clamp(14px,2vw,22px)}
   #dpage.topic-page .tp-intro::after{content:"\201D";bottom:clamp(2px,.8vw,8px);right:clamp(14px,2vw,22px)}
 
+  /* —— 有专属金框的主题:整块换成那张图,上面那一组金线 / 十字饰记 /
+     CSS 引号全部让位 ——————————————————————————————————
+     素材是照固定尺寸(620×150)画的,所以这里的高度是真的写死,不是
+     min-height:内容再长也不能把图撑变形,靠 TP_QUOTE_MAX 那道字数
+     上限接住这件事(见 dpTopicHtml)。
+
+     只在 ≥768px 生效:手机现在还没有对应素材,规则关在这个媒体查询
+     外面,窄屏会一直落回上面那一版 CSS 画的金框,不会出现被硬挤成
+     一条缝的桌机版插画。 */
+  @media(min-width:768px){
+    #dpage.topic-page.has-quote-frame .tp-intro{
+      border:none;background-color:transparent;
+      background-image:var(--tp-quote);
+      background-size:100% 100%;background-repeat:no-repeat;background-position:center;
+      height:150px;box-sizing:border-box;
+      display:flex;align-items:center;justify-content:center;
+      padding:0 clamp(56px,10.2vw,84px)
+    }
+    #dpage.topic-page.has-quote-frame .tp-intro::before,
+    #dpage.topic-page.has-quote-frame .tp-intro::after{content:none}
+    #dpage.topic-page.has-quote-frame .tp-intro p{
+      font-size:clamp(13.5px,1.05vw,15px);line-height:1.9
+    }
+  }
+
   /* —— 分段:圆形插画位 + 正文 —— */
   #dpage.topic-page .tp-sec{
     display:grid;grid-template-columns:clamp(112px,13vw,178px) minmax(0,1fr);
@@ -8590,6 +8615,16 @@ window.Guide = (function () {
   /* 正文底纹,一个主题一张。没列到的主题正文就是原本那片淡米色。 */
   const TOPIC_BG_DIR = "assets/topics/bg/";
   const TOPIC_BG = TOPIC_HERO;
+  /* 开场引言的专属金框。素材是照固定尺寸设计的(桌机 620×150),
+     不是随内容变形的九宫格 —— 所以配套一条硬规则:引言超过
+     TP_QUOTE_MAX 个字就用省略号收掉,不会真的把这张图撑高、撑变形。
+     这个字数不是随便定的:实测过这五张图,60 字(2 行)全部留有余裕,
+     65 字(3 行)在 wealth 那张会压到底部的硬币纹样上。
+     没列在这里的主题照旧是 CSS 画的金线 + 十字饰记,不开天窗。
+     手机上目前没有对应素材,一律回落到同一套 CSS 版本(见媒体查询)。 */
+  const TOPIC_QUOTE_DIR = "assets/topics/quote/";
+  const TOPIC_QUOTE = ["body", "wealth", "partner", "love", "family"];
+  const TP_QUOTE_MAX = 60;
   const TOPIC_SEC_ART = {
     /* 前四张对着设计稿那四项(方向 / 模式 / 课题 / 理想状态),
        第五、六张是长章节才会用到的延伸。
@@ -9342,8 +9377,13 @@ window.Guide = (function () {
     favType = favType || "";
     const PV = dpPvMap(data);
     let h = '<div class="tp-wrap">';
-    if (data.tagline)
-      h += '<div class="tp-intro"><p>' + esc0(data.tagline) + "</p></div>";
+    if (data.tagline) {
+      /* 只在这里、只对显示做截断 —— data.tagline 本身一个字都不会被改写,
+         存回去、收藏、其他任何用到 tagline 的地方都还是原文。 */
+      const tl = data.tagline.length > TP_QUOTE_MAX
+        ? data.tagline.slice(0, TP_QUOTE_MAX) + "…" : data.tagline;
+      h += '<div class="tp-intro"><p>' + esc0(tl) + "</p></div>";
+    }
     h += (data.sections || []).map(function (sc, si) {
       const k = favKey(favSource, sc.title || "", sc.body || "");
       const btn = '<button class="fav-btn' + (isFaved(k) ? " on" : "") + '" data-fav="' + esc0(k) +
@@ -9410,6 +9450,17 @@ window.Guide = (function () {
     host.style.setProperty("--tp-bg-on", on ? "1" : "0");
     if (on) host.style.setProperty("--tp-bg", 'url("' + TOPIC_BG_DIR + tid + '.webp")');
     else host.style.removeProperty("--tp-bg");
+  }
+  /* 开场引言的专属金框。同一套「变数 + 没有就清掉」的做法 ——
+     class 只用来在 CSS 里整段切换(默认版 / 专属版本两组规则
+     互不干扰),真正的图片路径还是走变数。 */
+  function dpTopicQuote(tid) {
+    const host = $("dpage");
+    if (!host) return;
+    const on = TOPIC_QUOTE.indexOf(tid) >= 0;
+    host.classList.toggle("has-quote-frame", on);
+    if (on) host.style.setProperty("--tp-quote", 'url("' + TOPIC_QUOTE_DIR + tid + '.webp")');
+    else host.style.removeProperty("--tp-quote");
   }
 
   /* 收起 ↔ 展开。原文一直在 DOM 里,这里只是放开高度 ——
@@ -9587,6 +9638,7 @@ window.Guide = (function () {
        原文一直在 DOM 里,展开没有替换掉任何一个字。 */
     dpTopicHero(tid);
     dpTopicBg(tid);
+    dpTopicQuote(tid);
     dpBindTopicUI();
     // 中文首次开启:自动开始生成(与旧行为一致;英文由使用者按钮触发)
     if (c && curResult && !topicBusy && !topicErrs[tid] && !window.I18N.isEN() &&
