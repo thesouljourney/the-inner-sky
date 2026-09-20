@@ -2010,6 +2010,8 @@ function testTopicLayout() {
 
   /* —— 开场引言:金线方框 + 四角饰记 + 一对引号 —— */
   checkEq("[tp] 开场引言有金色描边", /\.tp-intro\{[^}]*border:1px solid rgba\(232,211,162,/.test(css), true);
+  checkEq("[tp] 开场引言的宽度收窄、居中(不是铺满整张卡)",
+    /\.tp-intro\{[^}]*max-width:min\(620px,100%\)[^}]*margin-left:auto;margin-right:auto/.test(css), true);
   /* 四个角要四层同一张图:只给一张的话 background-position 的后三个值不会生效 —— 这是真的会发生的 CSS 坑,不是随手挑的断言 */
   const introBlock = css.slice(css.indexOf(".tp-intro{"), css.indexOf(".tp-intro p{"));
   const bgImgCount = (introBlock.match(/url\(/g) || []).length;

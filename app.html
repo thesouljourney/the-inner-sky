@@ -2496,7 +2496,10 @@
      四角饰记是同一张对称的十字线 SVG,靠 background-position 摆到
      四个角上,不需要四张各自旋转的图。 */
   #dpage.topic-page .tp-intro{
-    position:relative;
+    /* 宽度收在一个短引句读起来舒服的宽度,不铺满整张卡 ——
+       铺满的话一两行字会拉成一条很扁的横幅,金框反而不像「一句话」,
+       像一道分隔线。参考图里的金句框也明显比卡片本身窄。 */
+    position:relative;max-width:min(620px,100%);margin-left:auto;margin-right:auto;
     border:1px solid rgba(232,211,162,.55);border-radius:20px;
     background:rgba(248,242,237,.6);
     padding:clamp(26px,3.2vw,38px) clamp(30px,4.2vw,52px);
