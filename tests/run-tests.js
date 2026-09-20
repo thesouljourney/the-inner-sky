@@ -2009,7 +2009,29 @@ function testTopicLayout() {
   checkEq("[tp] 找得到 topic-page 的样式区块", css.length > 2000, true);
 
   /* —— 开场引言:金线方框 + 四角饰记 + 一对引号 —— */
-  checkEq("[tp] 开场引言有金色描边", /\.tp-intro\{[^}]*border:1px solid rgba\(232,211,162,/.test(css), true);
+  /* 颜色改成跟着主题走了;金色只是【没有主题颜色时】的 fallback,
+     不再是唯一颜色 —— 这条断言跟着改成验证「有 fallback」而不是「一定是金色」。 */
+  checkEq("[tp] 描边颜色跟着主题走,金色只是 fallback",
+    /\.tp-intro\{[^}]*border:1px solid var\(--tp-accent-soft, rgba\(232,211,162,\.55\)\)/.test(css), true);
+  /* 九个主题都给了颜色,而且互不相同 —— 不是随手填了九个一样的占位色 */
+  const ACCENTS = (function () {
+    const blk = html.slice(html.indexOf("const TOPIC_ACCENT = {"), html.indexOf("};", html.indexOf("const TOPIC_ACCENT = {")) + 2);
+    const m = {};
+    (blk.match(/([a-z]+):\s*"(#[0-9a-fA-F]{6})"/g) || []).forEach(function (line) {
+      const mm = line.match(/([a-z]+):\s*"(#[0-9a-fA-F]{6})"/);
+      m[mm[1]] = mm[2];
+    });
+    return m;
+  })();
+  const TIDS_EARLY = ["self", "emotion", "career", "family", "love", "partner", "wealth", "study", "body"];
+  checkEq("[tp] 九个主题都给了颜色", TIDS_EARLY.every(function (t) { return !!ACCENTS[t]; }), true);
+  checkEq("[tp] 九个颜色互不相同", new Set(Object.values(ACCENTS)).size, 9);
+  const accentFn = fn("dpTopicAccent");
+  checkEq("[tp] 描边 / 引号的颜色靠 CSS 变数,不用四处改字串",
+    /setProperty\("--tp-accent",/.test(accentFn) && /setProperty\("--tp-accent-soft",/.test(accentFn), true);
+  checkEq("[tp] 十字饰记的颜色是烧进 SVG 字串的(CSS 变数伸不进 url() 里),所以整包 background-image 交给 --tp-tick-bg",
+    /setProperty\("--tp-tick-bg",/.test(accentFn), true);
+  checkEq("[tp] 进主题页时才套颜色", /dpTopicAccent\(tid\);/.test(topicPage), true);
   checkEq("[tp] 开场引言的宽度收窄、居中(不是铺满整张卡)",
     /\.tp-intro\{[^}]*max-width:min\(620px,100%\)[^}]*margin-left:auto;margin-right:auto/.test(css), true);
   /* 四个角要四层同一张图:只给一张的话 background-position 的后三个值不会生效 —— 这是真的会发生的 CSS 坑,不是随手挑的断言 */

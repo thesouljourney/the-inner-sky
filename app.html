@@ -2488,25 +2488,30 @@
     box-shadow:0 18px 60px -46px rgba(34,35,58,.5)
   }
 
-  /* —— 开场引言:金线方框 + 四角饰记 + 一对引号 ——————————————
-     参考图那种「卡片金句」版式:细金线描边、四个角上的十字饰记、
+  /* —— 开场引言:细线方框 + 四角饰记 + 一对引号 ——————————————
+     参考图那种「卡片金句」版式:细描边、四个角上的十字饰记、
      开阖引号分别落在左上 / 右下。这里只做外框与装饰,文字与其余
      版面(段落、插画、尾段)一个字都没动 —— data.tagline 照旧原样送进来。
 
-     四角饰记是同一张对称的十字线 SVG,靠 background-position 摆到
-     四个角上,不需要四张各自旋转的图。 */
+     颜色跟着主题走(--tp-accent,由 dpTopicAccent 设),不再九个
+     主题都是金色。四角的十字饰记是一张 data-URI SVG,颜色烧在
+     字串里没办法用 CSS 变数换,所以那一部分连同它的四层
+     background-image 一起交给 JS 算好的 --tp-tick-bg。
+     两个变数都没设的时候(理论上不会,九个主题都给了颜色)——
+     fallback 回原本那一版金色,不开天窗。 */
   #dpage.topic-page .tp-intro{
     /* 宽度收在一个短引句读起来舒服的宽度,不铺满整张卡 ——
        铺满的话一两行字会拉成一条很扁的横幅,金框反而不像「一句话」,
        像一道分隔线。参考图里的金句框也明显比卡片本身窄。 */
     position:relative;max-width:min(620px,100%);margin-left:auto;margin-right:auto;
-    border:1px solid rgba(232,211,162,.55);border-radius:20px;
+    border:1px solid var(--tp-accent-soft, rgba(232,211,162,.55));border-radius:20px;
     background:rgba(248,242,237,.6);
     padding:clamp(26px,3.2vw,38px) clamp(30px,4.2vw,52px);
     text-align:center;margin-bottom:clamp(26px,3.4vw,44px);
     /* 一个 background-image 对应一层,四个角要四层同一张图 ——
        只给一张的话 background-position 只有第一个值生效,其余角落是空的。 */
-    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M10 2v16M2 10h16" stroke="%23e8d3a2" stroke-width="1"/></svg>'), url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M10 2v16M2 10h16" stroke="%23e8d3a2" stroke-width="1"/></svg>'), url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M10 2v16M2 10h16" stroke="%23e8d3a2" stroke-width="1"/></svg>'), url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M10 2v16M2 10h16" stroke="%23e8d3a2" stroke-width="1"/></svg>');
+    background-image: var(--tp-tick-bg,
+      url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M10 2v16M2 10h16" stroke="%23e8d3a2" stroke-width="1"/></svg>'), url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M10 2v16M2 10h16" stroke="%23e8d3a2" stroke-width="1"/></svg>'), url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M10 2v16M2 10h16" stroke="%23e8d3a2" stroke-width="1"/></svg>'), url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M10 2v16M2 10h16" stroke="%23e8d3a2" stroke-width="1"/></svg>'));
     background-repeat:no-repeat;
     background-size:14px 14px;
     background-position:
@@ -2520,7 +2525,7 @@
   #dpage.topic-page .tp-intro::before,
   #dpage.topic-page .tp-intro::after{
     position:absolute;font-family:var(--dp-display);line-height:1;
-    font-size:clamp(24px,2.4vw,32px);color:var(--dp-gold);opacity:.85
+    font-size:clamp(24px,2.4vw,32px);color:var(--tp-accent, var(--dp-gold));opacity:.85
   }
   #dpage.topic-page .tp-intro::before{content:"\201C";top:clamp(10px,1.6vw,16px);left:clamp(14px,2vw,22px)}
   #dpage.topic-page .tp-intro::after{content:"\201D";bottom:clamp(2px,.8vw,8px);right:clamp(14px,2vw,22px)}
@@ -8590,6 +8595,21 @@ window.Guide = (function () {
   /* 正文底纹,一个主题一张。没列到的主题正文就是原本那片淡米色。 */
   const TOPIC_BG_DIR = "assets/topics/bg/";
   const TOPIC_BG = TOPIC_HERO;
+  /* 开场引言那个金框的颜色,改成跟着主题走 —— 不再九个都是金色。
+     只挑一个柔和、跟站上既有配色(--dp-lav / --dp-gold 那个调性)
+     同一家族的颜色,细描边 + 小小的十字饰记,分量很轻,换个颜色
+     不会显得突兀。九个都给了,不留回落到金色的情形。 */
+  const TOPIC_ACCENT = {
+    self:    "#7fa0bc",  // 雾蓝 —— 海景 / 水纹 / 月亮
+    emotion: "#d98a94",  // 玫瑰粉
+    career:  "#b98a5c",  // 琥珀棕 —— 灯塔 / 罗盘的暖调
+    family:  "#8fa876",  // 草绿
+    love:    "#e3a0a8",  // 珊瑚粉,跟情感模式的玫瑰粉区分开
+    partner: "#8b8fd1",  // 薰衣草紫 —— 行星 / 水晶
+    wealth:  "#c9a227",  // 琥珀金
+    study:   "#6f9bb0",  // 青蓝
+    body:    "#6fab9a"   // 青玉绿 —— 莲花 / 水
+  };
   const TOPIC_SEC_ART = {
     /* 前四张对着设计稿那四项(方向 / 模式 / 课题 / 理想状态),
        第五、六张是长章节才会用到的延伸。
@@ -9411,6 +9431,29 @@ window.Guide = (function () {
     if (on) host.style.setProperty("--tp-bg", 'url("' + TOPIC_BG_DIR + tid + '.webp")');
     else host.style.removeProperty("--tp-bg");
   }
+  /* 开场引言金框的颜色。描边 / 引号直接吃 --tp-accent 这个变数就够,
+     但四角那个十字饰记是一张 data-URI 的 SVG —— 颜色是烧在 SVG 字串
+     里的,CSS 变数没办法伸进 url() 里面换色,所以这里在 JS 端现算一次
+     字串,整包塞进 --tp-tick-bg,CSS 端原样当 background-image 用。
+     没有对到颜色的主题(理论上不会发生,九个都给了)就把变数清掉,
+     CSS 那边原本写死的金色 fallback 会接手,不会开天窗。 */
+  function dpTopicAccent(tid) {
+    const host = $("dpage");
+    if (!host) return;
+    const hex = TOPIC_ACCENT[tid];
+    if (!hex) {
+      host.style.removeProperty("--tp-accent");
+      host.style.removeProperty("--tp-accent-soft");
+      host.style.removeProperty("--tp-tick-bg");
+      return;
+    }
+    const r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
+    host.style.setProperty("--tp-accent", hex);
+    host.style.setProperty("--tp-accent-soft", "rgba(" + r + "," + g + "," + b + ",.55)");
+    const tick = "url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 20 20\"><path d=\"M10 2v16M2 10h16\" stroke=\"%23" +
+      hex.slice(1) + "\" stroke-width=\"1\"/></svg>')";
+    host.style.setProperty("--tp-tick-bg", [tick, tick, tick, tick].join(", "));
+  }
 
   /* 收起 ↔ 展开。原文一直在 DOM 里,这里只是放开高度 ——
      与生命脉络那一页同一个做法(量 scrollHeight,展开完成后把上限拿掉)。 */
@@ -9587,6 +9630,7 @@ window.Guide = (function () {
        原文一直在 DOM 里,展开没有替换掉任何一个字。 */
     dpTopicHero(tid);
     dpTopicBg(tid);
+    dpTopicAccent(tid);
     dpBindTopicUI();
     // 中文首次开启:自动开始生成(与旧行为一致;英文由使用者按钮触发)
     if (c && curResult && !topicBusy && !topicErrs[tid] && !window.I18N.isEN() &&
