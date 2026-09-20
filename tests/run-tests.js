@@ -1986,12 +1986,10 @@ function testTopicLayout() {
   ["substr(", "substring(", "text-overflow", "line-clamp"].forEach(function (bad) {
     checkEq("[tp] 正文没有被截断(" + bad + ")", tp.indexOf(bad) >= 0, false);
   });
-  /* 三处 slice 都不碰正文:fav 的 data-text、段号补零、开场引言的显示截断
-     (下面单独验证它不碰 data.tagline 本体)。dpPara(sc.body) 送进去的
-     永远是完整原文。 */
-  checkEq("[tp] slice 只出现在这三处(fav 摘要 / 段号补零 / 引言显示截断)",
-    (tp.match(/\.slice\([^)]*\)/g) || []).sort().join(" "),
-    '.slice(-2) .slice(0, 300) .slice(0, TP_QUOTE_MAX)');
+  /* 两处 slice 都不碰正文:一处是 fav 的 data-text(与 dpAnswerHtml 同一行),
+     一处是段号补零。dpPara(sc.body) 送进去的永远是完整原文。 */
+  checkEq("[tp] slice 只出现在 fav 的 data-text 与段号补零",
+    (tp.match(/\.slice\([^)]*\)/g) || []).sort().join(" "), '.slice(-2) .slice(0, 300)');
   checkEq("[tp] 收藏挂点与旧版一致",
     /data-saveable data-source=/.test(tp) && /data-source-type=/.test(tp) &&
     /data-section=/.test(tp), true);
@@ -2026,22 +2024,8 @@ function testTopicLayout() {
   checkEq("[tp] 开阖引号是 CSS 生成的,不是塞进 HTML 里的新文字",
     /\.tp-intro::before\{content:"\\201C"/.test(css) &&
     /\.tp-intro::after\{content:"\\201D"/.test(css), true);
-  /* —— 开场引言的显示截断:只影响显示,data.tagline 本体不会被改写 —— */
-  const tlBlock = tp.slice(tp.indexOf("if (data.tagline) {"), tp.indexOf("h += (data.sections"));
-  checkEq("[tp] 只送进 esc0() 的是截断后的局部变数,不是 data.tagline 本人",
-    /esc0\(tl\)/.test(tlBlock) && !/esc0\(data\.tagline\)/.test(tlBlock), true);
-  checkEq("[tp] 没有任何地方把结果写回 data.tagline(下次渲染读到的还是原文)",
-    /data\.tagline\s*=/.test(tlBlock), false);
-  checkEq("[tp] 截断门槛是 TP_QUOTE_MAX,不是随手写的数字",
-    /data\.tagline\.length > TP_QUOTE_MAX/.test(tlBlock), true);
-  checkEq("[tp] 超过门槛才截断,用的是省略号,不是硬切没有提示",
-    /data\.tagline\.slice\(0, TP_QUOTE_MAX\) \+ "…"/.test(tlBlock), true);
-  /* 实测锁住的门槛:60 字(2 行)五张图都留有余裕,65 字(3 行)在
-     wealth 那张会压到底部的硬币纹样上 —— 这个数字来自真的截图量测,
-     不是估的,所以直接把它写进测试锁住,以后要改这个数字必须先
-     重新截图量过。 */
-  checkEq("[tp] TP_QUOTE_MAX 锁定在实测过的 60(见上面那次真实渲染)",
-    (html.match(/const TP_QUOTE_MAX = (\d+);/) || [, ""])[1], "60");
+  checkEq("[tp] data.tagline 本身一个字都没被改",
+    /if \(data\.tagline\)\s*\n\s*h \+= '<div class="tp-intro"><p>' \+ esc0\(data\.tagline\) \+ "<\/p><\/div>";/.test(tp), true);
   /* 手机上标题常常摊成两三行,引号需要额外的留白,不然会跟文字挤在一起 —— 这条守住那次修正 */
   checkEq("[tp] 手机上开场引言另外留了垂直空间给引号(不跟文字挤在一起)",
     /\.tp-intro\{padding:38px/.test(css), true);
@@ -2199,36 +2183,6 @@ function testTopicLayout() {
   checkEq("[tp] 进主题页时才套底纹", /dpTopicBg\(tid\);/.test(topicPage), true);
   checkEq("[tp] CSS 里没有为九个主题各写一条底纹规则",
     TIDS.filter(function (t) { return css.indexOf("bg/" + t) >= 0; }).join(","), "");
-
-  /* —— 开场引言的专属金框:五个主题先有,其余四个回落到 CSS 画的金框 —— */
-  const QUOTES = (html.match(/const TOPIC_QUOTE = \[([\s\S]*?)\];/) || [, ""])[1]
-    .split(",").map(function (x) { return x.trim().replace(/^"|"$/g, ""); }).filter(Boolean);
-  checkEq("[tp] 目前五个主题有专属金框", QUOTES.sort().join(","),
-    ["body", "family", "love", "partner", "wealth"].join(","));
-  const quoteMissing = QUOTES.filter(function (t) {
-    return !fs.existsSync(path.join(__dirname, "..", "assets", "topics", "quote", t + ".webp"));
-  });
-  checkEq("[tp] 五张金框素材都在 repo 里", quoteMissing.join(" "), "");
-  const quoteFn = fn("dpTopicQuote");
-  checkEq("[tp] 金框也走 CSS 变数 + class 双开关",
-    /classList\.toggle\("has-quote-frame", on\)/.test(quoteFn) &&
-    /setProperty\("--tp-quote",/.test(quoteFn), true);
-  checkEq("[tp] 没有素材就把 class 拿掉、变数清掉(回落到 CSS 画的金框)",
-    /removeProperty\("--tp-quote"\)/.test(quoteFn), true);
-  checkEq("[tp] 进主题页时才套金框", /dpTopicQuote\(tid\);/.test(topicPage), true);
-  checkEq("[tp] CSS 里没有为五个主题各写一条金框规则",
-    QUOTES.filter(function (t) { return css.indexOf("quote/" + t) >= 0; }).join(","), "");
-  /* 专属金框只在 ≥768px 生效 —— 手机现在没有对应素材,不能把桌机图硬挤给窄屏 */
-  const quoteCss = css.slice(css.indexOf(".has-quote-frame"));
-  const quoteMedia = css.slice(0, css.indexOf(".has-quote-frame"));
-  checkEq("[tp] 金框那组规则关在 min-width:768px 里面",
-    /@media\(min-width:768px\)\{\s*$/.test(quoteMedia.trimEnd()) ||
-    css.indexOf("@media(min-width:768px){") < css.indexOf(".has-quote-frame"), true);
-  checkEq("[tp] 高度是写死的 150px,不是 min-height(素材是照固定尺寸画的)",
-    /\.has-quote-frame \.tp-intro\{[^}]*height:150px/.test(quoteCss) &&
-    !/\.has-quote-frame \.tp-intro\{[^}]*min-height/.test(quoteCss), true);
-  checkEq("[tp] 有专属金框时,CSS 画的十字饰记 / 引号让位",
-    /\.has-quote-frame \.tp-intro::before,[\s\S]{0,80}content:none/.test(quoteCss), true);
   /* 淡到什么程度:预设值要真的很淡,不然正文的对比度会被吃掉 */
   const alpha = (css.match(/--tp-bg-a,([.\d]+)/) || [, "1"])[1];
   checkEq("[tp] 底纹预设够淡(≤ .2),现在是 " + alpha, parseFloat(alpha) <= 0.2, true);
