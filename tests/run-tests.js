@@ -2146,6 +2146,34 @@ function testTopicLayout() {
   checkEq("[tp] 只有主题页换 header", /renderTopicPage/.test(html.slice(html.indexOf("function dpTopicHero"), html.indexOf("function dpTopicHero") + 900)) === false, true);
   checkEq("[tp] 进主题页时才套底图", /dpTopicHero\(tid\);/.test(topicPage), true);
 
+  /* —— 正文底纹:每个主题一张云天,很淡 —— */
+  const BGS = (html.match(/const TOPIC_BG = ([\s\S]*?);/) || [, ""])[1].trim();
+  checkEq("[tp] 底纹与 header 用同一份主题清单(不会两边各漏一个)", BGS, "TOPIC_HERO");
+  const bgMissing = TIDS.filter(function (t) {
+    return !fs.existsSync(path.join(__dirname, "..", "assets", "topics", "bg", t + ".webp"));
+  });
+  checkEq("[tp] 九张底纹都在 repo 里", bgMissing.join(" "), "");
+  const bgFn = fn("dpTopicBg");
+  checkEq("[tp] 底纹也走 CSS 变数", /setProperty\("--tp-bg",/.test(bgFn), true);
+  checkEq("[tp] 没有素材就整层不画",
+    /setProperty\("--tp-bg-on", on \? "1" : "0"\)/.test(bgFn) &&
+    /removeProperty\("--tp-bg"\)/.test(bgFn), true);
+  checkEq("[tp] 进主题页时才套底纹", /dpTopicBg\(tid\);/.test(topicPage), true);
+  checkEq("[tp] CSS 里没有为九个主题各写一条底纹规则",
+    TIDS.filter(function (t) { return css.indexOf("bg/" + t) >= 0; }).join(","), "");
+  /* 淡到什么程度:预设值要真的很淡,不然正文的对比度会被吃掉 */
+  const alpha = (css.match(/--tp-bg-a,([.\d]+)/) || [, "1"])[1];
+  checkEq("[tp] 底纹预设够淡(≤ .2),现在是 " + alpha, parseFloat(alpha) <= 0.2, true);
+  /* ⚠ background-attachment:fixed 在 iOS Safari 上会跳、会破图 —— 改用 position:fixed */
+  checkEq("[tp] 不用 background-attachment:fixed", /background-attachment:\s*fixed/.test(css), false);
+  checkEq("[tp] 底纹是一层 position:fixed 的底,压在内容下面",
+    /#dpage\.topic-page::before\{[^}]*position:fixed[^}]*z-index:0/.test(css.replace(/\s+/g, "")) ||
+    /position:fixed;inset:0;z-index:0/.test(css), true);
+  checkEq("[tp] 内容压在底纹上面", /#dpage\.topic-page > \*\{position:relative;z-index:1\}/.test(css), true);
+  /* 白卡半透明:底纹透得出来,但文字仍然写在近乎纯白上 */
+  const cardA = (css.match(/background:rgba\(252,249,246,([.\d]+)\)/) || [, "0"])[1];
+  checkEq("[tp] 正文卡片仍然接近不透明(≥ .78),现在是 " + cardA, parseFloat(cardA) >= 0.78, true);
+
   /* —— 手机:编号在上,插画与标题横向并排;桌机那一套不受影响 —— */
   /* 手机断点现在有两块(header 一块、分段版面一块),取分段版面那一块 */
   const mq = css.slice(css.lastIndexOf("@media(max-width:767px)"));

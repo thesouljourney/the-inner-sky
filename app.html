@@ -2406,8 +2406,30 @@
      ⚠ 每一条规则都必须带 .topic-page —— 三十道探索题与生命蓝图
      仍然走 dpAnswerHtml,一个像素都不受影响。
      ============================================================ */
-  #dpage.topic-page{--dp-wide:min(1120px,calc(100vw - 96px));background:#f7f3ef}
+  #dpage.topic-page{--dp-wide:min(1120px,calc(100vw - 96px));background:#f7f3ef;position:relative}
   @media(max-width:1024px){#dpage.topic-page{--dp-wide:100%}}
+
+  /* —— 正文底纹:每个主题自己的一张云天,很淡 ——————————————
+     底图由 renderTopicPage 用 --tp-bg 传进来,没给就整层不画,
+     回到原本那片淡米色。
+
+     用 position:fixed 而不是 background-attachment:fixed ——
+     后者在 iOS Safari 上有已知的跳动与破图问题。铺满视窗、留在原地,
+     卷动时像纸的底色,不像一张跟着跑的贴图。
+
+     它压在最底下(z-index:0),hero 与页脚本来就是不透明的深蓝,
+     所以那两段看不到它,只有正文这一段会透出来。
+
+     ⚠ 淡到什么程度:--tp-bg-a 预设 .14。正文是深墨色写在白卡上,
+       卡片自己还有 .82 的底,所以对比度几乎不受影响。
+     ------------------------------------------------------------ */
+  #dpage.topic-page::before{
+    content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+    background-image:var(--tp-bg,none);
+    background-size:cover;background-position:center top;
+    opacity:calc(var(--tp-bg-on,0) * var(--tp-bg-a,.14))
+  }
+  #dpage.topic-page > *{position:relative;z-index:1}
 
   /* —— Header:每个主题自己的一张实景 ——————————————————————
      底图由 renderTopicPage 用 --tp-hero / --tp-hero-m 传进来(每个主题一张),
@@ -2459,7 +2481,8 @@
   /* 正文整体退到一张圆角白卡里(第二张参考图的做法):
      卡片本身就是「这一章有边界」的讯号,不再是一条没有尽头的长条。 */
   #dpage.topic-page .tp-wrap{
-    background:var(--dp-cloud);border:1px solid var(--dp-line);
+    /* 半透明:底纹从卡片底下透出来一点点,但文字仍然写在近乎纯白上 */
+    background:rgba(252,249,246,.82);border:1px solid rgba(240,232,227,.9);
     border-radius:clamp(20px,2.4vw,34px);
     padding:clamp(26px,4vw,54px) clamp(20px,3.6vw,52px);
     box-shadow:0 18px 60px -46px rgba(34,35,58,.5)
@@ -8532,6 +8555,9 @@ window.Guide = (function () {
   const TOPIC_HERO_DIR = "assets/topics/hero/";
   const TOPIC_HERO = ["self", "emotion", "career", "family", "love",
                       "partner", "wealth", "study", "body"];
+  /* 正文底纹,一个主题一张。没列到的主题正文就是原本那片淡米色。 */
+  const TOPIC_BG_DIR = "assets/topics/bg/";
+  const TOPIC_BG = TOPIC_HERO;
   const TOPIC_SEC_ART = {
     /* 前四张对着设计稿那四项(方向 / 模式 / 课题 / 理想状态),
        第五、六张是长章节才会用到的延伸。
@@ -9343,6 +9369,16 @@ window.Guide = (function () {
     host.style.setProperty("--tp-hero", 'url("' + TOPIC_HERO_DIR + tid + '.webp")');
     host.style.setProperty("--tp-hero-m", 'url("' + TOPIC_HERO_DIR + tid + '-m.webp")');
   }
+  /* 正文的底纹。与 header 同一个做法:路径交给 CSS 变数,
+     没有素材就把变数清掉,整层不画 —— 不会留一块怪颜色。 */
+  function dpTopicBg(tid) {
+    const host = $("dpage");
+    if (!host) return;
+    const on = TOPIC_BG.indexOf(tid) >= 0;
+    host.style.setProperty("--tp-bg-on", on ? "1" : "0");
+    if (on) host.style.setProperty("--tp-bg", 'url("' + TOPIC_BG_DIR + tid + '.webp")');
+    else host.style.removeProperty("--tp-bg");
+  }
 
   /* 收起 ↔ 展开。原文一直在 DOM 里,这里只是放开高度 ——
      与生命脉络那一页同一个做法(量 scrollHeight,展开完成后把上限拿掉)。 */
@@ -9518,6 +9554,7 @@ window.Guide = (function () {
     /* 阅读节奏:先看引子 → 想读再展开 → 读到的是完整原文。
        原文一直在 DOM 里,展开没有替换掉任何一个字。 */
     dpTopicHero(tid);
+    dpTopicBg(tid);
     dpBindTopicUI();
     // 中文首次开启:自动开始生成(与旧行为一致;英文由使用者按钮触发)
     if (c && curResult && !topicBusy && !topicErrs[tid] && !window.I18N.isEN() &&
