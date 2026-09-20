@@ -2109,16 +2109,22 @@ function testTopicLayout() {
     });
   });
   checkEq("[tp] header 尺寸正确(桌机 1600×686 / 手机 880×660)", wrongSize.join(" "), "");
-  /* 圆形插画同一套检查:一律 400×400 */
-  const wrongArt = [];
+  /* 圆形插画:正方形,而且够画面用。
+     版面上这张图最大显示多少?
+       桌机  圆圈 clamp(112px,13vw,178px)、图 inset 9% 占 82%  → 最大 146px
+       手机  圆圈 clamp(88px,26vw,112px)                        → 最大  92px
+     所以 2 倍萤幕需要 292px、手机 3 倍需要 276px —— 320 是够用的下限。
+     多数素材是 400(原档 1254 缩下来的);来源只有 320 的就照 320 存,
+     【绝不放大】—— 放大只会糊,尺寸还看起来是对的,测试也抓不到。 */
+  const badArt = [];
   Object.keys(SETS).forEach(function (t) {
     SETS[t].forEach(function (n) {
       const f = path.join(__dirname, "..", "assets", "topics", n + ".webp");
       const d = fs.existsSync(f) ? webpSize(f) : null;
-      if (!d || d[0] !== 400 || d[1] !== 400) wrongArt.push(n + "=" + (d ? d.join("×") : "?"));
+      if (!d || d[0] !== d[1] || d[0] < 320 || d[0] > 400) badArt.push(n + "=" + (d ? d.join("×") : "?"));
     });
   });
-  checkEq("[tp] 圆形插画一律 400×400", Array.from(new Set(wrongArt)).join(" "), "");
+  checkEq("[tp] 圆形插画是正方形,边长 320–400", Array.from(new Set(badArt)).join(" "), "");
   checkEq("[tp] header 放在自己的资料夹",
     /const TOPIC_HERO_DIR = "assets\/topics\/hero\/";/.test(html), true);
   /* 底图交给 CSS 变数 → 新增主题不用改 CSS,也不会有九条写死的规则 */
