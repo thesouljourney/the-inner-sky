@@ -2669,7 +2669,9 @@
   /* 描边跟着主题走(--theme-accent),跟开场引言金框同一个做法——
      九个主题不再共用一条灰线,读到这里能感觉到还是同一个主题。 */
   #dpage.topic-page .tp-pair .dp-reflect{
-    border:1px solid var(--highlight-color, var(--dp-line));border-radius:18px;
+    border:1px solid var(--highlight-color, var(--dp-line));
+    border:1px solid color-mix(in srgb, var(--theme-accent, var(--dp-line)) 70%, transparent);
+    border-radius:18px;
     background:rgba(248,242,237,.55);padding:clamp(20px,2.4vw,28px);box-sizing:border-box
   }
   #dpage.topic-page .tp-pair .dp-reflect .eb{display:none}
