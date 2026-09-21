@@ -2538,6 +2538,14 @@
   }
   #dpage.topic-page .tp-sec + .tp-sec{border-top:1px solid var(--dp-line)}
   #dpage.topic-page .tp-sec:first-of-type{padding-top:clamp(8px,1vw,14px)}
+  /* 最后一段读完,底下紧接着是「留给你的思考 / 试试看」—— 跟前面几段
+     之间一样补一条分隔线,读到这里有个停顿,而不是内容悄悄换了性质。 */
+  #dpage.topic-page .tp-sec:last-of-type{border-bottom:1px solid var(--dp-line)}
+  /* 插画只在「还没展开」的时候跟整段(标题 + 引子)垂直居中 —— 展开后
+     内容变得比插画高很多,居中会让插画整个飘到内容中间,很奇怪,
+     所以只用 align-self 管插画自己这一个 grid item,不动整行的
+     align-items(文字仍然照旧从顶端开始排)。 */
+  #dpage.topic-page .tp-sec:not(.open) .tp-art{align-self:center}
 
   /* 插画位:素材还没来的时候不是开天窗,而是一个刻意做过的水彩圆。
      src 一旦补上(TOPIC_SEC_ART),圆圈就换成那张图,版面不必再动。 */
