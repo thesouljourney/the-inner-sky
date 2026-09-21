@@ -2572,22 +2572,40 @@
     letter-spacing:.2em;color:var(--dp-gold);margin-bottom:6px
   }
   #dpage.topic-page .tp-h-row{display:flex;align-items:flex-start;gap:12px}
+  /* Premium Editorial 排版重整:全页只留两款中文字体 —— 标题宋体、
+     其余一律黑体,不再混用。数值(字重 / 字号 / 行高 / 字距 / 颜色)
+     照给定的规格表来,不是随手调的。 */
   #dpage.topic-page h3.tp-h{
-    flex:1;margin:0;font-family:var(--dp-serif);font-weight:600;
-    font-size:clamp(19px,1.8vw,26px);line-height:1.55;color:var(--dp-ink);letter-spacing:.01em
+    flex:1;margin:0;font-family:var(--dp-serif);font-weight:500;
+    font-size:clamp(26px,2.6vw,40px);line-height:1.4;color:#20233d;letter-spacing:-.02em
   }
   #dpage.topic-page .tp-h-row .fav-btn{flex:none;margin-top:4px}
 
-  /* 引子:收起时读到的那几句。与展开后的原文同一份资料的两种读法。
-     字体改成跟标题、开场引言同一个衬线字体家族(细体)——原本吃的是
-     全站默认的无衬线体,跟正上方衬线体的标题放在一起显得不搭。
-     没有用斜体:中文衬线字体大多没有真正的斜体字重,浏览器只是把
-     直立体强行斜切,笔画会显得别扭,不如维持正体。 */
+  /* 引子:收起时读到的那几句。与展开后的原文同一份资料的两种读法,
+     所以两边现在用同一套「正文」规格(黑体)—— 上一版曾经改成宋体
+     去贴标题,这次配合全页只留两款字体(标题宋体 / 其余黑体)的规则,
+     改回来跟 .tp-full .dp-prose p 用同一款字体、同一套字级。 */
   #dpage.topic-page .tp-peek .pv{
-    margin:14px 0 0;font-family:var(--dp-serif);font-weight:300;
-    font-size:15.5px;line-height:2.05;letter-spacing:.01em;color:rgba(34,35,58,.86)
+    margin:16px 0 0;font-family:var(--dp-sans);font-weight:400;
+    font-size:clamp(16px,1.45vw,21px);line-height:1.95;letter-spacing:.01em;color:#55596d
   }
-  #dpage.topic-page .tp-peek .ch-keys{margin-top:14px}
+  /* 重点列表之前没有专属样式,吃的是浏览器默认的项目符号与字级 ——
+     这次补齐:跟正文同一款黑体,圆点缩小、跟文字之间留出呼吸空间,
+     条目之间用 margin 隔开,不是紧贴着的一整块。 */
+  #dpage.topic-page .tp-peek .ch-keys{
+    margin-top:16px;list-style:none;padding:0
+  }
+  #dpage.topic-page .tp-peek .ch-keys li{
+    display:flex;align-items:baseline;gap:12px;
+    font-family:var(--dp-sans);font-weight:500;
+    font-size:clamp(15px,1.15vw,19.5px);line-height:1.75;letter-spacing:.01em;
+    color:#55596d;margin-top:10px
+  }
+  #dpage.topic-page .tp-peek .ch-keys li:first-child{margin-top:0}
+  #dpage.topic-page .tp-peek .ch-keys li i{
+    flex:none;width:4px;height:4px;margin-top:.75em;border-radius:50%;
+    background:#8179b6;opacity:.65
+  }
 
   /* 展开:高度由 JS 按实际内容给,这里只负责过渡与收起状态 */
   #dpage.topic-page .tp-full{
@@ -2600,15 +2618,16 @@
   #dpage.topic-page .tp-sec.open .tp-peek .ch-keys{display:none}
   #dpage.topic-page .tp-full .dp-prose{margin-top:14px}
   #dpage.topic-page .tp-full .dp-prose p{
-    margin:0 0 18px;font-size:15px;line-height:2.08;color:rgba(34,35,58,.9)
+    margin:0 0 22px;font-family:var(--dp-sans);font-weight:400;
+    font-size:clamp(16px,1.45vw,21px);line-height:1.95;letter-spacing:.01em;color:#55596d
   }
   #dpage.topic-page .tp-full .dp-prose p:last-child{margin-bottom:0}
 
   #dpage.topic-page .tp-open,#dpage.topic-page .tp-shut{
     appearance:none;background:none;border:0;cursor:pointer;padding:12px 0 0;
     display:inline-flex;align-items:center;gap:8px;
-    font-family:var(--dp-sans);font-size:13px;letter-spacing:.08em;
-    color:#8176ad;transition:opacity .3s
+    font-family:var(--dp-sans);font-weight:500;font-size:clamp(14px,1vw,15.5px);
+    letter-spacing:.08em;color:#8179b6;transition:opacity .3s
   }
   #dpage.topic-page .tp-open:hover,#dpage.topic-page .tp-shut:hover{opacity:.72}
   #dpage.topic-page .tp-open:focus-visible,#dpage.topic-page .tp-shut:focus-visible{
@@ -2689,11 +2708,11 @@
     /* 标题跟着插画垂直居中,想换几行就换几行 —— 不锁成一行 */
     #dpage.topic-page h3.tp-h{
       grid-area:title;align-self:center;
-      font-size:19px;line-height:1.62
+      font-size:clamp(24px,7.5vw,30px);line-height:1.4
     }
     #dpage.topic-page .tp-peek{grid-area:peek;margin-top:10px}  /* 与标题区约 20px */
     #dpage.topic-page .tp-full{grid-area:full}
-    #dpage.topic-page .tp-peek .pv{margin-top:0;font-size:15px;line-height:2}
+    #dpage.topic-page .tp-peek .pv{margin-top:0;font-size:17px;line-height:1.9}
 
     /* 开场引言的引号:手机上标题常常摊成两三行,固定的上下留白
        不够就会跟第一 / 最后一行文字挤在一起 —— 加一点垂直留白, 让引号跟文字之间
@@ -2702,7 +2721,7 @@
     #dpage.topic-page .tp-intro::before{font-size:22px;top:10px;left:16px}
     #dpage.topic-page .tp-intro::after{font-size:22px;bottom:6px;right:16px}
 
-    #dpage.topic-page .tp-open,#dpage.topic-page .tp-shut{min-height:44px;font-size:13.5px}
+    #dpage.topic-page .tp-open,#dpage.topic-page .tp-shut{min-height:44px;font-size:15px}
     #dpage.topic-page .tp-pair{grid-template-columns:1fr}
   }
 
