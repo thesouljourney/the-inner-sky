@@ -2430,6 +2430,13 @@
     opacity:calc(var(--tp-bg-on,0) * var(--tp-bg-a,.14))
   }
   #dpage.topic-page > *{position:relative;z-index:1}
+  /* ⚠ 账号选单开着的时候,要盖住它底下所有内容 —— 但 dp-hero 与
+     dp-body 是同一层的兄弟节点,z-index 都是 1,平手时后面的
+     dp-body(卡片、引言框)会照 DOM 顺序盖过 dp-hero,连带盖过
+     选单本身的 z-index:30(那个 30 只在 dp-hero 自己的层叠上下文
+     里管用,越不过兄弟节点这一层平手)。给 dp-hero 单独提一级,
+     选单才能真的浮在所有正文之上。 */
+  #dpage.topic-page > .dp-hero{z-index:5}
 
   /* —— Header:每个主题自己的一张实景 ——————————————————————
      底图由 renderTopicPage 用 --tp-hero / --tp-hero-m 传进来(每个主题一张),
