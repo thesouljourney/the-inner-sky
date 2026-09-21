@@ -2481,8 +2481,9 @@
   /* 正文整体退到一张圆角白卡里(第二张参考图的做法):
      卡片本身就是「这一章有边界」的讯号,不再是一条没有尽头的长条。 */
   #dpage.topic-page .tp-wrap{
-    /* 半透明:底纹从卡片底下透出来一点点,但文字仍然写在近乎纯白上 */
-    background:rgba(252,249,246,.82);border:1px solid rgba(240,232,227,.9);
+    /* 半透明:底纹从卡片底下透出来——82% 时底纹几乎看不见,调低到
+       68%,主题底纹更明显地透出来,文字仍然写在够亮的底上。 */
+    background:rgba(252,249,246,.68);border:1px solid rgba(240,232,227,.9);
     border-radius:clamp(20px,2.4vw,34px);
     padding:clamp(26px,4vw,54px) clamp(20px,3.6vw,52px);
     box-shadow:0 18px 60px -46px rgba(34,35,58,.5)

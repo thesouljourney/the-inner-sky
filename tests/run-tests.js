@@ -2214,9 +2214,11 @@ function testTopicLayout() {
     /#dpage\.topic-page::before\{[^}]*position:fixed[^}]*z-index:0/.test(css.replace(/\s+/g, "")) ||
     /position:fixed;inset:0;z-index:0/.test(css), true);
   checkEq("[tp] 内容压在底纹上面", /#dpage\.topic-page > \*\{position:relative;z-index:1\}/.test(css), true);
-  /* 白卡半透明:底纹透得出来,但文字仍然写在近乎纯白上 */
+  /* 白卡半透明:底纹透得出来,但文字仍然写在够亮的底上——82% 时
+     底纹几乎看不见,应用户要求调到 68% 让底纹更明显,同时不能低到
+     吃掉正文对比度,所以下限卡在 .55 */
   const cardA = (css.match(/background:rgba\(252,249,246,([.\d]+)\)/) || [, "0"])[1];
-  checkEq("[tp] 正文卡片仍然接近不透明(≥ .78),现在是 " + cardA, parseFloat(cardA) >= 0.78, true);
+  checkEq("[tp] 正文卡片够亮、对比度够(≥ .55),现在是 " + cardA, parseFloat(cardA) >= 0.55, true);
 
   /* —— 手机:编号在上,插画与标题横向并排;桌机那一套不受影响 —— */
   /* 手机断点现在有两块(header 一块、分段版面一块),取分段版面那一块 */
