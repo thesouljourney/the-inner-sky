@@ -2582,22 +2582,20 @@
      小、轻,颜色读主题色,不再用衬线数字体单独立一套。 */
   #dpage.topic-page .tp-no{
     display:block;font-family:var(--dp-sans);font-weight:500;
-    font-size:clamp(12px, 11.5px + .16vw, 13.5px);
-    letter-spacing:.16em;color:var(--theme-accent);opacity:.85;margin-bottom:6px
+    font-size:clamp(11px, 10.7px + .1vw, 12px);
+    letter-spacing:.14em;color:var(--theme-accent);opacity:.85;margin-bottom:6px
   }
   #dpage.topic-page .tp-h-row{display:flex;align-items:flex-start;gap:12px}
   /* Premium Editorial 排版:全页只留两款中文字体 —— 标题宋体、其余
      一律黑体,不再混用。字号用 clamp() 连成一条从手机到桌面的平滑
      曲线,不再靠 767px 断点整段跳一次值——断点只留给需要换版面
      (grid 区域)的规则,字号本身处处都是连续的。
-     字级整体压在跟全站其余页面(h3.dp-h 16–20px、.dp-prose 14.5px
-     那个量级)协调的范围内——上一版按 38–42px 走字面原始规格,
-     单独摆在这一页会比全站其他标题大出一大截,读起来不像同一个
-     产品,所以这一轮把整条曲线往下收,层级关系照旧,只是绝对值
-     贴回站内其他页面的尺度。 */
+     字级贴着全站其余页面本来的尺度走(h3.dp-h 16–20px、.dp-prose
+     14.5px)——不是「稍微」贴近,是基本落在同一个区间里,读起来
+     跟其他页面是同一件产品,不是另外做了一套更大的字号出来。 */
   #dpage.topic-page h3.tp-h{
     flex:1;margin:0;font-family:var(--dp-serif);font-weight:500;
-    font-size:clamp(21px, 18px + .94vw, 27px);line-height:1.45;
+    font-size:clamp(17px, 15.5px + .47vw, 20px);line-height:1.5;
     color:var(--title-color);letter-spacing:-.01em
   }
   #dpage.topic-page .tp-h-row .fav-btn{flex:none;margin-top:4px}
@@ -2606,8 +2604,8 @@
      两边用同一套「正文」规格(黑体),字号同一条 clamp 公式,不再
      手机 / 桌面各写一份数字。 */
   #dpage.topic-page .tp-peek .pv{
-    margin:14px 0 0;font-family:var(--dp-sans);font-weight:400;
-    font-size:clamp(15px, 14.3px + .23vw, 16.5px);line-height:1.9;
+    margin:12px 0 0;font-family:var(--dp-sans);font-weight:400;
+    font-size:clamp(14px, 13.7px + .1vw, 14.5px);line-height:1.9;
     letter-spacing:.01em;color:var(--body-color)
   }
   /* 重点列表之前没有专属样式,吃的是浏览器默认的项目符号与字级 ——
@@ -2616,13 +2614,13 @@
      不抢正文的注意力。星芒是 ::before 的文字内容,不是背景图,
      缩放跟着字号走,不用另外为每个尺寸各调一次。 */
   #dpage.topic-page .tp-peek .ch-keys{
-    margin-top:14px;list-style:none;padding:0
+    margin-top:12px;list-style:none;padding:0
   }
   #dpage.topic-page .tp-peek .ch-keys li{
-    display:flex;align-items:baseline;gap:11px;
+    display:flex;align-items:baseline;gap:10px;
     font-family:var(--dp-sans);font-weight:500;
-    font-size:clamp(14px, 13.3px + .21vw, 15.5px);line-height:1.7;letter-spacing:.01em;
-    color:var(--body-color);margin-top:9px
+    font-size:clamp(13px, 12.7px + .1vw, 13.5px);line-height:1.7;letter-spacing:.01em;
+    color:var(--body-color);margin-top:8px
   }
   #dpage.topic-page .tp-peek .ch-keys li:first-child{margin-top:0}
   #dpage.topic-page .tp-peek .ch-keys li i{
@@ -2642,8 +2640,8 @@
   #dpage.topic-page .tp-sec.open .tp-peek .ch-keys{display:none}
   #dpage.topic-page .tp-full .dp-prose{margin-top:14px}
   #dpage.topic-page .tp-full .dp-prose p{
-    margin:0 0 20px;font-family:var(--dp-sans);font-weight:400;
-    font-size:clamp(15px, 14.3px + .23vw, 16.5px);line-height:1.9;
+    margin:0 0 18px;font-family:var(--dp-sans);font-weight:400;
+    font-size:clamp(14px, 13.7px + .1vw, 14.5px);line-height:1.9;
     letter-spacing:.01em;color:var(--body-color)
   }
   #dpage.topic-page .tp-full .dp-prose p:last-child{margin-bottom:0}
@@ -2652,8 +2650,8 @@
     appearance:none;background:none;border:0;cursor:pointer;padding:12px 0 0;
     display:inline-flex;align-items:center;gap:8px;
     font-family:var(--dp-sans);font-weight:500;
-    font-size:clamp(12.5px, 12.2px + .1vw, 13.5px);
-    letter-spacing:.08em;color:var(--theme-accent);transition:opacity .3s
+    font-size:clamp(11.5px, 11.3px + .06vw, 12px);
+    letter-spacing:.07em;color:var(--theme-accent);transition:opacity .3s
   }
   #dpage.topic-page .tp-open:hover,#dpage.topic-page .tp-shut:hover{opacity:.72}
   #dpage.topic-page .tp-open:focus-visible,#dpage.topic-page .tp-shut:focus-visible{
