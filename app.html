@@ -2578,9 +2578,14 @@
   }
   #dpage.topic-page .tp-h-row .fav-btn{flex:none;margin-top:4px}
 
-  /* 引子:收起时读到的那几句。与展开后的原文同一份资料的两种读法。 */
+  /* 引子:收起时读到的那几句。与展开后的原文同一份资料的两种读法。
+     字体改成跟标题、开场引言同一个衬线字体家族(细体)——原本吃的是
+     全站默认的无衬线体,跟正上方衬线体的标题放在一起显得不搭。
+     没有用斜体:中文衬线字体大多没有真正的斜体字重,浏览器只是把
+     直立体强行斜切,笔画会显得别扭,不如维持正体。 */
   #dpage.topic-page .tp-peek .pv{
-    margin:14px 0 0;font-size:15px;line-height:2.05;color:rgba(34,35,58,.86)
+    margin:14px 0 0;font-family:var(--dp-serif);font-weight:300;
+    font-size:15.5px;line-height:2.05;letter-spacing:.01em;color:rgba(34,35,58,.86)
   }
   #dpage.topic-page .tp-peek .ch-keys{margin-top:14px}
 
