@@ -2541,21 +2541,18 @@
 
   /* 插画位:素材还没来的时候不是开天窗,而是一个刻意做过的水彩圆。
      src 一旦补上(TOPIC_SEC_ART),圆圈就换成那张图,版面不必再动。 */
+  /* 插画位:去掉圆圈的所有装饰层(描边、水彩晕染底色、圆形裁切)——
+     素材本身是去背的方形插画,现在就让它原样露出来,不套任何框。
+     position:relative 留着是给星记号(.gl)回落状态定位用;
+     aspect-ratio:1 留着是为了在 .tp-sec 的 grid 里占住同一块方形,
+     不然段落一多一少,插画高矮就会跟着晃。 */
   #dpage.topic-page .tp-art{
-    position:relative;aspect-ratio:1;border-radius:50%;
+    position:relative;aspect-ratio:1;
     display:flex;align-items:center;justify-content:center;
-    background:
-      radial-gradient(ellipse at 34% 28%,rgba(255,255,255,.9) 0%,rgba(255,255,255,0) 56%),
-      radial-gradient(ellipse at 72% 74%,rgba(235,196,195,.16) 0%,rgba(235,196,195,0) 64%),
-      radial-gradient(circle at 50% 50%,rgba(170,160,213,.09) 0%,rgba(248,242,237,.34) 70%,rgba(248,242,237,0) 100%);
-    box-shadow:inset 0 0 0 1px rgba(240,232,227,.9);
-    overflow:hidden;margin-top:6px
+    margin-top:6px
   }
-  /* 图叠在水彩圆上面。素材是去背的方形插画,所以用 contain 并留一点内缩 ——
-     不裁到边,圆圈本身还看得见一圈柔光。 */
   #dpage.topic-page .tp-art img{
-    position:absolute;inset:9%;width:82%;height:82%;
-    object-fit:contain;display:block
+    width:100%;height:100%;object-fit:contain;display:block
   }
   #dpage.topic-page .tp-art .gl{
     display:block;color:var(--dp-gold);opacity:.55;transform:scale(2.1);transform-origin:center
