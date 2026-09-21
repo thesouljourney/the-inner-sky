@@ -9966,7 +9966,12 @@ window.Guide = (function () {
       const tw = tip.offsetWidth || 78;
       tip.style.left = Math.max(10, Math.min(window.innerWidth - tw - 10,
         rect.left + rect.width / 2 - tw / 2 + window.scrollX)) + "px";
-      tip.style.top = (rect.top + window.scrollY - tip.offsetHeight - 10) + "px";
+      /* 放在选区下方,不是上方——手机原生的划词工具条(复制/查询/分享)
+         本来就贴着选区上缘弹出,「收藏」如果也放上面,会被原生工具条
+         盖住、点不到。放下面就跟原生工具条错开,不用去判断它在不在。 */
+      const th = tip.offsetHeight || 34;
+      const maxTop = window.scrollY + window.innerHeight - th - 10;
+      tip.style.top = Math.min(rect.bottom + window.scrollY + 10, maxTop) + "px";
     }, 130);
   });
   window.addEventListener("scroll", hideSaveTip, { passive: true });
