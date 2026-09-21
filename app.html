@@ -2668,11 +2668,16 @@
   #dpage.topic-page .tp-pair > *{margin:0}
   /* 描边跟着主题走(--theme-accent),跟开场引言金框同一个做法——
      九个主题不再共用一条灰线,读到这里能感觉到还是同一个主题。 */
+  /* 描边改成整块底色跟着主题走——比单一描边更看得出这是「这个主题」
+     的卡片,同时用很淡的染色(10% 主题色)避免盖过文字。不支持
+     color-mix() 的浏览器落回原本那片米色平底,不开天窗。 */
   #dpage.topic-page .tp-pair .dp-reflect{
-    border:1px solid var(--highlight-color, var(--dp-line));
-    border:1px solid color-mix(in srgb, var(--theme-accent, var(--dp-line)) 30%, transparent);
+    border:1px solid var(--dp-line);background:rgba(248,242,237,.55);
+    border:1px solid color-mix(in srgb, var(--theme-accent, var(--dp-line)) 22%, transparent);
+    background:color-mix(in srgb, var(--theme-accent, transparent) 9%, rgba(248,242,237,.7));
     border-radius:18px;
-    background:rgba(248,242,237,.55);padding:clamp(20px,2.4vw,28px);box-sizing:border-box
+    box-shadow:0 10px 26px -20px rgba(34,35,58,.4);
+    padding:clamp(20px,2.4vw,28px);box-sizing:border-box
   }
   #dpage.topic-page .tp-pair .dp-reflect .eb{display:none}
   #dpage.topic-page .tp-pair .dp-reflect .rule{display:none}
