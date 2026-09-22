@@ -3327,6 +3327,11 @@
     background:rgba(255,253,250,.72);border:1px solid rgba(154,106,52,.14);
     box-shadow:0 3px 20px -14px rgba(9,18,46,.2)
   }
+  /* 收藏:钉在面板右上角,不挤占内容区的版面——跟九大主题、生命蓝图
+     的星号按钮同一颗,大小与点击行为都沿用 .fav-btn 既有样式。 */
+  #dpage.compass-page .cp-panel > .fav-btn{
+    position:absolute;top:clamp(18px,2.2vw,26px);right:clamp(18px,2.2vw,26px)
+  }
   #dpage.compass-page .cp-panel .hd{
     margin:0;font-family:var(--dp-serif);font-weight:600;
     font-size:clamp(16.5px,1.9vw,20px);line-height:1.8;color:var(--dp-ink);letter-spacing:.02em
@@ -10151,6 +10156,23 @@ window.Guide = (function () {
            结构与上面那一支【完全一样】,只是没有中间那几句。 */
         panel = '<p class="hd">' + esc0(c.coreInsight) + "</p>" +
           why('<p class="tx">' + esc0(c.explanation) + "</p>");
+      }
+      /* 收藏:跟九大主题 / 生命蓝图同一套 data-fav + data-saveable 机制 ——
+         这里之前完全没有收藏入口,是唯一漏掉的一页。c 有内容才给收藏,
+         没有线索(!c)的那一支不给,不收藏一句「暂时没有」。 */
+      if (c) {
+        const dEnt = DIRS.filter(function (x) { return x.key === active; })[0];
+        const dName = dEnt ? dpT(dEnt.zh, dEnt.en) : active;
+        const favSrc = dpT("我的内在指南", "My Inner Compass");
+        const favTxt = [st ? st.situation : "", st ? st.text : "", st && st.micro ? st.micro : "",
+          c.coreInsight, c.explanation].filter(Boolean).join("\n\n");
+        const k = favKey(favSrc, dName, favTxt);
+        const favB = '<button class="fav-btn' + (isFaved(k) ? " on" : "") + '" data-fav="' + esc0(k) +
+          '" data-text="' + esc0(favTxt.slice(0, 300)) + '" data-source="' + esc0(favSrc) +
+          '" data-source-type="compass_direction" data-section="' + esc0(dName) +
+          '" title="' + esc0(T("saveIt")) + '">' + (isFaved(k) ? "★" : "☆") + "</button>";
+        panel = favB + '<div data-saveable data-source="' + esc0(favSrc) +
+          '" data-source-type="compass_direction" data-section="' + esc0(dName) + '">' + panel + "</div>";
       }
       panel = '<div class="cp-panel" id="cpPanel" data-for="' + esc0(active) + '">' +
         panel + '<button type="button" class="cp-close" id="cpPanelClose">' +

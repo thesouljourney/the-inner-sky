@@ -4232,8 +4232,13 @@ function testAnchorsV11AndRenderV2() {
   checkEq("[v2] 指南盘只剩线与一颗小星",
     (html.slice(html.indexOf("function compassRoseSvg"), html.indexOf("var CP_SHORT"))
       .match(/fill="none"/g) || []).length, 3);
+  /* 收藏功能补上之后,c.explanation 多了第三处引用——不是又渲染了一次
+     说明,是把它跟其余几段一起收进收藏用的纯文字(favTxt),给划词
+     收藏与 ★ 按钮的 data-text/data-fav 用。真正的渲染路径(展开说明
+     只能出现在 cp-why 披露里)没有变,所以数字从 2 改成 3,不是放宽
+     这条断言的意思。 */
   checkEq("[v2] 展开的说明一律收在披露后面",
-    (dir.match(/c\.explanation/g) || []).length === 2 &&
+    (dir.match(/c\.explanation/g) || []).length === 3 &&
     (dir.match(/class="cp-why"/g) || []).length === 1, true);
 
   /* ═══ F. 案例 A / B / C:每个有文案的方向都看得到个人化内容 ═══ */
