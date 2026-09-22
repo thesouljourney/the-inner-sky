@@ -2445,6 +2445,15 @@
     background:rgba(251,245,241,.65);border-color:rgba(154,106,52,.22);
     box-shadow:0 18px 46px -22px rgba(34,35,58,.32)
   }
+  /* 页尾的「返回主题列表」也是同一张底纹上的一块,原本吃的是全站
+     共用的不透明 --dp-cloud——颜色跟底纹太接近,看起来像整个糊掉、
+     几乎看不出这是一张卡。跟 .dp-card 同一个做法,只是不透明度
+     再高一点(这里内容少、是收尾的行动点,要比正文卡片更站得住)。 */
+  #dpage.reading-page .dp-return{
+    position:relative;z-index:1;
+    background:rgba(251,245,241,.78);border-color:rgba(154,106,52,.22);
+    box-shadow:0 18px 46px -22px rgba(34,35,58,.32)
+  }
 
   /* ============================================================
      九大主题(#/topic/<id>)—— 编辑式的分段版面
