@@ -2461,6 +2461,22 @@
     background:var(--dp-grad);color:#fff;font-weight:500;
     box-shadow:0 8px 20px -10px rgba(129,118,173,.5)
   }
+  /* 上一个 / 下一个标题:用户指定的那两张小卡,放用户给的实景图当底,
+     图上叠一层近乎不透明的暖白,文字才不会被拱门与海景压过去——
+     道理跟正文卡片、header 遮罩是同一个,只是这里内容更少、图更满,
+     遮罩需要更重一点。 */
+  #dpage.reading-page .dp-chnav > *{
+    position:relative;overflow:hidden;border-color:rgba(154,106,52,.22)
+  }
+  #dpage.reading-page .dp-chnav > *::before{
+    content:"";position:absolute;inset:0;z-index:0;
+    background-image:url("assets/reading/nav-bg.webp");
+    background-size:cover;background-position:center
+  }
+  #dpage.reading-page .dp-chnav > *::after{
+    content:"";position:absolute;inset:0;z-index:0;background:rgba(251,245,241,.55)
+  }
+  #dpage.reading-page .dp-chnav > * > *{position:relative;z-index:1}
 
   /* ============================================================
      九大主题(#/topic/<id>)—— 编辑式的分段版面
