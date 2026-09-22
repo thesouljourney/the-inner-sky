@@ -1989,7 +1989,10 @@ function testTopicLayout() {
   /* 第五次更新:页面最上方那组「专属建议」(topCards)改成 2×2 插画
      卡网格(cardsGridHtml,配用户给的四张插画素材),每章正文下面
      那组(ownCards)维持原本的星芒堆叠卡(cardsHtml)不变。 */
-  checkEq("[tp] 生命蓝图这一页没有被改", lock("renderReadingPage"), "50b416c0a6022278");
+  /* 第六次更新:插画卡的配图从「只认那九个精确别名」改成「对不上就
+     按位置轮流配图」——用户反馈实际生成的标题措辞没有精确落在那份
+     别名清单里,导致图完全不出来;现在四张卡永远都有插画。 */
+  checkEq("[tp] 生命蓝图这一页没有被改", lock("renderReadingPage"), "09a580e0f1ded38e");
   checkEq("[tp] 三十道探索题这一页没有被改", lock("renderQPage"), "893d3c71d47ab628");
 
   /* —— ② 文字没有被动过 —— */

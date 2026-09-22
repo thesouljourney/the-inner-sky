@@ -9973,9 +9973,13 @@ window.Guide = (function () {
          用户给的参考图那种做法:编号 + 右上角一张插画 + 标题 + 正文。
          数量不保证一定是四条(极端情况可能少几条),网格自动排,
          少的格子不留空,不新写任何标题或补一句 caption。 */
+      /* 真实生成的标题不一定刚好落在 CARD_ICON 那九个别名里(措辞可能
+         略有出入)——对不上就按位置轮流配图(水晶/拱窗/书/云端小径),
+         保证四张卡永远都有插画,不会因为一个字不一样就整张图消失。 */
+      const ICON_ORDER = ["crystal", "window", "book", "path"];
       function cardsGridHtml(list) {
         return '<div class="dp-cards-grid">' + list.map(function (cd, i) {
-          const icon = CARD_ICON[String(cd.title || "").trim()];
+          const icon = CARD_ICON[String(cd.title || "").trim()] || ICON_ORDER[i % ICON_ORDER.length];
           return '<div class="gc">' +
             '<span class="no" aria-hidden="true">' + ("0" + (i + 1)).slice(-2) + '</span>' +
             (icon ? '<img class="gc-art" src="assets/reading/gc-' + icon + '.webp" alt="" aria-hidden="true" loading="lazy" decoding="async">' : "") +
