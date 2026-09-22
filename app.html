@@ -2609,6 +2609,11 @@
   #dpage.reading-page .gc > div{font-size:13px;line-height:1.85;color:rgba(34,35,58,.82)}
   @media(max-width:640px){
     #dpage.reading-page .dp-cards-grid{grid-template-columns:1fr}
+    /* 手机上单栏排列,正文常常绕成三四行,卡片被撑得很高——插画如果
+       还是垂直置中(相对整张卡),就会跟标题脱节、飘在正文中间。
+       改成贴齐卡片顶端(跟标题同一条起始线对齐),四张卡的插画
+       位置才会一致,不会因为正文长短不同而高高低低。 */
+    #dpage.reading-page .gc .gc-art{top:22px;transform:none}
   }
 
   /* 页尾「返回主题列表」按钮换成用户给的金色星徽箭头图——图本身自带
