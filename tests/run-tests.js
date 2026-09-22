@@ -1974,7 +1974,11 @@ function testTopicLayout() {
     return crypto.createHash("sha256").update(fn(name)).digest("hex").slice(0, 16);
   };
   checkEq("[tp] dpAnswerHtml 的内容没有被改", lock("dpAnswerHtml"), "16ecaa4faf7f07b9");
-  checkEq("[tp] 生命蓝图这一页没有被改", lock("renderReadingPage"), "61dc64f60d32f416");
+  /* 这把锁原本是防九大主题改版时誤動到生命蓝图——后来应用户要求
+     拿掉了五章标签上方的「详细解读」字样(改成胶囊式 tab,直接从
+     标签开始),是这一页自己的、刻意的改动,所以锁的指纹跟着更新,
+     不是放宽这条测试。 */
+  checkEq("[tp] 生命蓝图这一页没有被改", lock("renderReadingPage"), "47393cb50e6f66e9");
   checkEq("[tp] 三十道探索题这一页没有被改", lock("renderQPage"), "893d3c71d47ab628");
 
   /* —— ② 文字没有被动过 —— */

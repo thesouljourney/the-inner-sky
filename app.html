@@ -2446,6 +2446,21 @@
     background:rgba(251,245,241,.68);border-color:rgba(154,106,52,.22);
     box-shadow:0 18px 46px -22px rgba(34,35,58,.32)
   }
+  /* 五章的标签:去掉原本「详细解读」那行字,标签直接从这里开始。
+     不是底线式的 tab(那是全站 .dp-tabs 的默认长相),改成胶囊式——
+     选中的那颗用站上既有的 --dp-grad(dp-cta 同一个渐层),其余
+     几颗是安静的文字,不需要再挂边框或底线去区分选中状态。 */
+  #dpage.reading-page .dp-tabs{
+    border-bottom:0;gap:8px;margin-bottom:26px
+  }
+  #dpage.reading-page .dp-tabs button{
+    border-radius:999px;padding:10px 20px;margin-bottom:0;border-bottom:0;
+    color:var(--dp-mut)
+  }
+  #dpage.reading-page .dp-tabs button.on{
+    background:var(--dp-grad);color:#fff;font-weight:500;
+    box-shadow:0 8px 20px -10px rgba(129,118,173,.5)
+  }
 
   /* ============================================================
      九大主题(#/topic/<id>)—— 编辑式的分段版面
@@ -9898,7 +9913,7 @@ window.Guide = (function () {
           cell(readingTab + 1, "nx", dpT("下一个标题 →", "Next →"), dpT("这是最后一章", "This is the last")) +
           "</nav>";
       }
-      body += '<div class="dp-card dp-detail" id="dpDetail"><div class="dp-read"><div class="dp-sec-label">' + dpT("详细解读", "IN DETAIL") + '</div>' +
+      body += '<div class="dp-card dp-detail" id="dpDetail"><div class="dp-read">' +
         '<div class="dp-tabs">' + chs.map(function (x, i) {
           return '<button data-rtab="' + i + '"' + (i === readingTab ? ' class="on"' : "") + ">" + esc0(chName(x, i)) + "</button>";
         }).join("") + "</div>" +
