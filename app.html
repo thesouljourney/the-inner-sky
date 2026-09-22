@@ -2425,12 +2425,17 @@
      用 ::before(paint 顺序最先)而不是九大主题那套 z-index:1 强制提层,
      这一页没有需要跨兄弟节点比大小的账号选单遮挡问题,不需要那么重。 */
   #dpage.reading-page{position:relative}
+  /* 底纹改成固定在视窗,不随内容卷动——跟九大主题那页同一个做法。
+     用 position:fixed 而不是 background-attachment:fixed:后者在 iOS
+     Safari 上有已知的跳动与破图问题(九大主题那边已经踩过、绕开了)。
+     卷动时只有卡片在动,底纹留在原地,两页表现要一致。 */
   #dpage.reading-page::before{
-    content:"";position:absolute;inset:0;pointer-events:none;
+    content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
     background-image:url("assets/reading/bg.webp");
     background-size:cover;background-position:center top;background-repeat:no-repeat;
     opacity:.28
   }
+  #dpage.reading-page > *{position:relative;z-index:1}
   /* 卡片本身要跟底纹分得开,不能让两者糊成一片:原本的 .dp-card
      用 --dp-cloud(#fcf9f6)配 --dp-line(#f0e8e3)的细边,两个颜色
      跟背景图的浅粉色调太接近,几乎看不出卡片的边界。这里单独加深
