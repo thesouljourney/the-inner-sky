@@ -2584,10 +2584,6 @@
     border:1px solid rgba(154,106,52,.16);border-radius:20px;
     padding:22px 116px 22px 24px
   }
-  #dpage.reading-page .gc .no{
-    display:block;font-family:var(--dp-display);font-size:15px;
-    letter-spacing:.1em;color:var(--dp-gold);margin-bottom:10px
-  }
   /* 插画放大、垂直居中贴右边——用户反馈原本的小图标太小,要跟参考图
      一样有份量。卡片右侧整段留白给图(padding-right),标题与正文
      都不会被图压到,不用各自再算一次要留多少空间。卡片给
@@ -10097,7 +10093,6 @@ window.Guide = (function () {
         return '<div class="dp-cards-grid">' + list.map(function (cd, i) {
           const icon = CARD_ICON[String(cd.title || "").trim()] || ICON_ORDER[i % ICON_ORDER.length];
           return '<div class="gc">' +
-            '<span class="no" aria-hidden="true">' + ("0" + (i + 1)).slice(-2) + '</span>' +
             /* 不能用 loading="lazy"——这张图被卡片的 overflow:hidden 裁切、
                本身又是 position:absolute,部分浏览器算不出它离视口多近,
                懒加载的判定永远不触发,图片实际上一次都不会去请求。
