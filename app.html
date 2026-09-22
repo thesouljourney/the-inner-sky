@@ -2431,6 +2431,16 @@
     background-size:cover;background-position:center top;background-repeat:no-repeat;
     opacity:.16
   }
+  /* 卡片本身要跟底纹分得开,不能让两者糊成一片:原本的 .dp-card
+     用 --dp-cloud(#fcf9f6)配 --dp-line(#f0e8e3)的细边,两个颜色
+     跟背景图的浅粉色调太接近,几乎看不出卡片的边界。这里单独加深
+     卡片的白度、边框对比与投影,只在这一页生效,不碰全站共用的
+     .dp-card。 */
+  #dpage.reading-page .dp-card{
+    position:relative;z-index:1;
+    background:#fff;border-color:rgba(154,106,52,.16);
+    box-shadow:0 16px 46px -22px rgba(34,35,58,.28)
+  }
 
   /* ============================================================
      九大主题(#/topic/<id>)—— 编辑式的分段版面
