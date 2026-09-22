@@ -2001,7 +2001,9 @@ function testTopicLayout() {
   // 再更新一次:返回按钮换成圆形箭头图标(dpReturnFoot 新增 opts.round,
   // 只有这一页的呼叫传了它),同样是这一页自己刻意的改动。
   // 再更新一次:页尾文案拿掉标点符号,同样是这一页自己刻意的改动。
-  checkEq("[tp] 生命蓝图这一页没有被改", lock("renderReadingPage"), "55e569bc48571d38");
+  // 再更新一次:「从九个不同的主题」与「开启属于自己的探索」之间加两个
+  // 不断行空格(视觉间距),同样是这一页自己刻意的改动。
+  checkEq("[tp] 生命蓝图这一页没有被改", lock("renderReadingPage"), "6395faa7c3d41060");
   checkEq("[tp] 三十道探索题这一页没有被改", lock("renderQPage"), "893d3c71d47ab628");
 
   /* —— ② 文字没有被动过 —— */
