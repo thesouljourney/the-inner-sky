@@ -2602,8 +2602,13 @@
     width:104px;height:104px;
     object-fit:contain;opacity:1;pointer-events:none
   }
+  /* 卡片标题原本没指定字体,吃的是全站默认的 --dp-sans(黑体),
+     跟刚换过的「专属建议」标签(细体衬线)风格不搭。换成同一套
+     --dp-serif 衬线,字重加到 600 撑住份量,四张卡跟标题看起来
+     是同一件事,不是临时拼上去的。 */
   #dpage.reading-page .gc b{
-    display:block;font-size:16px;margin-bottom:8px;color:var(--dp-ink)
+    display:block;font-family:var(--dp-serif);font-weight:600;
+    font-size:16.5px;margin-bottom:8px;color:var(--dp-ink)
   }
   #dpage.reading-page .gc > div{font-size:13px;line-height:1.85;color:rgba(34,35,58,.82)}
   @media(max-width:640px){
