@@ -2550,6 +2550,17 @@
     #dpage.reading-page .dp-cards-grid{grid-template-columns:1fr}
   }
 
+  /* 页尾「返回主题列表」按钮换成一个圆形箭头图标——用户给了参考图
+     (白底圆圈 + 一条灰色箭头)。文字保留在 aria-label 里,画面上只
+     剩箭头。只有这一页的 .dp-return 用得到这个 class(dpReturnFoot
+     其他呼叫点都没传 round),不影响九大主题 / 内在指南等其他页面。 */
+  #dpage.reading-page .dp-return .dp-cta-round{
+    flex:none;width:56px;height:56px;padding:0;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    background:#fff;color:rgba(34,35,58,.55);font-size:20px;
+    box-shadow:0 8px 20px -10px rgba(34,35,58,.35)
+  }
+
   /* ============================================================
      九大主题(#/topic/<id>)—— 编辑式的分段版面
      ------------------------------------------------------------
@@ -9764,9 +9775,14 @@ window.Guide = (function () {
       : "";
     // say:不传就跟改动前逐字相同——只有生命蓝图这一页传了自己的一段
     const say = o.say || dpT("你不是来寻找答案,\n而是来重新看见自己。", "You are not here for answers —\nyou are here to see yourself again.");
+    /* round:按钮换成一个圆形箭头图标,不印文字——只有生命蓝图这一页用。
+       文字还在,挪到 aria-label,屏幕阅读器照样念得出「返回主题列表」。 */
+    const ctaCls = "dp-cta" + (o.round ? " dp-cta-round" : "");
+    const ctaAttr = o.round ? ' aria-label="' + esc0(label) + '"' : "";
+    const ctaInner = o.round ? '<span aria-hidden="true">→</span>' : cta;
     return '<div class="dp-return' + (threadTail ? " thread-return" : "") + '"><span class="say">' +
       say.replace(/\n/g, "<br>") +
-      '</span><a class="dp-cta" href="' + (o.href || LANDING_TOPICS) + '">' + cta + "</a>" + hint + "</div>";
+      '</span><a class="' + ctaCls + '" href="' + (o.href || LANDING_TOPICS) + '"' + ctaAttr + '>' + ctaInner + "</a>" + hint + "</div>";
   }
 
   /* ============================================================
@@ -10069,7 +10085,8 @@ window.Guide = (function () {
          就是首页那组九大主题),不用另外传 href。 */
       foot = dpReturnFoot(false, {
         say: dpT("不急着找到答案,\n先听听内心的声音。\n\n从九个不同的主题,开启属于自己的探索。",
-          "There's no rush to find the answer —\nfirst, listen to your own voice.\n\nBegin your own exploration, across nine different themes.")
+          "There's no rush to find the answer —\nfirst, listen to your own voice.\n\nBegin your own exploration, across nine different themes."),
+        round: true
       });
     }
     dpScaffold({

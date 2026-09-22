@@ -1998,7 +1998,9 @@ function testTopicLayout() {
   // 完全没有请求记录)。这四张卡本来就在首屏附近,改成立即加载。
   // 再更新一次:页尾「你不是来寻找答案…」换成用户给的新文案,按钮维持
   // 原本的去处(首页九大主题),是这一页自己刻意的改动。
-  checkEq("[tp] 生命蓝图这一页没有被改", lock("renderReadingPage"), "b2ef7ed4866aea3a");
+  // 再更新一次:返回按钮换成圆形箭头图标(dpReturnFoot 新增 opts.round,
+  // 只有这一页的呼叫传了它),同样是这一页自己刻意的改动。
+  checkEq("[tp] 生命蓝图这一页没有被改", lock("renderReadingPage"), "656113a40dd1d85c");
   checkEq("[tp] 三十道探索题这一页没有被改", lock("renderQPage"), "893d3c71d47ab628");
 
   /* —— ② 文字没有被动过 —— */
