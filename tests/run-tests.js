@@ -1992,7 +1992,11 @@ function testTopicLayout() {
   /* 第六次更新:插画卡的配图从「只认那九个精确别名」改成「对不上就
      按位置轮流配图」——用户反馈实际生成的标题措辞没有精确落在那份
      别名清单里,导致图完全不出来;现在四张卡永远都有插画。 */
-  checkEq("[tp] 生命蓝图这一页没有被改", lock("renderReadingPage"), "09a580e0f1ded38e");
+  // 「专属建议」网格卡插画去掉 loading="lazy"——它被卡片的 overflow:hidden
+  // 裁切又是 position:absolute,部分浏览器判定不出离视口多近,懒加载永远
+  // 不触发,图片实际上一次都没被请求过(线上验证:Network 面板过滤 webp
+  // 完全没有请求记录)。这四张卡本来就在首屏附近,改成立即加载。
+  checkEq("[tp] 生命蓝图这一页没有被改", lock("renderReadingPage"), "2eeae1148e4dc13a");
   checkEq("[tp] 三十道探索题这一页没有被改", lock("renderQPage"), "893d3c71d47ab628");
 
   /* —— ② 文字没有被动过 —— */

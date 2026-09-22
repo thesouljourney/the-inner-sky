@@ -9982,7 +9982,12 @@ window.Guide = (function () {
           const icon = CARD_ICON[String(cd.title || "").trim()] || ICON_ORDER[i % ICON_ORDER.length];
           return '<div class="gc">' +
             '<span class="no" aria-hidden="true">' + ("0" + (i + 1)).slice(-2) + '</span>' +
-            (icon ? '<img class="gc-art" src="assets/reading/gc-' + icon + '.webp" alt="" aria-hidden="true" loading="lazy" decoding="async">' : "") +
+            /* 不能用 loading="lazy"——这张图被卡片的 overflow:hidden 裁切、
+               本身又是 position:absolute,部分浏览器算不出它离视口多近,
+               懒加载的判定永远不触发,图片实际上一次都不会去请求。
+               这四张卡在「专属建议」区块最上面,本来就在首屏附近,
+               懒加载省不到什么,换成立即加载更保险。 */
+            (icon ? '<img class="gc-art" src="assets/reading/gc-' + icon + '.webp" alt="" aria-hidden="true" decoding="async">' : "") +
             '<b>' + esc0(cd.title) + "</b>" +
             '<div data-saveable data-source="' + esc0(favSrc) + '" data-source-type="life_blueprint"' +
             ' data-section="' + esc0(dpT("专属建议", "For you") + " · " + String(cd.title || "")) + '">' +
