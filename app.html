@@ -2482,21 +2482,35 @@
     background:var(--dp-grad);color:#fff;font-weight:500;
     box-shadow:0 8px 20px -10px rgba(129,118,173,.5)
   }
-  /* 「专属建议」那张大卡(.dp-forcard,包住 FOR YOU 标签跟底下几张
-     .c4 小卡的外层容器)——用户给的这张粉蓝渐层天空图当底,遮罩比
-     之前几次都淡(.4),图案更看得出来。 */
-  #dpage.reading-page .dp-forcard{
-    position:relative;overflow:hidden
+  /* 「专属建议」那张大卡(.dp-forcard)——背景图撤掉了,改成参考图
+     那种做法:标题 + 一条延伸到底的细线 + 右侧英文小标,底下几条
+     建议各自一张满宽的卡,每条前面一枚小星芒。 */
+  #dpage.reading-page .dp-sec-label-line{
+    display:flex;align-items:center;gap:16px;margin-bottom:24px
   }
-  #dpage.reading-page .dp-forcard::before{
-    content:"";position:absolute;inset:0;z-index:0;
-    background-image:url("assets/reading/forcard-bg.webp");
-    background-size:cover;background-position:center
+  #dpage.reading-page .dp-sec-label-line .zh{
+    flex:none;font-family:var(--dp-serif);font-weight:600;font-size:clamp(18px,1.8vw,21px);
+    color:var(--dp-ink);letter-spacing:.04em
   }
-  #dpage.reading-page .dp-forcard::after{
-    content:"";position:absolute;inset:0;z-index:0;background:rgba(251,245,241,.65)
+  #dpage.reading-page .dp-sec-label-line .ln{flex:1;height:1px;background:rgba(154,106,52,.3)}
+  #dpage.reading-page .dp-sec-label-line .en{
+    flex:none;font-family:var(--dp-sans);font-size:11px;letter-spacing:.22em;color:var(--dp-mut)
   }
-  #dpage.reading-page .dp-forcard > *{position:relative;z-index:1}
+  #dpage.reading-page .dp-cards4{
+    display:flex;flex-direction:column;gap:16px
+  }
+  #dpage.reading-page .c4{
+    display:flex;align-items:flex-start;gap:14px;
+    background:rgba(251,245,241,.75);border:1px solid rgba(154,106,52,.16);
+    border-radius:18px;padding:20px 22px
+  }
+  #dpage.reading-page .c4 .ic{
+    flex:none;font-style:normal;line-height:1;margin-top:.3em;
+    font-size:16px;color:var(--dp-gold)
+  }
+  #dpage.reading-page .c4 .bd{min-width:0}
+  #dpage.reading-page .c4 b{font-size:16.5px;margin-bottom:8px}
+  #dpage.reading-page .c4 .bd > div{font-size:14.5px;line-height:1.9}
 
   /* ============================================================
      九大主题(#/topic/<id>)—— 编辑式的分段版面
@@ -9905,10 +9919,10 @@ window.Guide = (function () {
       // 建议卡片:正文可以划词收藏(与主题阅读同一套 selection / save 逻辑)
       function cardsHtml(list) {
         return '<div class="dp-cards4">' + list.map(function (cd) {
-          return '<div class="c4"><b>' + esc0(cd.title) + "</b>" +
+          return '<div class="c4"><i class="ic" aria-hidden="true">✦</i><div class="bd"><b>' + esc0(cd.title) + "</b>" +
             '<div data-saveable data-source="' + esc0(favSrc) + '" data-source-type="life_blueprint"' +
             ' data-section="' + esc0(dpT("专属建议", "For you") + " · " + String(cd.title || "")) + '">' +
-            esc0(cd.line || "") + "</div></div>";
+            esc0(cd.line || "") + "</div></div></div>";
         }).join("") + "</div>";
       }
       /* .dp-read 是主题阅读页的正文容器(max-width:var(--dp-text)=820px; margin:0 auto),
@@ -9921,7 +9935,9 @@ window.Guide = (function () {
          Mobile 上 --dp-text 本来就是 100%,这一区的行为与改动前一致。
          只动这一层容器,不动卡片设计、字级、间距与内容。 */
       if (topCards.length)
-        body += '<div class="dp-card dp-forcard"><div class="dp-sec-label">' + dpT("专属建议", "FOR YOU") + '</div>' +
+        body += '<div class="dp-card dp-forcard"><div class="dp-sec-label-line">' +
+          '<span class="zh">' + dpT("专属建议", "FOR YOU") + '</span><span class="ln"></span>' +
+          (window.I18N.isEN() ? "" : '<span class="en">INSIGHTS FOR YOU</span>') + '</div>' +
           cardsHtml(topCards) + "</div>";
 
       const k = favKey(favSrc, chName(ch, readingTab), ch.body || "");

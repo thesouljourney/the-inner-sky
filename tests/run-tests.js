@@ -1981,7 +1981,10 @@ function testTopicLayout() {
   /* 又更新一次:给「专属建议」那张大卡加了 dp-forcard 这个挂钩
      class,用来单独铺一张用户给的背景图——同样是这一页自己刻意的
      改动,指纹继续跟着更新。 */
-  checkEq("[tp] 生命蓝图这一页没有被改", lock("renderReadingPage"), "bdd347b2879bf0a4");
+  /* 第三次更新:撤掉「专属建议」大卡的背景图,改成标题+延伸线+英文
+     小标的分隔头,建议卡片各自一条满宽卡片带小星芒——同样是这一页
+     自己刻意的改动。 */
+  checkEq("[tp] 生命蓝图这一页没有被改", lock("renderReadingPage"), "ad90ef799470749d");
   checkEq("[tp] 三十道探索题这一页没有被改", lock("renderQPage"), "893d3c71d47ab628");
 
   /* —— ② 文字没有被动过 —— */
