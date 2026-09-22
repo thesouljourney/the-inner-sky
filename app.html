@@ -2615,15 +2615,17 @@
     filter:drop-shadow(0 6px 16px rgba(34,35,58,.45))
   }
   #dpage.reading-page .dp-return .dp-cta-round span{display:none}
-  /* 手机:卡片改直排——标题在最上面、分隔线、补充说明,箭头按钮退到
-     最下面置中,不再贴右边绝对定位(窄屏幕放不下,会压到文字)。 */
+  /* 手机:按钮维持跟参考图一样贴右边、垂直置中——不退到下面。
+     卡片改直排只是给文字本身多一点呼吸,按钮的位置(absolute + right)
+     不受 flex-direction 影响,这里只把按钮缩小、贴边距离收窄一点,
+     窄屏幕才不会太挤。 */
   @media(max-width:640px){
     #dpage.reading-page .dp-return{
-      flex-direction:column;padding:28px 20px 24px;gap:0
+      flex-direction:column;padding:24px 76px 24px 20px;gap:0
     }
     #dpage.reading-page .dp-return .say{margin-top:0}
     #dpage.reading-page .dp-return .dp-cta-round{
-      position:static;transform:none;margin-top:18px
+      width:52px;height:52px;right:14px
     }
   }
 
