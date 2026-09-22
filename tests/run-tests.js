@@ -1974,7 +1974,38 @@ function testTopicLayout() {
     return crypto.createHash("sha256").update(fn(name)).digest("hex").slice(0, 16);
   };
   checkEq("[tp] dpAnswerHtml 的内容没有被改", lock("dpAnswerHtml"), "16ecaa4faf7f07b9");
-  checkEq("[tp] 生命蓝图这一页没有被改", lock("renderReadingPage"), "61dc64f60d32f416");
+  /* 这把锁原本是防九大主题改版时誤動到生命蓝图——后来应用户要求
+     拿掉了五章标签上方的「详细解读」字样(改成胶囊式 tab,直接从
+     标签开始),是这一页自己的、刻意的改动,所以锁的指纹跟着更新,
+     不是放宽这条测试。 */
+  /* 又更新一次:给「专属建议」那张大卡加了 dp-forcard 这个挂钩
+     class,用来单独铺一张用户给的背景图——同样是这一页自己刻意的
+     改动,指纹继续跟着更新。 */
+  /* 第三次更新:撤掉「专属建议」大卡的背景图,改成标题+延伸线+英文
+     小标的分隔头,建议卡片各自一条满宽卡片带小星芒——同样是这一页
+     自己刻意的改动。 */
+  /* 第四次更新:「专属建议」的星芒符号从 ✦ 文字字符换成用户给的
+     星芒图片素材(背景图,不是文字内容),同样是这一页刻意的改动。 */
+  /* 第五次更新:页面最上方那组「专属建议」(topCards)改成 2×2 插画
+     卡网格(cardsGridHtml,配用户给的四张插画素材),每章正文下面
+     那组(ownCards)维持原本的星芒堆叠卡(cardsHtml)不变。 */
+  /* 第六次更新:插画卡的配图从「只认那九个精确别名」改成「对不上就
+     按位置轮流配图」——用户反馈实际生成的标题措辞没有精确落在那份
+     别名清单里,导致图完全不出来;现在四张卡永远都有插画。 */
+  // 「专属建议」网格卡插画去掉 loading="lazy"——它被卡片的 overflow:hidden
+  // 裁切又是 position:absolute,部分浏览器判定不出离视口多近,懒加载永远
+  // 不触发,图片实际上一次都没被请求过(线上验证:Network 面板过滤 webp
+  // 完全没有请求记录)。这四张卡本来就在首屏附近,改成立即加载。
+  // 再更新一次:页尾「你不是来寻找答案…」换成用户给的新文案,按钮维持
+  // 原本的去处(首页九大主题),是这一页自己刻意的改动。
+  // 再更新一次:返回按钮换成圆形箭头图标(dpReturnFoot 新增 opts.round,
+  // 只有这一页的呼叫传了它),同样是这一页自己刻意的改动。
+  // 再更新一次:页尾文案拿掉标点符号,同样是这一页自己刻意的改动。
+  // 再更新一次:「从九个不同的主题」与「开启属于自己的探索」之间加两个
+  // 不断行空格(视觉间距),同样是这一页自己刻意的改动。
+  // 再更新一次:「专属建议」四张卡拿掉编号(01/02/03/04),同样是这一页
+  // 自己刻意的改动。
+  checkEq("[tp] 生命蓝图这一页没有被改", lock("renderReadingPage"), "a5c185f1eb60b75f");
   checkEq("[tp] 三十道探索题这一页没有被改", lock("renderQPage"), "893d3c71d47ab628");
 
   /* —— ② 文字没有被动过 —— */
@@ -3358,14 +3389,20 @@ function testCompassPreLaunchFixes() {
     /\(o\.href \|\| LANDING_TOPICS\)/.test(foot), true);
   checkEq("[F2] 内在指南这一页自己传一组",
     /foot: dpReturnFoot\(false, \{ label: dpT\("回到主页", "Back to home"\), href: LANDING_URL \}\)/.test(html), true);
+  /* 生命蓝图这一页自己的页尾文案(不影响 dpReturnFoot 给其他页面的预设值,
+     也不影响内在指南自己那组 label/href——两边各自传各自的 opts) */
+  checkEq("[F2] 生命蓝图这一页自己传一段 say",
+    /foot = dpReturnFoot\(false, \{\s*say: dpT\(/.test(html), true);
   /* 其他页面一个都没被改到:剩下的呼叫仍然不带第二个参数 */
   const calls = (html.match(/dpReturnFoot\([^)]*\)/g) || [])
     .filter(function (c) { return c !== "dpReturnFoot(threadTail, opts)"; });
   checkEq("[F2] 其他页面的呼叫没有被动过",
     calls.filter(function (c) { return c.indexOf("label:") >= 0; }).length, 1);
+  checkEq("[F2] 生命蓝图这一页的呼叫没有被动过(只传 say)",
+    calls.filter(function (c) { return c.indexOf("say:") >= 0 && c.indexOf("label:") < 0; }).length, 1);
   checkEq("[F2] 其他页面仍然拿到预设值",
     calls.filter(function (c) {
-      return c.indexOf("label:") < 0 && !/dpReturnFoot\((\)|true\))/.test(c);
+      return c.indexOf("label:") < 0 && c.indexOf("say:") < 0 && !/dpReturnFoot\((\)|true\))/.test(c);
     }).join(","), "");
 }
 

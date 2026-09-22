@@ -2387,6 +2387,262 @@
     #dpage.thread-page .rise{opacity:1;transform:none;transition:none}
   }
 
+  /* ============================================================
+     生命蓝图(#/reading)—— 专属 header 实景 + 一层极淡的背景纹理
+     ------------------------------------------------------------
+     跟九大主题的 --tp-hero / --tp-bg 同一个做法,但这一页只有一份
+     素材、不需要按 tid 切换,所以直接写死路径,不用 JS 传 CSS 变数。
+     ============================================================ */
+  #dpage.reading-page .dp-hero{position:relative;isolation:isolate}
+  #dpage.reading-page .dp-hero::before{
+    content:"";position:absolute;inset:0;z-index:0;
+    background-image:url("assets/reading/hero.webp");
+    background-size:cover;background-position:center 42%
+  }
+  /* 底图上盖一层由深到浅的罩,道理跟九大主题一样:hero 里还有
+     logo / 导航 / 账号选单,这些字要维持浅色可读,不能被照片压过去。 */
+  #dpage.reading-page .dp-hero::after{
+    content:"";position:absolute;inset:0;z-index:0;
+    background:
+      linear-gradient(180deg,rgba(9,18,46,.84) 0%,rgba(9,18,46,.34) 24%,rgba(9,18,46,.12) 46%,rgba(9,18,46,.40) 100%),
+      linear-gradient(100deg,rgba(9,18,46,.72) 0%,rgba(9,18,46,.52) 30%,rgba(9,18,46,.20) 56%,rgba(9,18,46,0) 80%)
+  }
+  #dpage.reading-page .dp-hero > *{position:relative;z-index:1}
+  #dpage.reading-page .dp-hero .dp-stars i{opacity:calc(var(--o,.5) * .5)}
+  #dpage.reading-page .dp-title,
+  #dpage.reading-page .dp-sub,
+  #dpage.reading-page .dp-chip{text-shadow:0 1px 18px rgba(9,18,46,.55)}
+  @media(max-width:767px){
+    /* 手机换 4:3 那一张直幅裁切,不是把宽幅硬塞进窄萤幕 */
+    #dpage.reading-page .dp-hero::before{
+      background-image:url("assets/reading/hero-m.webp");background-position:center 38%
+    }
+  }
+  /* 背景纹理:压在 --dp-cream 底色之上、正文卡片之下的一层图。
+     第一版给到 .07,用户反馈太浅、看不太出来,调到 .16 —— 比九大
+     主题预设的 .14 略深一点,在卡片间隙看得清楚图案,仍然是深墨色
+     正文写在白卡上,对比度不受影响。
+     用 ::before(paint 顺序最先)而不是九大主题那套 z-index:1 强制提层,
+     这一页没有需要跨兄弟节点比大小的账号选单遮挡问题,不需要那么重。 */
+  #dpage.reading-page{position:relative}
+  /* 底纹改成固定在视窗,不随内容卷动——跟九大主题那页同一个做法。
+     用 position:fixed 而不是 background-attachment:fixed:后者在 iOS
+     Safari 上有已知的跳动与破图问题(九大主题那边已经踩过、绕开了)。
+     卷动时只有卡片在动,底纹留在原地,两页表现要一致。 */
+  #dpage.reading-page::before{
+    content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+    background-image:url("assets/reading/bg.webp");
+    background-size:cover;background-position:center top;background-repeat:no-repeat;
+    opacity:.28
+  }
+  #dpage.reading-page > *{position:relative;z-index:1}
+  /* 卡片本身要跟底纹分得开,不能让两者糊成一片:原本的 .dp-card
+     用 --dp-cloud(#fcf9f6)配 --dp-line(#f0e8e3)的细边,两个颜色
+     跟背景图的浅粉色调太接近,几乎看不出卡片的边界。这里单独加深
+     卡片的白度、边框对比与投影,只在这一页生效,不碰全站共用的
+     .dp-card。 */
+  /* 正文卡片(.dp-card)与页尾「返回主题列表」(.dp-return)统一同一个
+     透明度——原本 .dp-return 比 .dp-card 更高一点(78% vs 65%),
+     用户要求全部卡片一致,改成两个都是 68%,分寸都交给边框与投影
+     去撑,不用颜色深浅去区分「这是哪一种卡」。 */
+  #dpage.reading-page .dp-card{
+    position:relative;z-index:1;
+    background:rgba(251,245,241,.68);border-color:rgba(154,106,52,.22);
+    box-shadow:0 18px 46px -22px rgba(34,35,58,.32)
+  }
+  /* 页尾这张卡换成用户给的雪山实景图——文字用同一层米色遮罩叠在图上面,
+     不是纯色卡片。用户反馈遮罩太重、把图整个盖住了,参考图那张实景
+     几乎没有遮罩,靠深色粗体字自己在亮图上撑出对比——遮罩降到 18%,
+     图整个透出来,文字换成 --dp-ink 深色 + 加粗,不用遮罩去保证可读。
+     背景图用 background-size:cover 铺满整张卡(用户要的是「填满整个
+     格子」,不要 contain 那种图缩小、旁边露出底色的效果)。之前 cover
+     会在角落漏出源图自带的圆角留白,不是裁得不够——是裁的位置不对:
+     那张参考图本身是一张画了圆角的卡片插画,四个角落原本就是留白,
+     不管怎么整张裁都会带到。这次改成从内容区「上下各裁掉一截」抓一条
+     横向长条(1928×197,上下边缘都在圆角以内,四边都是实景),这样
+     cover 铺满就不会再露出任何一点白边,同时仍然是一张完整、连续、
+     没有另外拼接的实景。 */
+  #dpage.reading-page .dp-return{
+    position:relative;z-index:1;border-color:rgba(154,106,52,.22);
+    box-shadow:0 18px 46px -22px rgba(34,35,58,.32);
+    /* 叠一层很淡的米白遮罩,把图整体调浅一点——不是重新裁图或降低
+       opacity(那样连卡片的边框投影都会一起变淡),只压亮度。 */
+    background:linear-gradient(rgba(251,247,242,.5),rgba(251,247,242,.5)),
+      url("assets/reading/return-bg.webp") center/cover no-repeat;
+    /* 文字放在整张卡的正中间,不是贴左边——按钮改成绝对定位贴右边,
+       让出全宽给文字置中,两者不用再抢同一条 flex 主轴上的空间。 */
+    justify-content:center
+  }
+  #dpage.reading-page .dp-return .say{
+    color:#1c2b52;font-weight:700;text-align:center;
+    font-size:22px;line-height:1.75;
+    text-shadow:0 1px 8px rgba(251,245,241,.6);
+    /* 文字挪低一点,躲开背景图里那颗星芒(星芒偏上,原本文字是整张卡
+       垂直置中,刚好压在星芒上)。父层还是 align-items:center,这里
+       只加 margin-top 把文字往下推,不动按钮(按钮是另外绝对定位的,
+       没受影响)。 */
+    margin-top:22px
+  }
+  /* 主句跟补充说明中间那条「细线—星芒—细线」——用户给的参考图那种
+     做法。两条细线用 flex:1 撑开,星芒夹在中间,整条本身置中。 */
+  #dpage.reading-page .dp-return .say-div{
+    display:flex;align-items:center;gap:10px;
+    width:min(220px,70%);margin:14px auto;color:rgba(154,106,52,.32)
+  }
+  #dpage.reading-page .dp-return .say-div i{
+    flex:1;height:1px;background:currentColor;font-style:normal;
+    transform:scaleY(.6)
+  }
+  #dpage.reading-page .dp-return .say-div b{
+    flex:none;font-size:12px;font-weight:600;color:#9a6a2f
+  }
+  /* 第二段补充说明(「从九个不同的主题…」)字级比主句小、颜色浅一点,
+     整条独立成自己一行(不是挤在主句同一段落里)。 */
+  #dpage.reading-page .dp-return .say-sub{
+    display:block;text-align:center;font-size:14px;font-weight:600;color:rgba(28,43,82,.7)
+  }
+  /* 上一个 / 下一个标题:参考图是一张卡、中间一条竖线分两半,不是
+     两张各自独立的小卡挤在一起——卡片的边框 / 底色 / 投影搬到
+     .dp-chnav 本身,两个 <a> 退回成卡片里的两个格子,只留一条
+     中线分隔;标题字重加粗,贴近参考图serif 粗体的份量。 */
+  #dpage.reading-page .dp-chnav{
+    background:rgba(251,245,241,.68);border:1px solid rgba(154,106,52,.22);
+    border-radius:24px;box-shadow:0 18px 46px -22px rgba(34,35,58,.32);
+    overflow:hidden;gap:0
+  }
+  #dpage.reading-page .dp-chnav > *{
+    border:0;border-radius:0;background:none;box-shadow:none;padding:20px 24px
+  }
+  /* 中线不顶到卡片上下边缘——参考图里那条线短,离卡片的上下缘都
+     留了一截,不是从头连到尾,所以用绝对定位的短线,不是整个
+     格子高的 border。 */
+  #dpage.reading-page .dp-chnav > .nx{position:relative}
+  #dpage.reading-page .dp-chnav > .nx::before{
+    content:"";position:absolute;left:0;top:20px;bottom:20px;
+    width:1px;background:rgba(154,106,52,.22)
+  }
+  #dpage.reading-page .dp-chnav .tt{font-weight:700}
+  /* 五章的标签:去掉原本「详细解读」那行字,标签直接从这里开始。
+     不是底线式的 tab(那是全站 .dp-tabs 的默认长相),改成胶囊式——
+     选中的那颗用站上既有的 --dp-grad(dp-cta 同一个渐层),其余
+     几颗是安静的文字,不需要再挂边框或底线去区分选中状态。 */
+  #dpage.reading-page .dp-tabs{
+    border-bottom:0;gap:8px;margin-bottom:26px
+  }
+  #dpage.reading-page .dp-tabs button{
+    border-radius:999px;padding:10px 20px;margin-bottom:0;border-bottom:0;
+    color:var(--dp-mut)
+  }
+  #dpage.reading-page .dp-tabs button.on{
+    background:var(--dp-grad);color:#fff;font-weight:500;
+    box-shadow:0 8px 20px -10px rgba(129,118,173,.5)
+  }
+  /* 「专属建议」那张大卡(.dp-forcard)——背景图撤掉了,改成参考图
+     那种做法:标题 + 一条延伸到底的细线 + 右侧英文小标,底下几条
+     建议各自一张满宽的卡,每条前面一枚小星芒。 */
+  #dpage.reading-page .dp-sec-label-line{
+    display:flex;align-items:center;gap:16px;margin-bottom:24px
+  }
+  /* 「专属建议」标签的字体不好看——原本是常规粗细(600)的 Noto Serif SC,
+     跟正文标题字重太接近,显不出「这是一个标签」的份量。换成细体
+     (400)+ 更宽的字距,站上其他地方(INNER SKY logo / INSIGHTS FOR
+     YOU 那行英文小标)本来就是靠细体加宽字距撑出高级感,这里跟着
+     同一套语言,不是另外新增一种字体。 */
+  #dpage.reading-page .dp-sec-label-line .zh{
+    flex:none;font-family:var(--dp-serif);font-weight:400;font-size:clamp(16px,1.6vw,19px);
+    color:var(--dp-ink);letter-spacing:.12em
+  }
+  #dpage.reading-page .dp-sec-label-line .ln{flex:1;height:1px;background:rgba(154,106,52,.3)}
+  #dpage.reading-page .dp-sec-label-line .en{
+    flex:none;font-family:var(--dp-sans);font-size:9.5px;letter-spacing:.2em;color:var(--dp-mut)
+  }
+  #dpage.reading-page .dp-cards4{
+    display:flex;flex-direction:column;gap:16px
+  }
+  #dpage.reading-page .c4{
+    display:flex;align-items:flex-start;gap:14px;
+    background:rgba(251,245,241,.75);border:1px solid rgba(154,106,52,.16);
+    border-radius:18px;padding:20px 22px
+  }
+  #dpage.reading-page .c4 .ic{
+    flex:none;margin-top:2px;width:26px;height:26px;
+    background-image:url("assets/reading/sparkle.webp");
+    background-size:contain;background-repeat:no-repeat;background-position:center
+  }
+  #dpage.reading-page .c4 .bd{min-width:0}
+  #dpage.reading-page .c4 b{font-size:15px;margin-bottom:8px;color:var(--dp-ink)}
+  #dpage.reading-page .c4 .bd > div{font-size:13px;line-height:1.85;color:rgba(34,35,58,.82)}
+
+  /* 页面最上方「专属建议」的 2×2 插画卡网格——用户给的参考图那种
+     做法:编号 + 右上角一张插画 + 标题 + 正文,每张卡自己一个圆角
+     容器。手机上收成单列。 */
+  #dpage.reading-page .dp-cards-grid{
+    display:grid;grid-template-columns:1fr 1fr;gap:16px
+  }
+  #dpage.reading-page .gc{
+    position:relative;overflow:hidden;background:rgba(251,245,241,.75);
+    border:1px solid rgba(154,106,52,.16);border-radius:20px;
+    padding:22px 116px 22px 24px
+  }
+  /* 插画放大、垂直居中贴右边——用户反馈原本的小图标太小,要跟参考图
+     一样有份量。卡片右侧整段留白给图(padding-right),标题与正文
+     都不会被图压到,不用各自再算一次要留多少空间。卡片给
+     overflow:hidden,图比卡片矮一点点也不会顶穿圆角。
+     四张素材长宽比不一样(拱窗又高又窄、水晶接近方形)——固定高度
+     配 width:auto 会让窄的那张(拱窗/山路)看起来比其他两张小一圈,
+     四张卡份量不均。改成固定的正方形取景框(object-fit:contain 在
+     104×104 里居中缩放),不管素材本身长宽比,四张卡的插画占的
+     视觉面积都一样。 */
+  #dpage.reading-page .gc .gc-art{
+    position:absolute;top:50%;right:16px;transform:translateY(-50%);
+    width:104px;height:104px;
+    object-fit:contain;opacity:1;pointer-events:none
+  }
+  /* 卡片标题原本没指定字体,吃的是全站默认的 --dp-sans(黑体),
+     跟刚换过的「专属建议」标签(细体衬线)风格不搭。换成同一套
+     --dp-serif 衬线,字重加到 600 撑住份量,四张卡跟标题看起来
+     是同一件事,不是临时拼上去的。 */
+  #dpage.reading-page .gc b{
+    display:block;font-family:var(--dp-serif);font-weight:600;
+    font-size:16.5px;margin-bottom:8px;color:var(--dp-ink)
+  }
+  #dpage.reading-page .gc > div{font-size:13px;line-height:1.85;color:rgba(34,35,58,.82)}
+  @media(max-width:640px){
+    #dpage.reading-page .dp-cards-grid{grid-template-columns:1fr}
+    /* 手机上单栏排列,正文常常绕成三四行,卡片被撑得很高——插画如果
+       还是垂直置中(相对整张卡),就会跟标题脱节、飘在正文中间。
+       改成贴齐卡片顶端(跟标题同一条起始线对齐),四张卡的插画
+       位置才会一致,不会因为正文长短不同而高高低低。 */
+    #dpage.reading-page .gc .gc-art{top:22px;transform:none}
+  }
+
+  /* 页尾「返回主题列表」按钮换成用户给的金色星徽箭头图——图本身自带
+     圆框与光晕,不用再另外画白底圆圈/投影。文字保留在 aria-label 里,
+     画面上只剩这张图。只有这一页的 .dp-return 用得到这个 class
+     (dpReturnFoot 其他呼叫点都没传 round),不影响其他页面。
+     文字改置中之后,按钮退出 flex 主轴,改成贴右边的绝对定位——
+     不然文字置中会把按钮也一起挤到中间。用户嫌按钮太浅,加一圈
+     投影让它跟亮底的图有更多对比,不用重画图。 */
+  #dpage.reading-page .dp-return .dp-cta-round{
+    position:absolute;right:24px;top:50%;transform:translateY(-50%);
+    flex:none;width:64px;height:64px;padding:0;border-radius:50%;
+    background:url("assets/reading/return-arrow.webp") center/contain no-repeat;
+    filter:drop-shadow(0 6px 16px rgba(34,35,58,.45))
+  }
+  #dpage.reading-page .dp-return .dp-cta-round span{display:none}
+  /* 手机:按钮维持跟参考图一样贴右边、垂直置中——不退到下面。
+     卡片改直排只是给文字本身多一点呼吸,按钮的位置(absolute + right)
+     不受 flex-direction 影响,这里只把按钮缩小、贴边距离收窄一点,
+     窄屏幕才不会太挤。 */
+  @media(max-width:640px){
+    #dpage.reading-page .dp-return{
+      flex-direction:column;padding:24px 76px 24px 20px;gap:0
+    }
+    #dpage.reading-page .dp-return .say{margin-top:0}
+    #dpage.reading-page .dp-return .dp-cta-round{
+      width:52px;height:52px;right:14px
+    }
+  }
 
   /* ============================================================
      九大主题(#/topic/<id>)—— 编辑式的分段版面
@@ -8586,6 +8842,8 @@ window.Guide = (function () {
     // 九大主题是编辑式的分段版面(圆形插画位 / 段号 / 可展开的原文),同样只挂在这一页
     $("dpage").classList.toggle("topic-page", r.k === "topic");
     $("dpage").classList.toggle("compass-page", r.k === "compass");
+    // 生命蓝图专属的一张 header 实景与一层极淡的背景纹理,只挂在这一页
+    $("dpage").classList.toggle("reading-page", r.k === "reading");
     /* 开发预览的样式全锁在这个额外的 class 底下 —— 没有它,这一页与修改前一模一样 */
     $("dpage").classList.toggle("cp-preview", r.k === "compass" && !!r.dev);
     if (!(r.k === "compass" && r.dev)) $("dpage").classList.remove("cp-showdev");
@@ -9598,9 +9856,27 @@ window.Guide = (function () {
         esc0(dpT("看看还有哪些部分，正在等待你发现。",
                  "See which parts are still waiting to be found.")) + "</span>"
       : "";
+    // say:不传就跟改动前逐字相同——只有生命蓝图这一页传了自己的一段
+    const say = o.say || dpT("你不是来寻找答案,\n而是来重新看见自己。", "You are not here for answers —\nyou are here to see yourself again.");
+    /* say 里用空行分成两段的话,第二段(补充说明那句)另外包一层
+       .say-sub,好让它套一个跟主句不一样的小字级——不传空行(其他
+       页面都没有)就跟改动前一样,整段一起印,没有 .say-sub。 */
+    const sayBits = say.split("\n\n");
+    // 两段之间那条「细线—星芒—细线」的分隔,用户给的参考图那种做法,
+    // 只有真的分两段的时候才印,不影响其他页面单段的 say
+    const sayDivider = '<span class="say-div" aria-hidden="true"><i></i><b>✦</b><i></i></span>';
+    const sayHtml = sayBits[0].replace(/\n/g, "<br>") +
+      (sayBits.length > 1
+        ? sayDivider + '<span class="say-sub">' + sayBits.slice(1).join("\n\n").replace(/\n/g, "<br>") + "</span>"
+        : "");
+    /* round:按钮换成一个圆形箭头图标,不印文字——只有生命蓝图这一页用。
+       文字还在,挪到 aria-label,屏幕阅读器照样念得出「返回主题列表」。 */
+    const ctaCls = "dp-cta" + (o.round ? " dp-cta-round" : "");
+    const ctaAttr = o.round ? ' aria-label="' + esc0(label) + '"' : "";
+    const ctaInner = o.round ? '<span aria-hidden="true">→</span>' : cta;
     return '<div class="dp-return' + (threadTail ? " thread-return" : "") + '"><span class="say">' +
-      dpT("你不是来寻找答案,\n而是来重新看见自己。", "You are not here for answers —\nyou are here to see yourself again.").replace(/\n/g, "<br>") +
-      '</span><a class="dp-cta" href="' + (o.href || LANDING_TOPICS) + '">' + cta + "</a>" + hint + "</div>";
+      sayHtml +
+      '</span><a class="' + ctaCls + '" href="' + (o.href || LANDING_TOPICS) + '"' + ctaAttr + '>' + ctaInner + "</a>" + hint + "</div>";
   }
 
   /* ============================================================
@@ -9779,6 +10055,17 @@ window.Guide = (function () {
         "你的天赋特质", "你自带的能力",
         "你的理想状态", "什么状态最像真正的你"
       ];
+      /* 「专属建议」四张卡各自配一张插画——用户给的素材本来就分四组,
+         按标题落在哪一组(上面 CARDS_KEEP_TOP 的四个别名簇)来配图,
+         不是写死第几张卡配第几张图:生成顺序不保证跟这四组顺序一样。
+         没对上的标题(理论上不会发生,四组九个别名都列了)就不给图,
+         版面照常,不开天窗。 */
+      const CARD_ICON = {
+        "你的核心人格模式": "crystal", "你的核心人格特质": "crystal", "组成你的核心力量": "crystal",
+        "你的情绪运作方式": "window", "你如何感受这个世界": "window",
+        "你的天赋特质": "book", "你自带的能力": "book",
+        "你的理想状态": "path", "什么状态最像真正的你": "path"
+      };
       const chTitleIdx = {};
       chs.forEach(function (x, i) { const t = String(x.title || "").trim(); if (t) chTitleIdx[t] = i; });
       const topCards = [], chapterCards = {};
@@ -9793,7 +10080,31 @@ window.Guide = (function () {
       // 建议卡片:正文可以划词收藏(与主题阅读同一套 selection / save 逻辑)
       function cardsHtml(list) {
         return '<div class="dp-cards4">' + list.map(function (cd) {
-          return '<div class="c4"><b>' + esc0(cd.title) + "</b>" +
+          return '<div class="c4"><i class="ic" aria-hidden="true"></i><div class="bd"><b>' + esc0(cd.title) + "</b>" +
+            '<div data-saveable data-source="' + esc0(favSrc) + '" data-source-type="life_blueprint"' +
+            ' data-section="' + esc0(dpT("专属建议", "For you") + " · " + String(cd.title || "")) + '">' +
+            esc0(cd.line || "") + "</div></div></div>";
+        }).join("") + "</div>";
+      }
+      /* 页面最上方那组「专属建议」(topCards)改成 2×2 的插画卡网格,
+         用户给的参考图那种做法:编号 + 右上角一张插画 + 标题 + 正文。
+         数量不保证一定是四条(极端情况可能少几条),网格自动排,
+         少的格子不留空,不新写任何标题或补一句 caption。 */
+      /* 真实生成的标题不一定刚好落在 CARD_ICON 那九个别名里(措辞可能
+         略有出入)——对不上就按位置轮流配图(水晶/拱窗/书/云端小径),
+         保证四张卡永远都有插画,不会因为一个字不一样就整张图消失。 */
+      const ICON_ORDER = ["crystal", "window", "book", "path"];
+      function cardsGridHtml(list) {
+        return '<div class="dp-cards-grid">' + list.map(function (cd, i) {
+          const icon = CARD_ICON[String(cd.title || "").trim()] || ICON_ORDER[i % ICON_ORDER.length];
+          return '<div class="gc">' +
+            /* 不能用 loading="lazy"——这张图被卡片的 overflow:hidden 裁切、
+               本身又是 position:absolute,部分浏览器算不出它离视口多近,
+               懒加载的判定永远不触发,图片实际上一次都不会去请求。
+               这四张卡在「专属建议」区块最上面,本来就在首屏附近,
+               懒加载省不到什么,换成立即加载更保险。 */
+            (icon ? '<img class="gc-art" src="assets/reading/gc-' + icon + '.webp" alt="" aria-hidden="true" decoding="async">' : "") +
+            '<b>' + esc0(cd.title) + "</b>" +
             '<div data-saveable data-source="' + esc0(favSrc) + '" data-source-type="life_blueprint"' +
             ' data-section="' + esc0(dpT("专属建议", "For you") + " · " + String(cd.title || "")) + '">' +
             esc0(cd.line || "") + "</div></div>";
@@ -9809,8 +10120,10 @@ window.Guide = (function () {
          Mobile 上 --dp-text 本来就是 100%,这一区的行为与改动前一致。
          只动这一层容器,不动卡片设计、字级、间距与内容。 */
       if (topCards.length)
-        body += '<div class="dp-card"><div class="dp-sec-label">' + dpT("专属建议", "FOR YOU") + '</div>' +
-          cardsHtml(topCards) + "</div>";
+        body += '<div class="dp-card dp-forcard"><div class="dp-sec-label-line">' +
+          '<span class="zh">' + dpT("专属建议", "FOR YOU") + '</span><span class="ln"></span>' +
+          (window.I18N.isEN() ? "" : '<span class="en">INSIGHTS FOR YOU</span>') + '</div>' +
+          cardsGridHtml(topCards) + "</div>";
 
       const k = favKey(favSrc, chName(ch, readingTab), ch.body || "");
       const favB = '<button class="fav-btn' + (isFaved(k) ? " on" : "") + '" data-fav="' + esc0(k) +
@@ -9837,7 +10150,7 @@ window.Guide = (function () {
           cell(readingTab + 1, "nx", dpT("下一个标题 →", "Next →"), dpT("这是最后一章", "This is the last")) +
           "</nav>";
       }
-      body += '<div class="dp-card dp-detail" id="dpDetail"><div class="dp-read"><div class="dp-sec-label">' + dpT("详细解读", "IN DETAIL") + '</div>' +
+      body += '<div class="dp-card dp-detail" id="dpDetail"><div class="dp-read">' +
         '<div class="dp-tabs">' + chs.map(function (x, i) {
           return '<button data-rtab="' + i + '"' + (i === readingTab ? ' class="on"' : "") + ">" + esc0(chName(x, i)) + "</button>";
         }).join("") + "</div>" +
@@ -9859,7 +10172,15 @@ window.Guide = (function () {
         // 这一章的最终阅读出口:排在正文与章末专属建议全部结束之后
         chNav() +
         "</div></div>";
-      foot = dpReturnFoot();
+      /* 生命蓝图这一页的页尾文案自己写一段,不用 dpReturnFoot 默认那句
+         (那句是给九大主题 / 生命脉络这些「读完一段」的页面用的)。
+         按钮维持默认目的地(LANDING_TOPICS = index.html#chapters,
+         就是首页那组九大主题),不用另外传 href。 */
+      foot = dpReturnFoot(false, {
+        say: dpT("不急着找到答案\n先听听内心的声音\n\n从九个不同的主题  开启属于自己的探索",
+          "There's no rush to find the answer —\nfirst, listen to your own voice.\n\nBegin your own exploration, across nine different themes."),
+        round: true
+      });
     }
     dpScaffold({
       chip: dpT("生命蓝图", "BLUEPRINT"),
