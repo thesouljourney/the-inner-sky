@@ -2458,7 +2458,14 @@
   #dpage.reading-page .dp-chnav > *{
     border:0;border-radius:0;background:none;box-shadow:none;padding:20px 24px
   }
-  #dpage.reading-page .dp-chnav > .nx{border-left:1px solid rgba(154,106,52,.22)}
+  /* 中线不顶到卡片上下边缘——参考图里那条线短,离卡片的上下缘都
+     留了一截,不是从头连到尾,所以用绝对定位的短线,不是整个
+     格子高的 border。 */
+  #dpage.reading-page .dp-chnav > .nx{position:relative}
+  #dpage.reading-page .dp-chnav > .nx::before{
+    content:"";position:absolute;left:0;top:20px;bottom:20px;
+    width:1px;background:rgba(154,106,52,.22)
+  }
   #dpage.reading-page .dp-chnav .tt{font-weight:700}
   /* 五章的标签:去掉原本「详细解读」那行字,标签直接从这里开始。
      不是底线式的 tab(那是全站 .dp-tabs 的默认长相),改成胶囊式——
