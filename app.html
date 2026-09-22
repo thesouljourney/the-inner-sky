@@ -2440,11 +2440,18 @@
      透明度——原本 .dp-return 比 .dp-card 更高一点(78% vs 65%),
      用户要求全部卡片一致,改成两个都是 68%,分寸都交给边框与投影
      去撑,不用颜色深浅去区分「这是哪一种卡」。 */
-  #dpage.reading-page .dp-card,
-  #dpage.reading-page .dp-return{
+  #dpage.reading-page .dp-card{
     position:relative;z-index:1;
     background:rgba(251,245,241,.68);border-color:rgba(154,106,52,.22);
     box-shadow:0 18px 46px -22px rgba(34,35,58,.32)
+  }
+  /* 页尾这张卡换成用户给的雪山实景图——文字用同一层米色遮罩叠在图上面,
+     不是纯色卡片,遮罩浓度跟其他卡片的 68% 一致,保证字还看得清楚。 */
+  #dpage.reading-page .dp-return{
+    position:relative;z-index:1;border-color:rgba(154,106,52,.22);
+    box-shadow:0 18px 46px -22px rgba(34,35,58,.32);
+    background:linear-gradient(rgba(251,245,241,.42),rgba(251,245,241,.42)),
+      url("assets/reading/return-bg.webp") center/cover no-repeat
   }
   /* 上一个 / 下一个标题:参考图是一张卡、中间一条竖线分两半,不是
      两张各自独立的小卡挤在一起——卡片的边框 / 底色 / 投影搬到
@@ -2550,16 +2557,15 @@
     #dpage.reading-page .dp-cards-grid{grid-template-columns:1fr}
   }
 
-  /* 页尾「返回主题列表」按钮换成一个圆形箭头图标——用户给了参考图
-     (白底圆圈 + 一条灰色箭头)。文字保留在 aria-label 里,画面上只
-     剩箭头。只有这一页的 .dp-return 用得到这个 class(dpReturnFoot
-     其他呼叫点都没传 round),不影响九大主题 / 内在指南等其他页面。 */
+  /* 页尾「返回主题列表」按钮换成用户给的金色星徽箭头图——图本身自带
+     圆框与光晕,不用再另外画白底圆圈/投影。文字保留在 aria-label 里,
+     画面上只剩这张图。只有这一页的 .dp-return 用得到这个 class
+     (dpReturnFoot 其他呼叫点都没传 round),不影响其他页面。 */
   #dpage.reading-page .dp-return .dp-cta-round{
-    flex:none;width:56px;height:56px;padding:0;border-radius:50%;
-    display:flex;align-items:center;justify-content:center;
-    background:#fff;color:rgba(34,35,58,.55);font-size:20px;
-    box-shadow:0 8px 20px -10px rgba(34,35,58,.35)
+    flex:none;width:64px;height:64px;padding:0;border-radius:50%;
+    background:url("assets/reading/return-arrow.webp") center/contain no-repeat
   }
+  #dpage.reading-page .dp-return .dp-cta-round span{display:none}
 
   /* ============================================================
      九大主题(#/topic/<id>)—— 编辑式的分段版面
