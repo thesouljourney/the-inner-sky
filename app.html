@@ -2487,13 +2487,14 @@
      做法。两条细线用 flex:1 撑开,星芒夹在中间,整条本身置中。 */
   #dpage.reading-page .dp-return .say-div{
     display:flex;align-items:center;gap:10px;
-    width:min(220px,70%);margin:14px auto;color:rgba(154,106,52,.5)
+    width:min(220px,70%);margin:14px auto;color:rgba(154,106,52,.32)
   }
   #dpage.reading-page .dp-return .say-div i{
-    flex:1;height:1px;background:currentColor;font-style:normal
+    flex:1;height:1px;background:currentColor;font-style:normal;
+    transform:scaleY(.6)
   }
   #dpage.reading-page .dp-return .say-div b{
-    flex:none;font-size:11px;font-weight:400;color:var(--dp-gold)
+    flex:none;font-size:12px;font-weight:600;color:#9a6a2f
   }
   /* 第二段补充说明(「从九个不同的主题…」)字级比主句小、颜色浅一点,
      整条独立成自己一行(不是挤在主句同一段落里)。 */
