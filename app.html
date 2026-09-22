@@ -2418,9 +2418,10 @@
       background-image:url("assets/reading/hero-m.webp");background-position:center 38%
     }
   }
-  /* 背景纹理:压在 --dp-cream 底色之上、正文卡片之下的一层极淡的图,
-     用户要求「浅一点」—— 不透明度压到 .07,比九大主题预设的 .14 更淡,
-     只在卡片与卡片的间隙里隐约看得到,不会吃掉正文的对比度。
+  /* 背景纹理:压在 --dp-cream 底色之上、正文卡片之下的一层图。
+     第一版给到 .07,用户反馈太浅、看不太出来,调到 .16 —— 比九大
+     主题预设的 .14 略深一点,在卡片间隙看得清楚图案,仍然是深墨色
+     正文写在白卡上,对比度不受影响。
      用 ::before(paint 顺序最先)而不是九大主题那套 z-index:1 强制提层,
      这一页没有需要跨兄弟节点比大小的账号选单遮挡问题,不需要那么重。 */
   #dpage.reading-page{position:relative}
@@ -2428,7 +2429,7 @@
     content:"";position:absolute;inset:0;pointer-events:none;
     background-image:url("assets/reading/bg.webp");
     background-size:cover;background-position:center top;background-repeat:no-repeat;
-    opacity:.07
+    opacity:.16
   }
 
   /* ============================================================
