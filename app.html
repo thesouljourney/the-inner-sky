@@ -2543,9 +2543,14 @@
   #dpage.reading-page .dp-sec-label-line{
     display:flex;align-items:center;gap:16px;margin-bottom:24px
   }
+  /* 「专属建议」标签的字体不好看——原本是常规粗细(600)的 Noto Serif SC,
+     跟正文标题字重太接近,显不出「这是一个标签」的份量。换成细体
+     (400)+ 更宽的字距,站上其他地方(INNER SKY logo / INSIGHTS FOR
+     YOU 那行英文小标)本来就是靠细体加宽字距撑出高级感,这里跟着
+     同一套语言,不是另外新增一种字体。 */
   #dpage.reading-page .dp-sec-label-line .zh{
-    flex:none;font-family:var(--dp-serif);font-weight:600;font-size:clamp(15px,1.4vw,17px);
-    color:var(--dp-ink);letter-spacing:.04em
+    flex:none;font-family:var(--dp-serif);font-weight:400;font-size:clamp(16px,1.6vw,19px);
+    color:var(--dp-ink);letter-spacing:.12em
   }
   #dpage.reading-page .dp-sec-label-line .ln{flex:1;height:1px;background:rgba(154,106,52,.3)}
   #dpage.reading-page .dp-sec-label-line .en{
