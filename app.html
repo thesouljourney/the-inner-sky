@@ -9762,8 +9762,10 @@ window.Guide = (function () {
         esc0(dpT("看看还有哪些部分，正在等待你发现。",
                  "See which parts are still waiting to be found.")) + "</span>"
       : "";
+    // say:不传就跟改动前逐字相同——只有生命蓝图这一页传了自己的一段
+    const say = o.say || dpT("你不是来寻找答案,\n而是来重新看见自己。", "You are not here for answers —\nyou are here to see yourself again.");
     return '<div class="dp-return' + (threadTail ? " thread-return" : "") + '"><span class="say">' +
-      dpT("你不是来寻找答案,\n而是来重新看见自己。", "You are not here for answers —\nyou are here to see yourself again.").replace(/\n/g, "<br>") +
+      say.replace(/\n/g, "<br>") +
       '</span><a class="dp-cta" href="' + (o.href || LANDING_TOPICS) + '">' + cta + "</a>" + hint + "</div>";
   }
 
@@ -10061,7 +10063,14 @@ window.Guide = (function () {
         // 这一章的最终阅读出口:排在正文与章末专属建议全部结束之后
         chNav() +
         "</div></div>";
-      foot = dpReturnFoot();
+      /* 生命蓝图这一页的页尾文案自己写一段,不用 dpReturnFoot 默认那句
+         (那句是给九大主题 / 生命脉络这些「读完一段」的页面用的)。
+         按钮维持默认目的地(LANDING_TOPICS = index.html#chapters,
+         就是首页那组九大主题),不用另外传 href。 */
+      foot = dpReturnFoot(false, {
+        say: dpT("不急着找到答案,\n先听听内心的声音。\n\n从九个不同的主题,开启属于自己的探索。",
+          "There's no rush to find the answer —\nfirst, listen to your own voice.\n\nBegin your own exploration, across nine different themes.")
+      });
     }
     dpScaffold({
       chip: dpT("生命蓝图", "BLUEPRINT"),

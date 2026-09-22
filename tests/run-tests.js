@@ -1996,7 +1996,9 @@ function testTopicLayout() {
   // 裁切又是 position:absolute,部分浏览器判定不出离视口多近,懒加载永远
   // 不触发,图片实际上一次都没被请求过(线上验证:Network 面板过滤 webp
   // 完全没有请求记录)。这四张卡本来就在首屏附近,改成立即加载。
-  checkEq("[tp] 生命蓝图这一页没有被改", lock("renderReadingPage"), "2eeae1148e4dc13a");
+  // 再更新一次:页尾「你不是来寻找答案…」换成用户给的新文案,按钮维持
+  // 原本的去处(首页九大主题),是这一页自己刻意的改动。
+  checkEq("[tp] 生命蓝图这一页没有被改", lock("renderReadingPage"), "b2ef7ed4866aea3a");
   checkEq("[tp] 三十道探索题这一页没有被改", lock("renderQPage"), "893d3c71d47ab628");
 
   /* —— ② 文字没有被动过 —— */
@@ -3380,14 +3382,20 @@ function testCompassPreLaunchFixes() {
     /\(o\.href \|\| LANDING_TOPICS\)/.test(foot), true);
   checkEq("[F2] 内在指南这一页自己传一组",
     /foot: dpReturnFoot\(false, \{ label: dpT\("回到主页", "Back to home"\), href: LANDING_URL \}\)/.test(html), true);
+  /* 生命蓝图这一页自己的页尾文案(不影响 dpReturnFoot 给其他页面的预设值,
+     也不影响内在指南自己那组 label/href——两边各自传各自的 opts) */
+  checkEq("[F2] 生命蓝图这一页自己传一段 say",
+    /foot = dpReturnFoot\(false, \{\s*say: dpT\(/.test(html), true);
   /* 其他页面一个都没被改到:剩下的呼叫仍然不带第二个参数 */
   const calls = (html.match(/dpReturnFoot\([^)]*\)/g) || [])
     .filter(function (c) { return c !== "dpReturnFoot(threadTail, opts)"; });
   checkEq("[F2] 其他页面的呼叫没有被动过",
     calls.filter(function (c) { return c.indexOf("label:") >= 0; }).length, 1);
+  checkEq("[F2] 生命蓝图这一页的呼叫没有被动过(只传 say)",
+    calls.filter(function (c) { return c.indexOf("say:") >= 0 && c.indexOf("label:") < 0; }).length, 1);
   checkEq("[F2] 其他页面仍然拿到预设值",
     calls.filter(function (c) {
-      return c.indexOf("label:") < 0 && !/dpReturnFoot\((\)|true\))/.test(c);
+      return c.indexOf("label:") < 0 && c.indexOf("say:") < 0 && !/dpReturnFoot\((\)|true\))/.test(c);
     }).join(","), "");
 }
 
