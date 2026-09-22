@@ -2467,7 +2467,7 @@
     box-shadow:0 18px 46px -22px rgba(34,35,58,.32);
     /* 叠一层很淡的米白遮罩,把图整体调浅一点——不是重新裁图或降低
        opacity(那样连卡片的边框投影都会一起变淡),只压亮度。 */
-    background:linear-gradient(rgba(251,247,242,.58),rgba(251,247,242,.58)),
+    background:linear-gradient(rgba(251,247,242,.5),rgba(251,247,242,.5)),
       url("assets/reading/return-bg.webp") center/cover no-repeat;
     /* 文字放在整张卡的正中间,不是贴左边——按钮改成绝对定位贴右边,
        让出全宽给文字置中,两者不用再抢同一条 flex 主轴上的空间。 */
@@ -2499,7 +2499,7 @@
   /* 第二段补充说明(「从九个不同的主题…」)字级比主句小、颜色浅一点,
      整条独立成自己一行(不是挤在主句同一段落里)。 */
   #dpage.reading-page .dp-return .say-sub{
-    display:block;font-size:14px;font-weight:600;color:rgba(28,43,82,.7)
+    display:block;text-align:center;font-size:14px;font-weight:600;color:rgba(28,43,82,.7)
   }
   /* 上一个 / 下一个标题:参考图是一张卡、中间一条竖线分两半,不是
      两张各自独立的小卡挤在一起——卡片的边框 / 底色 / 投影搬到
