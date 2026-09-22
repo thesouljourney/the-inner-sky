@@ -2439,9 +2439,10 @@
   #dpage.reading-page .dp-card{
     position:relative;z-index:1;
     /* 纯白(#fff)对比是够了,但跟背景的暖调完全脱开,像贴了一张
-       白纸上去——改回接近背景色阶的暖白(比背景图本身更亮、更不
-       透明),分寸交给边框与投影去撑,不是靠颜色反差硬切开。 */
-    background:#fbf5f1;border-color:rgba(154,106,52,.22);
+       白纸上去——改回接近背景色阶的暖白,透明度压到 58%,底纹能
+       在卡片里隐约透出来,分寸交给边框与投影去撑,不是靠颜色反差
+       硬切开。 */
+    background:rgba(251,245,241,.58);border-color:rgba(154,106,52,.22);
     box-shadow:0 18px 46px -22px rgba(34,35,58,.32)
   }
 
