@@ -2522,7 +2522,7 @@
   #dpage.reading-page .gc{
     position:relative;overflow:hidden;background:rgba(251,245,241,.75);
     border:1px solid rgba(154,106,52,.16);border-radius:20px;
-    padding:22px 128px 22px 24px
+    padding:22px 116px 22px 24px
   }
   #dpage.reading-page .gc .no{
     display:block;font-family:var(--dp-display);font-size:15px;
@@ -2531,10 +2531,15 @@
   /* 插画放大、垂直居中贴右边——用户反馈原本的小图标太小,要跟参考图
      一样有份量。卡片右侧整段留白给图(padding-right),标题与正文
      都不会被图压到,不用各自再算一次要留多少空间。卡片给
-     overflow:hidden,图比卡片矮一点点也不会顶穿圆角。 */
+     overflow:hidden,图比卡片矮一点点也不会顶穿圆角。
+     四张素材长宽比不一样(拱窗又高又窄、水晶接近方形)——固定高度
+     配 width:auto 会让窄的那张(拱窗/山路)看起来比其他两张小一圈,
+     四张卡份量不均。改成固定的正方形取景框(object-fit:contain 在
+     104×104 里居中缩放),不管素材本身长宽比,四张卡的插画占的
+     视觉面积都一样。 */
   #dpage.reading-page .gc .gc-art{
     position:absolute;top:50%;right:16px;transform:translateY(-50%);
-    height:118px;width:auto;max-width:112px;
+    width:104px;height:104px;
     object-fit:contain;opacity:1;pointer-events:none
   }
   #dpage.reading-page .gc b{
