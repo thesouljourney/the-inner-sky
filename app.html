@@ -2513,6 +2513,33 @@
   #dpage.reading-page .c4 b{font-size:15px;margin-bottom:8px;color:var(--dp-ink)}
   #dpage.reading-page .c4 .bd > div{font-size:13px;line-height:1.85;color:rgba(34,35,58,.82)}
 
+  /* 页面最上方「专属建议」的 2×2 插画卡网格——用户给的参考图那种
+     做法:编号 + 右上角一张插画 + 标题 + 正文,每张卡自己一个圆角
+     容器。手机上收成单列。 */
+  #dpage.reading-page .dp-cards-grid{
+    display:grid;grid-template-columns:1fr 1fr;gap:16px
+  }
+  #dpage.reading-page .gc{
+    position:relative;background:rgba(251,245,241,.75);
+    border:1px solid rgba(154,106,52,.16);border-radius:20px;
+    padding:22px 24px
+  }
+  #dpage.reading-page .gc .no{
+    display:block;font-family:var(--dp-display);font-size:15px;
+    letter-spacing:.1em;color:var(--dp-gold);margin-bottom:10px
+  }
+  #dpage.reading-page .gc .gc-art{
+    position:absolute;top:18px;right:18px;height:60px;width:auto;max-width:76px;
+    object-fit:contain;opacity:.92;pointer-events:none
+  }
+  #dpage.reading-page .gc b{
+    display:block;font-size:16px;padding-right:64px;margin-bottom:8px;color:var(--dp-ink)
+  }
+  #dpage.reading-page .gc > div{font-size:13px;line-height:1.85;color:rgba(34,35,58,.82)}
+  @media(max-width:640px){
+    #dpage.reading-page .dp-cards-grid{grid-template-columns:1fr}
+  }
+
   /* ============================================================
      九大主题(#/topic/<id>)—— 编辑式的分段版面
      ------------------------------------------------------------
@@ -9906,6 +9933,17 @@ window.Guide = (function () {
         "你的天赋特质", "你自带的能力",
         "你的理想状态", "什么状态最像真正的你"
       ];
+      /* 「专属建议」四张卡各自配一张插画——用户给的素材本来就分四组,
+         按标题落在哪一组(上面 CARDS_KEEP_TOP 的四个别名簇)来配图,
+         不是写死第几张卡配第几张图:生成顺序不保证跟这四组顺序一样。
+         没对上的标题(理论上不会发生,四组九个别名都列了)就不给图,
+         版面照常,不开天窗。 */
+      const CARD_ICON = {
+        "你的核心人格模式": "crystal", "你的核心人格特质": "crystal", "组成你的核心力量": "crystal",
+        "你的情绪运作方式": "window", "你如何感受这个世界": "window",
+        "你的天赋特质": "book", "你自带的能力": "book",
+        "你的理想状态": "path", "什么状态最像真正的你": "path"
+      };
       const chTitleIdx = {};
       chs.forEach(function (x, i) { const t = String(x.title || "").trim(); if (t) chTitleIdx[t] = i; });
       const topCards = [], chapterCards = {};
@@ -9926,6 +9964,22 @@ window.Guide = (function () {
             esc0(cd.line || "") + "</div></div></div>";
         }).join("") + "</div>";
       }
+      /* 页面最上方那组「专属建议」(topCards)改成 2×2 的插画卡网格,
+         用户给的参考图那种做法:编号 + 右上角一张插画 + 标题 + 正文。
+         数量不保证一定是四条(极端情况可能少几条),网格自动排,
+         少的格子不留空,不新写任何标题或补一句 caption。 */
+      function cardsGridHtml(list) {
+        return '<div class="dp-cards-grid">' + list.map(function (cd, i) {
+          const icon = CARD_ICON[String(cd.title || "").trim()];
+          return '<div class="gc">' +
+            '<span class="no" aria-hidden="true">' + ("0" + (i + 1)).slice(-2) + '</span>' +
+            (icon ? '<img class="gc-art" src="assets/reading/gc-' + icon + '.webp" alt="" aria-hidden="true" loading="lazy" decoding="async">' : "") +
+            '<b>' + esc0(cd.title) + "</b>" +
+            '<div data-saveable data-source="' + esc0(favSrc) + '" data-source-type="life_blueprint"' +
+            ' data-section="' + esc0(dpT("专属建议", "For you") + " · " + String(cd.title || "")) + '">' +
+            esc0(cd.line || "") + "</div></div>";
+        }).join("") + "</div>";
+      }
       /* .dp-read 是主题阅读页的正文容器(max-width:var(--dp-text)=820px; margin:0 auto),
          下面的「详细解读」需要它才能跟主题页共用同一条正文基准线。
          但上方这四张「专属建议」不是正文,是卡片区块:套上正文栏之后,它们被压在
@@ -9939,7 +9993,7 @@ window.Guide = (function () {
         body += '<div class="dp-card dp-forcard"><div class="dp-sec-label-line">' +
           '<span class="zh">' + dpT("专属建议", "FOR YOU") + '</span><span class="ln"></span>' +
           (window.I18N.isEN() ? "" : '<span class="en">INSIGHTS FOR YOU</span>') + '</div>' +
-          cardsHtml(topCards) + "</div>";
+          cardsGridHtml(topCards) + "</div>";
 
       const k = favKey(favSrc, chName(ch, readingTab), ch.body || "");
       const favB = '<button class="fav-btn' + (isFaved(k) ? " on" : "") + '" data-fav="' + esc0(k) +

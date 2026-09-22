@@ -1986,7 +1986,10 @@ function testTopicLayout() {
      自己刻意的改动。 */
   /* 第四次更新:「专属建议」的星芒符号从 ✦ 文字字符换成用户给的
      星芒图片素材(背景图,不是文字内容),同样是这一页刻意的改动。 */
-  checkEq("[tp] 生命蓝图这一页没有被改", lock("renderReadingPage"), "eb72dc5a8ede9d05");
+  /* 第五次更新:页面最上方那组「专属建议」(topCards)改成 2×2 插画
+     卡网格(cardsGridHtml,配用户给的四张插画素材),每章正文下面
+     那组(ownCards)维持原本的星芒堆叠卡(cardsHtml)不变。 */
+  checkEq("[tp] 生命蓝图这一页没有被改", lock("renderReadingPage"), "50b416c0a6022278");
   checkEq("[tp] 三十道探索题这一页没有被改", lock("renderQPage"), "893d3c71d47ab628");
 
   /* —— ② 文字没有被动过 —— */
