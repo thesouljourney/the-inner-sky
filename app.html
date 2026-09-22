@@ -2475,6 +2475,10 @@
        没受影响)。 */
     margin-top:22px
   }
+  /* 第二段补充说明(「从九个不同的主题…」)字级比主句小 */
+  #dpage.reading-page .dp-return .say-sub{
+    display:inline-block;font-size:14px;font-weight:600
+  }
   /* 上一个 / 下一个标题:参考图是一张卡、中间一条竖线分两半,不是
      两张各自独立的小卡挤在一起——卡片的边框 / 底色 / 投影搬到
      .dp-chnav 本身,两个 <a> 退回成卡片里的两个格子,只留一条
@@ -9808,13 +9812,21 @@ window.Guide = (function () {
       : "";
     // say:不传就跟改动前逐字相同——只有生命蓝图这一页传了自己的一段
     const say = o.say || dpT("你不是来寻找答案,\n而是来重新看见自己。", "You are not here for answers —\nyou are here to see yourself again.");
+    /* say 里用空行分成两段的话,第二段(补充说明那句)另外包一层
+       .say-sub,好让它套一个跟主句不一样的小字级——不传空行(其他
+       页面都没有)就跟改动前一样,整段一起印,没有 .say-sub。 */
+    const sayBits = say.split("\n\n");
+    const sayHtml = sayBits[0].replace(/\n/g, "<br>") +
+      (sayBits.length > 1
+        ? "<br><br>" + '<span class="say-sub">' + sayBits.slice(1).join("\n\n").replace(/\n/g, "<br>") + "</span>"
+        : "");
     /* round:按钮换成一个圆形箭头图标,不印文字——只有生命蓝图这一页用。
        文字还在,挪到 aria-label,屏幕阅读器照样念得出「返回主题列表」。 */
     const ctaCls = "dp-cta" + (o.round ? " dp-cta-round" : "");
     const ctaAttr = o.round ? ' aria-label="' + esc0(label) + '"' : "";
     const ctaInner = o.round ? '<span aria-hidden="true">→</span>' : cta;
     return '<div class="dp-return' + (threadTail ? " thread-return" : "") + '"><span class="say">' +
-      say.replace(/\n/g, "<br>") +
+      sayHtml +
       '</span><a class="' + ctaCls + '" href="' + (o.href || LANDING_TOPICS) + '"' + ctaAttr + '>' + ctaInner + "</a>" + hint + "</div>";
   }
 
