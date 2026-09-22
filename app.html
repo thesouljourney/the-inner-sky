@@ -2387,6 +2387,49 @@
     #dpage.thread-page .rise{opacity:1;transform:none;transition:none}
   }
 
+  /* ============================================================
+     生命蓝图(#/reading)—— 专属 header 实景 + 一层极淡的背景纹理
+     ------------------------------------------------------------
+     跟九大主题的 --tp-hero / --tp-bg 同一个做法,但这一页只有一份
+     素材、不需要按 tid 切换,所以直接写死路径,不用 JS 传 CSS 变数。
+     ============================================================ */
+  #dpage.reading-page .dp-hero{position:relative;isolation:isolate}
+  #dpage.reading-page .dp-hero::before{
+    content:"";position:absolute;inset:0;z-index:0;
+    background-image:url("assets/reading/hero.webp");
+    background-size:cover;background-position:center 42%
+  }
+  /* 底图上盖一层由深到浅的罩,道理跟九大主题一样:hero 里还有
+     logo / 导航 / 账号选单,这些字要维持浅色可读,不能被照片压过去。 */
+  #dpage.reading-page .dp-hero::after{
+    content:"";position:absolute;inset:0;z-index:0;
+    background:
+      linear-gradient(180deg,rgba(9,18,46,.84) 0%,rgba(9,18,46,.34) 24%,rgba(9,18,46,.12) 46%,rgba(9,18,46,.40) 100%),
+      linear-gradient(100deg,rgba(9,18,46,.72) 0%,rgba(9,18,46,.52) 30%,rgba(9,18,46,.20) 56%,rgba(9,18,46,0) 80%)
+  }
+  #dpage.reading-page .dp-hero > *{position:relative;z-index:1}
+  #dpage.reading-page .dp-hero .dp-stars i{opacity:calc(var(--o,.5) * .5)}
+  #dpage.reading-page .dp-title,
+  #dpage.reading-page .dp-sub,
+  #dpage.reading-page .dp-chip{text-shadow:0 1px 18px rgba(9,18,46,.55)}
+  @media(max-width:767px){
+    /* 手机换 4:3 那一张直幅裁切,不是把宽幅硬塞进窄萤幕 */
+    #dpage.reading-page .dp-hero::before{
+      background-image:url("assets/reading/hero-m.webp");background-position:center 38%
+    }
+  }
+  /* 背景纹理:压在 --dp-cream 底色之上、正文卡片之下的一层极淡的图,
+     用户要求「浅一点」—— 不透明度压到 .07,比九大主题预设的 .14 更淡,
+     只在卡片与卡片的间隙里隐约看得到,不会吃掉正文的对比度。
+     用 ::before(paint 顺序最先)而不是九大主题那套 z-index:1 强制提层,
+     这一页没有需要跨兄弟节点比大小的账号选单遮挡问题,不需要那么重。 */
+  #dpage.reading-page{position:relative}
+  #dpage.reading-page::before{
+    content:"";position:absolute;inset:0;pointer-events:none;
+    background-image:url("assets/reading/bg.webp");
+    background-size:cover;background-position:center top;background-repeat:no-repeat;
+    opacity:.07
+  }
 
   /* ============================================================
      九大主题(#/topic/<id>)—— 编辑式的分段版面
@@ -8591,6 +8634,8 @@ window.Guide = (function () {
     // 九大主题是编辑式的分段版面(圆形插画位 / 段号 / 可展开的原文),同样只挂在这一页
     $("dpage").classList.toggle("topic-page", r.k === "topic");
     $("dpage").classList.toggle("compass-page", r.k === "compass");
+    // 生命蓝图专属的一张 header 实景与一层极淡的背景纹理,只挂在这一页
+    $("dpage").classList.toggle("reading-page", r.k === "reading");
     /* 开发预览的样式全锁在这个额外的 class 底下 —— 没有它,这一页与修改前一模一样 */
     $("dpage").classList.toggle("cp-preview", r.k === "compass" && !!r.dev);
     if (!(r.k === "compass" && r.dev)) $("dpage").classList.remove("cp-showdev");
