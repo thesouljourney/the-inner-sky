@@ -1984,7 +1984,9 @@ function testTopicLayout() {
   /* 第三次更新:撤掉「专属建议」大卡的背景图,改成标题+延伸线+英文
      小标的分隔头,建议卡片各自一条满宽卡片带小星芒——同样是这一页
      自己刻意的改动。 */
-  checkEq("[tp] 生命蓝图这一页没有被改", lock("renderReadingPage"), "ad90ef799470749d");
+  /* 第四次更新:「专属建议」的星芒符号从 ✦ 文字字符换成用户给的
+     星芒图片素材(背景图,不是文字内容),同样是这一页刻意的改动。 */
+  checkEq("[tp] 生命蓝图这一页没有被改", lock("renderReadingPage"), "eb72dc5a8ede9d05");
   checkEq("[tp] 三十道探索题这一页没有被改", lock("renderQPage"), "893d3c71d47ab628");
 
   /* —— ② 文字没有被动过 —— */

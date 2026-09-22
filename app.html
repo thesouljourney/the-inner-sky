@@ -2505,8 +2505,9 @@
     border-radius:18px;padding:20px 22px
   }
   #dpage.reading-page .c4 .ic{
-    flex:none;font-style:normal;line-height:1;margin-top:.3em;
-    font-size:16px;color:var(--dp-lav)
+    flex:none;margin-top:.3em;width:16px;height:16px;
+    background-image:url("assets/reading/sparkle.webp");
+    background-size:contain;background-repeat:no-repeat;background-position:center
   }
   #dpage.reading-page .c4 .bd{min-width:0}
   #dpage.reading-page .c4 b{font-size:15px;margin-bottom:8px;color:var(--dp-ink)}
@@ -9919,7 +9920,7 @@ window.Guide = (function () {
       // 建议卡片:正文可以划词收藏(与主题阅读同一套 selection / save 逻辑)
       function cardsHtml(list) {
         return '<div class="dp-cards4">' + list.map(function (cd) {
-          return '<div class="c4"><i class="ic" aria-hidden="true">✦</i><div class="bd"><b>' + esc0(cd.title) + "</b>" +
+          return '<div class="c4"><i class="ic" aria-hidden="true"></i><div class="bd"><b>' + esc0(cd.title) + "</b>" +
             '<div data-saveable data-source="' + esc0(favSrc) + '" data-source-type="life_blueprint"' +
             ' data-section="' + esc0(dpT("专属建议", "For you") + " · " + String(cd.title || "")) + '">' +
             esc0(cd.line || "") + "</div></div></div>";
