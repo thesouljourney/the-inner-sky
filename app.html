@@ -2482,6 +2482,21 @@
     background:var(--dp-grad);color:#fff;font-weight:500;
     box-shadow:0 8px 20px -10px rgba(129,118,173,.5)
   }
+  /* 「专属建议」那张大卡(.dp-forcard,包住 FOR YOU 标签跟底下几张
+     .c4 小卡的外层容器)——用户给的这张粉蓝渐层天空图当底,遮罩比
+     之前几次都淡(.4),图案更看得出来。 */
+  #dpage.reading-page .dp-forcard{
+    position:relative;overflow:hidden
+  }
+  #dpage.reading-page .dp-forcard::before{
+    content:"";position:absolute;inset:0;z-index:0;
+    background-image:url("assets/reading/forcard-bg.webp");
+    background-size:cover;background-position:center
+  }
+  #dpage.reading-page .dp-forcard::after{
+    content:"";position:absolute;inset:0;z-index:0;background:rgba(251,245,241,.4)
+  }
+  #dpage.reading-page .dp-forcard > *{position:relative;z-index:1}
 
   /* ============================================================
      九大主题(#/topic/<id>)—— 编辑式的分段版面
@@ -9906,7 +9921,7 @@ window.Guide = (function () {
          Mobile 上 --dp-text 本来就是 100%,这一区的行为与改动前一致。
          只动这一层容器,不动卡片设计、字级、间距与内容。 */
       if (topCards.length)
-        body += '<div class="dp-card"><div class="dp-sec-label">' + dpT("专属建议", "FOR YOU") + '</div>' +
+        body += '<div class="dp-card dp-forcard"><div class="dp-sec-label">' + dpT("专属建议", "FOR YOU") + '</div>' +
           cardsHtml(topCards) + "</div>";
 
       const k = favKey(favSrc, chName(ch, readingTab), ch.body || "");
