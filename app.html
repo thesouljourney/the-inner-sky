@@ -2461,22 +2461,6 @@
     background:var(--dp-grad);color:#fff;font-weight:500;
     box-shadow:0 8px 20px -10px rgba(129,118,173,.5)
   }
-  /* 专属建议卡(.c4,标题下面那颗星芒分隔线之后的小卡)——用户指定的
-     就是这一张,不是章节导航的那两张小卡(已经改回去了)。铺上
-     用户给的那张实景图,图上叠一层暖白让文字站得住,分寸跟之前
-     调好的章节导航一样,直接沿用同一个不透明度(.55)。 */
-  #dpage.reading-page .c4{
-    position:relative;overflow:hidden;border-color:rgba(154,106,52,.22)
-  }
-  #dpage.reading-page .c4::before{
-    content:"";position:absolute;inset:0;z-index:0;
-    background-image:url("assets/reading/nav-bg.webp");
-    background-size:cover;background-position:center
-  }
-  #dpage.reading-page .c4::after{
-    content:"";position:absolute;inset:0;z-index:0;background:rgba(251,245,241,.55)
-  }
-  #dpage.reading-page .c4 > *{position:relative;z-index:1}
 
   /* ============================================================
      九大主题(#/topic/<id>)—— 编辑式的分段版面
