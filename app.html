@@ -2468,7 +2468,12 @@
   #dpage.reading-page .dp-return .say{
     color:var(--dp-ink);font-weight:700;text-align:center;
     font-size:clamp(14px,1.4vw,16px);line-height:1.85;
-    text-shadow:0 1px 8px rgba(251,245,241,.6)
+    text-shadow:0 1px 8px rgba(251,245,241,.6);
+    /* 文字挪低一点,躲开背景图里那颗星芒(星芒偏上,原本文字是整张卡
+       垂直置中,刚好压在星芒上)。父层还是 align-items:center,这里
+       只加 margin-top 把文字往下推,不动按钮(按钮是另外绝对定位的,
+       没受影响)。 */
+    margin-top:22px
   }
   /* 上一个 / 下一个标题:参考图是一张卡、中间一条竖线分两半,不是
      两张各自独立的小卡挤在一起——卡片的边框 / 底色 / 投影搬到
