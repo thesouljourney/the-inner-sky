@@ -2449,14 +2449,18 @@
      不是纯色卡片。用户反馈遮罩太重、把图整个盖住了,参考图那张实景
      几乎没有遮罩,靠深色粗体字自己在亮图上撑出对比——遮罩降到 18%,
      图整个透出来,文字换成 --dp-ink 深色 + 加粗,不用遮罩去保证可读。
-     背景图改用 background-size:contain(不是 cover)——用户要的是「完整
-     图」,cover 会依卡片的实际宽高比裁掉一截,contain 保证图永远整张
-     都在,裁不掉。卡片本身比图窄的两侧留白,用从图边缘直接取样的
-     同色系底色(--dp-return-bg-fill)填,跟图的留白衔接不会跳色。 */
+     背景图用 background-size:cover 铺满整张卡(用户要的是「填满整个
+     格子」,不要 contain 那种图缩小、旁边露出底色的效果)。之前 cover
+     会在角落漏出源图自带的圆角留白,不是裁得不够——是裁的位置不对:
+     那张参考图本身是一张画了圆角的卡片插画,四个角落原本就是留白,
+     不管怎么整张裁都会带到。这次改成从内容区「上下各裁掉一截」抓一条
+     横向长条(1928×197,上下边缘都在圆角以内,四边都是实景),这样
+     cover 铺满就不会再露出任何一点白边,同时仍然是一张完整、连续、
+     没有另外拼接的实景。 */
   #dpage.reading-page .dp-return{
     position:relative;z-index:1;border-color:rgba(154,106,52,.22);
     box-shadow:0 18px 46px -22px rgba(34,35,58,.32);
-    background:#e4d5dc url("assets/reading/return-bg.webp") center/contain no-repeat;
+    background:url("assets/reading/return-bg.webp") center/cover no-repeat;
     /* 文字放在整张卡的正中间,不是贴左边——按钮改成绝对定位贴右边,
        让出全宽给文字置中,两者不用再抢同一条 flex 主轴上的空间。 */
     justify-content:center
