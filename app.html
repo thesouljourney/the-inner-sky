@@ -2436,22 +2436,14 @@
      跟背景图的浅粉色调太接近,几乎看不出卡片的边界。这里单独加深
      卡片的白度、边框对比与投影,只在这一页生效,不碰全站共用的
      .dp-card。 */
-  #dpage.reading-page .dp-card{
-    position:relative;z-index:1;
-    /* 纯白(#fff)对比是够了,但跟背景的暖调完全脱开,像贴了一张
-       白纸上去——改回接近背景色阶的暖白,透明度压到 58%,底纹能
-       在卡片里隐约透出来,分寸交给边框与投影去撑,不是靠颜色反差
-       硬切开。 */
-    background:rgba(251,245,241,.65);border-color:rgba(154,106,52,.22);
-    box-shadow:0 18px 46px -22px rgba(34,35,58,.32)
-  }
-  /* 页尾的「返回主题列表」也是同一张底纹上的一块,原本吃的是全站
-     共用的不透明 --dp-cloud——颜色跟底纹太接近,看起来像整个糊掉、
-     几乎看不出这是一张卡。跟 .dp-card 同一个做法,只是不透明度
-     再高一点(这里内容少、是收尾的行动点,要比正文卡片更站得住)。 */
+  /* 正文卡片(.dp-card)与页尾「返回主题列表」(.dp-return)统一同一个
+     透明度——原本 .dp-return 比 .dp-card 更高一点(78% vs 65%),
+     用户要求全部卡片一致,改成两个都是 68%,分寸都交给边框与投影
+     去撑,不用颜色深浅去区分「这是哪一种卡」。 */
+  #dpage.reading-page .dp-card,
   #dpage.reading-page .dp-return{
     position:relative;z-index:1;
-    background:rgba(251,245,241,.78);border-color:rgba(154,106,52,.22);
+    background:rgba(251,245,241,.68);border-color:rgba(154,106,52,.22);
     box-shadow:0 18px 46px -22px rgba(34,35,58,.32)
   }
 
