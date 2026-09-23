@@ -9107,6 +9107,13 @@ window.Guide = (function () {
     study:   "#6f9bb0",  // 青蓝
     body:    "#6fab9a"   // 青玉绿 —— 莲花 / 水
   };
+  /* 「我的收藏」卡片上的来源标签——九大主题各自的颜色跟主题页正文用的
+     是同一份 TOPIC_ACCENT,只是收藏当初存的是主题的显示名字(tName)
+     而不是 tid,所以反查一份「名字 → 色号」的表。不是九大主题来的
+     收藏(生命蓝图 / 生命脉络 / 探索题)不在这份表里,标签维持原本的
+     浅粉底色,不强行套颜色。 */
+  const FAV_TAG_COLOR = {};
+  (window.Reading.TOPICS9 || []).forEach(function (t) { FAV_TAG_COLOR[t.name] = TOPIC_ACCENT[t.id]; });
   const TOPIC_SEC_ART = {
     /* 前四张对着设计稿那四项(方向 / 模式 / 课题 / 理想状态),
        第五、六张是长章节才会用到的延伸。
@@ -12007,10 +12014,14 @@ window.Guide = (function () {
           const k = esc0(f.key);
           const back = f.route && /^#\//.test(f.route) ? f.route : "";
           const confirming = favConfirmKey === f.key;
+          const accent = f.source && FAV_TAG_COLOR[f.source];
+          const tagStyle = accent ?
+            ' style="background:color-mix(in srgb,' + accent + ' 20%, white);' +
+            'color:color-mix(in srgb,' + accent + ' 65%, black)"' : '';
           return '<div class="dp-quote-card"><span class="qm" aria-hidden="true">❝</span>' +
             '<blockquote>' + esc0(f.text) + '</blockquote>' +
             '<div class="tags">' +
-            (f.source ? '<span class="tag">' + esc0(f.source) + '</span>' : "") +
+            (f.source ? '<span class="tag"' + tagStyle + '>' + esc0(f.source) + '</span>' : "") +
             (f.ts ? '<span class="date">' + esc0(f.ts) + '</span>' : "") +
             '</div>' +
             '<div class="acts">' +
