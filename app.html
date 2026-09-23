@@ -3130,9 +3130,13 @@
     padding-bottom:clamp(60px,8vw,112px)
   }
   #dpage.compass-page .dp-hero .dp-stars i{opacity:calc(var(--o,.5) * .6)}
+  /* hero 底部那道「淡出」原本淡到 --dp-cream(米色),但页面本身的
+     底色现在是跟晨光图混出来的浅紫灰(#c3c0cd),两个颜色不一样,
+     hero 一淡完马上撞上不同色的底,变成一条看得出来的分割线。
+     改成淡到同一个浅紫灰,再把这段淡出拉长一点,过渡更柔。 */
   #dpage.compass-page .dp-hero::after{
-    content:"";position:absolute;left:0;right:0;bottom:0;height:clamp(70px,10vw,130px);
-    background:linear-gradient(180deg,rgba(248,242,237,0),var(--dp-cream));pointer-events:none
+    content:"";position:absolute;left:0;right:0;bottom:0;height:clamp(110px,15vw,190px);
+    background:linear-gradient(180deg,rgba(195,192,205,0),#c3c0cd);pointer-events:none
   }
   /* Hero 置中(与生命脉络那一页同一个做法),文字在云上要读得清楚 */
   #dpage.compass-page .dp-hero-grid{text-align:center;justify-items:center}
