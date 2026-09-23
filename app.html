@@ -3919,11 +3919,12 @@
       border:1px solid rgba(154,106,52,.14);
       box-shadow:0 3px 16px -12px rgba(9,18,46,.22);
       margin-bottom:12px;
-      background-size:100% 100%;background-position:center;background-repeat:no-repeat
+      background-size:cover;background-position:center;background-repeat:no-repeat
     }
     #dpage.compass-page .cp-ent:last-of-type{margin-bottom:0}
     /* 四张卡片各自一张完整的实景图当底,图本身左边已经是素色、右边
-       带插画跟圆角,直接铺满卡片,不再另外叠底色跟渐层遮罩。 */
+       带插画跟圆角;用 cover 让图完全填满格子、不被拉伸变形,
+       不再另外叠底色跟渐层遮罩。 */
     #dpage.compass-page .cp-ent.d1{background-image:url(assets/life/cp-mobile/card-ground.webp)}
     #dpage.compass-page .cp-ent.d2{background-image:url(assets/life/cp-mobile/card-move.webp)}
     #dpage.compass-page .cp-ent.d3{background-image:url(assets/life/cp-mobile/card-drain.webp)}
