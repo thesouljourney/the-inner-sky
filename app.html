@@ -3922,10 +3922,15 @@
     }
     #dpage.compass-page .cp-ent:last-of-type{margin-bottom:0}
     /* 卡片右侧那一小片实景:铺在卡片底色之上、文字之下,靠一层同色
-       渐层把边缘吃掉,不是硬裁一块照片贴满整张卡。四个方向各自一张。 */
+       渐层把边缘慢慢吃掉,不是硬裁一块照片贴满整张卡。四个方向各自
+       一张。渐层刻意留到 66% 才开始退,盖住整个文字栏(数字/圆图/
+       标题/说明最宽到 82% 左右),只在箭头附近才让插画完全显形,
+       这样素材才像是设计里长出来的,不是贴上去的。 */
     #dpage.compass-page .cp-ent::after{
       content:"";position:absolute;inset:0;z-index:0;pointer-events:none;
-      background:linear-gradient(90deg,rgba(255,253,250,1) 45%,rgba(255,253,250,0) 78%)
+      background:linear-gradient(90deg,
+        rgba(255,253,250,1) 0%,rgba(255,253,250,1) 66%,
+        rgba(255,253,250,.55) 80%,rgba(255,253,250,0) 94%)
     }
     #dpage.compass-page .cp-ent.d1{background-image:url(assets/life/cp-mobile/card-ground.webp);background-size:cover;background-position:right center}
     #dpage.compass-page .cp-ent.d2{background-image:url(assets/life/cp-mobile/card-move.webp);background-size:cover;background-position:right center}
