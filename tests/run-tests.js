@@ -2419,7 +2419,7 @@ function testCompassZhOnlyLabels() {
      改成真正的边界:只看 compassDirectionsHtml 自己那一段。 */
   const dirBlock = html.slice(html.indexOf("function compassDirectionsHtml"),
                               html.indexOf("/* ── 想留给自己的几句话"));
-  checkEq("[zh] 找得到真正的方向区块", dirBlock.length > 500 && dirBlock.length < 6000, true);
+  checkEq("[zh] 找得到真正的方向区块", dirBlock.length > 500 && dirBlock.length < 7000, true);
   checkEq("[zh] 正式页四方向的名字走 dpT —— 中文模式只会印中文",
     /'<b class="zh">' \+ esc0\(dpT\(d\.zh, d\.en\)\)/.test(dirBlock), true);
   checkEq("[zh] 方向区块里没有任何一定会印出来的英文名",
