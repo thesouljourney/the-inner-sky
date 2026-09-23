@@ -2719,7 +2719,11 @@
   /* 底色跟图片本身的深蓝色调一致(不是米色 --dp-cream)——这样不管是
      手机网址列收合展开、或是任何其他边缘情况让 fixed 底图跟视窗对不
      齐,露出来的都是同一片深蓝,不会看到突兀的白/米色断层。 */
-  #dpage.favorites-page{position:relative;background:#0d1730}
+  /* 页脚钉在最底部:收藏很少(甚至空状态)时,内容不够长,页脚不该
+     紧贴在内容后面、飘在版面中间——用 flex 撑满 min-height:100vh,
+     内容区吃掉多余空间,页脚永远落在视窗底部。 */
+  #dpage.favorites-page{position:relative;background:#0d1730;display:flex;flex-direction:column}
+  #dpage.favorites-page .dp-body{flex:1 0 auto}
   #dpage.favorites-page::before{
     /* 手机浏览器网址列收合/展开会让 viewport 高度瞬间变化,fixed 元素
        若贴着 inset:0,收合那一瞬间边缘会露出底下的颜色。上下都多留
