@@ -2716,13 +2716,15 @@
      跟生命蓝图那页同一个做法(position:fixed 而不是 background-attachment:
      fixed,躲开 iOS Safari 已知的跳动/破图问题),卷动时只有卡片在动,
      底纹留在原地。 */
-  #dpage.favorites-page{position:relative}
+  /* 底色跟图片本身的深蓝色调一致(不是米色 --dp-cream)——这样不管是
+     手机网址列收合展开、或是任何其他边缘情况让 fixed 底图跟视窗对不
+     齐,露出来的都是同一片深蓝,不会看到突兀的白/米色断层。 */
+  #dpage.favorites-page{position:relative;background:#0d1730}
   #dpage.favorites-page::before{
     /* 手机浏览器网址列收合/展开会让 viewport 高度瞬间变化,fixed 元素
-       若贴着 inset:0,收合那一瞬间底部会露出 #dpage 自己的米色底
-       (--dp-cream,看起来就是一截「白底」)。往下多留一截 buffer,
-       盖过网址列那部分高度,滚到底也不会露出来。 */
-    content:"";position:fixed;top:0;left:0;right:0;bottom:-160px;z-index:0;pointer-events:none;
+       若贴着 inset:0,收合那一瞬间边缘会露出底下的颜色。上下都多留
+       一截 buffer,盖过网址列那部分高度,滚到顶或滚到底都不会露出来。*/
+    content:"";position:fixed;top:0;left:0;right:0;bottom:-200px;z-index:0;pointer-events:none;
     background-image:url("assets/favorites/bg.webp");
     background-size:cover;background-position:center top;background-repeat:no-repeat;
     opacity:.28
