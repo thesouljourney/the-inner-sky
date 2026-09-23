@@ -2685,6 +2685,37 @@
   }
 
   /* ============================================================
+     我的收藏(#/favorites)—— 专属 hero 实景
+     ------------------------------------------------------------
+     跟生命蓝图那页同一个做法:hero 换成用户给的实景图,上面叠一层
+     由深到浅的罩,保证 logo / 导航 / 账号选单这些浅色字还能读。
+     ============================================================ */
+  #dpage.favorites-page .dp-hero{position:relative;isolation:isolate}
+  #dpage.favorites-page .dp-hero::before{
+    content:"";position:absolute;inset:0;z-index:0;
+    background-image:url("assets/favorites/hero.webp");
+    background-size:cover;background-position:center 55%
+  }
+  #dpage.favorites-page .dp-hero::after{
+    content:"";position:absolute;inset:0;z-index:0;
+    background:
+      linear-gradient(180deg,rgba(9,18,46,.82) 0%,rgba(9,18,46,.3) 26%,rgba(9,18,46,.14) 48%,rgba(9,18,46,.42) 100%),
+      linear-gradient(100deg,rgba(9,18,46,.68) 0%,rgba(9,18,46,.46) 30%,rgba(9,18,46,.16) 58%,rgba(9,18,46,0) 82%)
+  }
+  #dpage.favorites-page .dp-hero > *{position:relative;z-index:1}
+  /* 账号选单开着的时候要盖住 hero 里其他文字——同一个老问题,同一个补丁 */
+  #dpage.favorites-page > .dp-hero{z-index:5}
+  #dpage.favorites-page .dp-topbar{z-index:2}
+  #dpage.favorites-page .dp-hero .dp-stars i{opacity:calc(var(--o,.5) * .5)}
+  #dpage.favorites-page .dp-title,
+  #dpage.favorites-page .dp-sub,
+  #dpage.favorites-page .dp-chip{text-shadow:0 1px 18px rgba(9,18,46,.55)}
+  @media(max-width:767px){
+    /* 手机窄屏:实景图右侧的星光罐才是主角,构图往右挪一点,别把它裁掉 */
+    #dpage.favorites-page .dp-hero::before{background-position:68% 50%}
+  }
+
+  /* ============================================================
      九大主题(#/topic/<id>)—— 编辑式的分段版面
      ------------------------------------------------------------
      以前这一页与三十道探索题共用 dpAnswerHtml:一张很长的卡片,
@@ -8908,6 +8939,8 @@ window.Guide = (function () {
     $("dpage").classList.toggle("compass-page", r.k === "compass");
     // 生命蓝图专属的一张 header 实景与一层极淡的背景纹理,只挂在这一页
     $("dpage").classList.toggle("reading-page", r.k === "reading");
+    // 我的收藏专属的一张 hero 实景,只挂在这一页
+    $("dpage").classList.toggle("favorites-page", r.k === "favorites");
     /* 开发预览的样式全锁在这个额外的 class 底下 —— 没有它,这一页与修改前一模一样 */
     $("dpage").classList.toggle("cp-preview", r.k === "compass" && !!r.dev);
     if (!(r.k === "compass" && r.dev)) $("dpage").classList.remove("cp-showdev");
