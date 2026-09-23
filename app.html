@@ -535,7 +535,13 @@
   /* ---------- 内页页脚 ----------
      与落地页同一套深蓝底,但内页不放隐私政策 / 使用条款,只留「关于我们」
      与两个社群入口。所有经过 dpScaffold 的页面都会带上它。 */
-  #dpage .dp-foot{background:var(--dp-navy);color:rgba(249,246,242,.72);position:relative;overflow:hidden}
+  #dpage .dp-foot{
+    background:
+      linear-gradient(180deg,rgba(9,18,46,.55),rgba(9,18,46,.82)),
+      url(assets/foot/foot-sky.webp) center 60% / cover no-repeat,
+      var(--dp-navy);
+    color:rgba(249,246,242,.72);position:relative;overflow:hidden
+  }
   #dpage .dp-foot .in{
     position:relative;z-index:2;max-width:var(--dp-wide);margin:0 auto;
     padding:38px clamp(18px,4vw,48px);
@@ -2030,14 +2036,6 @@
   #dpage.thread-page .fold-btn:hover{color:#4c4470}
   #dpage.thread-page .fold-btn:focus-visible{
     outline:1px solid rgba(129,118,173,.7);outline-offset:3px;border-radius:8px
-  }
-
-  /* —— 页脚:同一片天空当底图,文字仍然是真的 HTML —— */
-  #dpage.thread-page .dp-foot{
-    background:
-      linear-gradient(180deg,rgba(9,18,46,.8),rgba(9,18,46,.9)),
-      url(assets/life/foot-sky.webp) center 34% / cover no-repeat,
-      var(--dp-navy)
   }
 
   /* —— 桌机:插画进第三栏,奇偶章错开高度,页面才有节奏 —— */

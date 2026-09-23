@@ -786,7 +786,12 @@ header.site > .wrap.nav {
 }
 
 /* ---------- 页脚 ---------- */
-footer.site { background: transparent; color: rgba(249,246,242,.75); position: relative; overflow: hidden; }
+footer.site {
+  background:
+    linear-gradient(180deg, rgba(7,20,49,.35), rgba(7,20,49,.78) 55%, #071431 100%),
+    url(assets/foot/foot-sky.webp) center 60% / cover no-repeat;
+  color: rgba(249,246,242,.75); position: relative; overflow: hidden;
+}
 footer .wrap { position: relative; z-index: 2; display: flex; align-items: center; justify-content: space-between; padding-top: 130px; padding-bottom: 52px; }
 footer .brand { color: var(--text-light); }
 footer .fine { font-size: 12.5px; display: flex; align-items: center; gap: 20px; }
