@@ -3922,13 +3922,13 @@
     }
     #dpage.compass-page .cp-ent:last-of-type{margin-bottom:0}
     /* 卡片右侧那一小片实景:铺在卡片底色之上、文字之下,靠一层同色
-       渐层把边缘吃掉,不是硬裁一块照片贴满整张卡。01/03/04 各自一张,
-       02(前进)维持素面。 */
+       渐层把边缘吃掉,不是硬裁一块照片贴满整张卡。四个方向各自一张。 */
     #dpage.compass-page .cp-ent::after{
       content:"";position:absolute;inset:0;z-index:0;pointer-events:none;
       background:linear-gradient(90deg,rgba(255,253,250,1) 45%,rgba(255,253,250,0) 78%)
     }
     #dpage.compass-page .cp-ent.d1{background-image:url(assets/life/cp-mobile/card-ground.webp);background-size:cover;background-position:right center}
+    #dpage.compass-page .cp-ent.d2{background-image:url(assets/life/cp-mobile/card-move.webp);background-size:cover;background-position:right center}
     #dpage.compass-page .cp-ent.d3{background-image:url(assets/life/cp-mobile/card-drain.webp);background-size:cover;background-position:right center}
     #dpage.compass-page .cp-ent.d4{background-image:url(assets/life/cp-mobile/card-call.webp);background-size:cover;background-position:right center}
     #dpage.compass-page .cp-ent > *{position:relative;z-index:1}
