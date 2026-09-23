@@ -3096,11 +3096,13 @@
   #dpage.compass-page{--dp-wide:min(1120px,calc(100vw - 96px));background:var(--dp-cream)}
   @media(max-width:1024px){#dpage.compass-page{--dp-wide:100%}}
 
-  /* —— Hero:沿用既有云天底,只是换一段引导语 —— */
+  /* —— Hero:用户给的晨光云海实景图,单独一份素材,不跟生命脉络
+     共用 hero-sky.webp(那张构图是给别的位置/裁法调的,直接换图
+     会连带影响那一页) —— */
   #dpage.compass-page .dp-hero{
     background:
-      linear-gradient(180deg,rgba(9,18,46,.72) 0%,rgba(9,18,46,.3) 44%,rgba(9,18,46,.44) 100%),
-      url(assets/life/hero-sky.webp) left 62% / 148% auto no-repeat,
+      linear-gradient(180deg,rgba(9,18,46,.6) 0%,rgba(9,18,46,.22) 44%,rgba(9,18,46,.4) 100%),
+      url(assets/life/compass-hero.webp) center 42% / cover no-repeat,
       var(--dp-navy);
     padding-bottom:clamp(60px,8vw,112px)
   }
@@ -3298,9 +3300,9 @@
        字才读得清楚(调的是遮罩,不是把字调亮,云本身没有被盖掉) */
     #dpage.compass-page .dp-hero{
       background:
-        linear-gradient(180deg,rgba(9,18,46,.97) 0%,rgba(9,18,46,.72) 18%,
-                               rgba(9,18,46,.5) 52%,rgba(9,18,46,.46) 100%),
-        url(assets/life/hero-sky.webp) left bottom / 215% auto no-repeat,
+        linear-gradient(180deg,rgba(9,18,46,.85) 0%,rgba(9,18,46,.5) 18%,
+                               rgba(9,18,46,.38) 52%,rgba(9,18,46,.4) 100%),
+        url(assets/life/compass-hero.webp) 68% 42% / cover no-repeat,
         var(--dp-navy);
       padding-bottom:clamp(48px,14vw,80px)
     }
