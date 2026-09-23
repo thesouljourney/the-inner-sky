@@ -3870,28 +3870,67 @@
     border:1px solid rgba(170,160,213,.4);border-radius:20px;padding:11px 22px;
     box-shadow:0 10px 30px rgba(9,18,46,.3);opacity:0;pointer-events:none;transition:opacity .3s}
   #dpToast.on{opacity:1}
-  /* 收藏页:句子星空 */
-  #dpage .dp-pills{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:22px}
-  #dpage .dp-pill{font-family:var(--dp-sans);font-size:13px;padding:7px 16px;border-radius:18px;cursor:pointer;
-    border:1px solid var(--dp-line);background:var(--dp-cloud);color:var(--dp-mut);transition:.2s}
-  #dpage .dp-pill:hover{color:var(--dp-ink);border-color:var(--dp-lav)}
-  #dpage .dp-pill.on{background:rgba(170,160,213,.16);border-color:var(--dp-lav);color:#5b5088;font-weight:500}
-  #dpage .dp-sort{margin-left:auto;font-size:12.5px;color:var(--dp-mut);background:none;border:none;
-    font-family:var(--dp-sans);cursor:pointer;padding:7px 4px}
-  #dpage .dp-sort:hover{color:var(--dp-ink)}
+  /* 收藏页:句子星空 —— 用户给的参考图那种版式:顶上一条搜索 + 排序的
+     小工具条,底下每一句收藏各自一张独立卡片(不再挤在同一张大卡里),
+     卡片左上角一个大引号、来源换成一颗色块小标签、右下角书签图示
+     取代原本的「取消收藏」文字按钮(点两次才真的移除,逻辑没变,
+     只是换了个位置跟长相)。 */
+  #dpage .fav-toolbar{
+    display:flex;align-items:center;gap:14px;
+    background:rgba(252,249,246,.86);border:1px solid var(--dp-line);border-radius:20px;
+    padding:8px 10px 8px 18px;margin-bottom:22px;
+    box-shadow:0 14px 34px -24px rgba(34,35,58,.4)
+  }
+  #dpage .fav-search{flex:1;display:flex;align-items:center;gap:10px;min-width:0;color:var(--dp-mut)}
+  #dpage .fav-search svg{flex:none;opacity:.6}
+  #dpage .fav-search input{
+    flex:1;min-width:0;border:none;background:none;outline:none;
+    font-family:var(--dp-sans);font-size:14px;color:var(--dp-ink);padding:9px 0
+  }
+  #dpage .fav-search input::placeholder{color:var(--dp-mut);opacity:.75}
+  #dpage .fav-sortbtn{
+    flex:none;display:flex;align-items:center;gap:6px;
+    font-family:var(--dp-sans);font-size:12.5px;color:var(--dp-mut);
+    background:none;border:none;border-left:1px solid var(--dp-line);
+    cursor:pointer;padding:8px 4px 8px 16px;white-space:nowrap;transition:color .2s
+  }
+  #dpage .fav-sortbtn:hover{color:var(--dp-ink)}
+  #dpage .fav-sortbtn svg{opacity:.6}
   #dpage .dp-quotes{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
-  #dpage .dp-quote-card{position:relative;border:1px solid var(--dp-line);border-radius:20px;
-    background:var(--dp-cloud);padding:24px 24px 18px;display:flex;flex-direction:column;gap:14px;overflow:hidden}
-  #dpage .dp-quote-card .star{position:absolute;top:14px;right:18px;color:var(--dp-lav);opacity:.5;font-size:12px}
+  #dpage .dp-quote-card{
+    position:relative;border:1px solid var(--dp-line);border-radius:22px;
+    background:rgba(252,249,246,.86);padding:26px 24px 20px;
+    display:flex;flex-direction:column;gap:14px;overflow:hidden;
+    box-shadow:0 14px 34px -24px rgba(34,35,58,.4)
+  }
+  #dpage .dp-quote-card .qm{
+    font-family:var(--dp-display);font-size:34px;line-height:1;font-weight:600;
+    color:#caa06a;opacity:.9
+  }
   #dpage .dp-quote-card blockquote{margin:0;font-family:var(--dp-serif);font-size:15.5px;line-height:1.95;color:var(--dp-ink)}
-  #dpage .dp-quote-card .src{font-size:11.5px;color:var(--dp-mut);line-height:1.7;letter-spacing:.03em}
-  #dpage .dp-quote-card .acts{display:flex;align-items:center;gap:14px;margin-top:auto;padding-top:4px}
-  #dpage .dp-quote-card .acts button,#dpage .dp-quote-card .acts a{font-family:var(--dp-sans);font-size:12px;
-    background:none;border:none;color:var(--dp-mut);cursor:pointer;text-decoration:none;padding:2px 0}
-  #dpage .dp-quote-card .acts button:hover,#dpage .dp-quote-card .acts a:hover{color:#6a5fa0}
-  #dpage .dp-quote-card .acts .rm.confirm{color:#b4645a}
+  #dpage .dp-quote-card .tags{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  #dpage .dp-quote-card .tag{
+    font-family:var(--dp-sans);font-size:11.5px;letter-spacing:.02em;
+    background:var(--dp-blush);color:#9b6b5e;border-radius:14px;padding:5px 13px
+  }
+  #dpage .dp-quote-card .date{font-family:var(--dp-sans);font-size:11.5px;color:var(--dp-mut)}
+  #dpage .dp-quote-card .acts{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:auto;padding-top:4px}
+  #dpage .dp-quote-card .acts a{font-family:var(--dp-sans);font-size:12px;
+    color:var(--dp-mut);cursor:pointer;text-decoration:none;padding:2px 0;transition:color .2s}
+  #dpage .dp-quote-card .acts a:hover{color:#6a5fa0}
+  #dpage .dp-quote-card .save-badge{
+    display:flex;align-items:center;gap:6px;font-family:var(--dp-sans);font-size:12px;
+    background:none;border:none;color:var(--dp-gold);cursor:pointer;padding:2px 0;transition:color .2s
+  }
+  #dpage .dp-quote-card .save-badge svg{flex:none}
+  #dpage .dp-quote-card .save-badge:hover{color:#c9a068}
+  #dpage .dp-quote-card .save-badge.confirm{color:#b4645a}
   #dpage .dp-count{font-size:12.5px;color:var(--dp-mut);margin-bottom:18px}
   @media(max-width:520px){#dpage .dp-quotes{grid-template-columns:1fr}}
+  @media(max-width:600px){
+    #dpage .fav-toolbar{flex-wrap:wrap;padding:6px 14px}
+    #dpage .fav-sortbtn{border-left:none;padding-left:0;margin-left:auto}
+  }
   #dpage .dp-footnav{
     display:flex;align-items:center;justify-content:space-between;gap:12px;
     border-top:1px solid var(--dp-line);margin-top:34px;padding-top:20px;font-size:13px
@@ -9002,7 +9041,7 @@ window.Guide = (function () {
   const SOCIAL_IG = "https://www.instagram.com/the_inner.sky?igsh=dDc4YmUwZTllc2h0&utm_source=qr";
   const SOCIAL_XHS = "https://xhslink.cn/m/6XbeCmG8RPc";
   let readingNavJump = false;   // 上 / 下一章点击后,下一次渲染要卷到「详细解读」顶端
-  let favFilter = "all", favSortNew = true, favConfirmKey = null;
+  let favFilter = "all", favSortNew = true, favConfirmKey = null, favSearch = "";
   let saveTipEl = null, toastEl = null, pendingSel = null;
 
 
@@ -11938,45 +11977,53 @@ window.Guide = (function () {
         '<a class="dp-cta" style="margin-top:18px" href="' + LANDING_TOPICS + '">' +
         dpT("开始探索", "Start exploring") + "</a></div>";
     } else {
-      // 只列出真正有收藏的来源
-      const sources = [];
-      list.forEach(function (f) { if (f.source && sources.indexOf(f.source) < 0) sources.push(f.source); });
-      if (favFilter !== "all" && sources.indexOf(favFilter) < 0) favFilter = "all";
-
-      let shown = list.filter(function (f) { return favFilter === "all" || f.source === favFilter; });
+      const q = favSearch.trim().toLowerCase();
+      let shown = list.filter(function (f) {
+        if (!q) return true;
+        return [f.text, f.source, f.section].some(function (v) {
+          return v && String(v).toLowerCase().indexOf(q) >= 0;
+        });
+      });
       shown.sort(function (a, b) {
         const ta = String(a.ts || ""), tb = String(b.ts || "");
         return favSortNew ? (tb < ta ? -1 : tb > ta ? 1 : 0) : (ta < tb ? -1 : ta > tb ? 1 : 0);
       });
 
-      body += '<div class="dp-card">' +
+      body += '<div class="fav-toolbar">' +
+        '<label class="fav-search">' +
+        '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8">' +
+        '<circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.8-3.8"></path></svg>' +
+        '<input type="text" data-fav-search value="' + esc0(favSearch) +
+        '" placeholder="' + esc0(dpT("搜索我的收藏…", "Search my saved lines…")) + '">' +
+        '</label>' +
+        '<button class="fav-sortbtn" data-fav-sort>' +
+        '<span>' + (favSortNew ? dpT("最近收藏", "Recent") : dpT("最早收藏", "Oldest")) + '</span>' +
+        '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">' +
+        '<path d="M6 9l6 6 6-6"></path></svg>' +
+        '</button></div>' +
         '<div class="dp-count">' + dpT(list.length + " 颗被留下来的星", list.length + " stars kept") + '</div>' +
-        '<div class="dp-pills">' +
-        '<button class="dp-pill' + (favFilter === "all" ? " on" : "") + '" data-fav-filter="all">' +
-        dpT("全部", "All") + '</button>' +
-        sources.map(function (t) {
-          return '<button class="dp-pill' + (favFilter === t ? " on" : "") + '" data-fav-filter="' + esc0(t) + '">' +
-            esc0(t) + '</button>';
-        }).join("") +
-        '<button class="dp-sort" data-fav-sort>' +
-        (favSortNew ? dpT("最新收藏 ↓", "Newest ↓") : dpT("最早收藏 ↑", "Oldest ↑")) + '</button>' +
-        '</div>' +
-        '<div class="dp-quotes">' +
+        (shown.length ? '<div class="dp-quotes">' +
         shown.map(function (f) {
           const k = esc0(f.key);
           const back = f.route && /^#\//.test(f.route) ? f.route : "";
-          return '<div class="dp-quote-card"><span class="star" aria-hidden="true">✦</span>' +
+          const confirming = favConfirmKey === f.key;
+          return '<div class="dp-quote-card"><span class="qm" aria-hidden="true">❝</span>' +
             '<blockquote>' + esc0(f.text) + '</blockquote>' +
-            '<div class="src">' + dpT("来自 · ", "From · ") + esc0(f.source || "—") +
-            (f.section ? '<br>' + esc0(f.section) : "") +
-            (f.ts ? '<br>' + esc0(f.ts) : "") + '</div>' +
+            '<div class="tags">' +
+            (f.source ? '<span class="tag">' + esc0(f.source) + '</span>' : "") +
+            (f.ts ? '<span class="date">' + esc0(f.ts) + '</span>' : "") +
+            '</div>' +
             '<div class="acts">' +
-            (back ? '<a href="' + esc0(back) + '">' + dpT("查看原文", "View in context") + ' →</a>' : "") +
-            '<button class="rm' + (favConfirmKey === f.key ? " confirm" : "") + '" data-fav-rm="' + k + '">' +
-            (favConfirmKey === f.key ? dpT("确定取消?", "Confirm remove?") : dpT("取消收藏", "Remove")) +
+            (back ? '<a href="' + esc0(back) + '">' + dpT("查看原文", "View in context") + ' →</a>' : '<span></span>') +
+            '<button class="save-badge' + (confirming ? " confirm" : "") + '" data-fav-rm="' + k + '">' +
+            '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8">' +
+            '<path d="M6 4h12v16l-6-4-6 4V4z"></path></svg>' +
+            '<span>' + (confirming ? dpT("确定取消?", "Confirm remove?") : dpT("已收藏", "Saved")) + '</span>' +
             '</button></div></div>';
-        }).join("") +
-        '</div></div>';
+        }).join("") + '</div>' :
+        '<div class="dp-card dp-loading"><span class="g">✦</span>' +
+        dpT("没有符合的句子。", "No lines match your search.") + '</div>')
+      ;
     }
 
     dpScaffold({
@@ -11988,11 +12035,6 @@ window.Guide = (function () {
       backLabel: dpT("返回主页", "Back to home"), backHref: LANDING_URL, seed: 41
     });
 
-    $("dpage").querySelectorAll("[data-fav-filter]").forEach(function (b) {
-      b.addEventListener("click", function () {
-        favFilter = b.getAttribute("data-fav-filter"); favConfirmKey = null; renderFavoritesPage();
-      });
-    });
     const sb = $("dpage").querySelector("[data-fav-sort]");
     if (sb) sb.addEventListener("click", function () { favSortNew = !favSortNew; renderFavoritesPage(); });
     // 取消收藏:先确认一次,避免误触永久删除
@@ -12005,6 +12047,18 @@ window.Guide = (function () {
         renderFavoritesPage();
       });
     });
+    // 搜索框:整页是重新渲染的,每次打字都会重建 input——重建完把焦点
+    // 跟光标位置还原回去,不然打到一半输入框会跳掉焦点。
+    const si = $("dpage").querySelector("[data-fav-search]");
+    if (si) {
+      si.addEventListener("input", function () {
+        favSearch = si.value;
+        const pos = si.selectionStart;
+        renderFavoritesPage();
+        const next = $("dpage").querySelector("[data-fav-search]");
+        if (next) { next.focus(); next.setSelectionRange(pos, pos); }
+      });
+    }
   }
 
   /* ============================================================
