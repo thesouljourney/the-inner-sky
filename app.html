@@ -10176,6 +10176,7 @@ window.Guide = (function () {
           return '<button data-rtab="' + i + '"' + (i === readingTab ? ' class="on"' : "") + ">" + esc0(chName(x, i)) + "</button>";
         }).join("") + "</div>" +
         '<div class="dp-h-row"><h3 class="dp-h">' + esc0(chName(ch, readingTab)) + "</h3>" + favB + "</div>" +
+        '<div class="dp-div"><span class="st">✦</span><span class="ln"></span></div>' +
         (ch.summary ? '<div class="dp-quote" style="text-align:left;padding:8px 0 16px;font-size:15.5px"' +
           ' data-saveable data-source="' + esc0(favSrc) + '" data-source-type="life_blueprint"' +
           ' data-section="' + esc0(chName(ch, readingTab)) + '">' + esc0(ch.summary) + "</div>" : "") +
