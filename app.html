@@ -3109,7 +3109,10 @@
     content:"";position:fixed;top:-160px;left:0;right:0;bottom:-200px;z-index:0;pointer-events:none;
     background-image:url("assets/life/compass-bg.webp");
     background-size:cover;background-position:center top;background-repeat:no-repeat;
-    opacity:.4
+    opacity:.4;
+    /* cover 已经填满,再放大就得用 transform——盖住的范围更大,
+       裁掉更多四周,图案本身在画面上看起来更大、更近。 */
+    transform:scale(1.25);transform-origin:center top
   }
   #dpage.compass-page > *{position:relative;z-index:1}
   /* 账号选单开着的时候要盖住底下所有内容——同一个老问题,同一个补丁 */
