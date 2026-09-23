@@ -4272,8 +4272,8 @@ function testAnchorsV11AndRenderV2() {
     /fill="url\(#cpGlow\)"|radialGradient/.test(
       html.slice(html.indexOf("function compassRoseSvg"), html.indexOf("function compassDirectionsHtml"))), false);
   checkEq("[v2] 指南盘只剩线与一颗小星",
-    (html.slice(html.indexOf("function compassRoseSvg"), html.indexOf("var CP_SHORT"))
-      .match(/fill="none"/g) || []).length, 3);
+    (html.slice(html.indexOf("function compassRoseSvg"), html.indexOf("var CP_GLYPH"))
+      .match(/fill="none"/g) || []).length, 0);
   checkEq("[v2] 展开的说明一律收在披露后面",
     (dir.match(/c\.explanation/g) || []).length === 2 &&
     (dir.match(/class="cp-why"/g) || []).length === 1, true);
