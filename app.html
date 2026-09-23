@@ -2408,6 +2408,14 @@
       linear-gradient(100deg,rgba(9,18,46,.72) 0%,rgba(9,18,46,.52) 30%,rgba(9,18,46,.20) 56%,rgba(9,18,46,0) 80%)
   }
   #dpage.reading-page .dp-hero > *{position:relative;z-index:1}
+  /* ⚠ 账号选单打开时被标题/引言文字挡住:.dp-topbar(账号选单所在)
+     跟 .dp-hero-grid(标题、引言)是 .dp-hero 底下同一层的兄弟节点,
+     刚才那条规则让两个都是 z-index:1——平手时按 DOM 顺序,后面的
+     .dp-hero-grid 会盖过 .dp-topbar,连带盖过选单本身的 z-index:30
+     (那个 30 只在 .dp-topbar 自己的层叠上下文里管用,越不过兄弟
+     节点这一层平手)。跟前面账号选单被卡片盖住是同一类问题,这次
+     出在 hero 内部:给 .dp-topbar 单独提一级。 */
+  #dpage.reading-page .dp-topbar{z-index:2}
   #dpage.reading-page .dp-hero .dp-stars i{opacity:calc(var(--o,.5) * .5)}
   #dpage.reading-page .dp-title,
   #dpage.reading-page .dp-sub,
