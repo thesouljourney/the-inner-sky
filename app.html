@@ -2718,7 +2718,11 @@
      底纹留在原地。 */
   #dpage.favorites-page{position:relative}
   #dpage.favorites-page::before{
-    content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+    /* 手机浏览器网址列收合/展开会让 viewport 高度瞬间变化,fixed 元素
+       若贴着 inset:0,收合那一瞬间底部会露出 #dpage 自己的米色底
+       (--dp-cream,看起来就是一截「白底」)。往下多留一截 buffer,
+       盖过网址列那部分高度,滚到底也不会露出来。 */
+    content:"";position:fixed;top:0;left:0;right:0;bottom:-160px;z-index:0;pointer-events:none;
     background-image:url("assets/favorites/bg.webp");
     background-size:cover;background-position:center top;background-repeat:no-repeat;
     opacity:.28
