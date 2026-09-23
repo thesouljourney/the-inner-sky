@@ -2972,26 +2972,50 @@
     margin-top:clamp(26px,3.4vw,44px)
   }
   #dpage.topic-page .tp-pair > *{margin:0}
-  /* 描边跟着主题走(--theme-accent),跟开场引言金框同一个做法——
-     九个主题不再共用一条灰线,读到这里能感觉到还是同一个主题。 */
-  /* 描边改成整块底色跟着主题走——比单一描边更看得出这是「这个主题」
-     的卡片,同时用很淡的染色(10% 主题色)避免盖过文字。不支持
-     color-mix() 的浏览器落回原本那片米色平底,不开天窗。 */
-  #dpage.topic-page .tp-pair .dp-reflect{
+  /* 用户给的参考图那种卡片:左上角圆形插画图标 + 标题,右上角编号,
+     正文下面一行英文小字收尾,右下角一枝装饰探出卡片(overflow:hidden
+     切掉超出的部分,圆角不会被顶穿)。底色跟描边都用 --theme-accent
+     的很淡染色(跟开场引言金框同一个做法),不支持 color-mix() 的
+     浏览器落回原本那片米色平底,不开天窗。
+     dpReflectHtml() 只有传了 tid(九大主题)才会印这套 .tp-reflect
+     标记——「属于我的生命脉络」与三十道探索题走的还是 .dp-reflect
+     那份旧样式,一个字元都没有动。 */
+  #dpage.topic-page .tp-reflect{
+    position:relative;overflow:hidden;box-sizing:border-box;
     border:1px solid var(--dp-line);background:rgba(248,242,237,.55);
-    border:1px solid color-mix(in srgb, var(--theme-accent, var(--dp-line)) 14%, transparent);
-    background:color-mix(in srgb, var(--theme-accent, transparent) 5%, rgba(248,242,237,.7));
+    border:1px solid color-mix(in srgb, var(--theme-accent, var(--dp-line)) 16%, transparent);
+    background:color-mix(in srgb, var(--theme-accent, transparent) 6%, rgba(248,242,237,.7));
     border-radius:18px;
     box-shadow:0 10px 26px -20px rgba(34,35,58,.4);
-    padding:clamp(20px,2.4vw,28px);box-sizing:border-box
+    padding:clamp(20px,2.4vw,28px)
   }
-  #dpage.topic-page .tp-pair .dp-reflect .eb{display:none}
-  #dpage.topic-page .tp-pair .dp-reflect .rule{display:none}
-  #dpage.topic-page .tp-pair .dp-reflect .glow{display:none}
-  #dpage.topic-page .tp-pair .dp-reflect h3.rt{
-    margin:0 0 14px;font-family:var(--dp-serif);font-weight:600;font-size:16px;color:var(--dp-ink)
+  #dpage.topic-page .tp-reflect .deco{
+    position:absolute;right:-8px;bottom:-10px;width:46%;max-width:170px;
+    aspect-ratio:4/3;background-size:contain;background-repeat:no-repeat;
+    background-position:bottom right;opacity:.9;pointer-events:none;z-index:0
   }
-  #dpage.topic-page .tp-pair .dp-reflect .bd p{font-size:14.5px;line-height:2}
+  #dpage.topic-page .tp-reflect .hd{
+    position:relative;z-index:1;display:flex;align-items:center;gap:12px;
+    max-width:78%
+  }
+  #dpage.topic-page .tp-reflect .hd .ic{
+    flex:none;width:38px;height:38px;border-radius:50%;
+    background-size:cover;background-position:center
+  }
+  #dpage.topic-page .tp-reflect .hd .tt{
+    margin:0;font-family:var(--dp-serif);font-weight:600;font-size:16px;color:var(--dp-ink)
+  }
+  #dpage.topic-page .tp-reflect .no{
+    position:absolute;top:clamp(20px,2.4vw,28px);right:clamp(20px,2.4vw,28px);z-index:1;
+    font-family:var(--dp-display);font-size:12px;letter-spacing:.08em;
+    color:var(--theme-accent);opacity:.6
+  }
+  #dpage.topic-page .tp-reflect .bd{position:relative;z-index:1;margin-top:14px}
+  #dpage.topic-page .tp-reflect .bd p{font-size:14.5px;line-height:2}
+  #dpage.topic-page .tp-reflect .cap{
+    position:relative;z-index:1;margin-top:14px;
+    font-family:var(--dp-sans);font-size:9.5px;letter-spacing:.2em;color:var(--dp-mut)
+  }
 
   /* —— 尾段的其他共用区块:收进同一张白卡的节奏里 —— */
   #dpage.topic-page .tp-tail{margin-top:clamp(26px,3.4vw,44px)}
@@ -9435,8 +9459,25 @@ window.Guide = (function () {
       "</div>";
   }
   // kind: "q" = 留给你的思考(读一句) / "a" = 试试看(动手做)
-  function dpReflectHtml(kind, text) {
+  // tid:只有九大主题会传——传了就换成用户给的参考图那种卡片版(圆形
+  // 插画图标 + 标题 + 编号,右下角一枝跟主题色一致的装饰,底下一行
+  // 英文小字收尾);不传就跟改动前逐字相同,「属于我的生命脉络」与
+  // 三十道探索题一个字元都没变。
+  function dpReflectHtml(kind, text, tid) {
     const isAct = kind === "a";
+    if (tid) {
+      const dir = TOPIC_ART_DIR + "reflect/" + tid;
+      const icon = dir + (isAct ? "-try-icon" : "-icon") + ".webp";
+      const deco = dir + (isAct ? "-try-bg" : "-leaf") + ".webp";
+      const cap = isAct ? "TRY THIS" : "A MOMENT FOR YOU";
+      return '<div class="tp-reflect' + (isAct ? " act" : "") + '">' +
+        '<span class="deco" style="background-image:url(\'' + deco + '\')" aria-hidden="true"></span>' +
+        '<div class="hd"><span class="ic" style="background-image:url(\'' + icon + '\')" aria-hidden="true"></span>' +
+        '<h3 class="tt">' + (isAct ? dpT("试试看", "Try This") : dpT("留给你的思考", "A Question For You")) + "</h3></div>" +
+        '<span class="no" aria-hidden="true">' + (isAct ? "02" : "01") + "</span>" +
+        '<div class="bd dp-rich">' + dpParaRich(text) + '</div>' +
+        '<div class="cap">' + cap + "</div></div>";
+    }
     return '<div class="dp-reflect' + (isAct ? " act" : "") + '">' +
       (isAct ? "" : '<span class="glow" aria-hidden="true"></span>') +
       '<div class="eb"><span class="ic" aria-hidden="true">' + (isAct ? "✧" : "✦") + '</span>' +
@@ -9767,10 +9808,10 @@ window.Guide = (function () {
        上下叠着看起来只是页面又长了一截。其余共用区块照旧往下排。 */
     let t = "";
     if (data.question && data.action)
-      t += '<div class="tp-pair">' + dpReflectHtml("q", data.question) +
-        dpReflectHtml("a", data.action) + "</div>";
-    else if (data.question) t += '<div class="tp-pair one">' + dpReflectHtml("q", data.question) + "</div>";
-    else if (data.action) t += '<div class="tp-pair one">' + dpReflectHtml("a", data.action) + "</div>";
+      t += '<div class="tp-pair">' + dpReflectHtml("q", data.question, tid) +
+        dpReflectHtml("a", data.action, tid) + "</div>";
+    else if (data.question) t += '<div class="tp-pair one">' + dpReflectHtml("q", data.question, tid) + "</div>";
+    else if (data.action) t += '<div class="tp-pair one">' + dpReflectHtml("a", data.action, tid) + "</div>";
     let tail = "";
     if (data.aha && data.aha.length) tail += dpKeepHtml(data.aha);
     if (data.steps && data.steps.length) tail += dpStartHtml(data.steps);
