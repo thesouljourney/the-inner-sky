@@ -2703,8 +2703,6 @@
       linear-gradient(100deg,rgba(9,18,46,.68) 0%,rgba(9,18,46,.46) 30%,rgba(9,18,46,.16) 58%,rgba(9,18,46,0) 82%)
   }
   #dpage.favorites-page .dp-hero > *{position:relative;z-index:1}
-  /* 账号选单开着的时候要盖住 hero 里其他文字——同一个老问题,同一个补丁 */
-  #dpage.favorites-page > .dp-hero{z-index:5}
   #dpage.favorites-page .dp-topbar{z-index:2}
   #dpage.favorites-page .dp-hero .dp-stars i{opacity:calc(var(--o,.5) * .5)}
   #dpage.favorites-page .dp-title,
@@ -2713,6 +2711,26 @@
   @media(max-width:767px){
     /* 手机窄屏:实景图右侧的星光罐才是主角,构图往右挪一点,别把它裁掉 */
     #dpage.favorites-page .dp-hero::before{background-position:68% 50%}
+  }
+  /* 整页底纹:压在 --dp-cream 底色之上、正文卡片之下的一层图。
+     跟生命蓝图那页同一个做法(position:fixed 而不是 background-attachment:
+     fixed,躲开 iOS Safari 已知的跳动/破图问题),卷动时只有卡片在动,
+     底纹留在原地。 */
+  #dpage.favorites-page{position:relative}
+  #dpage.favorites-page::before{
+    content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+    background-image:url("assets/favorites/bg.webp");
+    background-size:cover;background-position:center top;background-repeat:no-repeat;
+    opacity:.28
+  }
+  #dpage.favorites-page > *{position:relative;z-index:1}
+  /* 账号选单开着的时候要盖住底下所有内容——同一个老问题,同一个补丁 */
+  #dpage.favorites-page > .dp-hero{z-index:5}
+  /* 卡片跟底纹分开:提高白度与投影对比,不然两者的浅色调会糊在一起 */
+  #dpage.favorites-page .dp-card{
+    position:relative;z-index:1;
+    background:rgba(252,249,246,.72);border-color:rgba(154,106,52,.16);
+    box-shadow:0 18px 46px -22px rgba(34,35,58,.32)
   }
 
   /* ============================================================
