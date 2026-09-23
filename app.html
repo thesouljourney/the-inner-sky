@@ -3702,6 +3702,12 @@
     box-shadow:0 2px 14px -10px rgba(9,18,46,.14);
     transition:background .35s ease,border-color .35s ease
   }
+  /* .no 跟手机地图摘要一样,预设不显示——只在 ≤767px 那段手机专属
+     CSS 里打开,桌机/平板维持原本只有小记号图示的样子。 */
+  #dpage.compass-page .cp-ent .no,
+  #dpage.compass-page .cp-ent .arrow{display:none}
+  #dpage.compass-page .cp-quickmap,
+  #dpage.compass-page .cp-scrolldown{display:none}
   #dpage.compass-page .cp-ent .gl{
     display:block;width:20px;height:20px;line-height:0
   }
@@ -3827,11 +3833,79 @@
   #dpage.compass-page .cp-sky-card{background:rgba(255,253,250,.62);border-color:rgba(150,130,180,.08)}
 
   @media(max-width:767px){
-    #dpage.compass-page .cp-wheel{grid-template-columns:1fr;gap:12px;margin-top:20px}
+    #dpage.compass-page .cp-wheel{grid-template-columns:1fr;gap:0;margin-top:20px}
     #dpage.compass-page .cp-rose{width:min(48vw,172px);margin-bottom:6px}
-    #dpage.compass-page .cp-ent{padding:18px;border-radius:16px;min-height:62px}
-    #dpage.compass-page .cp-ent .zh{margin-top:11px;font-size:15.5px}
-    #dpage.compass-page .cp-ent .sit{font-size:14.5px;margin-top:9px;line-height:1.95}
+    /* —— 手机地图摘要:罗盘图下面先给一句「这是我的内在指南」的
+       整体感——四个方向的短名 + 一句固定的方向说明,排成十字,
+       中间标出「此刻的你」。内容跟底下的 .cp-ent 重复,纯视觉,
+       aria-hidden 交给 .cp-ent 负责朗读。 */
+    #dpage.compass-page .cp-quickmap{
+      display:block;order:5;margin:4px auto 0;max-width:300px;
+      text-align:center;color:var(--dp-ink)
+    }
+    #dpage.compass-page .qm-cell{display:flex;flex-direction:column;gap:4px;padding:6px 4px}
+    #dpage.compass-page .qm-cell b{
+      font-family:var(--dp-serif);font-weight:600;font-size:14px;letter-spacing:.04em
+    }
+    #dpage.compass-page .qm-cell span{
+      font-size:11.5px;line-height:1.5;font-weight:300;color:rgba(34,35,58,.72)
+    }
+    #dpage.compass-page .qm-top::after,
+    #dpage.compass-page .qm-bottom::before{
+      content:"";display:block;width:1px;height:14px;margin:2px auto 0;
+      background:rgba(154,106,52,.3)
+    }
+    #dpage.compass-page .qm-bottom::before{margin:0 auto 2px}
+    #dpage.compass-page .qm-row{
+      display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:6px
+    }
+    #dpage.compass-page .qm-left{align-items:flex-end;text-align:right}
+    #dpage.compass-page .qm-right{align-items:flex-start;text-align:left}
+    #dpage.compass-page .qm-center{
+      display:flex;flex-direction:column;align-items:center;gap:4px;padding:0 8px
+    }
+    #dpage.compass-page .qm-center .qm-mark{
+      font-size:15px;color:rgba(154,106,52,.7)
+    }
+    #dpage.compass-page .qm-center b{
+      font-family:var(--dp-sans);font-weight:300;font-size:11px;letter-spacing:.14em;
+      color:rgba(34,35,58,.65)
+    }
+    #dpage.compass-page .cp-scrolldown{
+      display:flex;order:8;align-items:center;justify-content:center;gap:6px;
+      width:100%;margin:18px 0 4px;padding:8px;background:none;border:none;cursor:pointer;
+      font-family:var(--dp-sans);font-weight:300;font-size:12.5px;letter-spacing:.12em;
+      color:#7a6fa8
+    }
+    #dpage.compass-page .cp-scrolldown span{font-size:12px;animation:dpTw 1.8s ease-in-out infinite alternate}
+    /* —— 四个方向的入口:从「四张卡片」改成「编号列表」——去掉卡片的
+       底色/边框/圆角/投影,换成跟站内其他清单(.cp-line)一样的细上线,
+       左边补上编号、右边补上箭头。点击行为、资料完全没有动。 */
+    #dpage.compass-page .cp-ent{
+      position:relative;order:10;
+      display:grid;grid-template-columns:26px 1fr 20px;
+      grid-template-areas:"no zh arrow" "no sit arrow";
+      column-gap:12px;align-items:start;
+      padding:20px 4px;min-height:0;
+      background:none;border:none;border-radius:0;box-shadow:none;
+      border-top:1px solid rgba(154,106,52,.16)
+    }
+    #dpage.compass-page .cp-ent:last-of-type{border-bottom:1px solid rgba(154,106,52,.16)}
+    #dpage.compass-page .cp-ent .no{
+      display:block;grid-area:no;margin-top:1px;
+      font-family:var(--dp-display);font-weight:400;font-size:13px;
+      letter-spacing:.06em;color:rgba(154,106,52,.55)
+    }
+    #dpage.compass-page .cp-ent .gl{display:none}
+    #dpage.compass-page .cp-ent .arrow{
+      display:block;grid-area:arrow;align-self:center;justify-self:end;
+      font-size:14px;color:rgba(154,106,52,.5)
+    }
+    #dpage.compass-page .cp-ent .zh{grid-area:zh;margin-top:0;font-size:15.5px}
+    #dpage.compass-page .cp-ent .sit{
+      grid-area:sit;font-size:14px;margin-top:7px;line-height:1.85;
+      display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden
+    }
     #dpage.compass-page .cp-panel{padding:22px 18px;border-radius:16px}
     #dpage.compass-page .cp-panel .bd{font-size:14.5px;line-height:2.05}
     #dpage.compass-page .cp-panel .tx{font-size:14px;line-height:2.05}
@@ -10691,9 +10765,13 @@ window.Guide = (function () {
       return '<button type="button" class="cp-ent d' + (i + 1) + (on ? " on" : "") +
         '" data-dir="' + esc0(d.key) + '"' +
         ' aria-expanded="' + (on ? "true" : "false") + '" aria-controls="cpPanel">' +
+        /* .no 只在手机版列表样式里显示(见 ≤767px 那段 CSS)——桌机/平板
+           一个像素都不变,用的是 DIRECTIONS 本来就有的 d.no,不是新内容。 */
+        '<span class="no" aria-hidden="true">' + esc0(d.no) + "</span>" +
         '<span class="gl" aria-hidden="true">' + (CP_GLYPH[d.key] || "") + "</span>" +
         '<b class="zh">' + esc0(dpT(d.zh, d.en)) + "</b>" +
-        '<span class="sit">' + esc0(lead) + "</span></button>";
+        '<span class="sit">' + esc0(lead) + "</span>" +
+        '<span class="arrow" aria-hidden="true">→</span></button>';
     }).join("");
 
     /* 一块共用的内容区。桌机在盘下方,手机由 CSS order 挪到被点的那一列底下。 */
@@ -10728,10 +10806,41 @@ window.Guide = (function () {
         esc0(dpT("收起", "Close")) + "</button></div>";
     }
 
+    /* 手机专属:罗盘图下面先给一张「地图摘要」,四个方向用短名 + 一句
+       静态的方向说明(不是个人化内容,四个方向本身是固定的身分,
+       跟 CP_GLYPH 的山/日/云/星是同一层东西),排成一个十字,
+       让第一屏先读出「这是我的内在指南」这句话,再往下才是四张可以
+       点开的正文卡。只在 ≤767px 显示(见对应 CSS),桌机/平板
+       一个像素都不受影响,也不影响 .cp-ent 本身的资料或点击逻辑。
+       aria-hidden:内容跟底下可互动的 .cp-ent 重复,交给它们负责朗读。 */
+    const QM_NAME = {
+      ground: dpT("安定", "Grounded"), move: dpT("前进", "Forward"),
+      drain: dpT("消耗", "Drained"), call: dpT("吸引", "Drawn")
+    };
+    const QM_TAG = {
+      ground: dpT("先安顿自己", "Steady yourself first"),
+      move: dpT("更有向前的力量", "More strength to move forward"),
+      drain: dpT("看见消耗，重新调整", "Notice what drains you, then adjust"),
+      call: dpT("靠近喜欢的事物", "Move closer to what draws you")
+    };
+    const qmCell = function (key, cls) {
+      return '<div class="qm-cell ' + cls + '"><b>' + esc0(QM_NAME[key]) + '</b>' +
+        '<span>' + esc0(QM_TAG[key]) + '</span></div>';
+    };
+    const quickmap = '<div class="cp-quickmap" aria-hidden="true">' +
+      qmCell("move", "qm-top") +
+      '<div class="qm-row">' + qmCell("ground", "qm-left") +
+      '<div class="qm-center"><span class="qm-mark">✦</span><b>' +
+      esc0(dpT("此刻的你", "You, right now")) + "</b></div>" +
+      qmCell("call", "qm-right") + "</div>" +
+      qmCell("drain", "qm-bottom") + "</div>" +
+      '<button type="button" class="cp-scrolldown" data-scroll-ents>' +
+      esc0(dpT("往下探索", "Explore below")) + '<span aria-hidden="true">↓</span></button>';
+
     return '<section class="cp-sec cp-compass">' +
       compassSecHead("01", dpT("我的内在指南", "My Inner Compass"), "MY INNER COMPASS") +
       '<div class="cp-wheel" data-active="' + esc0(active || "") + '">' +
-      core + ents + panel + "</div></section>";
+      core + quickmap + ents + panel + "</div></section>";
   }
 
   /* ── 想留给自己的几句话 ──────────────────────────────────
@@ -11969,6 +12078,13 @@ window.Guide = (function () {
       });
       const cl = document.getElementById("cpPanelClose");
       if (cl) cl.addEventListener("click", function () { cpSelect(compassDirOpen); });
+      /* 手机地图摘要底下的「往下探索」——只是卷到第一张方向卡,
+         不碰任何资料或既有的开合逻辑。 */
+      const sd = host.querySelector("[data-scroll-ents]");
+      if (sd) sd.addEventListener("click", function () {
+        const first = host.querySelector(".cp-ent");
+        if (first) first.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
     }
     cpBindDirections();
 
