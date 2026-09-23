@@ -3835,14 +3835,13 @@
 
   @media(max-width:767px){
     #dpage.compass-page .cp-wheel{grid-template-columns:1fr;gap:0;margin-top:20px}
-    #dpage.compass-page .cp-rose{width:min(42vw,152px);grid-area:rose;position:relative}
+    #dpage.compass-page .cp-rose{width:min(42vw,152px);grid-area:rose}
     /* —— 罗盘插图本身就是那颗星:四个方向的短名 + 一句固定的方向说明
        直接排在它的上下左右,不是另外画一颗小的。用 grid-template-areas
        把 .cp-rose 跟四个 .qm-cell 一起摆位,内容跟底下的 .cp-ent
        重复,纯视觉,aria-hidden 交给 .cp-ent 负责朗读。
-       圆环 + 十字连接线是纯装饰:圆环贴着罗盘图边缘(.cp-rose::after),
-       连接线用两条铺满 .cp-wheel-core 的极细渐层线(::after)在四个
-       方向之间打底,压在罗盘图跟文字底下(z-index:-1),不抢视觉。 */
+       十字连接线是纯装饰:两条铺满 .cp-wheel-core 的极细渐层线(::after)
+       在四个方向之间打底,压在罗盘图跟文字底下(z-index:-1),不抢视觉。 */
     #dpage.compass-page .cp-wheel-core{
       display:grid;
       grid-template-columns:1fr auto 1fr;
@@ -3855,10 +3854,6 @@
       background:
         linear-gradient(rgba(154,106,52,.24),rgba(154,106,52,.24)) center/1px 100% no-repeat,
         linear-gradient(90deg,rgba(154,106,52,.24),rgba(154,106,52,.24)) center/100% 1px no-repeat
-    }
-    #dpage.compass-page .cp-rose::after{
-      content:"";position:absolute;inset:-11%;border-radius:50%;
-      border:1px solid rgba(154,106,52,.32);pointer-events:none
     }
     #dpage.compass-page .qm-cell{
       display:flex;flex-direction:column;gap:3px;text-align:center;color:var(--dp-ink)
