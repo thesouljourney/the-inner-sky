@@ -3848,13 +3848,13 @@
 
   @media(max-width:767px){
     #dpage.compass-page .cp-wheel{grid-template-columns:1fr;gap:0;margin-top:20px}
-    #dpage.compass-page .cp-rose{width:min(42vw,152px);grid-area:rose}
+    #dpage.compass-page .cp-rose{width:min(42vw,152px);grid-area:rose;position:relative}
     /* —— 罗盘插图本身就是那颗星:四个方向的短名 + 一句固定的方向说明
        直接排在它的上下左右,不是另外画一颗小的。用 grid-template-areas
        把 .cp-rose 跟四个 .qm-cell 一起摆位,内容跟底下的 .cp-ent
        重复,纯视觉,aria-hidden 交给 .cp-ent 负责朗读。
-       十字连接线是纯装饰:两条铺满 .cp-wheel-core 的极细渐层线(::after)
-       在四个方向之间打底,压在罗盘图跟文字底下(z-index:-1),不抢视觉。 */
+       轨道环:用户给的素材(中心镂空),叠在罗盘插图正后方,比 CSS 画的
+       十字线更像真的星盘。 */
     #dpage.compass-page .cp-wheel-core{
       display:grid;
       grid-template-columns:1fr auto 1fr;
@@ -3862,11 +3862,11 @@
       grid-template-areas:". top ." "left rose right" ". now ." ". bottom .";
       row-gap:4px;column-gap:4px;justify-items:center;align-items:center
     }
-    #dpage.compass-page .cp-wheel-core::after{
-      content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
-      background:
-        linear-gradient(rgba(154,106,52,.24),rgba(154,106,52,.24)) center/1px 100% no-repeat,
-        linear-gradient(90deg,rgba(154,106,52,.24),rgba(154,106,52,.24)) center/100% 1px no-repeat
+    #dpage.compass-page .cp-rose::before{
+      content:"";position:absolute;left:50%;top:50%;
+      width:168%;aspect-ratio:1/1;transform:translate(-50%,-50%);
+      background:url(assets/life/cp-mobile/orbit-ring.webp) center/contain no-repeat;
+      opacity:.85;pointer-events:none
     }
     #dpage.compass-page .qm-cell{
       display:flex;flex-direction:column;gap:3px;text-align:center;color:var(--dp-ink)
@@ -3885,6 +3885,14 @@
       display:block;grid-area:now;font-family:var(--dp-sans);font-weight:300;
       font-size:10.5px;letter-spacing:.16em;color:rgba(34,35,58,.6)
     }
+    /* 指南盘这一整段(从「前进」到「消耗」)两侧也各配一枝淡叶子,
+       跟 hero 那两枝呼应,不是只有 hero 顶部才有。 */
+    #dpage.compass-page .cp-compass::before{
+      content:"";position:absolute;left:-8px;right:-8px;top:-20px;height:420px;
+      z-index:0;pointer-events:none;opacity:.4;
+      background:url(assets/life/cp-mobile/leaves.webp) center/contain no-repeat
+    }
+    #dpage.compass-page .cp-compass > *{position:relative;z-index:1}
     /* .cp-compass 自己的副标(见 JS 里的 compassSecHead 第四个参数)——
        桌机/平板预设 display:none(见基础规则),只在这里打开。 */
     #dpage.compass-page .cp-compass .cp-lead{display:block}
@@ -3899,19 +3907,30 @@
     #dpage.compass-page .cp-startfrom span{
       font-size:13px;font-weight:300;color:rgba(34,35,58,.68)
     }
-    /* —— 四个方向的入口:圆角卡片,左边一颗实景小圆图 + 编号,
-       右边一颗圆形箭头按钮。点击行为、资料完全没有动,只是外观。 */
+    /* —— 四个方向的入口:圆角卡片,左边一颗上了色的圆形小图 + 编号,
+       右边一圈细框的箭头按钮,卡片右侧衬一点淡淡的实景(01/03/04 各自
+       一张,02 维持素面)。点击行为、资料完全没有动,只是外观。 */
     #dpage.compass-page .cp-ent{
-      position:relative;order:10;
-      display:grid;grid-template-columns:26px 44px 1fr 36px;
+      position:relative;order:10;overflow:hidden;
+      display:grid;grid-template-columns:26px 46px 1fr 34px;
       grid-template-areas:"no ic zh arrow" "no ic sit arrow";
       column-gap:12px;row-gap:2px;align-items:center;
       padding:18px 16px;min-height:0;border-radius:20px;
-      background:rgba(255,253,250,.6);border:1px solid rgba(154,106,52,.14);
+      background:rgba(255,253,250,.68);border:1px solid rgba(154,106,52,.14);
       box-shadow:0 3px 16px -12px rgba(9,18,46,.22);
       margin-bottom:12px
     }
     #dpage.compass-page .cp-ent:last-of-type{margin-bottom:0}
+    /* 卡片右侧那一小片实景:铺在卡片底色之上、文字之下,靠一层同色
+       渐层把边缘吃掉,不是硬裁一块照片贴上去。 */
+    #dpage.compass-page .cp-ent::after{
+      content:"";position:absolute;inset:0;z-index:0;pointer-events:none;
+      background:linear-gradient(90deg,rgba(255,253,250,1) 45%,rgba(255,253,250,0) 78%)
+    }
+    #dpage.compass-page .cp-ent.d1{background-image:url(assets/life/cp-mobile/cloud-card.webp);background-size:cover;background-position:right center}
+    #dpage.compass-page .cp-ent.d3{background-image:url(assets/life/cp-mobile/cherry.webp);background-size:220px auto;background-position:right -10px center;background-repeat:no-repeat}
+    #dpage.compass-page .cp-ent.d4{background-image:url(assets/life/cp-mobile/cloud-card.webp);background-size:cover;background-position:right center}
+    #dpage.compass-page .cp-ent > *{position:relative;z-index:1}
     #dpage.compass-page .cp-ent .no{
       display:block;grid-area:no;align-self:start;margin-top:2px;
       font-family:var(--dp-display);font-weight:400;font-size:13px;
@@ -3919,14 +3938,20 @@
     }
     #dpage.compass-page .cp-ent .gl{display:none}
     #dpage.compass-page .cp-ent .ic{
-      display:block;grid-area:ic;grid-row:1/3;width:44px;height:44px;
-      border-radius:50%;object-fit:cover;
-      background:rgba(154,106,52,.08)
+      display:block;grid-area:ic;grid-row:1/3;width:46px;height:46px;
+      border-radius:50%;object-fit:contain;padding:9px;box-sizing:border-box;
+      box-shadow:inset 0 0 0 1px rgba(154,106,52,.16)
     }
+    #dpage.compass-page .cp-ent.d1 .ic{background:radial-gradient(circle,#e4ecf5,#cfdcec)}
+    #dpage.compass-page .cp-ent.d2 .ic{background:radial-gradient(circle,#faf1de,#f0dfb8)}
+    #dpage.compass-page .cp-ent.d3 .ic{background:radial-gradient(circle,#e7ecf6,#d3ddef)}
+    #dpage.compass-page .cp-ent.d4 .ic{background:radial-gradient(circle,#f7f0e0,#ecdec0)}
     #dpage.compass-page .cp-ent .arrow{
-      display:block;grid-area:arrow;grid-row:1/3;align-self:center;justify-self:end;
-      width:32px;height:32px;font-size:0;color:transparent;border-radius:50%;
-      background:url(assets/life/cp-mobile/arrow-btn.webp) center/cover no-repeat
+      display:flex;align-items:center;justify-content:center;
+      grid-area:arrow;grid-row:1/3;align-self:center;justify-self:end;
+      width:30px;height:30px;border-radius:50%;
+      background:rgba(255,253,250,.9);border:1px solid rgba(154,106,52,.4);
+      font-size:13px;color:#9a6a2f
     }
     #dpage.compass-page .cp-ent .zh{grid-area:zh;margin-top:0;font-size:15.5px}
     #dpage.compass-page .cp-ent .sit{

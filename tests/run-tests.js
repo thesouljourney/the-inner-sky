@@ -4256,8 +4256,10 @@ function testAnchorsV11AndRenderV2() {
   checkEq("[v2] 香槟色的细边", /border:1px solid rgba\(154,106,52,\.13\)/.test(entCss), true);
   checkEq("[v2] 几乎没有阴影",
     /box-shadow:0 2px 14px -10px/.test(entCss), true);
+  /* 手机版新增了 .cp-ent::after 做卡片右侧图片渐隐遮罩,不是方向之间的连接线 */
   checkEq("[v2] 不再画连接线 —— 罗盘自己组织四个方向",
-    /\.cp-ent::after\{/.test(html), false);
+    /\.cp-ent::after\{[^}]*linear-gradient/.test(html) &&
+    !/\.cp-ent::after\{[^}]*(height:1px|height:2px|width:100%.*top:50%)/.test(html), true);
   checkEq("[v2] 四个方向各有一个香槟细线的小记号",
     /var CP_GLYPH = \{/.test(html) &&
     ["ground", "move", "drain", "call"].every(function (k) {
