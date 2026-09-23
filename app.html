@@ -3981,9 +3981,14 @@
   #dpage .dp-loading .g{font-size:26px;color:var(--dp-lav);display:block;margin-bottom:10px;animation:dpTw 1.6s ease-in-out infinite alternate}
   /* 句尾那颗小星芒,取代原本的句号——比正文字小一号,微微上挑,
      跟标题字之间留一点呼吸,不是另一个独立的字。 */
+  /* 🌟 是系统内建的彩色 emoji,颜色是字体自己画死的,CSS 的 color
+     完全套不上去——它本来就偏浅黄白,叠在这张半透明卡片上更显淡。
+     用 filter 把饱和度跟对比度都推高,再加一圈暖金色的光晕,
+     让它在浅底上看起来更「亮」,而不是试图去改它本来的颜色。 */
   #dpage .dp-loading .flare{
-    display:inline-block;font-size:13px;margin-left:6px;
-    vertical-align:1px;animation:dpTw 2.2s ease-in-out .3s infinite alternate
+    display:inline-block;font-size:16px;margin-left:6px;
+    vertical-align:-1px;filter:saturate(1.8) contrast(1.25) drop-shadow(0 0 5px rgba(201,160,104,.55));
+    animation:dpTw 2.2s ease-in-out .3s infinite alternate
   }
   #dpage .fav-btn{background:none;border:none;cursor:pointer;font-size:17px;color:var(--dp-lav);flex:none;padding:2px 4px}
   #dpage .fav-btn.on{color:#c9a227}
