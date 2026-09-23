@@ -3093,21 +3093,49 @@
      dp-cta / dp-foot,所以一条都不能外溢。
      颜色、字体、断点全部沿用 #dpage 既有的 --dp-* 与既有写法。
      ============================================================ */
-  #dpage.compass-page{--dp-wide:min(1120px,calc(100vw - 96px));background:var(--dp-cream)}
+  #dpage.compass-page{--dp-wide:min(1120px,calc(100vw - 96px));background:var(--dp-cream);position:relative}
   @media(max-width:1024px){#dpage.compass-page{--dp-wide:100%}}
+  /* 整页底纹:用户给的晨光云海图,压在底色之上、正文之下——跟我的收藏
+     / 生命蓝图那两页同一个做法:position:fixed 而不是
+     background-attachment:fixed(iOS Safari 已知的跳动/破图问题),
+     卷动时只有内容在动,底纹留在原地;上下都留一截 buffer,手机网址列
+     收合展开、状态列挡住顶部那一截也不会露出边缘。
+     改用「白罩」:一层白色蒙版直接叠在同一个 background 里(不是用
+     CSS opacity 调整整层透明度)——这样蒙版颜色是画死的白,不会跟着
+     底下随便什么颜色变,底色也能安心退回原本站内共用的米色
+     --dp-cream,不用再另外配一个跟图片混出来的紫灰色。 */
+  #dpage.compass-page::before{
+    content:"";position:fixed;top:-160px;left:0;right:0;bottom:-200px;z-index:0;pointer-events:none;
+    background:
+      linear-gradient(rgba(255,255,255,.62),rgba(255,255,255,.62)),
+      url("assets/life/compass-bg.webp") center top / cover no-repeat;
+    /* cover 已经填满,再放大就得用 transform——盖住的范围更大,
+       裁掉更多四周,图案本身在画面上看起来更大、更近。 */
+    transform:scale(1.25);transform-origin:center top
+  }
+  #dpage.compass-page > *{position:relative;z-index:1}
+  /* 账号选单开着的时候要盖住底下所有内容——同一个老问题,同一个补丁 */
+  #dpage.compass-page > .dp-hero{z-index:5}
+  #dpage.compass-page .dp-topbar{z-index:2}
 
-  /* —— Hero:沿用既有云天底,只是换一段引导语 —— */
+  /* —— Hero:用户给的晨光云海实景图,单独一份素材,不跟生命脉络
+     共用 hero-sky.webp(那张构图是给别的位置/裁法调的,直接换图
+     会连带影响那一页) —— */
   #dpage.compass-page .dp-hero{
     background:
-      linear-gradient(180deg,rgba(9,18,46,.72) 0%,rgba(9,18,46,.3) 44%,rgba(9,18,46,.44) 100%),
-      url(assets/life/hero-sky.webp) left 62% / 148% auto no-repeat,
+      linear-gradient(180deg,rgba(9,18,46,.6) 0%,rgba(9,18,46,.22) 44%,rgba(9,18,46,.4) 100%),
+      url(assets/life/compass-hero.webp) center 42% / cover no-repeat,
       var(--dp-navy);
     padding-bottom:clamp(60px,8vw,112px)
   }
   #dpage.compass-page .dp-hero .dp-stars i{opacity:calc(var(--o,.5) * .6)}
+  /* hero 底部那道「淡出」原本淡到 --dp-cream(米色),但页面本身的
+     底色现在是跟晨光图混出来的浅紫灰(#c3c0cd),两个颜色不一样,
+     hero 一淡完马上撞上不同色的底,变成一条看得出来的分割线。
+     改成淡到同一个浅紫灰,再把这段淡出拉长一点,过渡更柔。 */
   #dpage.compass-page .dp-hero::after{
-    content:"";position:absolute;left:0;right:0;bottom:0;height:clamp(70px,10vw,130px);
-    background:linear-gradient(180deg,rgba(248,242,237,0),var(--dp-cream));pointer-events:none
+    content:"";position:absolute;left:0;right:0;bottom:0;height:clamp(110px,15vw,190px);
+    background:linear-gradient(180deg,rgba(239,232,227,0),#efe8e3);pointer-events:none
   }
   /* Hero 置中(与生命脉络那一页同一个做法),文字在云上要读得清楚 */
   #dpage.compass-page .dp-hero-grid{text-align:center;justify-items:center}
@@ -3298,9 +3326,9 @@
        字才读得清楚(调的是遮罩,不是把字调亮,云本身没有被盖掉) */
     #dpage.compass-page .dp-hero{
       background:
-        linear-gradient(180deg,rgba(9,18,46,.97) 0%,rgba(9,18,46,.72) 18%,
-                               rgba(9,18,46,.5) 52%,rgba(9,18,46,.46) 100%),
-        url(assets/life/hero-sky.webp) left bottom / 215% auto no-repeat,
+        linear-gradient(180deg,rgba(9,18,46,.85) 0%,rgba(9,18,46,.5) 18%,
+                               rgba(9,18,46,.38) 52%,rgba(9,18,46,.4) 100%),
+        url(assets/life/compass-hero.webp) 68% 42% / cover no-repeat,
         var(--dp-navy);
       padding-bottom:clamp(48px,14vw,80px)
     }
