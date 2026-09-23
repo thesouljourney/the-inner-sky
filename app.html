@@ -3706,7 +3706,7 @@
      CSS 里打开,桌机/平板维持原本只有小记号图示的样子。 */
   #dpage.compass-page .cp-ent .no,
   #dpage.compass-page .cp-ent .arrow{display:none}
-  #dpage.compass-page .cp-quickmap,
+  #dpage.compass-page .qm-cell,
   #dpage.compass-page .cp-scrolldown{display:none}
   #dpage.compass-page .cp-ent .gl{
     display:block;width:20px;height:20px;line-height:0
@@ -3834,46 +3834,34 @@
 
   @media(max-width:767px){
     #dpage.compass-page .cp-wheel{grid-template-columns:1fr;gap:0;margin-top:20px}
-    #dpage.compass-page .cp-rose{width:min(48vw,172px);margin-bottom:6px}
-    /* —— 手机地图摘要:罗盘图下面先给一句「这是我的内在指南」的
-       整体感——四个方向的短名 + 一句固定的方向说明,排成十字,
-       中间标出「此刻的你」。内容跟底下的 .cp-ent 重复,纯视觉,
-       aria-hidden 交给 .cp-ent 负责朗读。 */
-    #dpage.compass-page .cp-quickmap{
-      display:block;order:5;margin:4px auto 0;max-width:300px;
-      text-align:center;color:var(--dp-ink)
+    #dpage.compass-page .cp-rose{width:min(42vw,152px);grid-area:rose}
+    /* —— 罗盘插图本身就是那颗星:四个方向的短名 + 一句固定的方向说明
+       直接排在它的上下左右,不是另外画一颗小的。用 grid-template-areas
+       把 .cp-rose 跟四个 .qm-cell 一起摆位,内容跟底下的 .cp-ent
+       重复,纯视觉,aria-hidden 交给 .cp-ent 负责朗读。 */
+    #dpage.compass-page .cp-wheel-core{
+      display:grid;
+      grid-template-columns:1fr auto 1fr;
+      grid-template-rows:auto auto auto;
+      grid-template-areas:". top ." "left rose right" ". bottom .";
+      row-gap:4px;column-gap:4px;justify-items:center;align-items:center
     }
-    #dpage.compass-page .qm-cell{display:flex;flex-direction:column;gap:4px;padding:6px 4px}
+    #dpage.compass-page .qm-cell{
+      display:flex;flex-direction:column;gap:3px;text-align:center;color:var(--dp-ink)
+    }
     #dpage.compass-page .qm-cell b{
-      font-family:var(--dp-serif);font-weight:600;font-size:14px;letter-spacing:.04em
+      font-family:var(--dp-serif);font-weight:600;font-size:13.5px;letter-spacing:.04em
     }
     #dpage.compass-page .qm-cell span{
-      font-size:11.5px;line-height:1.5;font-weight:300;color:rgba(34,35,58,.72)
+      font-size:10.5px;line-height:1.4;font-weight:300;color:rgba(34,35,58,.72)
     }
-    #dpage.compass-page .qm-top::after,
-    #dpage.compass-page .qm-bottom::before{
-      content:"";display:block;width:1px;height:14px;margin:2px auto 0;
-      background:rgba(154,106,52,.3)
-    }
-    #dpage.compass-page .qm-bottom::before{margin:0 auto 2px}
-    #dpage.compass-page .qm-row{
-      display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:6px
-    }
-    #dpage.compass-page .qm-left{align-items:flex-end;text-align:right}
-    #dpage.compass-page .qm-right{align-items:flex-start;text-align:left}
-    #dpage.compass-page .qm-center{
-      display:flex;flex-direction:column;align-items:center;gap:4px;padding:0 8px
-    }
-    #dpage.compass-page .qm-center .qm-mark{
-      font-size:15px;color:rgba(154,106,52,.7)
-    }
-    #dpage.compass-page .qm-center b{
-      font-family:var(--dp-sans);font-weight:300;font-size:11px;letter-spacing:.14em;
-      color:rgba(34,35,58,.65)
-    }
+    #dpage.compass-page .qm-top{grid-area:top;padding-bottom:2px}
+    #dpage.compass-page .qm-bottom{grid-area:bottom;padding-top:2px}
+    #dpage.compass-page .qm-left{grid-area:left;align-items:flex-end;text-align:right;max-width:94px}
+    #dpage.compass-page .qm-right{grid-area:right;align-items:flex-start;text-align:left;max-width:94px}
     #dpage.compass-page .cp-scrolldown{
       display:flex;order:8;align-items:center;justify-content:center;gap:6px;
-      width:100%;margin:18px 0 4px;padding:8px;background:none;border:none;cursor:pointer;
+      width:100%;margin:14px 0 4px;padding:8px;background:none;border:none;cursor:pointer;
       font-family:var(--dp-sans);font-weight:300;font-size:12.5px;letter-spacing:.12em;
       color:#7a6fa8
     }
@@ -10806,12 +10794,12 @@ window.Guide = (function () {
         esc0(dpT("收起", "Close")) + "</button></div>";
     }
 
-    /* 手机专属:罗盘图下面先给一张「地图摘要」,四个方向用短名 + 一句
-       静态的方向说明(不是个人化内容,四个方向本身是固定的身分,
-       跟 CP_GLYPH 的山/日/云/星是同一层东西),排成一个十字,
-       让第一屏先读出「这是我的内在指南」这句话,再往下才是四张可以
-       点开的正文卡。只在 ≤767px 显示(见对应 CSS),桌机/平板
-       一个像素都不受影响,也不影响 .cp-ent 本身的资料或点击逻辑。
+    /* 手机专属:四个方向的短名 + 一句静态的方向说明(不是个人化内容,
+       四个方向本身是固定的身分,跟 CP_GLYPH 的山/日/云/星是同一层
+       东西)直接排在罗盘插图的上下左右——用的是同一颗星,不是另外
+       画一颗小的。只在 ≤767px 显示(见对应 CSS,靠 .cp-wheel-core
+       在手机改成 grid 把四个方向摆到罗盘四边),桌机/平板一个像素
+       都不受影响,也不影响 .cp-ent 本身的资料或点击逻辑。
        aria-hidden:内容跟底下可互动的 .cp-ent 重复,交给它们负责朗读。 */
     const QM_NAME = {
       ground: dpT("安定", "Grounded"), move: dpT("前进", "Forward"),
@@ -10824,23 +10812,19 @@ window.Guide = (function () {
       call: dpT("靠近喜欢的事物", "Move closer to what draws you")
     };
     const qmCell = function (key, cls) {
-      return '<div class="qm-cell ' + cls + '"><b>' + esc0(QM_NAME[key]) + '</b>' +
+      return '<div class="qm-cell ' + cls + '" aria-hidden="true"><b>' + esc0(QM_NAME[key]) + '</b>' +
         '<span>' + esc0(QM_TAG[key]) + '</span></div>';
     };
-    const quickmap = '<div class="cp-quickmap" aria-hidden="true">' +
-      qmCell("move", "qm-top") +
-      '<div class="qm-row">' + qmCell("ground", "qm-left") +
-      '<div class="qm-center"><span class="qm-mark">✦</span><b>' +
-      esc0(dpT("此刻的你", "You, right now")) + "</b></div>" +
-      qmCell("call", "qm-right") + "</div>" +
-      qmCell("drain", "qm-bottom") + "</div>" +
+    const coreWithMap = '<div class="cp-wheel-core">' + compassRoseSvg() +
+      qmCell("move", "qm-top") + qmCell("ground", "qm-left") +
+      qmCell("call", "qm-right") + qmCell("drain", "qm-bottom") + "</div>" +
       '<button type="button" class="cp-scrolldown" data-scroll-ents>' +
       esc0(dpT("往下探索", "Explore below")) + '<span aria-hidden="true">↓</span></button>';
 
     return '<section class="cp-sec cp-compass">' +
       compassSecHead("01", dpT("我的内在指南", "My Inner Compass"), "MY INNER COMPASS") +
       '<div class="cp-wheel" data-active="' + esc0(active || "") + '">' +
-      core + quickmap + ents + panel + "</div></section>";
+      coreWithMap + ents + panel + "</div></section>";
   }
 
   /* ── 想留给自己的几句话 ──────────────────────────────────
