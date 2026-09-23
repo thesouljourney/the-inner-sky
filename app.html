@@ -3916,19 +3916,21 @@
       grid-template-areas:"no ic zh arrow" "no ic sit arrow";
       column-gap:12px;row-gap:2px;align-items:center;
       padding:18px 16px;min-height:0;border-radius:20px;
-      border:1px solid rgba(154,106,52,.14);
+      background:rgba(255,253,250,.68);border:1px solid rgba(154,106,52,.14);
       box-shadow:0 3px 16px -12px rgba(9,18,46,.22);
-      margin-bottom:12px;
-      background-size:cover;background-position:center;background-repeat:no-repeat
+      margin-bottom:12px
     }
     #dpage.compass-page .cp-ent:last-of-type{margin-bottom:0}
-    /* 四张卡片各自一张完整的实景图当底,图本身左边已经是素色、右边
-       带插画跟圆角;用 cover 让图完全填满格子、不被拉伸变形,
-       不再另外叠底色跟渐层遮罩。 */
-    #dpage.compass-page .cp-ent.d1{background-image:url(assets/life/cp-mobile/card-ground.webp)}
-    #dpage.compass-page .cp-ent.d2{background-image:url(assets/life/cp-mobile/card-move.webp)}
-    #dpage.compass-page .cp-ent.d3{background-image:url(assets/life/cp-mobile/card-drain.webp)}
-    #dpage.compass-page .cp-ent.d4{background-image:url(assets/life/cp-mobile/card-call.webp)}
+    /* 卡片右侧那一小片实景:铺在卡片底色之上、文字之下,靠一层同色
+       渐层把边缘吃掉,不是硬裁一块照片贴满整张卡。01/03/04 各自一张,
+       02(前进)维持素面。 */
+    #dpage.compass-page .cp-ent::after{
+      content:"";position:absolute;inset:0;z-index:0;pointer-events:none;
+      background:linear-gradient(90deg,rgba(255,253,250,1) 45%,rgba(255,253,250,0) 78%)
+    }
+    #dpage.compass-page .cp-ent.d1{background-image:url(assets/life/cp-mobile/card-ground.webp);background-size:cover;background-position:right center}
+    #dpage.compass-page .cp-ent.d3{background-image:url(assets/life/cp-mobile/card-drain.webp);background-size:cover;background-position:right center}
+    #dpage.compass-page .cp-ent.d4{background-image:url(assets/life/cp-mobile/card-call.webp);background-size:cover;background-position:right center}
     #dpage.compass-page .cp-ent > *{position:relative;z-index:1}
     #dpage.compass-page .cp-ent .no{
       display:block;grid-area:no;align-self:start;margin-top:2px;
