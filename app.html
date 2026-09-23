@@ -3979,6 +3979,12 @@
   #dpage .dp-dots .tx{margin-left:8px}
   @media (prefers-reduced-motion:reduce){#dpage .dp-boot .dot,#dpage .dp-dots .dot{animation-duration:6s}}
   #dpage .dp-loading .g{font-size:26px;color:var(--dp-lav);display:block;margin-bottom:10px;animation:dpTw 1.6s ease-in-out infinite alternate}
+  /* 句尾那颗小星芒,取代原本的句号——比正文字小一号,微微上挑,
+     跟标题字之间留一点呼吸,不是另一个独立的字。 */
+  #dpage .dp-loading .flare{
+    display:inline-block;width:13px;height:13px;margin-left:6px;fill:#c9a068;
+    vertical-align:2px;animation:dpTw 2.2s ease-in-out .3s infinite alternate
+  }
   #dpage .fav-btn{background:none;border:none;cursor:pointer;font-size:17px;color:var(--dp-lav);flex:none;padding:2px 4px}
   #dpage .fav-btn.on{color:#c9a227}
   @media(max-width:760px){
@@ -11982,7 +11988,10 @@ window.Guide = (function () {
     else if (!list.length) {
       // 温柔的 empty state,不用 "No data"
       body = '<div class="dp-card dp-loading"><span class="g">✦</span>' +
-        dpT("这里还没有留下星星。", "No stars kept here yet.") + '<br>' +
+        dpT("这里还没有留下星星", "No stars kept here yet") +
+        '<svg class="flare" viewBox="0 0 20 20" aria-hidden="true">' +
+        '<path d="M10 2.6c.3 3.7 3.7 7.1 7.4 7.4-3.7.3-7.1 3.7-7.4 7.4-.3-3.7-3.7-7.1-7.4-7.4 3.7-.3 7.1-3.7 7.4-7.4Z"/>' +
+        '</svg>' + '<br>' +
         '<span style="font-size:12.5px;opacity:.85">' +
         dpT("阅读时，选中让你有感觉的句子，就可以把它收藏在这里。",
             "While reading, select a line that moves you to keep it here.") + '</span><br>' +
