@@ -2007,7 +2007,10 @@ function testTopicLayout() {
   // 自己刻意的改动。
   // 再更新一次:每一章标题下面加一条星芒分隔线(跟「专属建议」同一条
   // 视觉语言),不管这一章有没有摘要都印,是这一页自己刻意的改动。
-  checkEq("[tp] 生命蓝图这一页没有被改", lock("renderReadingPage"), "1684338ad3f505ca");
+  // 再更新一次:每一章正文默认收起,只露标题跟摘要,要点「继续探索」
+  // 才展开(复用既有的渐进展开机制 dpMakeFoldable),是这一页自己
+  // 刻意的改动。
+  checkEq("[tp] 生命蓝图这一页没有被改", lock("renderReadingPage"), "ed2046eb17f13540");
   checkEq("[tp] 三十道探索题这一页没有被改", lock("renderQPage"), "893d3c71d47ab628");
 
   /* —— ② 文字没有被动过 —— */
