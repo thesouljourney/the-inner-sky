@@ -2543,6 +2543,27 @@
     width:1px;background:rgba(154,106,52,.22)
   }
   #dpage.reading-page .dp-chnav .tt{font-weight:700}
+  /* 每一章正文默认收起,只露标题跟摘要——渐进展开的样式(thread-page
+     那边已经有一份,这里原样照抄,只是换了作用的 class),折起来的
+     状态用 max-height:0,展开量交给 JS 按实际内容给,转屏不会截断。 */
+  #dpage.reading-page .fold-rest{
+    overflow:hidden;max-height:0;opacity:0;
+    transition:max-height .5s cubic-bezier(.22,1,.36,1),opacity .38s ease
+  }
+  #dpage.reading-page .fold-rest.on{opacity:1}
+  @media (prefers-reduced-motion:reduce){#dpage.reading-page .fold-rest{transition:none}}
+  #dpage.reading-page .fold-btn{
+    display:inline-flex;align-items:center;gap:8px;
+    margin-top:12px;min-height:40px;padding:8px 2px;
+    background:none;border:none;cursor:pointer;
+    font-family:var(--dp-sans);font-size:13.5px;letter-spacing:.08em;
+    color:#7a6fa8;transition:color .3s ease
+  }
+  #dpage.reading-page .fold-btn .cv{font-size:11px;line-height:1;transition:transform .3s ease}
+  #dpage.reading-page .fold-btn:hover{color:#4c4470}
+  #dpage.reading-page .fold-btn:focus-visible{
+    outline:1px solid rgba(129,118,173,.7);outline-offset:3px;border-radius:8px
+  }
   /* 五章的标签:去掉原本「详细解读」那行字,标签直接从这里开始。
      不是底线式的 tab(那是全站 .dp-tabs 的默认长相),改成胶囊式——
      选中的那颗用站上既有的 --dp-grad(dp-cta 同一个渐层),其余
@@ -9344,7 +9365,9 @@ window.Guide = (function () {
     }).join("") + "</ul>";
   }
 
-  function dpMakeFoldable(host, keep) {
+  // label:不传就跟改动前逐字相同(T("keepReading"));生命蓝图那五章
+  // 传自己的一句「继续探索」,不改全站共用的翻译。
+  function dpMakeFoldable(host, keep, label) {
     if (!host || host.dataset.folded) return;
     const ps = Array.prototype.filter.call(host.children, function (n) { return n.tagName === "P"; });
     // 只多出一段就不值得折
@@ -9362,7 +9385,7 @@ window.Guide = (function () {
     btn.setAttribute("aria-expanded", "false");
     btn.setAttribute("aria-controls", id);
     btn.innerHTML = '<span class="tx"></span><span class="cv" aria-hidden="true">↓</span>';
-    btn.querySelector(".tx").textContent = T("keepReading");
+    btn.querySelector(".tx").textContent = label || T("keepReading");
     host.appendChild(btn);
     /* 展开完成后把上限拿掉:之后换行、换字体或转屏都不会再被截断 */
     rest.addEventListener("transitionend", function (e) {
@@ -9374,7 +9397,7 @@ window.Guide = (function () {
       rest.classList.toggle("on", on);
       btn.setAttribute("aria-expanded", on ? "true" : "false");
       btn.classList.toggle("open", on);
-      btn.querySelector(".tx").textContent = on ? T("foldUp") : T("keepReading");
+      btn.querySelector(".tx").textContent = on ? T("foldUp") : (label || T("keepReading"));
       btn.querySelector(".cv").textContent = on ? "↑" : "↓";
       // 收起时要先回到当前实际高度再归零,否则从 none 直接跳 0 不会有过渡
       rest.style.maxHeight = rest.scrollHeight + "px";
@@ -10213,6 +10236,16 @@ window.Guide = (function () {
     $("dpage").querySelectorAll("[data-rtab]").forEach(function (b) {
       b.addEventListener("click", function () { location.hash = "#/reading/" + b.getAttribute("data-rtab"); });
     });
+    /* 每一章的正文默认收起,只露标题跟摘要,要点「继续探索」才展开——
+       用户要求的呈现方式。用既有的渐进展开机制(dpMakeFoldable),
+       keep:0 表示一段都不先露,跟"属于我的生命脉络"那边只是文案不同,
+       行为(收起状态用 max-height:0、展开量随内容走、转屏不截断)完全
+       一样,不用另外写一套折叠逻辑。 */
+    (function () {
+      const d = document.getElementById("dpDetail");
+      const prose = d && d.querySelector(".dp-prose");
+      if (prose) dpMakeFoldable(prose, 0, dpT("继续探索", "Keep exploring"));
+    })();
     /* 上 / 下一章走的是既有的 #/reading/<i> 路由:换的只有 readingTab,
        curResult、收藏、已读状态、chart 资料都不动,也不会重新跟服务器要内容。
        renderRoute 那边同一页内换页签本来就不会 scrollTo(0,0),所以这里
