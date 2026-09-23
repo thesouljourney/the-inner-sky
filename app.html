@@ -3101,10 +3101,14 @@
      问题),卷动时只有内容在动,底纹留在原地;上下都留一截 buffer,
      手机网址列收合展开也不会露出边缘。 */
   #dpage.compass-page::before{
+    /* 这张图本身是暖粉/暖橘的浅色调,跟 --dp-cream 底色太接近——
+       0.16 那个亮度调下去,跟白底混在一起几乎看不出图案,变成一片
+       近乎全白。调高到看得出云彩/日出的层次,同时仍然比 hero 淡,
+       不会抢正文。 */
     content:"";position:fixed;top:0;left:0;right:0;bottom:-200px;z-index:0;pointer-events:none;
     background-image:url("assets/life/compass-bg.webp");
     background-size:cover;background-position:center top;background-repeat:no-repeat;
-    opacity:.16
+    opacity:.4
   }
   #dpage.compass-page > *{position:relative;z-index:1}
   /* 账号选单开着的时候要盖住底下所有内容——同一个老问题,同一个补丁 */
