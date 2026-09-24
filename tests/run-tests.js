@@ -2419,7 +2419,7 @@ function testCompassZhOnlyLabels() {
      改成真正的边界:只看 compassDirectionsHtml 自己那一段。 */
   const dirBlock = html.slice(html.indexOf("function compassDirectionsHtml"),
                               html.indexOf("/* ── 想留给自己的几句话"));
-  checkEq("[zh] 找得到真正的方向区块", dirBlock.length > 500 && dirBlock.length < 7000, true);
+  checkEq("[zh] 找得到真正的方向区块", dirBlock.length > 500 && dirBlock.length < 10000, true);
   checkEq("[zh] 正式页四方向的名字走 dpT —— 中文模式只会印中文",
     /'<b class="zh">' \+ esc0\(dpT\(d\.zh, d\.en\)\)/.test(dirBlock), true);
   checkEq("[zh] 方向区块里没有任何一定会印出来的英文名",
@@ -4050,7 +4050,7 @@ function testCompassCentredLayout() {
   /* 罗盘改用品牌自己那张天体素材,不再是手画的线稿 */
   checkEq("[layout] 罗盘用的是品牌的天体素材",
     /background:url\(assets\/life\/compass\.webp\)/.test(css), true);
-  checkEq("[layout] 手机上罗盘缩小", /\.cp-rose\{width:min\(42vw,152px\)/.test(css), true);
+  checkEq("[layout] 手机上罗盘缩小", /\.cp-rose\{width:min\(35vw,128px\)/.test(css), true);
   checkEq("[layout] 旧的两栏 / 环绕规则已清掉",
     /cp-grid4|\.cp-dirs|cp-keep-card|\.cp-anchor\b|cp-wd\b/.test(html), false);
   const keep = html.slice(html.indexOf("function compassAnchorsHtml()"), html.indexOf("function compassNowHtml()"));

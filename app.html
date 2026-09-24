@@ -3402,16 +3402,6 @@
       padding-bottom:clamp(48px,14vw,80px);
       position:relative
     }
-    /* 手机专属:hero 两个角落各一枝淡叶子,纯装饰——这张素材本身就是
-       左右各一丛(不用另外镜像一次),压在照片之上、文字之下。不给
-       z-index、不碰 isolation:::before 生成内容本来就排在真正子元素
-       前面,账号选单原本的层叠(.dp-topbar/.dp-hero-grid 都是
-       z-index:auto)不会被这层改动影响。 */
-    #dpage.compass-page .dp-hero::before{
-      content:"";position:absolute;left:0;right:0;top:0;height:150px;
-      background:url(assets/life/cp-mobile/leaves.webp) center top / 100% auto no-repeat;
-      opacity:.55;pointer-events:none
-    }
     /* 页尾的返回区块在窄萤幕会把长按钮挤到折行 —— 这一页改成直排置中。
        .dp-return 是共用元件,所以这条规则锁在 .compass-page 底下,
        其他页面的页尾一个像素都不受影响。 */
@@ -3719,7 +3709,6 @@
   #dpage.compass-page .cp-ent .ic,
   #dpage.compass-page .cp-ent .arrow{display:none}
   #dpage.compass-page .qm-cell,
-  #dpage.compass-page .qm-now,
   #dpage.compass-page .cp-startfrom,
   #dpage.compass-page .cp-compass .cp-lead{display:none}
   #dpage.compass-page .cp-ent .gl{
@@ -3809,6 +3798,10 @@
     font-family:var(--dp-sans);font-weight:300;font-size:12.5px;letter-spacing:.12em;color:#7a6fa8
   }
   #dpage.compass-page .cp-close:focus-visible{outline:2px solid rgba(154,140,205,.8);outline-offset:3px}
+  /* 手机版展开区才有的眉标与小图示(见 ≤767px),桌机/平板不显示 */
+  #dpage.compass-page .cp-panel .cp-eyebrow,
+  #dpage.compass-page .cp-why .wi,
+  #dpage.compass-page .cp-panel .rp .ri{display:none}
 
   /* 桌机:三栏,罗盘在中间跨两列;四个方向左右各两个;内容区在盘下方整列。
      不再画连接线 —— 罗盘本身够有分量,它自己就把四个方向组织起来了。 */
@@ -3860,8 +3853,16 @@
   #dpage.compass-page .cp-sky-card{background:rgba(255,253,250,.62);border-color:rgba(150,130,180,.08)}
 
   @media(max-width:767px){
-    #dpage.compass-page .cp-wheel{grid-template-columns:1fr;gap:0;margin-top:20px}
-    #dpage.compass-page .cp-rose{width:min(42vw,152px);grid-area:rose;position:relative}
+    #dpage.compass-page .cp-wheel{grid-template-columns:1fr;gap:0;margin-top:14px}
+    /* 罗盘比最初缩小约 16%(152→128px):这一段只是地图,不该占掉
+       大半个萤幕,让底下真正可以点的四张卡尽早出现。 */
+    #dpage.compass-page .cp-rose{width:min(35vw,128px);grid-area:rose;position:relative}
+    /* 手机版中央:一整张主星盘面(qm-center),外圈照旧叠 orbit-ring。
+       桌机仍是 compass.webp。 */
+    #dpage.compass-page .cp-rose{
+      background:url(assets/life/cp-mobile/qm-center.webp) center / contain no-repeat;
+      filter:none
+    }
     /* —— 罗盘插图本身就是那颗星:四个方向的短名 + 一句固定的方向说明
        直接排在它的上下左右,不是另外画一颗小的。用 grid-template-areas
        把 .cp-rose 跟四个 .qm-cell 一起摆位,内容跟底下的 .cp-ent
@@ -3871,8 +3872,8 @@
     #dpage.compass-page .cp-wheel-core{
       display:grid;
       grid-template-columns:1fr auto 1fr;
-      grid-template-rows:auto auto auto auto;
-      grid-template-areas:". top ." "left rose right" ". now ." ". bottom .";
+      grid-template-rows:auto auto auto;
+      grid-template-areas:". top ." "left rose right" ". bottom .";
       row-gap:4px;column-gap:4px;justify-items:center;align-items:center
     }
     #dpage.compass-page .cp-rose::before{
@@ -3892,39 +3893,66 @@
     }
     #dpage.compass-page .qm-top{grid-area:top;padding-bottom:2px}
     #dpage.compass-page .qm-bottom{grid-area:bottom;padding-top:2px}
-    #dpage.compass-page .qm-left{grid-area:left;align-items:flex-end;text-align:right;max-width:94px}
-    #dpage.compass-page .qm-right{grid-area:right;align-items:flex-start;text-align:left;max-width:94px}
-    #dpage.compass-page .qm-now{
-      display:block;grid-area:now;font-family:var(--dp-sans);font-weight:300;
-      font-size:10.5px;letter-spacing:.16em;color:rgba(34,35,58,.6)
+    #dpage.compass-page .qm-left{grid-area:left;align-items:center;text-align:center;max-width:94px}
+    #dpage.compass-page .qm-right{grid-area:right;align-items:center;text-align:center;max-width:94px}
+    /* 每个方向名字上面一个小天体(太阳/月亮/星/云),固定身分,跟底下
+       卡片的 .ic 是同一组意象。纯装饰:::before 没有文字,qm-cell 本身
+       已是 aria-hidden。::after 留给 .qm-bottom 的叶子,所以用 ::before。 */
+    #dpage.compass-page .qm-cell::before{
+      content:"";display:block;width:32px;height:32px;margin:0 auto 4px;
+      background:center / contain no-repeat;pointer-events:none
     }
-    /* 罗盘两侧各配一枝花:左白右粉,不再贴在标题那一行,改成靠着
-       指南盘(前进/安定/吸引/消耗那一圈)——白花偏中下,对齐「安定」
-       往下到「消耗」;粉花偏中上,对齐说明文字下面到「吸引」。两枝
-       都整枝压在 .cp-compass 内容左右外侧(负 left/right,只留一点
-       探进画面),量过 .qm-left/.qm-right 实际位置,确保不会挡到
-       「安定」「吸引」那两个字。 */
+    #dpage.compass-page .qm-top::before{width:36px;height:36px;background-image:url(assets/life/cp-mobile/qm-sun.webp)}
+    #dpage.compass-page .qm-left::before{width:28px;background-image:url(assets/life/cp-mobile/qm-moon.webp)}
+    #dpage.compass-page .qm-right::before{width:34px;height:34px;background-image:url(assets/life/cp-mobile/qm-star.webp)}
+    #dpage.compass-page .qm-bottom::before{
+      width:50px;height:20px;margin-bottom:2px;background-image:url(assets/life/cp-mobile/qm-cloud.webp)
+    }
+    /* 指南盘四个边角各一丛淡叶子(hero 上不放任何装饰)。素材是左右
+       各一丛的一张图,每个角落只露其中一丛:宽度卡在单丛那么宽,用
+       background-position 选左丛或右丛。上面两丛垂直翻转,从角落往下
+       垂;挂在 .cp-compass 顶端(跟标题同高)。下面两丛原样,从底部往上
+       长;挂在 .cp-wheel-core 底边(「消耗」底下)——.qm-bottom 没有
+       position,它的 ::after 定位基准一样是 .cp-wheel-core。left/right
+       -20px 刚好抵到 .dp-body 的 20px 内距,贴齐萤幕边、不会撑出横向卷动。
+       z-index:-1 压在字底下:.cp-compass/.cp-wheel 都是 z-index:1 的
+       堆叠层,所以只会退到本段背后,不会掉到页面底色后面。 */
+    #dpage.compass-page .cp-compass::before,
+    #dpage.compass-page .cp-compass::after,
+    #dpage.compass-page .cp-wheel-core::after,
+    #dpage.compass-page .qm-bottom::after{
+      content:"";position:absolute;width:84px;height:130px;
+      pointer-events:none;opacity:.6;
+      background:url(assets/life/cp-mobile/leaves.webp) no-repeat;background-size:200px auto
+    }
     #dpage.compass-page .cp-compass::before,
     #dpage.compass-page .cp-compass::after{
-      content:"";position:absolute;width:48px;
-      z-index:0;pointer-events:none;opacity:.7;background-repeat:no-repeat;background-size:contain
+      top:-6px;z-index:0;transform:scaleY(-1);width:72px;height:112px;background-size:172px auto
     }
-    #dpage.compass-page .cp-compass::before{
-      left:-28px;top:220px;height:210px;
-      background-image:url(assets/life/cp-mobile/branch-white.webp);background-position:left top
-    }
-    #dpage.compass-page .cp-compass::after{
-      right:-28px;top:130px;height:190px;
-      background-image:url(assets/life/cp-mobile/branch-pink.webp);background-position:right bottom
-    }
+    #dpage.compass-page .cp-compass::before{left:-20px;background-position:left bottom}
+    #dpage.compass-page .cp-compass::after{right:-20px;background-position:right bottom}
+    #dpage.compass-page .cp-wheel-core::after,
+    #dpage.compass-page .qm-bottom::after{bottom:-24px;z-index:-1}
+    #dpage.compass-page .cp-wheel-core::after{left:-20px;background-position:left bottom}
+    #dpage.compass-page .qm-bottom::after{right:-20px;background-position:right bottom}
     #dpage.compass-page .cp-compass > *{position:relative;z-index:1}
     /* .cp-compass 自己的副标(见 JS 里的 compassSecHead 第四个参数)——
        桌机/平板预设 display:none(见基础规则),只在这里打开。 */
     #dpage.compass-page .cp-compass .cp-lead{display:block}
+    /* 手机版这一段标题上面不放「01」编号 */
+    #dpage.compass-page .cp-compass .cp-no{display:none}
     #dpage.compass-page .cp-lead{font-size:14.5px}
+    /* 本段副标固定两行(文案里的 \n 用 pre-line 断行),字比其他段小一号。
+       左右各留 52px:上面两丛叶子(比下面两丛小一点)从萤幕边往内伸到
+       72px(= .dp-body 20px 内距 + 52px),字最外侧碰不到叶子;360px
+       宽的手机上第二行也刚好排得下,不会折成三行。 */
+    #dpage.compass-page .cp-compass .cp-lead{
+      white-space:pre-line;font-size:13px;line-height:1.9;
+      max-width:none;padding:0 52px
+    }
     #dpage.compass-page .cp-startfrom{
       position:relative;display:flex;order:8;flex-direction:column;align-items:center;gap:6px;
-      text-align:center;margin:22px 0 16px;padding:26px 0
+      text-align:center;margin:6px 0 14px;padding:24px 0
     }
     /* 天空从这里开始慢慢安静下来:往下一路铺到四张卡底下,盖过中间
        卡与卡的缝隙,让卡片区变成视觉主角,而不是天空/罗盘/卡片素材
@@ -3975,90 +4003,182 @@
        标题-说明-箭头位置完全统一,只有背景实景跟渐层不同。 */
     #dpage.compass-page .cp-ent{
       position:relative;order:10;overflow:hidden;
-      display:grid;grid-template-columns:26px 46px 1fr 34px;
-      grid-template-areas:"no ic zh arrow" "no ic sit arrow";
-      column-gap:12px;row-gap:2px;align-items:center;
-      padding:18px 16px;min-height:0;border-radius:20px;
+      display:grid;grid-template-columns:52px 1fr 34px;
+      grid-template-areas:"ic zh arrow" "ic sit arrow";
+      column-gap:12px;row-gap:0;align-items:center;align-content:center;
+      /* 固定高度:说明一行或两行,四张卡都一样高(两行 + 上下内距刚好
+         装满);一行的那张文字会垂直置中,不会缩成一张比较矮的卡。 */
+      height:112px;padding:0 16px;min-height:0;border-radius:20px;
       background-image:linear-gradient(135deg,rgba(255,255,255,.94),rgba(250,247,242,.88));
       background-size:cover;
-      border:1px solid rgba(191,163,124,.13);
+      /* 实景只铺到边框里面:不然 1px 边框底下会透出一条照片的颜色
+         (「消耗」那张的粉色最明显),卡边看起来毛毛的。 */
+      background-clip:padding-box;
+      border:1px solid rgba(191,163,124,.2);
       box-shadow:0 12px 30px rgba(57,44,31,.045),inset 0 1px 0 rgba(255,255,255,.9);
-      margin-bottom:12px
+      margin-bottom:10px
     }
     #dpage.compass-page .cp-ent:last-of-type{margin-bottom:0}
-    /* 卡片右侧那一小片实景:铺在珍珠底色之上、文字之下,靠一层同色
-       渐层把边缘慢慢吃掉,不是硬裁一块照片贴满整张卡。四个方向各自
-       一张,只承担卡片右侧一小块视觉份量(渐层最深处仍留一点底色,
-       插画不会用满饱和度)。渐层留到 62% 才开始退,盖住整个文字栏
-       (数字/圆图/标题/说明最宽到 82% 左右),这样素材才像是设计里
-       长出来的,不是贴上去的。 */
-    #dpage.compass-page .cp-ent::after{
-      content:"";position:absolute;inset:0;z-index:0;pointer-events:none;
-      background:linear-gradient(90deg,
-        rgba(252,249,243,1) 0%,rgba(252,249,243,1) 62%,
-        rgba(252,249,243,.72) 76%,rgba(252,249,243,.34) 88%,
-        rgba(252,249,243,.16) 100%)
+    /* 卡片右侧的实景插画(素材本身已去背、左缘是柔边):放在 ::before
+       一层,贴齐卡片右缘、高度撑满,宽度随素材比例(约占卡片右侧四成)。
+       再用 mask 把插画最左边那一段慢慢淡掉,跟珍珠底色融在一起,
+       不会看到素材边缘。卡片底色本身只剩珍珠渐层。 */
+    #dpage.compass-page .cp-ent::before{
+      content:"";position:absolute;top:0;right:0;bottom:0;width:62%;z-index:0;pointer-events:none;
+      background:right center / auto 100% no-repeat;
+      -webkit-mask-image:linear-gradient(90deg,transparent 0,transparent 18%,#000 58%);
+              mask-image:linear-gradient(90deg,transparent 0,transparent 18%,#000 58%)
     }
-    #dpage.compass-page .cp-ent.d1{background-image:url(assets/life/cp-mobile/card-ground.webp),linear-gradient(135deg,rgba(255,255,255,.94),rgba(250,247,242,.88));background-size:cover,cover;background-position:right center,center}
-    #dpage.compass-page .cp-ent.d2{background-image:url(assets/life/cp-mobile/card-move.webp),linear-gradient(135deg,rgba(255,255,255,.94),rgba(250,247,242,.88));background-size:cover,cover;background-position:right center,center}
-    #dpage.compass-page .cp-ent.d3{background-image:url(assets/life/cp-mobile/card-drain.webp),linear-gradient(135deg,rgba(255,255,255,.94),rgba(250,247,242,.88));background-size:cover,cover;background-position:right center,center}
-    #dpage.compass-page .cp-ent.d4{background-image:url(assets/life/cp-mobile/card-call.webp),linear-gradient(135deg,rgba(255,255,255,.94),rgba(250,247,242,.88));background-size:cover,cover;background-position:right center,center}
+    #dpage.compass-page .cp-ent.d1::before{background-image:url(assets/life/cp-mobile/card-ground.webp)}
+    #dpage.compass-page .cp-ent.d2::before{background-image:url(assets/life/cp-mobile/card-move.webp)}
+    #dpage.compass-page .cp-ent.d3::before{background-image:url(assets/life/cp-mobile/card-drain.webp)}
+    #dpage.compass-page .cp-ent.d4::before{background-image:url(assets/life/cp-mobile/card-call.webp)}
     #dpage.compass-page .cp-ent > *{position:relative;z-index:1}
-    /* 编号跟 icon 共用一条视觉基线(都用 grid-row:1/3 垂直居中),
-       编号缩小、拉开字距、香槟金,不再是孤零零贴最左边的临时标签感。 */
-    #dpage.compass-page .cp-ent .no{
-      display:block;grid-area:no;grid-row:1/3;align-self:center;justify-self:center;
-      font-family:var(--dp-display);font-weight:500;font-size:11.5px;
-      letter-spacing:.14em;color:rgba(180,138,64,.82)
-    }
+    /* 手机版卡片不放 01–04 编号,直接从圆图开始 */
+    #dpage.compass-page .cp-ent .no{display:none}
     #dpage.compass-page .cp-ent .gl{display:none}
-    /* 四个方向共用同一套「章节点」:固定尺寸、固定描边、固定光晕、
-       固定透明度,只有图里的 symbol(月/日/云/星)不一样——不靠各自
-       素材自带的边框/发光,统一裁成正圆,外面再罩一圈站内自己画的
-       细描边跟柔光,四张卡才会一眼看出是同一套系统。 */
+    /* 四个方向的小圆图:素材本身就是那个圈(自带金边),已裁到刚好
+       贴着圆边,所以这里不再外罩描边/光圈,只给一点很淡的落影。
+       四张同尺寸、同位置,只有圆里的 symbol(月/日/云/星)不同。 */
     #dpage.compass-page .cp-ent .ic{
-      display:block;grid-area:ic;grid-row:1/3;width:44px;height:44px;
-      border-radius:50%;object-fit:cover;
-      box-shadow:0 0 0 1px rgba(191,163,124,.34),0 0 0 5px rgba(255,250,240,.55),
-        0 2px 8px -2px rgba(154,106,52,.22)
+      display:block;grid-area:ic;grid-row:1/3;width:52px;height:52px;
+      border-radius:50%;object-fit:contain;
+      filter:drop-shadow(0 3px 6px rgba(154,106,52,.16))
     }
     #dpage.compass-page .cp-ent .arrow{
       display:flex;align-items:center;justify-content:center;
       grid-area:arrow;grid-row:1/3;align-self:center;justify-self:end;
       width:30px;height:30px;border-radius:50%;
-      background:rgba(255,253,250,.9);border:1px solid rgba(154,106,52,.4);
-      font-size:13px;color:#9a6a2f
+      background:rgba(255,253,250,.92);border:1px solid rgba(154,106,52,.3);
+      box-shadow:0 2px 6px -3px rgba(154,106,52,.3);
+      font-size:12.5px;line-height:1;color:#9a6a2f
     }
-    #dpage.compass-page .cp-ent .zh{grid-area:zh;margin-top:0;font-size:15.5px}
+    #dpage.compass-page .cp-ent .zh{
+      grid-area:zh;align-self:end;margin-top:0;font-size:15.5px;line-height:1.5;letter-spacing:.04em
+    }
+    /* 说明统一:同字级、同行高、最多两行,超过用省略号收尾 */
     #dpage.compass-page .cp-ent .sit{
-      grid-area:sit;font-size:13.5px;margin-top:5px;line-height:1.7;
+      grid-area:sit;align-self:start;margin-top:4px;
+      font-size:12.5px;line-height:1.75;letter-spacing:.02em;color:rgba(74,72,89,.86);
       display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden
     }
-    #dpage.compass-page .cp-panel{padding:22px 18px;border-radius:16px}
-    #dpage.compass-page .cp-panel .bd{font-size:14.5px;line-height:2.05}
-    #dpage.compass-page .cp-panel .tx{font-size:14px;line-height:2.05}
-    #dpage.compass-page .cp-panel .rp{padding:14px 15px}
-    #dpage.compass-page .cp-panel .rp p{font-size:14px}
-    /* 手机版:「为什么这适合我？」从点开才有的收合区块,
-       改成夹在中间、一直看得到的一个小方块——資料、<details> 標籤、
-       点击处理完全没动。真正让它一直展开的是 JS 帮 <details> 补上
-       .open(见 cpBindDirections),这里只负责把 summary 变成一句
-       安静的小标签(不能再点、没有箭头),再画一个底色方块装内容。 */
+    /* ── 手机版展开区(点开一个方向之后长在那张卡下面)──────────
+       一张独立的珍珠卡:眉标「给现在的你」→ 大字 openingLine →
+       shortInsight → 淡紫「为什么这适合我？」小卡 → 叶子图示的
+       「想一想」→ 置中的「收起 ︿」。右上角衬这个方向的插画,
+       左缘与下缘用 mask 淡掉,不压到正文。资料与点击行为都没动。 */
+    #dpage.compass-page .cp-panel{
+      overflow:hidden;margin-bottom:10px;padding:22px 18px 10px;border-radius:20px;
+      background:linear-gradient(180deg,rgba(255,254,251,.97),rgba(252,249,244,.95));
+      border:1px solid rgba(191,163,124,.2);
+      box-shadow:0 12px 30px rgba(57,44,31,.05),inset 0 1px 0 rgba(255,255,255,.9)
+    }
+    #dpage.compass-page .cp-panel::before{
+      content:"";position:absolute;top:0;right:0;width:60%;height:200px;z-index:0;pointer-events:none;
+      background:right top / contain no-repeat;
+      -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 45%),linear-gradient(180deg,#000 55%,transparent 100%);
+      -webkit-mask-composite:source-in;
+              mask-image:linear-gradient(90deg,transparent 0,#000 45%),linear-gradient(180deg,#000 55%,transparent 100%);
+              mask-composite:intersect
+    }
+    #dpage.compass-page .cp-panel[data-for="ground"]::before{background-image:url(assets/life/cp-mobile/panel-ground.webp)}
+    #dpage.compass-page .cp-panel[data-for="move"]::before{background-image:url(assets/life/cp-mobile/panel-move.webp)}
+    /* 前进:整张展开区换成暖金的云底(淡星、角落淡云),「为什么这适合我」
+       小卡跟着改成暖米色,不用其他方向的淡紫。 */
+    #dpage.compass-page .cp-panel[data-for="move"]{
+      background:
+        linear-gradient(180deg,rgba(255,252,245,.55),rgba(255,251,244,.35)),
+        url(assets/life/cp-mobile/panel-move-bg.webp) center / cover no-repeat,
+        #fdf8ef
+    }
+    #dpage.compass-page .cp-panel[data-for="move"] .cp-eyebrow,
+    #dpage.compass-page .cp-panel[data-for="move"] .cp-close{color:#9a7440}
+    #dpage.compass-page .cp-panel[data-for="move"] .cp-eyebrow::before{color:rgba(196,152,72,.7)}
+    #dpage.compass-page .cp-panel[data-for="move"] .cp-why{
+      background:linear-gradient(135deg,rgba(255,249,236,.86),rgba(253,244,226,.78));
+      border-color:rgba(214,172,96,.26)
+    }
+    #dpage.compass-page .cp-panel[data-for="drain"]::before{background-image:url(assets/life/cp-mobile/panel-drain.webp)}
+    /* 消耗:粉色系。「为什么这适合我」小卡改成淡粉,右下角探进一枝淡淡的
+       樱花(纯装饰、压在字底下);眉标与收起改成玫瑰色。 */
+    #dpage.compass-page .cp-panel[data-for="drain"] .cp-why{
+      position:relative;overflow:hidden;
+      background:linear-gradient(135deg,rgba(253,240,243,.88),rgba(250,236,244,.8));
+      border-color:rgba(222,150,170,.26)
+    }
+    #dpage.compass-page .cp-panel[data-for="drain"] .cp-why::before{
+      content:"";position:absolute;right:-18px;bottom:-14px;width:150px;height:112px;
+      pointer-events:none;opacity:.32;
+      background:url(assets/life/cp-mobile/panel-drain-branch.webp) right bottom / contain no-repeat
+    }
+    #dpage.compass-page .cp-panel[data-for="drain"] .cp-why > *{position:relative;z-index:1}
+    #dpage.compass-page .cp-panel[data-for="drain"] .cp-eyebrow,
+    #dpage.compass-page .cp-panel[data-for="drain"] .cp-close{color:#a86c80}
+    #dpage.compass-page .cp-panel[data-for="drain"] .cp-eyebrow::before{color:rgba(214,138,160,.8)}
+    #dpage.compass-page .cp-panel[data-for="call"]::before{background-image:url(assets/life/cp-mobile/panel-call.webp)}
+    #dpage.compass-page .cp-panel > *{position:relative;z-index:1}
+    #dpage.compass-page .cp-panel .cp-eyebrow{
+      display:inline-flex;align-items:center;gap:7px;
+      font-family:var(--dp-sans);font-weight:400;font-size:12px;letter-spacing:.12em;color:#6f6796
+    }
+    #dpage.compass-page .cp-panel .cp-eyebrow::before{content:"✦";font-size:11px;color:rgba(129,118,173,.75)}
+    #dpage.compass-page .cp-panel .cp-eyebrow::after{content:"✦";font-size:11px;color:rgba(196,152,72,.85)}
+    #dpage.compass-page .cp-panel .hd{
+      margin-top:10px;max-width:80%;font-size:20px;line-height:1.55;letter-spacing:.03em
+    }
+    #dpage.compass-page .cp-panel .bd{
+      margin-top:10px;max-width:90%;font-size:13.5px;line-height:1.95;font-weight:400;color:rgba(52,51,70,.86)
+    }
+    #dpage.compass-page .cp-panel .bd.sub{color:rgba(52,51,70,.7)}
+    /* 「为什么这适合我？」:一直展开的淡紫小卡(JS 帮 <details> 补 open) */
     #dpage.compass-page .cp-why{
-      margin:16px 0 0;background:rgba(233,238,248,.6);
-      border:1px solid rgba(154,140,205,.18);border-radius:16px;
-      padding:14px 16px 16px
+      margin:18px 0 0;padding:14px 16px 16px;border-radius:16px;
+      background:linear-gradient(135deg,rgba(236,238,251,.82),rgba(244,241,250,.74));
+      border:1px solid rgba(154,140,205,.2)
     }
     #dpage.compass-page .cp-why > summary{
-      pointer-events:none;cursor:default;min-height:0;
-      font-size:11.5px;letter-spacing:.08em;color:#6b5fa0
+      display:flex;align-items:center;gap:10px;pointer-events:none;cursor:default;min-height:0;
+      font-family:var(--dp-serif);font-weight:600;font-size:15px;letter-spacing:.02em;color:var(--dp-ink)
     }
-    /* 一直是 open 状态,所以要连 [open] 那条一起盖掉,不然箭头还是会跑出来
-       (那条选择器多了一个属性选择器,优先度比这里原本这条高)。 */
+    /* 小小的向上折角,表示这一块是展开状态 */
     #dpage.compass-page .cp-why > summary::after,
-    #dpage.compass-page .cp-why[open] > summary::after{content:none}
-    #dpage.compass-page .cp-why > .ci{margin-top:8px;font-size:14.5px}
-    #dpage.compass-page .cp-why > .tx{margin-top:8px;font-size:13.5px;line-height:1.9}
+    #dpage.compass-page .cp-why[open] > summary::after{
+      content:"";width:6px;height:6px;margin:3px 0 0 2px;
+      border-left:1.4px solid currentColor;border-top:1.4px solid currentColor;transform:rotate(45deg)
+    }
+    #dpage.compass-page .cp-why .wi{
+      display:block;flex:0 0 auto;width:30px;height:30px;border-radius:50%;
+      filter:drop-shadow(0 2px 4px rgba(154,106,52,.18))
+    }
+    #dpage.compass-page .cp-why > .ci{margin-top:10px;font-size:14.5px;line-height:1.9}
+    #dpage.compass-page .cp-why > .tx{margin-top:6px;font-size:13.5px;line-height:1.9;font-weight:400;color:rgba(52,51,70,.84)}
+    /* 「想一想」:左边一颗叶子圆图,右边标题 + 这一条方向自己的问题 */
+    #dpage.compass-page .cp-panel .rp{
+      display:grid;grid-template-columns:44px 1fr;column-gap:12px;row-gap:4px;align-items:start;
+      margin-top:18px;padding:0 2px;background:none;border:0;border-radius:0
+    }
+    #dpage.compass-page .cp-panel .rp .ri{
+      display:block;grid-row:1/3;width:44px;height:44px;border-radius:50%;
+      filter:drop-shadow(0 2px 5px rgba(154,106,52,.18))
+    }
+    #dpage.compass-page .cp-panel .rp .k{
+      align-self:end;font-family:var(--dp-serif);font-weight:600;font-size:15px;
+      letter-spacing:.02em;text-transform:none;color:var(--dp-ink)
+    }
+    #dpage.compass-page .cp-panel .rp p{
+      margin:0;font-family:var(--dp-sans);font-size:13.5px;line-height:1.85;color:rgba(52,51,70,.84)
+    }
+    #dpage.compass-page .cp-close{
+      display:flex;align-items:center;justify-content:center;gap:8px;width:100%;
+      margin-top:12px;min-height:44px;font-size:13px;letter-spacing:.1em;color:#7a6fa8
+    }
+    #dpage.compass-page .cp-close::after{
+      content:"";width:6px;height:6px;margin-top:3px;
+      border-left:1.4px solid currentColor;border-top:1.4px solid currentColor;transform:rotate(45deg)
+    }
+    /* 被点开的那张卡:箭头转成朝上,表示可以收起 */
+    #dpage.compass-page .cp-ent .arrow{transition:transform .2s ease}
+    #dpage.compass-page .cp-ent.on .arrow{transform:rotate(-90deg)}
     /* 手机:内容区长在【被点的那一列】底下,不是跳到整段最下面。
        DOM 里内容区永远在最后,这里只用 order 把它挪上去。 */
     #dpage.compass-page .cp-wheel-core{order:0}
@@ -10985,8 +11105,14 @@ window.Guide = (function () {
     if (active) {
       const c = saved.directions[KEYS[active]];
       const st = sits[KEYS[active]];
+      /* .wi / .ri / .cp-eyebrow 是手机版展开区的小图示与眉标,纯装饰;
+         桌机/平板用 CSS 藏起来,版面一个像素都不变。 */
+      const WHY_ICON = { ground: "why-moon.webp", drain: "why-drain.webp", call: "why-call.webp" };
+      const LEAF_ICON = { move: "ic-leaf-move.webp", drain: "ic-leaf-drain.webp", call: "ic-leaf-call.webp" };
+      const whyIcon = WHY_ICON[active] ? "assets/life/cp-mobile/" + WHY_ICON[active] : (CP_ICON[active] || "");
       const why = function (body) {
         return '<details class="cp-why"><summary>' +
+          '<img class="wi" aria-hidden="true" alt="" src="' + esc0(whyIcon) + '">' +
           esc0(dpT("为什么这适合我？", "Why this fits me")) + "</summary>" + body + "</details>";
       };
       /* 「想一想」:这一条方向自己的 reflectionPrompt,长在「为什么这适合我」
@@ -10994,7 +11120,9 @@ window.Guide = (function () {
          一个问题」是两件事,那一个不动,这里只是把这一条方向自己的问题
          摆回它自己的卡片里。没有就整段不印,不用空标签占位。 */
       const think = c && c.reflectionPrompt
-        ? '<div class="rp"><span class="k">' + esc0(dpT("想一想", "A question")) + "</span>" +
+        ? '<div class="rp"><img class="ri" aria-hidden="true" alt="" src="assets/life/cp-mobile/' +
+          (LEAF_ICON[active] || "ic-leaf.webp") + '">' +
+          '<span class="k">' + esc0(dpT("想一想", "A question")) + "</span>" +
           "<p>" + esc0(c.reflectionPrompt) + "</p></div>"
         : "";
       /* openingLine/shortInsight 是 v1.4 新字段,比 cardSubtitle 深一层;
@@ -11008,7 +11136,8 @@ window.Guide = (function () {
                    "There isn’t enough to say about this direction yet.")) + "</p>";
       } else {
         /* openingLine → shortInsight → 情境层第二句(如果有) → 披露 → 想一想 */
-        panel = '<p class="hd">' + esc0(opening) + "</p>" +
+        panel = '<span class="cp-eyebrow" aria-hidden="true">' + esc0(dpT("给现在的你", "For you, right now")) + "</span>" +
+          '<p class="hd">' + esc0(opening) + "</p>" +
           (shortIns ? '<p class="bd">' + esc0(shortIns) + "</p>" : "") +
           (st && st.micro ? '<p class="bd sub">' + esc0(st.micro) + "</p>" : "") +
           why('<p class="ci">' + esc0(c.coreInsight) + "</p>" +
@@ -11039,7 +11168,6 @@ window.Guide = (function () {
     const coreWithMap = '<div class="cp-wheel-core">' + compassRoseSvg() +
       qmCell("move", "qm-top") + qmCell("ground", "qm-left") +
       qmCell("call", "qm-right") + qmCell("drain", "qm-bottom") +
-      '<span class="qm-now" aria-hidden="true">' + esc0(dpT("此刻的你", "You, right now")) + "</span>" +
       "</div>" +
       /* 手机专属:四张卡开始前的静态过场标题 */
       '<div class="cp-startfrom" aria-hidden="true">' +
@@ -11050,8 +11178,8 @@ window.Guide = (function () {
     return '<section class="cp-sec cp-compass">' +
       /* 手机专属副标(桌机/平板不显示,见 CSS),用既有 .cp-lead 插槽 */
       compassSecHead("01", dpT("我的内在指南", "My Inner Compass"), "MY INNER COMPASS",
-        dpT("这是属于你的四个内在方向，当你需要停下来时，回来看看自己。",
-            "These are your four inner directions — come back to them whenever you need to pause.")) +
+        dpT("这是属于你的四个内在方向\n当你需要停下来时，回来看看自己。",
+            "These are your four inner directions —\ncome back to them whenever you need to pause.")) +
       '<div class="cp-wheel" data-active="' + esc0(active || "") + '">' +
       coreWithMap + ents + panel + "</div></section>";
   }
