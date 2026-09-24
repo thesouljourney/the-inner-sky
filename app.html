@@ -4530,7 +4530,6 @@
      今天想问自己的一个问题(照用户的范例图;手机 + 桌机)
      ------------------------------------------------------------
      标题下一条 — ✦ —;问题卡是一张雾面玻璃卡,顶端一颗小星芒,
-     左上角挂着一枝金色星芒吊饰(ask-charm,像挂在卡片边上);
      写字处是卡片里的一块更透的玻璃;下面左边星光胶囊按钮、
      右边「今天先不回答 →」。背景图不动。
      ============================================================ */
@@ -4549,14 +4548,6 @@
     -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
     border:1px solid rgba(255,255,255,.75);
     box-shadow:0 14px 38px rgba(96,80,140,.1),inset 0 1px 0 rgba(255,255,255,.9)
-  }
-  /* 挂在左上角的金色星芒吊饰 */
-  #dpage.compass-page .cp-ask-card::before{
-    content:"";position:absolute;z-index:2;pointer-events:none;
-    left:-18px;top:-34px;width:150px;height:98px;
-    background:url(assets/life/cp-mobile/ask-charm.webp) center / contain no-repeat;
-    /* 翻成星芒在左、尾巴往右,再转平,沿着卡片上缘横躺 */
-    transform:scaleX(-1) rotate(25deg);transform-origin:center
   }
   /* 顶端一颗小星芒,两侧极短的淡线 */
   #dpage.compass-page .cp-ask-card .mk{
@@ -4600,7 +4591,6 @@
   #dpage.compass-page .cp-ask-card .cp-skip{font-size:11.5px;letter-spacing:.08em;color:#7a72a0;padding:6px 4px;min-height:32px}
   @media(max-width:767px){
     #dpage.compass-page .cp-ask-card{padding:28px 18px 22px;border-radius:24px}
-    #dpage.compass-page .cp-ask-card::before{left:-14px;top:-28px;width:120px;height:78px}
     #dpage.compass-page .cp-ask-card .qt{font-size:14.5px}
     #dpage.compass-page .cp-ask-card .cp-act{gap:4px}
     #dpage.compass-page .cp-ask-card .cp-skip{font-size:11px;letter-spacing:.04em;padding:6px 0}
@@ -4610,7 +4600,6 @@
   @media(min-width:768px){
     #dpage.compass-page .cp-ask{max-width:720px;margin-left:auto;margin-right:auto}
     #dpage.compass-page .cp-ask-card{padding:40px 44px 32px}
-    #dpage.compass-page .cp-ask-card::before{left:-24px;top:-44px;width:190px;height:124px}
     #dpage.compass-page .cp-ask-card .qt{font-size:17px}
     #dpage.compass-page .cp-ask-card .cp-ta{min-height:150px}
     #dpage.compass-page .cp-ask-card .cp-skip{font-size:12px}
