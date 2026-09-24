@@ -3798,6 +3798,10 @@
     font-family:var(--dp-sans);font-weight:300;font-size:12.5px;letter-spacing:.12em;color:#7a6fa8
   }
   #dpage.compass-page .cp-close:focus-visible{outline:2px solid rgba(154,140,205,.8);outline-offset:3px}
+  /* 手机版展开区才有的眉标与小图示(见 ≤767px),桌机/平板不显示 */
+  #dpage.compass-page .cp-panel .cp-eyebrow,
+  #dpage.compass-page .cp-why .wi,
+  #dpage.compass-page .cp-panel .rp .ri{display:none}
 
   /* 桌机:三栏,罗盘在中间跨两列;四个方向左右各两个;内容区在盘下方整列。
      不再画连接线 —— 罗盘本身够有分量,它自己就把四个方向组织起来了。 */
@@ -4058,31 +4062,92 @@
       font-size:12.5px;line-height:1.75;letter-spacing:.02em;color:rgba(74,72,89,.86);
       display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden
     }
-    #dpage.compass-page .cp-panel{padding:22px 18px;border-radius:16px}
-    #dpage.compass-page .cp-panel .bd{font-size:14.5px;line-height:2.05}
-    #dpage.compass-page .cp-panel .tx{font-size:14px;line-height:2.05}
-    #dpage.compass-page .cp-panel .rp{padding:14px 15px}
-    #dpage.compass-page .cp-panel .rp p{font-size:14px}
-    /* 手机版:「为什么这适合我？」从点开才有的收合区块,
-       改成夹在中间、一直看得到的一个小方块——資料、<details> 標籤、
-       点击处理完全没动。真正让它一直展开的是 JS 帮 <details> 补上
-       .open(见 cpBindDirections),这里只负责把 summary 变成一句
-       安静的小标签(不能再点、没有箭头),再画一个底色方块装内容。 */
+    /* ── 手机版展开区(点开一个方向之后长在那张卡下面)──────────
+       一张独立的珍珠卡:眉标「给现在的你」→ 大字 openingLine →
+       shortInsight → 淡紫「为什么这适合我？」小卡 → 叶子图示的
+       「想一想」→ 置中的「收起 ︿」。右上角衬这个方向的插画,
+       左缘与下缘用 mask 淡掉,不压到正文。资料与点击行为都没动。 */
+    #dpage.compass-page .cp-panel{
+      overflow:hidden;margin-bottom:10px;padding:22px 18px 10px;border-radius:20px;
+      background:linear-gradient(180deg,rgba(255,254,251,.97),rgba(252,249,244,.95));
+      border:1px solid rgba(191,163,124,.2);
+      box-shadow:0 12px 30px rgba(57,44,31,.05),inset 0 1px 0 rgba(255,255,255,.9)
+    }
+    #dpage.compass-page .cp-panel::before{
+      content:"";position:absolute;top:0;right:0;width:60%;height:200px;z-index:0;pointer-events:none;
+      background:right top / contain no-repeat;
+      -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 45%),linear-gradient(180deg,#000 55%,transparent 100%);
+      -webkit-mask-composite:source-in;
+              mask-image:linear-gradient(90deg,transparent 0,#000 45%),linear-gradient(180deg,#000 55%,transparent 100%);
+              mask-composite:intersect
+    }
+    #dpage.compass-page .cp-panel[data-for="ground"]::before{background-image:url(assets/life/cp-mobile/panel-ground.webp)}
+    #dpage.compass-page .cp-panel[data-for="move"]::before{background-image:url(assets/life/cp-mobile/card-move.webp)}
+    #dpage.compass-page .cp-panel[data-for="drain"]::before{background-image:url(assets/life/cp-mobile/card-drain.webp)}
+    #dpage.compass-page .cp-panel[data-for="call"]::before{background-image:url(assets/life/cp-mobile/card-call.webp)}
+    #dpage.compass-page .cp-panel > *{position:relative;z-index:1}
+    #dpage.compass-page .cp-panel .cp-eyebrow{
+      display:inline-flex;align-items:center;gap:7px;
+      font-family:var(--dp-sans);font-weight:400;font-size:12px;letter-spacing:.12em;color:#6f6796
+    }
+    #dpage.compass-page .cp-panel .cp-eyebrow::before{content:"✦";font-size:11px;color:rgba(129,118,173,.75)}
+    #dpage.compass-page .cp-panel .cp-eyebrow::after{content:"✦";font-size:11px;color:rgba(196,152,72,.85)}
+    #dpage.compass-page .cp-panel .hd{
+      margin-top:10px;max-width:80%;font-size:20px;line-height:1.55;letter-spacing:.03em
+    }
+    #dpage.compass-page .cp-panel .bd{
+      margin-top:10px;max-width:90%;font-size:13.5px;line-height:1.95;font-weight:400;color:rgba(52,51,70,.86)
+    }
+    #dpage.compass-page .cp-panel .bd.sub{color:rgba(52,51,70,.7)}
+    /* 「为什么这适合我？」:一直展开的淡紫小卡(JS 帮 <details> 补 open) */
     #dpage.compass-page .cp-why{
-      margin:16px 0 0;background:rgba(233,238,248,.6);
-      border:1px solid rgba(154,140,205,.18);border-radius:16px;
-      padding:14px 16px 16px
+      margin:18px 0 0;padding:14px 16px 16px;border-radius:16px;
+      background:linear-gradient(135deg,rgba(236,238,251,.82),rgba(244,241,250,.74));
+      border:1px solid rgba(154,140,205,.2)
     }
     #dpage.compass-page .cp-why > summary{
-      pointer-events:none;cursor:default;min-height:0;
-      font-size:11.5px;letter-spacing:.08em;color:#6b5fa0
+      display:flex;align-items:center;gap:10px;pointer-events:none;cursor:default;min-height:0;
+      font-family:var(--dp-serif);font-weight:600;font-size:15px;letter-spacing:.02em;color:var(--dp-ink)
     }
-    /* 一直是 open 状态,所以要连 [open] 那条一起盖掉,不然箭头还是会跑出来
-       (那条选择器多了一个属性选择器,优先度比这里原本这条高)。 */
+    /* 小小的向上折角,表示这一块是展开状态 */
     #dpage.compass-page .cp-why > summary::after,
-    #dpage.compass-page .cp-why[open] > summary::after{content:none}
-    #dpage.compass-page .cp-why > .ci{margin-top:8px;font-size:14.5px}
-    #dpage.compass-page .cp-why > .tx{margin-top:8px;font-size:13.5px;line-height:1.9}
+    #dpage.compass-page .cp-why[open] > summary::after{
+      content:"";width:6px;height:6px;margin:3px 0 0 2px;
+      border-left:1.4px solid currentColor;border-top:1.4px solid currentColor;transform:rotate(45deg)
+    }
+    #dpage.compass-page .cp-why .wi{
+      display:block;flex:0 0 auto;width:30px;height:30px;border-radius:50%;
+      filter:drop-shadow(0 2px 4px rgba(154,106,52,.18))
+    }
+    #dpage.compass-page .cp-why > .ci{margin-top:10px;font-size:14.5px;line-height:1.9}
+    #dpage.compass-page .cp-why > .tx{margin-top:6px;font-size:13.5px;line-height:1.9;font-weight:400;color:rgba(52,51,70,.84)}
+    /* 「想一想」:左边一颗叶子圆图,右边标题 + 这一条方向自己的问题 */
+    #dpage.compass-page .cp-panel .rp{
+      display:grid;grid-template-columns:44px 1fr;column-gap:12px;row-gap:4px;align-items:start;
+      margin-top:18px;padding:0 2px;background:none;border:0;border-radius:0
+    }
+    #dpage.compass-page .cp-panel .rp .ri{
+      display:block;grid-row:1/3;width:44px;height:44px;border-radius:50%;
+      filter:drop-shadow(0 2px 5px rgba(154,106,52,.18))
+    }
+    #dpage.compass-page .cp-panel .rp .k{
+      align-self:end;font-family:var(--dp-serif);font-weight:600;font-size:15px;
+      letter-spacing:.02em;text-transform:none;color:var(--dp-ink)
+    }
+    #dpage.compass-page .cp-panel .rp p{
+      margin:0;font-family:var(--dp-sans);font-size:13.5px;line-height:1.85;color:rgba(52,51,70,.84)
+    }
+    #dpage.compass-page .cp-close{
+      display:flex;align-items:center;justify-content:center;gap:8px;width:100%;
+      margin-top:12px;min-height:44px;font-size:13px;letter-spacing:.1em;color:#7a6fa8
+    }
+    #dpage.compass-page .cp-close::after{
+      content:"";width:6px;height:6px;margin-top:3px;
+      border-left:1.4px solid currentColor;border-top:1.4px solid currentColor;transform:rotate(45deg)
+    }
+    /* 被点开的那张卡:箭头转成朝上,表示可以收起 */
+    #dpage.compass-page .cp-ent .arrow{transition:transform .2s ease}
+    #dpage.compass-page .cp-ent.on .arrow{transform:rotate(-90deg)}
     /* 手机:内容区长在【被点的那一列】底下,不是跳到整段最下面。
        DOM 里内容区永远在最后,这里只用 order 把它挪上去。 */
     #dpage.compass-page .cp-wheel-core{order:0}
@@ -11009,8 +11074,12 @@ window.Guide = (function () {
     if (active) {
       const c = saved.directions[KEYS[active]];
       const st = sits[KEYS[active]];
+      /* .wi / .ri / .cp-eyebrow 是手机版展开区的小图示与眉标,纯装饰;
+         桌机/平板用 CSS 藏起来,版面一个像素都不变。 */
+      const whyIcon = active === "ground" ? "assets/life/cp-mobile/why-moon.webp" : (CP_ICON[active] || "");
       const why = function (body) {
         return '<details class="cp-why"><summary>' +
+          '<img class="wi" aria-hidden="true" alt="" src="' + esc0(whyIcon) + '">' +
           esc0(dpT("为什么这适合我？", "Why this fits me")) + "</summary>" + body + "</details>";
       };
       /* 「想一想」:这一条方向自己的 reflectionPrompt,长在「为什么这适合我」
@@ -11018,7 +11087,8 @@ window.Guide = (function () {
          一个问题」是两件事,那一个不动,这里只是把这一条方向自己的问题
          摆回它自己的卡片里。没有就整段不印,不用空标签占位。 */
       const think = c && c.reflectionPrompt
-        ? '<div class="rp"><span class="k">' + esc0(dpT("想一想", "A question")) + "</span>" +
+        ? '<div class="rp"><img class="ri" aria-hidden="true" alt="" src="assets/life/cp-mobile/ic-leaf.webp">' +
+          '<span class="k">' + esc0(dpT("想一想", "A question")) + "</span>" +
           "<p>" + esc0(c.reflectionPrompt) + "</p></div>"
         : "";
       /* openingLine/shortInsight 是 v1.4 新字段,比 cardSubtitle 深一层;
@@ -11032,7 +11102,8 @@ window.Guide = (function () {
                    "There isn’t enough to say about this direction yet.")) + "</p>";
       } else {
         /* openingLine → shortInsight → 情境层第二句(如果有) → 披露 → 想一想 */
-        panel = '<p class="hd">' + esc0(opening) + "</p>" +
+        panel = '<span class="cp-eyebrow" aria-hidden="true">' + esc0(dpT("给现在的你", "For you, right now")) + "</span>" +
+          '<p class="hd">' + esc0(opening) + "</p>" +
           (shortIns ? '<p class="bd">' + esc0(shortIns) + "</p>" : "") +
           (st && st.micro ? '<p class="bd sub">' + esc0(st.micro) + "</p>" : "") +
           why('<p class="ci">' + esc0(c.coreInsight) + "</p>" +
