@@ -4309,8 +4309,20 @@
      ============================================================ */
   /* 「02」跟「01」一样不显示(编号结构仍在 markup 里,见测试) */
   #dpage.compass-page .cp-keep .cp-no{display:none}
-  /* 标题上方一颗小金星芒——没有横线,两段共用 */
+  /* 「想留给自己的几句话」:标题上下各一条 细线—✦—细线 */
   #dpage.compass-page .cp-keep .cp-sh::before,
+  #dpage.compass-page .cp-keep .cp-sh::after{
+    content:"✦";display:block;width:min(78%,300px);margin:0 auto;
+    line-height:1;font-size:11px;color:rgba(176,132,62,.72);text-align:center;
+    background-image:
+      linear-gradient(90deg,transparent,rgba(176,132,62,.42)),
+      linear-gradient(90deg,rgba(176,132,62,.42),transparent);
+    background-size:calc(50% - 14px) 1px,calc(50% - 14px) 1px;
+    background-position:left center,right center;background-repeat:no-repeat
+  }
+  #dpage.compass-page .cp-keep .cp-sh::before{margin-bottom:12px}
+  #dpage.compass-page .cp-keep .cp-sh::after{margin-top:12px;width:min(62%,240px)}
+  /* 「此刻的我」:标题上方只有一颗小金星芒,没有横线 */
   #dpage.compass-page .cp-now .cp-sh::before{
     content:"✦";display:block;margin:0 auto 10px;
     font-size:9px;line-height:1;color:rgba(184,155,105,.78)
@@ -4318,30 +4330,41 @@
   #dpage.compass-page .cp-keep .cp-sh .cp-h,
   #dpage.compass-page .cp-now .cp-sh .cp-h{margin-top:0}
 
-  /* 句子卡:更透、极细香槟金边框;右上角月亮缩小当水印 */
+  /* 句子卡:半透明珍珠卡,右上角淡淡的月亮与云(沿用「安定」那张插画,
+     椭圆遮罩淡出,不形成图片边界),文字留在左侧 */
   #dpage.compass-page .cp-lines{
     position:relative;overflow:hidden;
-    max-width:min(100%,600px);margin:22px auto 0;padding:26px 24px;border-radius:22px;
-    background:linear-gradient(135deg,rgba(255,255,255,.42),rgba(250,247,255,.3));
-    border:1px solid rgba(184,155,105,.25);
-    box-shadow:0 10px 30px rgba(96,80,140,.05)
+    max-width:min(100%,600px);margin:20px auto 0;padding:24px 22px;border-radius:22px;
+    background:linear-gradient(135deg,rgba(255,255,255,.74),rgba(248,245,255,.6));
+    border:1px solid rgba(214,204,232,.55);
+    box-shadow:0 14px 34px rgba(96,80,140,.08),inset 0 1px 0 rgba(255,255,255,.9);
+    -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)
   }
   #dpage.compass-page .cp-lines::before{
-    content:"";position:absolute;top:0;right:0;width:36%;height:70%;z-index:0;pointer-events:none;
-    background:url(assets/life/cp-mobile/panel-ground.webp) right top / contain no-repeat;opacity:.42;
+    content:"";position:absolute;top:0;right:0;width:52%;height:100%;z-index:0;pointer-events:none;
+    background:url(assets/life/cp-mobile/panel-ground.webp) right top / contain no-repeat;opacity:.7;
     -webkit-mask-image:radial-gradient(ellipse 100% 90% at 100% 0%,#000 35%,transparent 100%);
             mask-image:radial-gradient(ellipse 100% 90% at 100% 0%,#000 35%,transparent 100%)
   }
-  #dpage.compass-page .cp-lines > p{position:relative;z-index:1;margin:0;padding-right:12%}
+  #dpage.compass-page .cp-lines > p{position:relative;z-index:1;margin:0;padding-right:16%}
   #dpage.compass-page .cp-keep-lead,
   #dpage.compass-page .cp-lines .cp-line{
     padding-top:0;padding-bottom:0;border:0;
-    font-family:var(--dp-serif);font-weight:500;font-size:15.5px;line-height:1.9;
+    font-family:var(--dp-serif);font-weight:500;font-size:15.5px;line-height:1.95;
     letter-spacing:.02em;color:var(--dp-ink)
   }
   #dpage.compass-page .cp-lines .cp-line:last-child{border-bottom:0}
-  /* 段落之间只留白,不放线 */
-  #dpage.compass-page .cp-lines > p + p{margin-top:26px}
+  /* 段落之间:一条中间有 ✦ 的细金线 */
+  #dpage.compass-page .cp-lines > p + p{margin-top:16px;padding-top:18px}
+  #dpage.compass-page .cp-lines > p + p::before{
+    content:"✦";position:absolute;top:-6px;left:0;right:0;
+    line-height:1;font-size:10px;color:rgba(176,132,62,.7);text-align:center;
+    background-image:
+      linear-gradient(90deg,transparent,rgba(176,132,62,.36)),
+      linear-gradient(90deg,rgba(176,132,62,.36),transparent);
+    background-size:calc(50% - 12px) 1px,calc(50% - 12px) 1px;
+    background-position:left center,right center;background-repeat:no-repeat
+  }
 
   /* 此刻的我 */
   #dpage.compass-page .cp-now > .cp-q:not(.cp-q2){
@@ -4404,7 +4427,7 @@
   #dpage.compass-page .cp-now .dp-cta::after{content:"→";font-family:var(--dp-sans);font-size:16px;letter-spacing:0}
 
   @media(max-width:767px){
-    #dpage.compass-page .cp-lines{padding:24px 20px}
+    #dpage.compass-page .cp-lines{padding:22px 18px}
     #dpage.compass-page .cp-keep-lead,
     #dpage.compass-page .cp-lines .cp-line{font-size:15px}
     #dpage.compass-page .cp-now .cp-moods{gap:8px}
@@ -4417,10 +4440,9 @@
   @media(min-width:768px){
     #dpage.compass-page .cp-keep,
     #dpage.compass-page .cp-now{max-width:640px;margin-left:auto;margin-right:auto}
-    #dpage.compass-page .cp-lines{padding:34px 36px}
+    #dpage.compass-page .cp-lines{padding:30px 32px}
     #dpage.compass-page .cp-keep-lead,
     #dpage.compass-page .cp-lines .cp-line{font-size:17px}
-    #dpage.compass-page .cp-lines > p + p{margin-top:30px}
     #dpage.compass-page .cp-now > .cp-q:not(.cp-q2){font-size:14.5px}
     #dpage.compass-page .cp-now .cp-q2{font-size:18px}
     /* 两行各四个 */
