@@ -173,7 +173,10 @@
   /* 包成 transport 可以吃的形状 —— 与真实 API 回来的文字格式完全一致,
      这样验证管线跑的是同一条路径。 */
   function textFor(caseId, version) {
-    var byVersion = { "compass-v1.1": R11, "compass-v1.2": R12 };
+    /* compass-v1.3 只改了写作指令(不发明步骤、力道抓准、不重复),
+       没有新的录制样本 —— v1.2 的样本本来就没有踩到这些新规则,
+       借来当 v1.3 的 fixture 完全站得住,等有真的 v1.3 输出再换掉。 */
+    var byVersion = { "compass-v1.1": R11, "compass-v1.2": R12, "compass-v1.3": R12 };
     var pick = byVersion[version];
     var m = (pick && pick[caseId]) ? pick[caseId] : R[caseId];
     if (!m) return null;
@@ -194,7 +197,7 @@
 
   return {
     PROMPT_VERSION: PROMPT_VERSION, MODEL: MODEL,
-    CASES: Object.keys(R), RAW: R, RAW_V11: R11, RAW_V12: R12,
+    CASES: Object.keys(R), RAW: R, RAW_V11: R11, RAW_V12: R12, RAW_V13: R12,
     CASES_V11: Object.keys(R11), CASES_V12: Object.keys(R12),
     textFor: textFor, transportFor: transportFor,
     isRecorded: true

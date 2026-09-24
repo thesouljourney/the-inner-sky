@@ -1838,8 +1838,8 @@ function testCompassVoiceV11() {
   checkEq("[v11] compass-v1 仍然存在且未被覆盖", G.SYSTEMS["compass-v1"] === G.SYSTEM, true);
   checkEq("[v11] v1 的写作指令内容没有变",
     require("crypto").createHash("sha256").update(G.SYSTEM).digest("hex").slice(0, 16), "df3b0a8385d86155");
-  checkEq("[v11] 三个版本都在", G.PROMPT_VERSIONS.join(","), "compass-v1,compass-v1.1,compass-v1.2");
-  checkEq("[v11] 预设走 v1.2", G.DEFAULT_PROMPT_VERSION, "compass-v1.2");
+  checkEq("[v11] 四个版本都在", G.PROMPT_VERSIONS.join(","), "compass-v1,compass-v1.1,compass-v1.2,compass-v1.3");
+  checkEq("[v11] 预设走 v1.3", G.DEFAULT_PROMPT_VERSION, "compass-v1.3");
   checkEq("[v11] v1 与 v1.1 不是同一份", G.SYSTEM === G.SYSTEM_V11, false);
 
   // 2 · v1.1 里写进了这一阶段的三件事
@@ -2447,9 +2447,9 @@ function testCompassVoiceV12() {
   const crypto = require("crypto");
   const h = (t) => crypto.createHash("sha256").update(t).digest("hex").slice(0, 16);
 
-  /* ★ VOICE LOCK:三份写作指令全部逐字钉住。
-     改写法的正确做法是开新版本,不是就地编辑 —— 就地改会让这三条立刻红。 */
-  checkEq("[lock] 声音基准是 compass-v1.2", G.VOICE_BASELINE.version, "compass-v1.2");
+  /* ★ VOICE LOCK:四份写作指令全部逐字钉住。
+     改写法的正确做法是开新版本,不是就地编辑 —— 就地改会让这几条立刻红。 */
+  checkEq("[lock] 声音基准是 compass-v1.3", G.VOICE_BASELINE.version, "compass-v1.3");
   checkEq("[lock] 基准的语言是中文", G.VOICE_BASELINE.language, "zh");
   checkEq("[lock] 预设生成走的就是基准版本",
     G.DEFAULT_PROMPT_VERSION, G.VOICE_BASELINE.version);
@@ -2457,7 +2457,8 @@ function testCompassVoiceV12() {
     G.VOICE_BASELINE.history.filter(v => !G.SYSTEMS[v]).join(","), "");
   checkEq("[lock] compass-v1 逐字未动", h(G.SYSTEMS["compass-v1"]), "df3b0a8385d86155");
   checkEq("[lock] compass-v1.1 逐字未动", h(G.SYSTEMS["compass-v1.1"]), "f81a63bee5bb64d2");
-  checkEq("[lock] compass-v1.2 逐字未动(已锁)", h(G.SYSTEMS["compass-v1.2"]), "a06710405bc99c8e");
+  checkEq("[lock] compass-v1.2 逐字未动(历史版本)", h(G.SYSTEMS["compass-v1.2"]), "a06710405bc99c8e");
+  checkEq("[lock] compass-v1.3 逐字未动(已锁)", h(G.SYSTEMS["compass-v1.3"]), "921e386f119d02a3");
   checkEq("[lock] 已锁的 v1.2 样本文案逐字未动",
     h(JSON.stringify(RC.RAW_V12.C1)), "afd185f8e09f4739");
 
@@ -2568,6 +2569,69 @@ function testCompassVoiceV12() {
     checkEq("[v12] v1.2 的反思句都不预设结论",
       ["grounds", "moves", "drains", "calls"]
         .filter(k => V.perDirection[k].checks.permission.embeddedConclusion.length).join(","), "");
+  });
+}
+
+/* ---------- 21b. 内在指南 Phase 6.4 · 写作校准 v1.3 ----------
+   v1.2 的规则一条都没拿掉(下面逐一核对),只加三件事:
+   不准发明固定步骤、判断力道要抓准、coreInsight 与 explanation 不要重复。
+   还没有真人写的 v1.3 录制样本,所以这里只核对【写作指令本身】写了什么,
+   不像 v1.1/v1.2 那样另外拿录制文案跑分。样本改用真的 v1.3 文案产生后,
+   应该在这里补上像 groupCheck / crossCardCheck 那样的量测。 */
+function testCompassVoiceV13() {
+  const fs = require("fs");
+  const G = require(path.join(__dirname, "..", "assets", "compass-generation.js"));
+  const RC = require(path.join(__dirname, "..", "assets", "compass-recorded.js"));
+  const edge = fs.readFileSync(path.join(__dirname, "..", "docs", "edge", "compass-generate.ts"), "utf8");
+
+  // 1 · v1.2 原封不动,v1.3 不是它的复制品
+  checkEq("[v13] compass-v1.2 未被改动", G.SYSTEMS["compass-v1.2"] === G.SYSTEM_V12, true);
+  checkEq("[v13] v1.3 不是 v1.2 的复制品", G.SYSTEM_V12 === G.SYSTEM_V13, false);
+  const m13 = edge.match(/const COMPASS_SYSTEM_V13 = `([\s\S]*?)`;/);
+  checkEq("[v13] 服务端的 v1.3 与前端逐字相同",
+    m13 ? firstDiff(m13[1], G.SYSTEM_V13) : "缺 COMPASS_SYSTEM_V13", "");
+
+  // 2 · v1.2 建立的东西一条都没丢
+  checkEq("[v13] v1.2 的规则一条都没丢",
+    ["认出来", "是什么", "轻轻一步", "不要】每一张都用「所以」",
+     "只能说证据授权你说的事", "不可以】替这个人判断",
+     "怎样让我重新有动力", "不准写成命运、使命、注定", "避免「耗很久」",
+     "绝对禁止:占星语言", "绝对禁止:玄学语言", "绝对禁止:心理诊断", "绝对禁止:编造原因",
+     "不要贴标签", "少用分析腔"]
+      .filter(x => G.SYSTEM_V13.indexOf(x) < 0).join(","), "");
+
+  // 3 · 这一版新加的三件事都写进去了
+  checkEq("[v13] 写明不要发明固定步骤",
+    /不要发明固定步骤[\s\S]{0,200}这四步对你来说不能跳过/.test(G.SYSTEM_V13), true);
+  checkEq("[v13] 步骤数量只能来自 composite.sequence,不是自己编",
+    /顺序来自 composite\.sequence,不是你自己发明的步骤数/.test(G.SYSTEM_V13), true);
+  checkEq("[v13] 写明判断力道要抓准(太绝对/太虚/理想三段对照)",
+    /判断力道要抓准[\s\S]{0,300}太绝对[\s\S]{0,300}太虚[\s\S]{0,300}理想/.test(G.SYSTEM_V13), true);
+  checkEq("[v13] 太绝对的例子含「你的星盘决定了」",
+    /太绝对[\s\S]{0,200}你的星盘决定了/.test(G.SYSTEM_V13), true);
+  checkEq("[v13] 占星禁令追加了「你的星盘决定」这个说法",
+    /你的星盘显示」「你的命盘告诉你」「你的配置说明」「你的星盘决定」/.test(G.SYSTEM_V13), true);
+  checkEq("[v13] 不要贴标签追加了「你的问题在于……」",
+    /不写「你是一个……」[\s\S]{0,60}「你的问题在于……」/.test(G.SYSTEM_V13), true);
+  checkEq("[v13] 写明 coreInsight 与 explanation 不要重复",
+    /coreInsight 与 explanation 不要重复/.test(G.SYSTEM_V13), true);
+  checkEq("[v13] 写明写完要自己检查",
+    /写完先自己检查[\s\S]{0,200}换一个星盘的人[\s\S]{0,200}是不是只是把占星关键词翻成中文/.test(G.SYSTEM_V13), true);
+
+  // 4 · 版本表与预设版本都已经切过来
+  checkEq("[v13] 四个版本都在 SYSTEMS 里",
+    ["compass-v1", "compass-v1.1", "compass-v1.2", "compass-v1.3"]
+      .filter(v => !G.SYSTEMS[v]).join(","), "");
+  checkEq("[v13] PROMPT_VERSIONS 含 v1.3", G.PROMPT_VERSIONS.indexOf("compass-v1.3") >= 0, true);
+  checkEq("[v13] 预设已经是 v1.3", G.DEFAULT_PROMPT_VERSION, "compass-v1.3");
+
+  // 5 · v1.2 的录制样本借来当 v1.3 fixture 时,共用的校验管线仍然全过
+  //     (真正的 v1.3 专属量测,要等有真人写的 v1.3 样本才能补)
+  return G.generate(
+    require(path.join(__dirname, "..", "assets", "compass-preview.js")).buildCase("C1"),
+    RC.transportFor("C1"), { promptVersion: "compass-v1.3" }
+  ).then(r => {
+    checkEq("[v13] 借用 v1.2 样本作 fixture 时,v1.3 的验证管线也全过", r.status, "ok");
   });
 }
 
@@ -4522,6 +4586,7 @@ function main() {
   const liveJobs = testCompassLivePath();
   const voiceJobs = testCompassVoiceV11();
   const v12Jobs = testCompassVoiceV12();
+  const v13Jobs = testCompassVoiceV13();
   testCompassLiveAuthPath();
   testCompassShadowPermission();
   testCompassProductPage();
@@ -4539,7 +4604,7 @@ function main() {
   testTopicLayout();
   testTopicPreviews();
   testCompassZhOnlyLabels();
-  return Promise.all([genJobs, liveJobs, voiceJobs, v12Jobs]).then(function () { return testPlaces(); }).then(function () {
+  return Promise.all([genJobs, liveJobs, voiceJobs, v12Jobs, v13Jobs]).then(function () { return testPlaces(); }).then(function () {
     console.log("\n对照来源:" + REF.reference);
     console.log("设置:" + JSON.stringify(REF.settings));
     console.log("\n通过 " + pass + " / 失败 " + fail);
