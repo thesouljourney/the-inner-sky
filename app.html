@@ -4442,60 +4442,70 @@
   #dpage.compass-page .cp-keep .cp-sh::after{margin-top:8px}
   @media(min-width:768px){
   }
-  /* ── 「想留给自己的几句话」:简洁的 floating glass / paper card ─────
-     只留一个右上角的金色星轨(可稍微超出卡边)与右下角一抹极淡的云;
-     标题上方一颗很小的金星芒。其余框线、吊坠、星屑全部拿掉。 */
+  /* ── 「想留给自己的几句话」:星月信笺卡(照用户的效果图) ──────────
+     标题上方一颗小金星芒、标题下方一条 细线—✦—细线;卡片本身是奶油色
+     信笺 + 1px 香槟金细边,左上角半月、右上角金色星轨、底部一整排淡云
+     都画在卡片「里面」(被圆角裁切),文字置中,两段之间同样一条 — ✦ —。
+     卡片高度随句子多寡变化,装饰各自贴在角落,不会被拉伸。 */
   #dpage.compass-page .cp-keep .cp-sh::before{
     content:"";width:18px;height:18px;margin:0 auto 10px;
     background:url(assets/life/cp-mobile/keep-star.webp) center / contain no-repeat
   }
-  #dpage.compass-page .cp-keep .cp-sh::after{display:none}
+  #dpage.compass-page .cp-keep .cp-sh::after,
+  #dpage.compass-page .cp-lines > p + p::before{
+    content:"✦";display:block;width:min(64%,280px);margin:12px auto 0;
+    line-height:1;font-size:10px;color:rgba(190,150,80,.85);text-align:center;
+    background-image:
+      linear-gradient(90deg,transparent,rgba(201,168,105,.55)),
+      linear-gradient(90deg,rgba(201,168,105,.55),transparent);
+    background-size:calc(50% - 12px) 1px,calc(50% - 12px) 1px;
+    background-position:left center,right center;background-repeat:no-repeat
+  }
   #dpage.compass-page .cp-lines{
-    position:relative;overflow:visible;box-sizing:border-box;
-    width:100%;max-width:680px;margin:24px auto 0;padding:28px 26px;
-    background:rgba(255,252,248,.8);
-    -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
-    border:1px solid rgba(201,168,105,.35);border-radius:26px;
+    position:relative;overflow:hidden;box-sizing:border-box;
+    width:100%;max-width:680px;margin:20px auto 0;padding:74px 26px 92px;
+    text-align:center;
+    background:
+      url(assets/life/cp-mobile/kc-star.webp) right top / 118px auto no-repeat,
+      url(assets/life/cp-mobile/kc-moon.webp) left top / 104px auto no-repeat,
+      linear-gradient(180deg,rgba(255,251,244,.9),rgba(255,248,240,.84));
+    -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+    border:1px solid rgba(201,168,105,.55);border-radius:26px;
     box-shadow:0 12px 35px rgba(70,78,120,.08)
   }
-  /* 右上角:金色星轨,可稍微超出卡边 */
+  /* 底部一整排淡云(在卡片里、被圆角裁切) */
   #dpage.compass-page .cp-lines::before{
     content:"";position:absolute;z-index:0;pointer-events:none;
-    top:-18px;right:-12px;width:108px;height:128px;opacity:.55;
-    background:url(assets/life/cp-mobile/keep-moon.webp) right top / contain no-repeat;
+    left:0;right:0;bottom:0;top:auto;width:auto;height:auto;aspect-ratio:1288/300;opacity:.6;
+    background:url(assets/life/cp-mobile/kc-clouds.webp) center bottom / 100% auto no-repeat;
     -webkit-mask-image:none;mask-image:none
   }
-  /* 右下角:一抹极淡的 lavender / peach 云,收在卡片圆角里 */
-  #dpage.compass-page .cp-lines::after{
-    content:"";position:absolute;z-index:0;pointer-events:none;
-    right:0;bottom:0;left:auto;top:auto;width:170px;height:100px;opacity:.18;transform:none;
-    border-bottom-right-radius:26px;
-    background:url(assets/life/cp-mobile/keep-cloud.webp) right bottom / contain no-repeat
-  }
-  #dpage.compass-page .cp-lines > p{position:relative;z-index:1;margin:0;padding-right:14%}
+  #dpage.compass-page .cp-lines::after{content:none}
+  #dpage.compass-page .cp-lines > p{position:relative;z-index:1;margin:0;padding:0}
   #dpage.compass-page .cp-keep-lead,
   #dpage.compass-page .cp-lines .cp-line{
     font-family:var(--dp-serif);font-weight:400;font-size:17px;line-height:1.9;
-    letter-spacing:.02em;color:#26324A
+    letter-spacing:.04em;color:#26324A
   }
-  /* 两段之间:一段 70px 的短渐变线,置中 */
-  #dpage.compass-page .cp-lines > p + p{margin-top:22px;padding-top:23px}
+  /* 两段之间的 — ✦ —:放在第二段上方,跟标题下那条同一个样式 */
+  #dpage.compass-page .cp-lines > p + p{margin-top:0;padding-top:0}
   #dpage.compass-page .cp-lines > p + p::before{
-    content:"";position:absolute;top:0;left:50%;right:auto;width:70px;height:1px;
-    transform:translateX(-50%);
-    background:linear-gradient(90deg,transparent,rgba(201,168,105,.55),transparent)
+    position:static;transform:none;height:auto;margin:20px auto 20px;width:min(56%,240px)
   }
   @media(min-width:768px){
     #dpage.compass-page .cp-keep{max-width:720px}
-    #dpage.compass-page .cp-lines{padding:34px 40px}
-    #dpage.compass-page .cp-lines::before{top:-22px;right:-16px;width:120px;height:142px}
+    #dpage.compass-page .cp-lines{
+      padding:90px 72px 150px;
+      background-size:170px auto,150px auto,auto
+    }
+    #dpage.compass-page .cp-lines::before{opacity:.5}
+    #dpage.compass-page .cp-keep-lead,
+    #dpage.compass-page .cp-lines .cp-line{font-size:19px}
   }
   /* 桌机:两段都收在正中间一栏,跟指南盘对齐;字与图示放大一号 */
   @media(min-width:768px){
-    #dpage.compass-page .cp-keep,
+    #dpage.compass-page .cp-keep{max-width:720px;margin-left:auto;margin-right:auto}
     #dpage.compass-page .cp-now{max-width:640px;margin-left:auto;margin-right:auto}
-    #dpage.compass-page .cp-keep-lead,
-    #dpage.compass-page .cp-lines .cp-line{font-size:17px}
     #dpage.compass-page .cp-now > .cp-q:not(.cp-q2){font-size:14.5px}
     #dpage.compass-page .cp-now .cp-q2{font-size:18px}
     /* 两行各四个 */
