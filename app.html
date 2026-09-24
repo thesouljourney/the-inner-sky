@@ -4553,9 +4553,10 @@
   /* 挂在左上角的金色星芒吊饰 */
   #dpage.compass-page .cp-ask-card::before{
     content:"";position:absolute;z-index:2;pointer-events:none;
-    left:-26px;top:-30px;width:120px;height:120px;
+    left:-18px;top:-34px;width:150px;height:98px;
     background:url(assets/life/cp-mobile/ask-charm.webp) center / contain no-repeat;
-    transform:scaleX(-1) rotate(-38deg);transform-origin:center
+    /* 翻成星芒在左、尾巴往右,再转平,沿着卡片上缘横躺 */
+    transform:scaleX(-1) rotate(25deg);transform-origin:center
   }
   /* 顶端一颗小星芒,两侧极短的淡线 */
   #dpage.compass-page .cp-ask-card .mk{
@@ -4579,7 +4580,8 @@
     font-size:14.5px
   }
   #dpage.compass-page .cp-ask-card .cp-ta::placeholder{color:rgba(119,110,150,.55)}
-  #dpage.compass-page .cp-ask-card .cp-act{justify-content:space-between;gap:12px;margin-top:22px}
+  /* 「留下这个回答」置中,「今天先不回答」小字放在下面 */
+  #dpage.compass-page .cp-ask-card .cp-act{flex-direction:column;justify-content:center;gap:4px;margin-top:22px}
   #dpage.compass-page .cp-ask-card .dp-cta{
     display:inline-flex;align-items:center;justify-content:center;gap:8px;
     min-width:170px;min-height:42px;padding:0 22px;border-radius:30px;border:0;
@@ -4590,22 +4592,21 @@
     text-shadow:0 1px 5px rgba(90,60,140,.45);
     box-shadow:0 8px 22px rgba(170,130,220,.22),0 0 14px rgba(230,190,240,.25)
   }
-  #dpage.compass-page .cp-ask-card .cp-skip{font-size:13px;letter-spacing:.08em;color:#6f6796;padding:8px 4px}
+  #dpage.compass-page .cp-ask-card .cp-skip{font-size:11.5px;letter-spacing:.08em;color:#7a72a0;padding:6px 4px;min-height:32px}
   @media(max-width:767px){
     #dpage.compass-page .cp-ask-card{padding:28px 18px 22px;border-radius:24px}
-    #dpage.compass-page .cp-ask-card::before{left:-20px;top:-26px;width:96px;height:96px}
+    #dpage.compass-page .cp-ask-card::before{left:-14px;top:-28px;width:120px;height:78px}
     #dpage.compass-page .cp-ask-card .qt{font-size:16px}
     #dpage.compass-page .cp-ask-card .cp-ta{min-height:112px}
-    #dpage.compass-page .cp-ask-card .dp-cta{min-width:0;padding:0 18px}
-    #dpage.compass-page .cp-ask-card .cp-skip{font-size:12.5px}
+    #dpage.compass-page .cp-ask-card .dp-cta{min-width:170px;padding:0 18px}
   }
   @media(min-width:768px){
     #dpage.compass-page .cp-ask{max-width:720px;margin-left:auto;margin-right:auto}
     #dpage.compass-page .cp-ask-card{padding:40px 44px 32px}
-    #dpage.compass-page .cp-ask-card::before{left:-34px;top:-38px;width:150px;height:150px}
+    #dpage.compass-page .cp-ask-card::before{left:-24px;top:-44px;width:190px;height:124px}
     #dpage.compass-page .cp-ask-card .qt{font-size:19px}
     #dpage.compass-page .cp-ask-card .cp-ta{min-height:150px}
-    #dpage.compass-page .cp-ask-card .cp-act{padding:0 12px}
+    #dpage.compass-page .cp-ask-card .cp-skip{font-size:12px}
   }
 
   /* ── 这一页所有「细线—✦—细线」分隔线统一换成用户给的金色星芒线素材 ──
