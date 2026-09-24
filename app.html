@@ -4012,26 +4012,23 @@
       background-clip:padding-box;
       border:1px solid rgba(191,163,124,.2);
       box-shadow:0 12px 30px rgba(57,44,31,.045),inset 0 1px 0 rgba(255,255,255,.9);
-      margin-bottom:12px
+      margin-bottom:10px
     }
     #dpage.compass-page .cp-ent:last-of-type{margin-bottom:0}
-    /* 卡片右侧那一小片实景:铺在珍珠底色之上、文字之下,靠一层同色
-       渐层把边缘慢慢吃掉,不是硬裁一块照片贴满整张卡。四个方向各自
-       一张,只承担卡片右侧一小块视觉份量(渐层最深处仍留一点底色,
-       插画不会用满饱和度)。渐层留到 62% 才开始退,盖住整个文字栏
-       (数字/圆图/标题/说明最宽到 82% 左右),这样素材才像是设计里
-       长出来的,不是贴上去的。 */
-    #dpage.compass-page .cp-ent::after{
-      content:"";position:absolute;inset:0;z-index:0;pointer-events:none;
-      background:linear-gradient(90deg,
-        rgba(252,249,243,1) 0%,rgba(252,249,243,1) 62%,
-        rgba(252,249,243,.72) 76%,rgba(252,249,243,.34) 88%,
-        rgba(252,249,243,.16) 100%)
+    /* 卡片右侧的实景插画(素材本身已去背、左缘是柔边):放在 ::before
+       一层,贴齐卡片右缘、高度撑满,宽度随素材比例(约占卡片右侧四成)。
+       再用 mask 把插画最左边那一段慢慢淡掉,跟珍珠底色融在一起,
+       不会看到素材边缘。卡片底色本身只剩珍珠渐层。 */
+    #dpage.compass-page .cp-ent::before{
+      content:"";position:absolute;top:0;right:0;bottom:0;width:62%;z-index:0;pointer-events:none;
+      background:right center / auto 100% no-repeat;
+      -webkit-mask-image:linear-gradient(90deg,transparent 0,transparent 18%,#000 58%);
+              mask-image:linear-gradient(90deg,transparent 0,transparent 18%,#000 58%)
     }
-    #dpage.compass-page .cp-ent.d1{background-image:url(assets/life/cp-mobile/card-ground.webp),linear-gradient(135deg,rgba(255,255,255,.94),rgba(250,247,242,.88));background-size:cover,cover;background-position:right center,center}
-    #dpage.compass-page .cp-ent.d2{background-image:url(assets/life/cp-mobile/card-move.webp),linear-gradient(135deg,rgba(255,255,255,.94),rgba(250,247,242,.88));background-size:cover,cover;background-position:right center,center}
-    #dpage.compass-page .cp-ent.d3{background-image:url(assets/life/cp-mobile/card-drain.webp),linear-gradient(135deg,rgba(255,255,255,.94),rgba(250,247,242,.88));background-size:cover,cover;background-position:right center,center}
-    #dpage.compass-page .cp-ent.d4{background-image:url(assets/life/cp-mobile/card-call.webp),linear-gradient(135deg,rgba(255,255,255,.94),rgba(250,247,242,.88));background-size:cover,cover;background-position:right center,center}
+    #dpage.compass-page .cp-ent.d1::before{background-image:url(assets/life/cp-mobile/card-ground.webp)}
+    #dpage.compass-page .cp-ent.d2::before{background-image:url(assets/life/cp-mobile/card-move.webp)}
+    #dpage.compass-page .cp-ent.d3::before{background-image:url(assets/life/cp-mobile/card-drain.webp)}
+    #dpage.compass-page .cp-ent.d4::before{background-image:url(assets/life/cp-mobile/card-call.webp)}
     #dpage.compass-page .cp-ent > *{position:relative;z-index:1}
     /* 手机版卡片不放 01–04 编号,直接从圆图开始 */
     #dpage.compass-page .cp-ent .no{display:none}
