@@ -4044,7 +4044,7 @@ function testCompassCentredLayout() {
   checkEq("[layout] 所有宽度都是直排单栏",
     /@media all\{\s*#dpage\.compass-page \.cp-wheel\{grid-template-columns:1fr/.test(css), true);
   checkEq("[layout] 桌机:指南盘段落收在正中间一栏",
-    /min-width:768px\)\{\s*#dpage\.compass-page \.cp-compass\{max-width:560px;margin-left:auto;margin-right:auto\}/.test(css), true);
+    /min-width:768px\)\{\s*#dpage\.compass-page \.cp-compass\{max-width:720px;margin-left:auto;margin-right:auto\}/.test(css), true);
   checkEq("[layout] 展开状态宣告成单一值(一次一个)",
     /var compassDirOpen = "";/.test(html), true);
   checkEq("[layout] 入口文字靠左", /\.cp-ent\{[\s\S]{0,120}text-align:left/.test(css), true);
