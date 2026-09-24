@@ -6531,8 +6531,10 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       var TABLE_R = "compass_results";
       var V2 = "inner_sky_compass_result_v2";
       var COLS = "prompt_version,generated_at,revision,"
-        + "grounds_core,grounds_expl,grounds_prompt,moves_core,moves_expl,moves_prompt,"
-        + "drains_core,drains_expl,drains_prompt,calls_core,calls_expl,calls_prompt";
+        + "grounds_core,grounds_expl,grounds_prompt,grounds_opening,grounds_short,"
+        + "moves_core,moves_expl,moves_prompt,moves_opening,moves_short,"
+        + "drains_core,drains_expl,drains_prompt,drains_opening,drains_short,"
+        + "calls_core,calls_expl,calls_prompt,calls_opening,calls_short";
 
       function C() { return window.CompassCanonical || null; }
       function urlR(q) { return (cfg().url || "") + "/rest/v1/" + TABLE_R + (q || ""); }
@@ -6652,6 +6654,44 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
               }, function () { return { status: "created", revision: 1 }; });
             }, function () {
               note("canonical_insert_failed", { reason: "network" });
+              return { status: "failed", reason: "network" };
+            });
+        },
+
+        /* 版本升级用的条件更新。只有一个呼叫点:generation 升版之后的背景重新生成
+           成功了,要把新内容换上去 —— 不是随时可以覆盖别人那一份的通用写入。
+           乐观并发靠 URL 上的 revision=eq.<expectRevision> 过滤,不是 RLS:
+           WHERE 对不上(别的装置已经先改过)就是 0 列,PostgREST 回空阵列,
+           不是错误 —— 那正是「冲突,不覆盖」要的效果,静静放弃,下次再试。 */
+        replace: function (owner, result, expectRevision) {
+          var Cc = C();
+          if (!Cc) return Promise.resolve({ status: "failed", reason: "module_unavailable" });
+          var v = Cc.validateResult(result);
+          if (!v.ok) {
+            note("canonical_local_invalid", { reason: v.reason });
+            return Promise.resolve({ status: "failed", reason: v.reason });
+          }
+          var row = Cc.toRow(v.result);
+          row.revision = (Number(expectRevision) || 1) + 1;
+          return nf(urlR("?user_id=eq." + encodeURIComponent(owner) +
+                         "&revision=eq." + encodeURIComponent(String(Number(expectRevision) || 1))),
+              { method: "PATCH",
+                headers: Object.assign({}, authHeaders(), { "Prefer": "return=representation" }),
+                body: JSON.stringify(row) }, 10000)
+            .then(function (r) {
+              if (!r.ok) {
+                note("canonical_update_failed", { httpStatus: r.status });
+                return { status: "failed", reason: "http", httpStatus: r.status };
+              }
+              return r.json().then(function (rows) {
+                if (!Array.isArray(rows) || !rows.length) {
+                  note("canonical_update_conflict");
+                  return { status: "conflict" };
+                }
+                return { status: "updated", revision: Number(rows[0].revision) || row.revision };
+              }, function () { return { status: "updated", revision: row.revision }; });
+            }, function () {
+              note("canonical_update_failed", { reason: "network" });
               return { status: "failed", reason: "network" };
             });
         }
@@ -9445,6 +9485,12 @@ window.Guide = (function () {
   var compassCanonResult = null;
   var compassCanonBusy = false;
   var compassCanonOwner = "";
+  /* 内容版本升级(R6)。只在账号层(authed)运作,一次网页生命周期最多真的
+     呼叫一次 Claude API——命中过的 owner|targetVersion 记在这里,
+     不管成功失败都不在同一次页面存活期间内重试,避免刷屏式重打 API;
+     失败的话下一次整页重新加载(等于新的一次生命周期)会自然再试一次。 */
+  var compassRegenBusy = false;
+  var compassRegenTried = {};
 
   /* Dev Preview(#/compass/preview)的 UI 状态。同样必须写在首次渲染之前。
      这一组只有在开发预览路由下才会被读到,正式的 #/compass 完全不碰。 */
@@ -11140,6 +11186,7 @@ window.Guide = (function () {
         function finish() {
           compassCanonBusy = false;
           if (curRoute && curRoute.k === "compass") compassRepaint();
+          compassEnsureLatestVersion(owner);
         }
 
         if (r.action === "adopt" || r.action === "retry-upload") {
@@ -11176,6 +11223,96 @@ window.Guide = (function () {
         finish();
       });
     });
+  }
+
+  /* ── 内容版本升级(R6)─────────────────────────────────────
+     一个登入使用者 = 一份正式的内在指南,这个不变式(R1)没有变——
+     变的是「正式那一份」不再永远停在生成当下那一版写作规则。
+
+     版本号不新开一个栏位:generation 那边本来就有 promptVersion
+     (DB 是 prompt_version,一直都在,R1 上线时就有),这里直接拿它当
+     内容版本用,跟 window.CompassGeneration.DEFAULT_PROMPT_VERSION 比对。
+
+     只在账号层(authed)运作,而且只有【已经解析出一份稳定正式指南】
+     (state === CANONICAL)才检查——RESOLVING / PENDING_UPLOAD /
+     CONFLICT_CANDIDATE / CACHED_OFFLINE 这些还没定案或连不上的状态,
+     不掺和进来,避免跟既有的上传/冲突流程打架。
+
+     版本一致:不加载生成模组之外的任何东西,不呼叫 API,0 次请求。
+     版本不同(含旧资料完全没有这个字段的 legacy 情形,一律当作要升级):
+     背景重新生成一次;失败或版本冲突就安静放弃,画面上原本那一份
+     一个字都不动——不会出现空白页,也不会把旧内容删掉。 */
+  function compassEnsureLatestVersion(owner) {
+    if (compassCanonState !== "CANONICAL" || compassRegenBusy) return;
+    var authed = !!(window.Cloud && window.Cloud.hasSession && window.Cloud.hasSession()) &&
+                 owner && owner !== "anon";
+    if (!authed) return;
+    var saved = compassCanonResult;
+    if (!saved || !saved.directions || !Object.keys(saved.directions).length) return;
+
+    cpProdLoad().then(function () {
+      var G = window.CompassGeneration;
+      if (!G) return;
+      var target = G.DEFAULT_PROMPT_VERSION;
+      if ((saved.promptVersion || "") === target) return;   // 版本一致:什么都不做
+      var tryKey = owner + "|" + target;
+      if (compassRegenTried[tryKey]) return;                 // 这一次页面生命周期已经试过
+      compassRegenTried[tryKey] = true;
+      compassRegenerateForLatestVersion(owner, target);
+    }).catch(function () { });
+  }
+
+  function compassRegenerateForLatestVersion(owner, target) {
+    if (compassRegenBusy || !curResult) return;
+    compassRegenBusy = true;
+    var G = window.CompassGeneration, PV = window.CompassPreview, AN = window.CompassAnchors;
+    if (!G || !PV || !AN) { compassRegenBusy = false; return; }
+    window.Compass.setNatal(curResult);
+    var vm = PV.buildCurrent(curResult);
+    if (!vm) { compassRegenBusy = false; return; }
+    var live = cpLiveTransport();
+    var payload = null;
+    G.generate(vm, function (p) { p._input = payload; return live(p); },
+      { promptVersion: target, _pre: (payload = G.buildInput(vm)) })
+      .then(function (r) {
+        if (r.status !== "ok" || !r.copies) { compassRegenBusy = false; return; }
+        var AN3 = window.CompassAnchorsSemantic;
+        var an = (AN3 ? AN3 : AN).derive(r.copies);
+        var fresh = {
+          promptVersion: r.meta.promptVersion,
+          generatedAt: r.meta.generatedAt,
+          directions: r.copies,
+          anchors: an.status === "ok" ? an.anchors : []
+        };
+        /* 本机 v1 快取也跟着换新(既有行为,跟手动按「生成」那条路一致)。 */
+        window.Compass.result.set(owner, fresh);
+        var can = window.Compass.canonical;
+        return can.fetch(owner).then(function (cloud) {
+          if (cloud.status === "absent") {
+            /* 理论上不该发生(R1 期间那一列不会被删)——稳妥起见退回 create,
+               绝不因为这一步失败就丢掉刚生成好的新内容。 */
+            return can.createFirst(owner, fresh).then(function (res) {
+              if (res.status === "created") {
+                compassCanonState = "CANONICAL";
+                compassCanonResult = fresh;
+                can.writeLocal(owner, fresh, "canonical", res.revision);
+                if (curRoute && curRoute.k === "compass") compassRepaint();
+              }
+            });
+          }
+          if (cloud.status !== "valid") return;   // 连不上 / 坏掉:这次先不换,下次再试
+          return can.replace(owner, fresh, cloud.revision).then(function (res) {
+            if (res.status === "updated") {
+              compassCanonState = "CANONICAL";
+              compassCanonResult = fresh;
+              can.writeLocal(owner, fresh, "canonical", res.revision);
+              if (curRoute && curRoute.k === "compass") compassRepaint();
+            }
+            // conflict / failed:安静放弃,旧内容留着,下一次页面生命周期再试一次
+          });
+        }).then(function () { compassRegenBusy = false; },
+                function () { compassRegenBusy = false; });
+      }, function () { compassRegenBusy = false; });
   }
 
   /* 画面要呈现的那一份。登入使用者一律走解析结果;

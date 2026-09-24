@@ -4514,8 +4514,12 @@ function testCanonicalStorage() {
   checkEq("[r1] INSERT 只多送一个 user_id",
     /var row = Cc\.toRow\(v\.result\);\s*\n\s*row\.user_id = owner;\s*\n\s*return nf\(/
       .test(html), true);
+  /* 只看 createFirst 那一段 —— replace()(版本升级的条件更新)另外校验,
+     它本来就得自己设 row.revision,不该跟 INSERT 这条混在一起看。 */
+  const createFirstBlk = html.slice(html.indexOf("createFirst: function (owner, result) {"),
+                                     html.indexOf("replace: function (owner, result, expectRevision) {"));
   checkEq("[r1] INSERT 不送 revision / created_at / updated_at",
-    /row\.(revision|created_at|updated_at)\s*=/.test(html), false);
+    /row\.(revision|created_at|updated_at)\s*=/.test(createFirstBlk), false);
   checkEq("[r1] 栏位名逐字固定", Object.keys(row).join(","),
     "prompt_version,generated_at," +
     "grounds_core,grounds_expl,grounds_prompt,grounds_opening,grounds_short," +
@@ -4623,8 +4627,16 @@ function testCanonicalStorage() {
     /merge-duplicates|on_conflict/.test(canBlk), false);
   checkEq("[r1] canonical 只用 POST 建立第一份",
     (canBlk.match(/method: "POST"/g) || []).length, 1);
-  checkEq("[r1] canonical 不做 PATCH / DELETE",
-    /method: "(PATCH|PUT|DELETE)"/.test(canBlk), false);
+  checkEq("[r1] canonical 绝不做 DELETE",
+    /method: "DELETE"/.test(canBlk), false);
+  /* R6:版本升级允许【恰好一次】条件更新(PATCH),不是随时可覆盖的通用写入——
+     必须用 revision=eq. 当乐观并发的 WHERE 过滤,对不上就是 0 列而不是覆盖。 */
+  checkEq("[r1] canonical 只用一次 PATCH,而且是版本升级的条件更新",
+    (canBlk.match(/method: "PATCH"/g) || []).length === 1 &&
+    /revision=eq\./.test(canBlk), true);
+  checkEq("[r1] PATCH 没有过滤条件就不算数(不能变成随时可覆盖)",
+    /method: "PATCH"[\s\S]{0,600}revision=eq\./.test(canBlk) ||
+    /revision=eq\.[\s\S]{0,600}method: "PATCH"/.test(canBlk), true);
   checkEq("[r1] 冲突(409)会重读,不覆盖",
     /r\.status === 409[\s\S]{0,200}canonical_insert_conflict/.test(html), true);
   checkEq("[r1] 生成后先写本机再上云",
@@ -4673,6 +4685,47 @@ function testCanonicalStorage() {
   checkEq("[r1] 没有 service_role", /service_role/.test(html + src + sql), false);
 }
 
+/* ---------- 36. R6 · 内容版本升级(compass 不再永远停在生成当下那一版) ----------
+   R1 的不变式(一个登入使用者 = 一份正式的内在指南)没有变——
+   这里加的是:那一份不再永远锁死在第一次生成时的写作规则版本。
+
+   不新开版本栏位:直接借用 generation 层本来就有的 promptVersion
+   (DB 是 prompt_version,R1 上线就有),跟 DEFAULT_PROMPT_VERSION 比对。 */
+function testCompassVersionUpgrade() {
+  const fs = require("fs");
+  const html = fs.readFileSync(path.join(__dirname, "..", "app.html"), "utf8");
+
+  const canBlk = html.slice(html.indexOf("canonical: (function () {"),
+                            html.indexOf('    result: (function () {'))
+                     .replace(/\/\*[\s\S]*?\*\//g, "");
+  checkEq("[r6] SELECT 里补上了 opening/short(不然读回来一律是空的)",
+    ["grounds_opening", "grounds_short", "moves_opening", "moves_short",
+     "drains_opening", "drains_short", "calls_opening", "calls_short"]
+      .every(function (c) { return canBlk.indexOf(c) >= 0; }), true);
+
+  const verBlk = html.slice(html.indexOf("function compassEnsureLatestVersion"),
+                            html.indexOf("function compassSavedResult"));
+  checkEq("[r6] 只在 CANONICAL 状态下检查版本(不跟解析中/冲突/离线抢跑)",
+    /if \(compassCanonState !== "CANONICAL" \|\| compassRegenBusy\) return;/.test(verBlk), true);
+  checkEq("[r6] 只管账号层(authed),匿名本机不在这次范围内",
+    /if \(!authed\) return;/.test(verBlk), true);
+  checkEq("[r6] 版本一致就直接不做事,不呼叫任何生成",
+    /if \(\(saved\.promptVersion \|\| ""\) === target\) return;/.test(verBlk), true);
+  checkEq("[r6] 版本号直接借用 DEFAULT_PROMPT_VERSION,没有另开一个常数",
+    /var target = G\.DEFAULT_PROMPT_VERSION;/.test(verBlk), true);
+  checkEq("[r6] 一个页面生命周期同一个 owner|version 只真的试一次",
+    /if \(compassRegenTried\[tryKey\]\) return;/.test(verBlk) &&
+    /compassRegenTried\[tryKey\] = true;/.test(verBlk), true);
+  checkEq("[r6] 失败 / 版本冲突时不动 compassCanonResult(旧内容原样留着)",
+    /res\.status === "updated"/.test(verBlk) &&
+    !/conflict[\s\S]{0,80}compassCanonResult\s*=/.test(verBlk), true);
+  checkEq("[r6] 这一层从头到尾没有任何删除动作", /\.remove\(|DELETE|delete public\./i.test(verBlk), false);
+  checkEq("[r6] 成功之后本机快取也跟着换新", /window\.Compass\.result\.set\(owner, fresh\)/.test(verBlk), true);
+  checkEq("[r6] 解析流程收尾时会检查版本(不用额外按钮)",
+    /compassCanonBusy = false;\s*\n\s*if \(curRoute && curRoute\.k === "compass"\) compassRepaint\(\);\s*\n\s*compassEnsureLatestVersion\(owner\);/.test(html),
+    true);
+}
+
 function main() {
   testTimezones();
   testCharts();
@@ -4710,6 +4763,7 @@ function main() {
   testCompassSituations();
   testAnchorsV11AndRenderV2();
   testCanonicalStorage();
+  testCompassVersionUpgrade();
   testTopicLayout();
   testTopicPreviews();
   testCompassZhOnlyLabels();
