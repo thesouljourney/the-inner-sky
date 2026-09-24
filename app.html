@@ -4193,6 +4193,14 @@
     #dpage.compass-page .qm-right::before{width:44px;height:44px}
     #dpage.compass-page .qm-bottom::before{width:70px;height:27px}
     #dpage.compass-page .cp-wheel-core{row-gap:8px;margin-bottom:6px}
+    /* 卡片区那层暖白雾:手机上是满版所以看不到边,桌机只有卡片那么宽,
+       左右两条直边会像一个框。改成往外放宽、四周都淡出的椭圆,
+       只剩一团很淡的光,不再有边界。 */
+    #dpage.compass-page .cp-startfrom::before{
+      left:-180px;right:-180px;top:-40px;height:640px;
+      background:radial-gradient(ellipse 50% 50% at 50% 50%,
+        rgba(255,251,244,.5) 0%,rgba(255,251,244,.32) 45%,rgba(255,251,244,0) 100%)
+    }
     /* 四角叶子跟着放大,往外推到盘面区外缘,罗盘与四个方向都在叶子里面 */
     #dpage.compass-page .cp-compass::before,
     #dpage.compass-page .cp-compass::after{top:-40px;width:110px;height:170px;background-size:262px auto}
