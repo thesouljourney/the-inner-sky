@@ -3,7 +3,9 @@
    ------------------------------------------------------------
    这一支只做两件事,而且两件都是【纯函式】:
 
-     ① 窄对应   已接受的文案  ⇄  compass_results 的那 12 个栏位
+     ① 窄对应   已接受的文案  ⇄  compass_results 的那些栏位
+        (v1.4 起每个方向多了 opening/short 两个可选栏位,
+        跟 prompt 一样不参与「有没有这个方向」的判断)
      ② 解析     (云端状态, 本机候选) → 这一次该呈现什么
 
    IO(fetch / localStorage)不在这里,在 app.html。
@@ -13,7 +15,7 @@
    ------------------------------------------------------------
    ⚠ 隐私边界
 
-   toRow 是【白名单】,不是黑名单:它只去读那 12 条已知路径,
+   toRow 是【白名单】,不是黑名单:它只去读那些已知路径,
    所以快取里将来多出任何东西都不可能被带上云。
    锚点(anchors)刻意【不】上云 —— 那是推导层,而且
    selectionReason 属于生成内部状态。
@@ -40,16 +42,22 @@
 
   var VERSION = "canonical-1.0";
 
-  /* 方向 → 栏位。这张表就是这一层的全部对外形状。 */
+  /* 方向 → 栏位。这张表就是这一层的全部对外形状。
+     opening/short 是 v1.4 才加的两个可选字段,跟 prompt 一样【不参与】
+     「有没有这个方向」的判断——只有 core 才是必要的。 */
   var FIELDS = [
-    { key: "grounds", core: "grounds_core", expl: "grounds_expl", prompt: "grounds_prompt" },
-    { key: "moves",   core: "moves_core",   expl: "moves_expl",   prompt: "moves_prompt" },
-    { key: "drains",  core: "drains_core",  expl: "drains_expl",  prompt: "drains_prompt" },
-    { key: "calls",   core: "calls_core",   expl: "calls_expl",   prompt: "calls_prompt" }
+    { key: "grounds", core: "grounds_core", expl: "grounds_expl", prompt: "grounds_prompt",
+      opening: "grounds_opening", short: "grounds_short" },
+    { key: "moves",   core: "moves_core",   expl: "moves_expl",   prompt: "moves_prompt",
+      opening: "moves_opening",   short: "moves_short" },
+    { key: "drains",  core: "drains_core",  expl: "drains_expl",  prompt: "drains_prompt",
+      opening: "drains_opening",  short: "drains_short" },
+    { key: "calls",   core: "calls_core",   expl: "calls_expl",   prompt: "calls_prompt",
+      opening: "calls_opening",   short: "calls_short" }
   ];
 
   /* 与 SQL 的 CHECK 对齐。前端先挡一次,让坏资料连送都不会送出去。 */
-  var LIMITS = { core: 200, expl: 1200, prompt: 300, promptVersion: 40 };
+  var LIMITS = { core: 200, expl: 1200, prompt: 300, promptVersion: 40, opening: 40, short: 160 };
 
   /* 解析器可能停在的状态。只有 NONE 可以显示「生成我的内在指南」。 */
   var STATES = ["UNKNOWN", "RESOLVING", "CANONICAL", "ADOPT_LOCAL", "PENDING_UPLOAD",
@@ -74,6 +82,8 @@
       row[f.core] = trim(c.coreInsight) || null;
       row[f.expl] = trim(c.explanation) || null;
       row[f.prompt] = trim(c.reflectionPrompt) || null;
+      row[f.opening] = trim(c.openingLine) || null;
+      row[f.short] = trim(c.shortInsight) || null;
     });
     return row;
   }
@@ -90,7 +100,9 @@
       out.directions[f.key] = {
         coreInsight: core,
         explanation: trim(row && row[f.expl]),
-        reflectionPrompt: trim(row && row[f.prompt])
+        reflectionPrompt: trim(row && row[f.prompt]),
+        openingLine: trim(row && row[f.opening]),
+        shortInsight: trim(row && row[f.short])
       };
     });
     return out;
@@ -112,6 +124,8 @@
       if (trim(c.coreInsight).length > LIMITS.core) return "core_too_long";
       if (trim(c.explanation).length > LIMITS.expl) return "explanation_too_long";
       if (trim(c.reflectionPrompt).length > LIMITS.prompt) return "prompt_too_long";
+      if (trim(c.openingLine).length > LIMITS.opening) return "opening_too_long";
+      if (trim(c.shortInsight).length > LIMITS.short) return "short_too_long";
     }
     return null;
   }
@@ -137,7 +151,9 @@
       if (!trim(c.coreInsight)) return;
       clean.directions[k] = { coreInsight: trim(c.coreInsight),
                               explanation: trim(c.explanation),
-                              reflectionPrompt: trim(c.reflectionPrompt) };
+                              reflectionPrompt: trim(c.reflectionPrompt),
+                              openingLine: trim(c.openingLine),
+                              shortInsight: trim(c.shortInsight) };
     });
     var bad = checkShape(clean.promptVersion, clean.generatedAt, clean.directions);
     if (bad) return { ok: false, result: null, reason: bad };
@@ -154,6 +170,8 @@
       if (trim(x.coreInsight) !== trim(y.coreInsight)) return false;
       if (trim(x.explanation) !== trim(y.explanation)) return false;
       if (trim(x.reflectionPrompt) !== trim(y.reflectionPrompt)) return false;
+      if (trim(x.openingLine) !== trim(y.openingLine)) return false;
+      if (trim(x.shortInsight) !== trim(y.shortInsight)) return false;
     }
     return true;
   }

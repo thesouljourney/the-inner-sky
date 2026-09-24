@@ -3399,7 +3399,18 @@
                                rgba(9,18,46,.38) 52%,rgba(9,18,46,.4) 100%),
         url(assets/life/compass-hero.webp) 68% 42% / cover no-repeat,
         var(--dp-navy);
-      padding-bottom:clamp(48px,14vw,80px)
+      padding-bottom:clamp(48px,14vw,80px);
+      position:relative
+    }
+    /* 手机专属:hero 两个角落各一枝淡叶子,纯装饰——这张素材本身就是
+       左右各一丛(不用另外镜像一次),压在照片之上、文字之下。不给
+       z-index、不碰 isolation:::before 生成内容本来就排在真正子元素
+       前面,账号选单原本的层叠(.dp-topbar/.dp-hero-grid 都是
+       z-index:auto)不会被这层改动影响。 */
+    #dpage.compass-page .dp-hero::before{
+      content:"";position:absolute;left:0;right:0;top:0;height:150px;
+      background:url(assets/life/cp-mobile/leaves.webp) center top / 100% auto no-repeat;
+      opacity:.55;pointer-events:none
     }
     /* 页尾的返回区块在窄萤幕会把长按钮挤到折行 —— 这一页改成直排置中。
        .dp-return 是共用元件,所以这条规则锁在 .compass-page 底下,
@@ -3702,6 +3713,15 @@
     box-shadow:0 2px 14px -10px rgba(9,18,46,.14);
     transition:background .35s ease,border-color .35s ease
   }
+  /* .no 跟手机地图摘要一样,预设不显示——只在 ≤767px 那段手机专属
+     CSS 里打开,桌机/平板维持原本只有小记号图示的样子。 */
+  #dpage.compass-page .cp-ent .no,
+  #dpage.compass-page .cp-ent .ic,
+  #dpage.compass-page .cp-ent .arrow{display:none}
+  #dpage.compass-page .qm-cell,
+  #dpage.compass-page .qm-now,
+  #dpage.compass-page .cp-startfrom,
+  #dpage.compass-page .cp-compass .cp-lead{display:none}
   #dpage.compass-page .cp-ent .gl{
     display:block;width:20px;height:20px;line-height:0
   }
@@ -3770,6 +3790,19 @@
   #dpage.compass-page .cp-why > summary::after{content:"↓";font-size:11px}
   #dpage.compass-page .cp-why[open] > summary::after{content:"↑"}
   #dpage.compass-page .cp-why > summary:focus-visible{outline:2px solid rgba(154,140,205,.8);outline-offset:3px}
+  /* 「想一想」:这一条方向自己的 reflectionPrompt,长在「为什么这适合我」
+     底下,同一张卡里——跟 .cp-pv-card .rp(开发预览)是同一套视觉语言。 */
+  #dpage.compass-page .cp-panel .rp{
+    margin-top:clamp(18px,2.2vw,24px);padding:16px 18px;border-radius:14px;
+    background:rgba(170,160,213,.09);border:1px solid rgba(170,160,213,.18)
+  }
+  #dpage.compass-page .cp-panel .rp .k{
+    display:block;font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;
+    color:rgba(119,119,138,.9)
+  }
+  #dpage.compass-page .cp-panel .rp p{
+    margin:8px 0 0;font-family:var(--dp-serif);font-size:15px;line-height:1.95;color:var(--dp-ink)
+  }
   #dpage.compass-page .cp-close{
     margin-top:clamp(16px,2vw,22px);padding:6px 0;min-height:36px;
     background:none;border:0;cursor:pointer;
@@ -3827,14 +3860,205 @@
   #dpage.compass-page .cp-sky-card{background:rgba(255,253,250,.62);border-color:rgba(150,130,180,.08)}
 
   @media(max-width:767px){
-    #dpage.compass-page .cp-wheel{grid-template-columns:1fr;gap:12px;margin-top:20px}
-    #dpage.compass-page .cp-rose{width:min(48vw,172px);margin-bottom:6px}
-    #dpage.compass-page .cp-ent{padding:18px;border-radius:16px;min-height:62px}
-    #dpage.compass-page .cp-ent .zh{margin-top:11px;font-size:15.5px}
-    #dpage.compass-page .cp-ent .sit{font-size:14.5px;margin-top:9px;line-height:1.95}
+    #dpage.compass-page .cp-wheel{grid-template-columns:1fr;gap:0;margin-top:20px}
+    #dpage.compass-page .cp-rose{width:min(42vw,152px);grid-area:rose;position:relative}
+    /* —— 罗盘插图本身就是那颗星:四个方向的短名 + 一句固定的方向说明
+       直接排在它的上下左右,不是另外画一颗小的。用 grid-template-areas
+       把 .cp-rose 跟四个 .qm-cell 一起摆位,内容跟底下的 .cp-ent
+       重复,纯视觉,aria-hidden 交给 .cp-ent 负责朗读。
+       轨道环:用户给的素材(中心镂空),叠在罗盘插图正后方,比 CSS 画的
+       十字线更像真的星盘。 */
+    #dpage.compass-page .cp-wheel-core{
+      display:grid;
+      grid-template-columns:1fr auto 1fr;
+      grid-template-rows:auto auto auto auto;
+      grid-template-areas:". top ." "left rose right" ". now ." ". bottom .";
+      row-gap:4px;column-gap:4px;justify-items:center;align-items:center
+    }
+    #dpage.compass-page .cp-rose::before{
+      content:"";position:absolute;left:50%;top:50%;
+      width:168%;aspect-ratio:1/1;transform:translate(-50%,-50%);
+      background:url(assets/life/cp-mobile/orbit-ring.webp) center/contain no-repeat;
+      opacity:.85;pointer-events:none
+    }
+    #dpage.compass-page .qm-cell{
+      display:flex;flex-direction:column;gap:3px;text-align:center;color:var(--dp-ink)
+    }
+    #dpage.compass-page .qm-cell b{
+      font-family:var(--dp-serif);font-weight:600;font-size:13.5px;letter-spacing:.04em
+    }
+    #dpage.compass-page .qm-cell span{
+      font-size:10.5px;line-height:1.4;font-weight:300;color:rgba(34,35,58,.72)
+    }
+    #dpage.compass-page .qm-top{grid-area:top;padding-bottom:2px}
+    #dpage.compass-page .qm-bottom{grid-area:bottom;padding-top:2px}
+    #dpage.compass-page .qm-left{grid-area:left;align-items:flex-end;text-align:right;max-width:94px}
+    #dpage.compass-page .qm-right{grid-area:right;align-items:flex-start;text-align:left;max-width:94px}
+    #dpage.compass-page .qm-now{
+      display:block;grid-area:now;font-family:var(--dp-sans);font-weight:300;
+      font-size:10.5px;letter-spacing:.16em;color:rgba(34,35,58,.6)
+    }
+    /* 罗盘两侧各配一枝花:左白右粉,不再贴在标题那一行,改成靠着
+       指南盘(前进/安定/吸引/消耗那一圈)——白花偏中下,对齐「安定」
+       往下到「消耗」;粉花偏中上,对齐说明文字下面到「吸引」。两枝
+       都整枝压在 .cp-compass 内容左右外侧(负 left/right,只留一点
+       探进画面),量过 .qm-left/.qm-right 实际位置,确保不会挡到
+       「安定」「吸引」那两个字。 */
+    #dpage.compass-page .cp-compass::before,
+    #dpage.compass-page .cp-compass::after{
+      content:"";position:absolute;width:48px;
+      z-index:0;pointer-events:none;opacity:.7;background-repeat:no-repeat;background-size:contain
+    }
+    #dpage.compass-page .cp-compass::before{
+      left:-28px;top:220px;height:210px;
+      background-image:url(assets/life/cp-mobile/branch-white.webp);background-position:left top
+    }
+    #dpage.compass-page .cp-compass::after{
+      right:-28px;top:130px;height:190px;
+      background-image:url(assets/life/cp-mobile/branch-pink.webp);background-position:right bottom
+    }
+    #dpage.compass-page .cp-compass > *{position:relative;z-index:1}
+    /* .cp-compass 自己的副标(见 JS 里的 compassSecHead 第四个参数)——
+       桌机/平板预设 display:none(见基础规则),只在这里打开。 */
+    #dpage.compass-page .cp-compass .cp-lead{display:block}
+    #dpage.compass-page .cp-lead{font-size:14.5px}
+    #dpage.compass-page .cp-startfrom{
+      position:relative;display:flex;order:8;flex-direction:column;align-items:center;gap:6px;
+      text-align:center;margin:22px 0 16px;padding:26px 0
+    }
+    /* 天空从这里开始慢慢安静下来:往下一路铺到四张卡底下,盖过中间
+       卡与卡的缝隙,让卡片区变成视觉主角,而不是天空/罗盘/卡片素材
+       全部同时抢戏。只降对比、加一层暖白雾,不是整片刷白——所以顶端
+       从完全透明开始,跟罗盘那段天空无缝接上。 */
+    #dpage.compass-page .cp-startfrom::before{
+      content:"";position:absolute;left:-8px;right:-8px;top:0;height:560px;
+      z-index:0;pointer-events:none;
+      background:linear-gradient(180deg,
+        rgba(255,251,244,0) 0%,rgba(255,251,244,.3) 25%,
+        rgba(255,251,244,.56) 52%,rgba(255,251,244,.56) 80%,
+        rgba(255,251,244,0) 100%)
+    }
+    #dpage.compass-page .cp-startfrom > *{position:relative;z-index:1}
+    #dpage.compass-page .cp-startfrom b{
+      font-family:var(--dp-serif);font-weight:600;font-size:18px;color:var(--dp-ink)
+    }
+    #dpage.compass-page .cp-startfrom span{
+      font-size:13.5px;font-weight:300;color:rgba(34,35,58,.6)
+    }
+    /* 标题上下各一条「细线—小星—细线」的过场装饰,纯视觉、跟内容
+       资料无关。两条都用 position:absolute 直接对齐 .cp-startfrom
+       本身(b/span 都没有自己 position,绝对定位的宽度基准会往上
+       找到 .cp-startfrom),宽度用 vw 而不是各自父元素的 %——
+       避免「标题」跟「副标题」两行文字本身宽度不同,导致同样的
+       百分比却算出不同长度。 */
+    #dpage.compass-page .cp-startfrom b::before,
+    #dpage.compass-page .cp-startfrom span::after{
+      content:"✦";position:absolute;left:50%;transform:translateX(-50%);
+      line-height:1;font-size:11px;color:rgba(154,106,52,.62);text-align:center;
+      background-image:
+        linear-gradient(90deg,transparent,rgba(154,106,52,.4)),
+        linear-gradient(90deg,rgba(154,106,52,.4),transparent);
+      background-size:calc(50% - 13px) 1px,calc(50% - 13px) 1px;
+      background-position:left center,right center;background-repeat:no-repeat
+    }
+    /* 标题上面这一条比副标题下面那一条更长一些。b/span 自己也是
+       "position:relative"(见上面 .cp-startfrom > * 那条规则),
+       所以这里的绝对定位其实是相对 b/span 自己算,不是相对
+       .cp-startfrom——top/bottom 要用负值把线推到文字外面
+       (.cp-startfrom 已经留了 26px 的 padding 装它)。 */
+    #dpage.compass-page .cp-startfrom b::before{width:min(84vw,320px);top:-22px}
+    #dpage.compass-page .cp-startfrom span::after{width:min(64vw,260px);bottom:-22px}
+    /* —— 四个方向的入口:圆角卡片,左边一颗统一规格的圆形章节点 + 编号,
+       右边一圈细框的箭头按钮,卡片右侧衬一点淡淡的实景。点击行为、
+       资料完全没有动,只是外观。卡面用极淡的斜向珍珠渐层 + 内高光,
+       不是纯色网页卡片;四张卡的 height/radius/padding/编号-icon-
+       标题-说明-箭头位置完全统一,只有背景实景跟渐层不同。 */
+    #dpage.compass-page .cp-ent{
+      position:relative;order:10;overflow:hidden;
+      display:grid;grid-template-columns:26px 46px 1fr 34px;
+      grid-template-areas:"no ic zh arrow" "no ic sit arrow";
+      column-gap:12px;row-gap:2px;align-items:center;
+      padding:18px 16px;min-height:0;border-radius:20px;
+      background-image:linear-gradient(135deg,rgba(255,255,255,.94),rgba(250,247,242,.88));
+      background-size:cover;
+      border:1px solid rgba(191,163,124,.13);
+      box-shadow:0 12px 30px rgba(57,44,31,.045),inset 0 1px 0 rgba(255,255,255,.9);
+      margin-bottom:12px
+    }
+    #dpage.compass-page .cp-ent:last-of-type{margin-bottom:0}
+    /* 卡片右侧那一小片实景:铺在珍珠底色之上、文字之下,靠一层同色
+       渐层把边缘慢慢吃掉,不是硬裁一块照片贴满整张卡。四个方向各自
+       一张,只承担卡片右侧一小块视觉份量(渐层最深处仍留一点底色,
+       插画不会用满饱和度)。渐层留到 62% 才开始退,盖住整个文字栏
+       (数字/圆图/标题/说明最宽到 82% 左右),这样素材才像是设计里
+       长出来的,不是贴上去的。 */
+    #dpage.compass-page .cp-ent::after{
+      content:"";position:absolute;inset:0;z-index:0;pointer-events:none;
+      background:linear-gradient(90deg,
+        rgba(252,249,243,1) 0%,rgba(252,249,243,1) 62%,
+        rgba(252,249,243,.72) 76%,rgba(252,249,243,.34) 88%,
+        rgba(252,249,243,.16) 100%)
+    }
+    #dpage.compass-page .cp-ent.d1{background-image:url(assets/life/cp-mobile/card-ground.webp),linear-gradient(135deg,rgba(255,255,255,.94),rgba(250,247,242,.88));background-size:cover,cover;background-position:right center,center}
+    #dpage.compass-page .cp-ent.d2{background-image:url(assets/life/cp-mobile/card-move.webp),linear-gradient(135deg,rgba(255,255,255,.94),rgba(250,247,242,.88));background-size:cover,cover;background-position:right center,center}
+    #dpage.compass-page .cp-ent.d3{background-image:url(assets/life/cp-mobile/card-drain.webp),linear-gradient(135deg,rgba(255,255,255,.94),rgba(250,247,242,.88));background-size:cover,cover;background-position:right center,center}
+    #dpage.compass-page .cp-ent.d4{background-image:url(assets/life/cp-mobile/card-call.webp),linear-gradient(135deg,rgba(255,255,255,.94),rgba(250,247,242,.88));background-size:cover,cover;background-position:right center,center}
+    #dpage.compass-page .cp-ent > *{position:relative;z-index:1}
+    /* 编号跟 icon 共用一条视觉基线(都用 grid-row:1/3 垂直居中),
+       编号缩小、拉开字距、香槟金,不再是孤零零贴最左边的临时标签感。 */
+    #dpage.compass-page .cp-ent .no{
+      display:block;grid-area:no;grid-row:1/3;align-self:center;justify-self:center;
+      font-family:var(--dp-display);font-weight:500;font-size:11.5px;
+      letter-spacing:.14em;color:rgba(180,138,64,.82)
+    }
+    #dpage.compass-page .cp-ent .gl{display:none}
+    /* 四个方向共用同一套「章节点」:固定尺寸、固定描边、固定光晕、
+       固定透明度,只有图里的 symbol(月/日/云/星)不一样——不靠各自
+       素材自带的边框/发光,统一裁成正圆,外面再罩一圈站内自己画的
+       细描边跟柔光,四张卡才会一眼看出是同一套系统。 */
+    #dpage.compass-page .cp-ent .ic{
+      display:block;grid-area:ic;grid-row:1/3;width:44px;height:44px;
+      border-radius:50%;object-fit:cover;
+      box-shadow:0 0 0 1px rgba(191,163,124,.34),0 0 0 5px rgba(255,250,240,.55),
+        0 2px 8px -2px rgba(154,106,52,.22)
+    }
+    #dpage.compass-page .cp-ent .arrow{
+      display:flex;align-items:center;justify-content:center;
+      grid-area:arrow;grid-row:1/3;align-self:center;justify-self:end;
+      width:30px;height:30px;border-radius:50%;
+      background:rgba(255,253,250,.9);border:1px solid rgba(154,106,52,.4);
+      font-size:13px;color:#9a6a2f
+    }
+    #dpage.compass-page .cp-ent .zh{grid-area:zh;margin-top:0;font-size:15.5px}
+    #dpage.compass-page .cp-ent .sit{
+      grid-area:sit;font-size:13.5px;margin-top:5px;line-height:1.7;
+      display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden
+    }
     #dpage.compass-page .cp-panel{padding:22px 18px;border-radius:16px}
     #dpage.compass-page .cp-panel .bd{font-size:14.5px;line-height:2.05}
     #dpage.compass-page .cp-panel .tx{font-size:14px;line-height:2.05}
+    #dpage.compass-page .cp-panel .rp{padding:14px 15px}
+    #dpage.compass-page .cp-panel .rp p{font-size:14px}
+    /* 手机版:「为什么这适合我？」从点开才有的收合区块,
+       改成夹在中间、一直看得到的一个小方块——資料、<details> 標籤、
+       点击处理完全没动。真正让它一直展开的是 JS 帮 <details> 补上
+       .open(见 cpBindDirections),这里只负责把 summary 变成一句
+       安静的小标签(不能再点、没有箭头),再画一个底色方块装内容。 */
+    #dpage.compass-page .cp-why{
+      margin:16px 0 0;background:rgba(233,238,248,.6);
+      border:1px solid rgba(154,140,205,.18);border-radius:16px;
+      padding:14px 16px 16px
+    }
+    #dpage.compass-page .cp-why > summary{
+      pointer-events:none;cursor:default;min-height:0;
+      font-size:11.5px;letter-spacing:.08em;color:#6b5fa0
+    }
+    /* 一直是 open 状态,所以要连 [open] 那条一起盖掉,不然箭头还是会跑出来
+       (那条选择器多了一个属性选择器,优先度比这里原本这条高)。 */
+    #dpage.compass-page .cp-why > summary::after,
+    #dpage.compass-page .cp-why[open] > summary::after{content:none}
+    #dpage.compass-page .cp-why > .ci{margin-top:8px;font-size:14.5px}
+    #dpage.compass-page .cp-why > .tx{margin-top:8px;font-size:13.5px;line-height:1.9}
     /* 手机:内容区长在【被点的那一列】底下,不是跳到整段最下面。
        DOM 里内容区永远在最后,这里只用 order 把它挪上去。 */
     #dpage.compass-page .cp-wheel-core{order:0}
@@ -3849,7 +4073,6 @@
     #dpage.compass-page .cp-wheel[data-active="call"]   .cp-panel{order:45}
     #dpage.compass-page .cp-lines{margin-top:24px}
     #dpage.compass-page .cp-line{padding:18px 0;font-size:16px}
-    #dpage.compass-page .cp-lead{font-size:14.5px}
     #dpage.compass-page .cp-ask-card .qt{font-size:18px}
   }
 
@@ -6456,7 +6679,9 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
           out.directions[k] = {
             coreInsight: String(c.coreInsight),
             explanation: String(c.explanation || ""),
-            reflectionPrompt: String(c.reflectionPrompt || "")
+            reflectionPrompt: String(c.reflectionPrompt || ""),
+            openingLine: String(c.openingLine || ""),
+            shortInsight: String(c.shortInsight || "")
           };
         });
         /* 只有 line 会进画面。其余是取舍过程的纪录,给开发追溯用,不显示。 */
@@ -10683,6 +10908,14 @@ window.Guide = (function () {
        那一行是情境,或者是他自己的 coreInsight —— 两种都是个人化内容,
        版面上一个字的差别都没有。
        §6.2-1:方向的名字在中文模式只印中文,英文名是英文版才有的东西。 */
+    /* 手机版小圆图,跟 CP_GLYPH 同一层(固定身分,非新内容);
+       桌机/平板照旧用线稿小记号 .gl,见对应 CSS。 */
+    const CP_ICON = {
+      ground: "assets/life/cp-mobile/ic-moon.webp",
+      move: "assets/life/cp-mobile/ic-sun.webp",
+      drain: "assets/life/cp-mobile/ic-cloud.webp",
+      call: "assets/life/cp-mobile/ic-star.webp"
+    };
     const ents = DIRS.map(function (d, i) {
       const c = saved.directions[KEYS[d.key]];
       const st = sits[KEYS[d.key]];
@@ -10691,9 +10924,14 @@ window.Guide = (function () {
       return '<button type="button" class="cp-ent d' + (i + 1) + (on ? " on" : "") +
         '" data-dir="' + esc0(d.key) + '"' +
         ' aria-expanded="' + (on ? "true" : "false") + '" aria-controls="cpPanel">' +
+        /* .no 只在手机版列表样式里显示(见 ≤767px 那段 CSS)——桌机/平板
+           一个像素都不变,用的是 DIRECTIONS 本来就有的 d.no,不是新内容。 */
+        '<span class="no" aria-hidden="true">' + esc0(d.no) + "</span>" +
         '<span class="gl" aria-hidden="true">' + (CP_GLYPH[d.key] || "") + "</span>" +
+        '<img class="ic" aria-hidden="true" alt="" src="' + esc0(CP_ICON[d.key] || "") + '">' +
         '<b class="zh">' + esc0(dpT(d.zh, d.en)) + "</b>" +
-        '<span class="sit">' + esc0(lead) + "</span></button>";
+        '<span class="sit">' + esc0(lead) + "</span>" +
+        '<span class="arrow" aria-hidden="true">→</span></button>';
     }).join("");
 
     /* 一块共用的内容区。桌机在盘下方,手机由 CSS order 挪到被点的那一列底下。 */
@@ -10705,33 +10943,71 @@ window.Guide = (function () {
         return '<details class="cp-why"><summary>' +
           esc0(dpT("为什么这适合我？", "Why this fits me")) + "</summary>" + body + "</details>";
       };
+      /* 「想一想」:这一条方向自己的 reflectionPrompt,长在「为什么这适合我」
+         底下——跟页面下面那个【一天只挑一句、四选一轮换】的「今天想问自己的
+         一个问题」是两件事,那一个不动,这里只是把这一条方向自己的问题
+         摆回它自己的卡片里。没有就整段不印,不用空标签占位。 */
+      const think = c && c.reflectionPrompt
+        ? '<div class="rp"><span class="k">' + esc0(dpT("想一想", "A question")) + "</span>" +
+          "<p>" + esc0(c.reflectionPrompt) + "</p></div>"
+        : "";
+      /* openingLine/shortInsight 是 v1.4 新字段,比 cardSubtitle 深一层;
+         旧内容没有就退回 st.situation/st.text 或 coreInsight,需要重新生成才能真正分层。 */
+      const opening = (c && c.openingLine) || (st && st.situation) || (c && c.coreInsight) || "";
+      const shortIns = (c && c.shortInsight) || (st && st.text) || "";
       if (!c) {
         /* 这一段生成时就没有足够线索 —— 与情境层无关,照实说 */
         panel = '<p class="cp-pending">' +
           esc0(dpT("这个方向目前没有足够的线索。",
                    "There isn’t enough to say about this direction yet.")) + "</p>";
-      } else if (st) {
-        /* 情境 → 那几句 → 可选的第二句 → 披露里是【原本那两段,一字不改】 */
-        panel = '<p class="hd">' + esc0(st.situation) + "</p>" +
-          '<p class="bd">' + esc0(st.text) + "</p>" +
-          (st.micro ? '<p class="bd sub">' + esc0(st.micro) + "</p>" : "") +
-          why('<p class="ci">' + esc0(c.coreInsight) + "</p>" +
-              '<p class="tx">' + esc0(c.explanation) + "</p>");
       } else {
-        /* 认不出情境:他自己的 coreInsight 当主角,explanation 收到披露后面。
-           结构与上面那一支【完全一样】,只是没有中间那几句。 */
-        panel = '<p class="hd">' + esc0(c.coreInsight) + "</p>" +
-          why('<p class="tx">' + esc0(c.explanation) + "</p>");
+        /* openingLine → shortInsight → 情境层第二句(如果有) → 披露 → 想一想 */
+        panel = '<p class="hd">' + esc0(opening) + "</p>" +
+          (shortIns ? '<p class="bd">' + esc0(shortIns) + "</p>" : "") +
+          (st && st.micro ? '<p class="bd sub">' + esc0(st.micro) + "</p>" : "") +
+          why('<p class="ci">' + esc0(c.coreInsight) + "</p>" +
+              '<p class="tx">' + esc0(c.explanation) + "</p>") + think;
       }
       panel = '<div class="cp-panel" id="cpPanel" data-for="' + esc0(active) + '">' +
         panel + '<button type="button" class="cp-close" id="cpPanelClose">' +
         esc0(dpT("收起", "Close")) + "</button></div>";
     }
 
+    /* 手机专属地图摘要:固定的方向身分(跟 CP_GLYPH 同一层),排在
+       罗盘四周,只在 ≤767px 显示,不影响 .cp-ent 的资料或点击。
+       aria-hidden:跟底下 .cp-ent 重复,交给它们朗读。 */
+    const QM_NAME = {
+      ground: dpT("安定", "Grounded"), move: dpT("前进", "Forward"),
+      drain: dpT("消耗", "Drained"), call: dpT("吸引", "Drawn")
+    };
+    const QM_TAG = {
+      ground: dpT("先安顿自己", "Steady yourself first"),
+      move: dpT("更有向前的力量", "More strength to move forward"),
+      drain: dpT("看见消耗，重新调整", "Notice what drains you, then adjust"),
+      call: dpT("靠近喜欢的事物", "Move closer to what draws you")
+    };
+    const qmCell = function (key, cls) {
+      return '<div class="qm-cell ' + cls + '" aria-hidden="true"><b>' + esc0(QM_NAME[key]) + '</b>' +
+        '<span>' + esc0(QM_TAG[key]) + '</span></div>';
+    };
+    const coreWithMap = '<div class="cp-wheel-core">' + compassRoseSvg() +
+      qmCell("move", "qm-top") + qmCell("ground", "qm-left") +
+      qmCell("call", "qm-right") + qmCell("drain", "qm-bottom") +
+      '<span class="qm-now" aria-hidden="true">' + esc0(dpT("此刻的你", "You, right now")) + "</span>" +
+      "</div>" +
+      /* 手机专属:四张卡开始前的静态过场标题 */
+      '<div class="cp-startfrom" aria-hidden="true">' +
+      '<b>' + esc0(dpT("从一个方向开始", "Start from one direction")) + "</b>" +
+      '<span>' + esc0(dpT("此刻，你最想先靠近哪一个方向？",
+                          "Which one feels closest to you right now?")) + "</span></div>";
+
     return '<section class="cp-sec cp-compass">' +
-      compassSecHead("01", dpT("我的内在指南", "My Inner Compass"), "MY INNER COMPASS") +
+      /* 手机专属副标(桌机/平板不显示,见 CSS),用既有 .cp-lead 插槽 */
+      compassSecHead("01", dpT("我的内在指南", "My Inner Compass"), "MY INNER COMPASS",
+        dpT("这是属于你的四个内在方向，当你需要停下来时，回来看看自己。",
+            "These are your four inner directions — come back to them whenever you need to pause.")) +
       '<div class="cp-wheel" data-active="' + esc0(active || "") + '">' +
-      core + ents + panel + "</div></section>";
+      coreWithMap + ents + panel + "</div></section>";
   }
 
   /* ── 想留给自己的几句话 ──────────────────────────────────
@@ -11969,6 +12245,14 @@ window.Guide = (function () {
       });
       const cl = document.getElementById("cpPanelClose");
       if (cl) cl.addEventListener("click", function () { cpSelect(compassDirOpen); });
+      /* 手机版:「为什么这适合我？」一直展开,不是点开才有的收合区块。
+         用 .open 属性做,不是硬改 CSS 去对抗浏览器原生收合的内部渲染
+         (那一层在 Chrome 是靠 content-visibility 藏起来的,CSS 覆写
+         不动它,文字会进 DOM 但画面上量不出高度)。点击行为、资料
+         结构完全没动,桌机一个像素都不受影响。 */
+      if (window.matchMedia("(max-width:767px)").matches) {
+        host.querySelectorAll(".cp-why").forEach(function (d) { d.open = true; });
+      }
     }
     cpBindDirections();
 
