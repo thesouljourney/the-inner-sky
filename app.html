@@ -3885,23 +3885,23 @@
       display:block;grid-area:now;font-family:var(--dp-sans);font-weight:300;
       font-size:10.5px;letter-spacing:.16em;color:rgba(34,35,58,.6)
     }
-    /* 罗盘两侧各配一枝花:左白右粉,不再贴在标题那一行,改成靠着
-       指南盘(前进/安定/吸引/消耗那一圈)——白花偏中下,对齐「安定」
-       往下到「消耗」;粉花偏中上,对齐说明文字下面到「吸引」。两枝
-       都整枝压在 .cp-compass 内容左右外侧(负 left/right,只留一点
-       探进画面),量过 .qm-left/.qm-right 实际位置,确保不会挡到
-       「安定」「吸引」那两个字。 */
+    /* 罗盘两侧各配一枝花:左白右粉,靠着指南盘(前进/安定/吸引/消耗
+       那一圈)——白花偏中下,对齐「安定」往下到「消耗」;粉花偏中上,
+       对齐说明文字下面到「吸引」。放大成大幅的画框式装饰而不是小
+       贴纸:大半截压在 .cp-compass 内容左右外侧、探出画面,只留一条
+       够宽的边缘留在画面里,量过 .qm-left/.qm-right 实际位置,确保
+       伸进来的这一条不会压到「安定」「吸引」那两个字。 */
     #dpage.compass-page .cp-compass::before,
     #dpage.compass-page .cp-compass::after{
-      content:"";position:absolute;width:48px;
-      z-index:0;pointer-events:none;opacity:.7;background-repeat:no-repeat;background-size:contain
+      content:"";position:absolute;
+      z-index:0;pointer-events:none;opacity:.75;background-repeat:no-repeat;background-size:contain
     }
     #dpage.compass-page .cp-compass::before{
-      left:-28px;top:220px;height:210px;
+      left:-70px;top:238px;width:88px;height:260px;
       background-image:url(assets/life/cp-mobile/branch-white.webp);background-position:left top
     }
     #dpage.compass-page .cp-compass::after{
-      right:-28px;top:130px;height:190px;
+      right:-68px;top:112px;width:76px;height:230px;
       background-image:url(assets/life/cp-mobile/branch-pink.webp);background-position:right bottom
     }
     #dpage.compass-page .cp-compass > *{position:relative;z-index:1}
