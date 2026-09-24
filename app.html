@@ -3803,29 +3803,9 @@
   #dpage.compass-page .cp-why .wi,
   #dpage.compass-page .cp-panel .rp .ri{display:none}
 
-  /* 桌机:三栏,罗盘在中间跨两列;四个方向左右各两个;内容区在盘下方整列。
-     不再画连接线 —— 罗盘本身够有分量,它自己就把四个方向组织起来了。 */
-  @media(min-width:1025px){
-    #dpage.compass-page .cp-wheel{
-      grid-template-columns:1fr minmax(210px,340px) 1fr;
-      column-gap:clamp(30px,3.6vw,56px);row-gap:clamp(18px,2.2vw,28px);align-items:center
-    }
-    #dpage.compass-page .cp-wheel-core{grid-column:2;grid-row:1/3}
-    #dpage.compass-page .cp-ent.d1{grid-column:1;grid-row:1}
-    #dpage.compass-page .cp-ent.d2{grid-column:3;grid-row:1}
-    #dpage.compass-page .cp-ent.d3{grid-column:1;grid-row:2}
-    #dpage.compass-page .cp-ent.d4{grid-column:3;grid-row:2}
-    #dpage.compass-page .cp-panel{grid-column:1/-1;grid-row:3;margin-top:clamp(22px,2.8vw,36px)}
-  }
-  /* 平板:盘面在上,四个入口 2×2,内容区在最下面整列 */
-  @media(max-width:1024px){
-    #dpage.compass-page .cp-wheel{grid-template-columns:repeat(2,minmax(0,1fr));
-      column-gap:clamp(22px,3vw,34px)}
-    #dpage.compass-page .cp-wheel-core{grid-column:1/-1;margin-bottom:clamp(14px,2vw,22px)}
-    #dpage.compass-page .cp-rose{width:clamp(180px,26vw,230px)}
-    #dpage.compass-page .cp-panel{grid-column:1/-1;margin-top:8px}
-    #dpage.compass-page .cp-ent{border-top:1px solid rgba(154,140,205,.16)}
-  }
+  /* 四个方向(指南盘 + 「从一个方向开始」+ 四张卡 + 展开区)在所有宽度
+     都用同一套直排版型——原本桌机三栏 / 平板 2×2 的格线已拿掉,样式见下方
+     「指南盘直排版型」那一段(原本只给手机,现在全宽度共用)。 */
   /* —— 02:没有卡片、没有编号。一句是一句,两句是两句,三句是三句。
         编号会让一句话看起来像「三句里的第一句」,所以整个拿掉。 —— */
   #dpage.compass-page .cp-lines{
@@ -3852,7 +3832,10 @@
   /* 05:安静的存档 */
   #dpage.compass-page .cp-sky-card{background:rgba(255,253,250,.62);border-color:rgba(150,130,180,.08)}
 
-  @media(max-width:767px){
+  /* ── 指南盘直排版型(全宽度共用)────────────────────────
+     原本是 ≤767px 专属;桌机现在也用这一套,只是整段收在页面正中间
+     一栏(宽度上限见本段最后)。 */
+  @media all{
     #dpage.compass-page .cp-wheel{grid-template-columns:1fr;gap:0;margin-top:14px}
     /* 罗盘比最初缩小约 16%(152→128px):这一段只是地图,不该占掉
        大半个萤幕,让底下真正可以点的四张卡尽早出现。 */
@@ -3941,7 +3924,6 @@
     #dpage.compass-page .cp-compass .cp-lead{display:block}
     /* 手机版这一段标题上面不放「01」编号 */
     #dpage.compass-page .cp-compass .cp-no{display:none}
-    #dpage.compass-page .cp-lead{font-size:14.5px}
     /* 本段副标固定两行(文案里的 \n 用 pre-line 断行),字比其他段小一号。
        左右各留 52px:上面两丛叶子(比下面两丛小一点)从萤幕边往内伸到
        72px(= .dp-body 20px 内距 + 52px),字最外侧碰不到叶子;360px
@@ -4191,6 +4173,56 @@
     #dpage.compass-page .cp-wheel[data-active="move"]   .cp-panel{order:25}
     #dpage.compass-page .cp-wheel[data-active="drain"]  .cp-panel{order:35}
     #dpage.compass-page .cp-wheel[data-active="call"]   .cp-panel{order:45}
+  }
+  /* 桌机/平板:整个指南盘段落收成页面正中间一栏。
+     盘面区比较宽(720px),让四个角的叶子把整个罗盘框在里面;
+     「从一个方向开始」、四张卡、展开区再收窄到 600px 置中。 */
+  @media(min-width:768px){
+    #dpage.compass-page .cp-compass{max-width:720px;margin-left:auto;margin-right:auto}
+    #dpage.compass-page .cp-startfrom,
+    #dpage.compass-page .cp-ent,
+    #dpage.compass-page .cp-panel{width:100%;max-width:600px;justify-self:center}
+    /* 桌机卡片加高:600px 宽配 112px 高太扁,右侧插画会被高度缩得很小。
+       加到 132px,比例接近手机,插画跟着变大,说明也更容易完整放下。 */
+    #dpage.compass-page .cp-ent{height:132px;padding:0 20px;column-gap:16px;grid-template-columns:60px 1fr 36px}
+    #dpage.compass-page .cp-ent .ic{width:60px;height:60px}
+    #dpage.compass-page .cp-ent .zh{font-size:16.5px}
+    #dpage.compass-page .cp-ent .sit{font-size:13.5px}
+    #dpage.compass-page .cp-ent .arrow{width:34px;height:34px}
+    /* 大萤幕上盘面与四个方向放大 */
+    #dpage.compass-page .cp-rose{width:240px}
+    #dpage.compass-page .qm-cell b{font-size:16.5px}
+    #dpage.compass-page .qm-cell span{font-size:12.5px}
+    #dpage.compass-page .qm-left,
+    #dpage.compass-page .qm-right{max-width:130px}
+    #dpage.compass-page .qm-cell::before{width:42px;height:42px}
+    #dpage.compass-page .qm-top::before{width:48px;height:48px}
+    #dpage.compass-page .qm-right::before{width:44px;height:44px}
+    #dpage.compass-page .qm-bottom::before{width:70px;height:27px}
+    #dpage.compass-page .cp-wheel-core{row-gap:8px;margin-bottom:6px}
+    /* 卡片区那层暖白雾:手机上是满版所以看不到边,桌机只有卡片那么宽,
+       左右两条直边会像一个框。改成往外放宽、四周都淡出的椭圆,
+       只剩一团很淡的光,不再有边界。 */
+    #dpage.compass-page .cp-startfrom::before{
+      left:-180px;right:-180px;top:-40px;height:640px;
+      background:radial-gradient(ellipse 50% 50% at 50% 50%,
+        rgba(255,251,244,.5) 0%,rgba(255,251,244,.32) 45%,rgba(255,251,244,0) 100%)
+    }
+    /* 四角叶子跟着放大,往外推到盘面区外缘,罗盘与四个方向都在叶子里面 */
+    #dpage.compass-page .cp-compass::before,
+    #dpage.compass-page .cp-compass::after{top:-40px;width:110px;height:170px;background-size:262px auto}
+    #dpage.compass-page .cp-compass::before{left:-56px}
+    #dpage.compass-page .cp-compass::after{right:-56px}
+    #dpage.compass-page .cp-wheel-core::after,
+    #dpage.compass-page .qm-bottom::after{bottom:-30px;width:128px;height:198px;background-size:305px auto}
+    #dpage.compass-page .cp-wheel-core::after{left:-56px}
+    #dpage.compass-page .qm-bottom::after{right:-56px}
+    /* 整页底纹:同一张晨光云海图是直式的,宽萤幕用 cover 只会裁到最上面
+       那段偏紫的天空;改成对准中段的夕阳与云海,跟手机上看到的色调一致 */
+    #dpage.compass-page::before{background-position:center,center 47%;transform:none}
+  }
+  @media(max-width:767px){
+    #dpage.compass-page .cp-lead{font-size:14.5px}
     #dpage.compass-page .cp-lines{margin-top:24px}
     #dpage.compass-page .cp-line{padding:18px 0;font-size:16px}
     #dpage.compass-page .cp-ask-card .qt{font-size:18px}
@@ -4251,7 +4283,7 @@
     border-color:#D8DAEE
   }
 
-  @media(max-width:767px){
+  @media all{
     /* 插画的淡出改成从右上角往外的椭圆,不再是水平 + 垂直两条直线,
        看不到图片的边界(「前进」不动)。 */
     #dpage.compass-page .cp-panel[data-for="ground"]::before,
@@ -4268,22 +4300,6 @@
     #dpage.compass-page .cp-panel[data-for="call"] .cp-why{background:#F1F2FC;border-color:#D8DAEE}
   }
 
-  /* 桌机/平板:标题区跟手机一致——不放「01」、显示两行副标、
-     上方两个角各一丛淡叶子(从 hero 下缘往下垂)。罗盘与四张卡的
-     版面不变,所以下方两丛叶子只在手机版(桌机那里是卡片)。 */
-  @media(min-width:768px){
-    #dpage.compass-page .cp-compass .cp-no{display:none}
-    #dpage.compass-page .cp-compass .cp-lead{display:block;white-space:pre-line;margin-top:12px}
-    #dpage.compass-page .cp-compass > *{position:relative;z-index:1}
-    #dpage.compass-page .cp-compass::before,
-    #dpage.compass-page .cp-compass::after{
-      content:"";position:absolute;top:-36px;width:118px;height:180px;z-index:0;
-      pointer-events:none;opacity:.6;transform:scaleY(-1);
-      background:url(assets/life/cp-mobile/leaves.webp) no-repeat;background-size:282px auto
-    }
-    #dpage.compass-page .cp-compass::before{left:0;background-position:left bottom}
-    #dpage.compass-page .cp-compass::after{right:0;background-position:right bottom}
-  }
 
   /* 记录:展开长在自己下面 */
   #dpage.compass-page .cp-sky-card.open{background:var(--dp-cloud)}
@@ -12599,14 +12615,11 @@ window.Guide = (function () {
       });
       const cl = document.getElementById("cpPanelClose");
       if (cl) cl.addEventListener("click", function () { cpSelect(compassDirOpen); });
-      /* 手机版:「为什么这适合我？」一直展开,不是点开才有的收合区块。
-         用 .open 属性做,不是硬改 CSS 去对抗浏览器原生收合的内部渲染
-         (那一层在 Chrome 是靠 content-visibility 藏起来的,CSS 覆写
-         不动它,文字会进 DOM 但画面上量不出高度)。点击行为、资料
-         结构完全没动,桌机一个像素都不受影响。 */
-      if (window.matchMedia("(max-width:767px)").matches) {
-        host.querySelectorAll(".cp-why").forEach(function (d) { d.open = true; });
-      }
+      /* 「为什么这适合我？」一直展开,不是点开才有的收合区块(桌机与手机
+         现在共用同一套直排版型)。用 .open 属性做,不是硬改 CSS 去对抗
+         浏览器原生收合的内部渲染(那一层在 Chrome 是靠 content-visibility
+         藏起来的,CSS 覆写不动它)。点击行为、资料结构完全没动。 */
+      host.querySelectorAll(".cp-why").forEach(function (d) { d.open = true; });
     }
     cpBindDirections();
 

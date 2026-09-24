@@ -4039,14 +4039,18 @@ function testCompassCentredLayout() {
   checkEq("[layout] 渲染流程没有自动生成",
     /cpProdGenerate\(\)/.test(html.replace(/addEventListener\("click", cpProdGenerate\)/g, "").replace(/function cpProdGenerate\(\)/g, "")), false);
   const css = html.slice(html.indexOf("以指南盘为中心的五段(01–05)"), html.indexOf("/* 记录:展开长在自己下面 */"));
-  checkEq("[layout] 桌机三栏,盘面跨两列",
-    /grid-template-columns:1fr minmax\(210px,340px\) 1fr/.test(css) && /\.cp-wheel-core\{grid-column:2;grid-row:1\/3\}/.test(css), true);
+  /* 桌机也改成跟手机同一套直排版型:盘面 → 从一个方向开始 → 四张卡,
+     整段收在页面正中间一栏;旧的三栏 / 2×2 格线整个拿掉 */
+  checkEq("[layout] 所有宽度都是直排单栏",
+    /@media all\{\s*#dpage\.compass-page \.cp-wheel\{grid-template-columns:1fr/.test(css), true);
+  checkEq("[layout] 桌机:指南盘段落收在正中间一栏",
+    /min-width:768px\)\{\s*#dpage\.compass-page \.cp-compass\{max-width:720px;margin-left:auto;margin-right:auto\}/.test(css), true);
   checkEq("[layout] 展开状态宣告成单一值(一次一个)",
     /var compassDirOpen = "";/.test(html), true);
   checkEq("[layout] 入口文字靠左", /\.cp-ent\{[\s\S]{0,120}text-align:left/.test(css), true);
-  checkEq("[layout] 平板 2×2、手机单栏",
-    /max-width:1024px\)\{\s*#dpage\.compass-page \.cp-wheel\{grid-template-columns:repeat\(2/.test(css) &&
-    /max-width:767px\)\{\s*#dpage\.compass-page \.cp-wheel\{grid-template-columns:1fr/.test(css), true);
+  checkEq("[layout] 旧的桌机三栏 / 平板 2×2 格线已拿掉",
+    /grid-template-columns:1fr minmax\(210px,340px\) 1fr/.test(css) ||
+    /max-width:1024px\)\{\s*#dpage\.compass-page \.cp-wheel\{grid-template-columns:repeat\(2/.test(css), false);
   /* 罗盘改用品牌自己那张天体素材,不再是手画的线稿 */
   checkEq("[layout] 罗盘用的是品牌的天体素材",
     /background:url\(assets\/life\/compass\.webp\)/.test(css), true);
@@ -4290,8 +4294,8 @@ function testCompassSituations() {
     /window\.scrollBy\(0, now\.getBoundingClientRect\(\)\.top - before\)/.test(html), true);
   const css = html.slice(html.indexOf("以指南盘为中心的五段(01–05)"),
                          html.indexOf("/* 记录:展开长在自己下面 */"));
-  checkEq("[sit] 桌机:内容区在盘下方整列",
-    /\.cp-panel\{grid-column:1\/-1;grid-row:3;/.test(css), true);
+  checkEq("[sit] 桌机不再把内容区固定在盘下方(跟手机一样长在被点的卡下面)",
+    /\.cp-panel\{grid-column:1\/-1;grid-row:3;/.test(css), false);
   checkEq("[sit] 手机:内容区长在被点的那一列底下",
     /\[data-active="ground"\] \.cp-panel\{order:15\}/.test(css) &&
     /\[data-active="call"\]   \.cp-panel\{order:45\}/.test(css), true);
