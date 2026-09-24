@@ -3903,7 +3903,9 @@
       background:url(assets/life/cp-mobile/leaves.webp) no-repeat;background-size:200px auto
     }
     #dpage.compass-page .cp-compass::before,
-    #dpage.compass-page .cp-compass::after{top:-6px;z-index:0;transform:scaleY(-1)}
+    #dpage.compass-page .cp-compass::after{
+      top:-6px;z-index:0;transform:scaleY(-1);width:72px;height:112px;background-size:172px auto
+    }
     #dpage.compass-page .cp-compass::before{left:-20px;background-position:left bottom}
     #dpage.compass-page .cp-compass::after{right:-20px;background-position:right bottom}
     #dpage.compass-page .cp-wheel-core::after,
@@ -3915,6 +3917,14 @@
        桌机/平板预设 display:none(见基础规则),只在这里打开。 */
     #dpage.compass-page .cp-compass .cp-lead{display:block}
     #dpage.compass-page .cp-lead{font-size:14.5px}
+    /* 本段副标固定两行(文案里的 \n 用 pre-line 断行),字比其他段小一号。
+       左右各留 52px:上面两丛叶子(比下面两丛小一点)从萤幕边往内伸到
+       72px(= .dp-body 20px 内距 + 52px),字最外侧碰不到叶子;360px
+       宽的手机上第二行也刚好排得下,不会折成三行。 */
+    #dpage.compass-page .cp-compass .cp-lead{
+      white-space:pre-line;font-size:13px;line-height:1.9;
+      max-width:none;padding:0 52px
+    }
     #dpage.compass-page .cp-startfrom{
       position:relative;display:flex;order:8;flex-direction:column;align-items:center;gap:6px;
       text-align:center;margin:6px 0 14px;padding:24px 0
@@ -11042,8 +11052,8 @@ window.Guide = (function () {
     return '<section class="cp-sec cp-compass">' +
       /* 手机专属副标(桌机/平板不显示,见 CSS),用既有 .cp-lead 插槽 */
       compassSecHead("01", dpT("我的内在指南", "My Inner Compass"), "MY INNER COMPASS",
-        dpT("这是属于你的四个内在方向，当你需要停下来时，回来看看自己。",
-            "These are your four inner directions — come back to them whenever you need to pause.")) +
+        dpT("这是属于你的四个内在方向\n当你需要停下来时，回来看看自己。",
+            "These are your four inner directions —\ncome back to them whenever you need to pause.")) +
       '<div class="cp-wheel" data-active="' + esc0(active || "") + '">' +
       coreWithMap + ents + panel + "</div></section>";
   }
