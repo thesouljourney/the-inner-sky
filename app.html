@@ -3924,7 +3924,7 @@
        资料无关,两个方向共用同一份写法。 */
     #dpage.compass-page .cp-startfrom b::before,
     #dpage.compass-page .cp-startfrom span::after{
-      content:"✦";display:block;width:min(72%,260px);margin:0 auto;
+      content:"✦";display:block;margin:0 auto;
       text-align:center;line-height:1;font-size:11px;color:rgba(154,106,52,.62);
       background-image:
         linear-gradient(90deg,transparent,rgba(154,106,52,.4)),
@@ -3932,7 +3932,9 @@
       background-size:calc(50% - 13px) 1px,calc(50% - 13px) 1px;
       background-position:left center,right center;background-repeat:no-repeat
     }
-    #dpage.compass-page .cp-startfrom b::before{margin-bottom:16px}
+    /* 标题上面这一条比副标题下面那一条更长一些 */
+    #dpage.compass-page .cp-startfrom b::before{width:min(88%,320px);margin-bottom:16px}
+    #dpage.compass-page .cp-startfrom span::after{width:min(72%,260px)}
     #dpage.compass-page .cp-startfrom span::after{margin-top:16px}
     /* —— 四个方向的入口:圆角卡片,左边一颗统一规格的圆形章节点 + 编号,
        右边一圈细框的箭头按钮,卡片右侧衬一点淡淡的实景。点击行为、
