@@ -4526,6 +4526,88 @@
     #dpage.compass-page .cp-now .cp-ta{min-height:136px;background-size:150px auto,auto}
   }
 
+  /* ============================================================
+     今天想问自己的一个问题(照用户的范例图;手机 + 桌机)
+     ------------------------------------------------------------
+     标题下一条 — ✦ —;问题卡是一张雾面玻璃卡,顶端一颗小星芒,
+     左上角挂着一枝金色星芒吊饰(ask-charm,像挂在卡片边上);
+     写字处是卡片里的一块更透的玻璃;下面左边星光胶囊按钮、
+     右边「今天先不回答 →」。背景图不动。
+     ============================================================ */
+  #dpage.compass-page .cp-ask .cp-sh::after{
+    content:"✦";display:block;width:min(64%,260px);margin:12px auto 0;
+    line-height:1;font-size:10px;color:rgba(190,150,80,.85);text-align:center;
+    background-image:
+      linear-gradient(90deg,transparent,rgba(201,168,105,.55)),
+      linear-gradient(90deg,rgba(201,168,105,.55),transparent);
+    background-size:calc(50% - 12px) 1px,calc(50% - 12px) 1px;
+    background-position:left center,right center;background-repeat:no-repeat
+  }
+  #dpage.compass-page .cp-ask-card{
+    overflow:visible;max-width:640px;margin:22px auto 0;padding:30px 24px 26px;border-radius:28px;
+    background:linear-gradient(180deg,rgba(255,252,248,.78),rgba(252,247,244,.66));
+    -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+    border:1px solid rgba(255,255,255,.75);
+    box-shadow:0 14px 38px rgba(96,80,140,.1),inset 0 1px 0 rgba(255,255,255,.9)
+  }
+  /* 挂在左上角的金色星芒吊饰 */
+  #dpage.compass-page .cp-ask-card::before{
+    content:"";position:absolute;z-index:2;pointer-events:none;
+    left:-26px;top:-30px;width:120px;height:120px;
+    background:url(assets/life/cp-mobile/ask-charm.webp) center / contain no-repeat;
+    transform:scaleX(-1) rotate(-38deg);transform-origin:center
+  }
+  /* 顶端一颗小星芒,两侧极短的淡线 */
+  #dpage.compass-page .cp-ask-card .mk{
+    display:block;width:120px;margin:0 auto;font-size:13px;line-height:1;color:rgba(190,150,80,.85);
+    background-image:
+      linear-gradient(90deg,transparent,rgba(201,168,105,.4)),
+      linear-gradient(90deg,rgba(201,168,105,.4),transparent);
+    background-size:calc(50% - 12px) 1px,calc(50% - 12px) 1px;
+    background-position:left center,right center;background-repeat:no-repeat
+  }
+  #dpage.compass-page .cp-ask-card .qt{
+    margin:18px auto 0;max-width:22em;font-family:var(--dp-serif);font-weight:500;
+    font-size:17px;line-height:1.9;letter-spacing:.03em;color:#2a2848
+  }
+  #dpage.compass-page .cp-ask-card .cp-ta{
+    max-width:none;min-height:130px;margin-top:22px;padding:16px 18px;border-radius:20px;
+    background:
+      url(assets/life/cp-mobile/note-feather.webp) right 10px bottom 8px / 90px auto no-repeat,
+      rgba(255,255,255,.42);
+    border:1px solid rgba(255,255,255,.8);box-shadow:inset 0 1px 6px rgba(120,100,150,.06);
+    font-size:14.5px
+  }
+  #dpage.compass-page .cp-ask-card .cp-ta::placeholder{color:rgba(119,110,150,.55)}
+  #dpage.compass-page .cp-ask-card .cp-act{justify-content:space-between;gap:12px;margin-top:22px}
+  #dpage.compass-page .cp-ask-card .dp-cta{
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    min-width:170px;min-height:42px;padding:0 22px;border-radius:30px;border:0;
+    background:
+      linear-gradient(rgba(255,255,255,.3),rgba(255,255,255,.3)),
+      url(assets/life/cp-mobile/cta-pill.webp) center / 100% 100% no-repeat,#c9b8e6;
+    font-family:var(--dp-serif);font-size:13.5px;letter-spacing:.1em;color:#fff;
+    text-shadow:0 1px 5px rgba(90,60,140,.45);
+    box-shadow:0 8px 22px rgba(170,130,220,.22),0 0 14px rgba(230,190,240,.25)
+  }
+  #dpage.compass-page .cp-ask-card .cp-skip{font-size:13px;letter-spacing:.08em;color:#6f6796;padding:8px 4px}
+  @media(max-width:767px){
+    #dpage.compass-page .cp-ask-card{padding:28px 18px 22px;border-radius:24px}
+    #dpage.compass-page .cp-ask-card::before{left:-20px;top:-26px;width:96px;height:96px}
+    #dpage.compass-page .cp-ask-card .qt{font-size:16px}
+    #dpage.compass-page .cp-ask-card .cp-ta{min-height:112px}
+    #dpage.compass-page .cp-ask-card .dp-cta{min-width:0;padding:0 18px}
+    #dpage.compass-page .cp-ask-card .cp-skip{font-size:12.5px}
+  }
+  @media(min-width:768px){
+    #dpage.compass-page .cp-ask{max-width:720px;margin-left:auto;margin-right:auto}
+    #dpage.compass-page .cp-ask-card{padding:40px 44px 32px}
+    #dpage.compass-page .cp-ask-card::before{left:-34px;top:-38px;width:150px;height:150px}
+    #dpage.compass-page .cp-ask-card .qt{font-size:19px}
+    #dpage.compass-page .cp-ask-card .cp-ta{min-height:150px}
+    #dpage.compass-page .cp-ask-card .cp-act{padding:0 12px}
+  }
+
   /* 记录:展开长在自己下面 */
   #dpage.compass-page .cp-sky-card.open{background:var(--dp-cloud)}
   #dpage.compass-page .cp-sky-card .qz{
@@ -11905,7 +11987,7 @@ window.Guide = (function () {
       '<div class="cp-ask-card"><span class="mk" aria-hidden="true">✦</span>' +
       '<p class="qt">' + esc0(q.text).replace(/\n/g, "<br>") + "</p>" +
       '<textarea id="cpAnswer" class="cp-ta" rows="3" placeholder="' +
-      esc0(dpT("写下你的回答……", "Write your answer…")) + '"></textarea>' +
+      esc0(dpT("写下此刻想到的……", "Write what comes to mind…")) + '"></textarea>' +
       '<div class="cp-act"><button type="button" class="dp-cta" id="cpSaveAnswer">' +
       esc0(dpT("留下这个回答", "Keep this answer")) + "</button>" +
       '<button type="button" class="cp-skip" id="cpSkip">' +
