@@ -4098,7 +4098,23 @@
       background:linear-gradient(135deg,rgba(255,249,236,.86),rgba(253,244,226,.78));
       border-color:rgba(214,172,96,.26)
     }
-    #dpage.compass-page .cp-panel[data-for="drain"]::before{background-image:url(assets/life/cp-mobile/card-drain.webp)}
+    #dpage.compass-page .cp-panel[data-for="drain"]::before{background-image:url(assets/life/cp-mobile/panel-drain.webp)}
+    /* 消耗:粉色系。「为什么这适合我」小卡改成淡粉,右下角探进一枝淡淡的
+       樱花(纯装饰、压在字底下);眉标与收起改成玫瑰色。 */
+    #dpage.compass-page .cp-panel[data-for="drain"] .cp-why{
+      position:relative;overflow:hidden;
+      background:linear-gradient(135deg,rgba(253,240,243,.88),rgba(250,236,244,.8));
+      border-color:rgba(222,150,170,.26)
+    }
+    #dpage.compass-page .cp-panel[data-for="drain"] .cp-why::before{
+      content:"";position:absolute;right:-18px;bottom:-14px;width:150px;height:112px;
+      pointer-events:none;opacity:.32;
+      background:url(assets/life/cp-mobile/panel-drain-branch.webp) right bottom / contain no-repeat
+    }
+    #dpage.compass-page .cp-panel[data-for="drain"] .cp-why > *{position:relative;z-index:1}
+    #dpage.compass-page .cp-panel[data-for="drain"] .cp-eyebrow,
+    #dpage.compass-page .cp-panel[data-for="drain"] .cp-close{color:#a86c80}
+    #dpage.compass-page .cp-panel[data-for="drain"] .cp-eyebrow::before{color:rgba(214,138,160,.8)}
     #dpage.compass-page .cp-panel[data-for="call"]::before{background-image:url(assets/life/cp-mobile/card-call.webp)}
     #dpage.compass-page .cp-panel > *{position:relative;z-index:1}
     #dpage.compass-page .cp-panel .cp-eyebrow{
@@ -11091,7 +11107,9 @@ window.Guide = (function () {
       const st = sits[KEYS[active]];
       /* .wi / .ri / .cp-eyebrow 是手机版展开区的小图示与眉标,纯装饰;
          桌机/平板用 CSS 藏起来,版面一个像素都不变。 */
-      const whyIcon = active === "ground" ? "assets/life/cp-mobile/why-moon.webp" : (CP_ICON[active] || "");
+      const WHY_ICON = { ground: "why-moon.webp", drain: "why-drain.webp" };
+      const LEAF_ICON = { move: "ic-leaf-move.webp", drain: "ic-leaf-drain.webp" };
+      const whyIcon = WHY_ICON[active] ? "assets/life/cp-mobile/" + WHY_ICON[active] : (CP_ICON[active] || "");
       const why = function (body) {
         return '<details class="cp-why"><summary>' +
           '<img class="wi" aria-hidden="true" alt="" src="' + esc0(whyIcon) + '">' +
@@ -11103,7 +11121,7 @@ window.Guide = (function () {
          摆回它自己的卡片里。没有就整段不印,不用空标签占位。 */
       const think = c && c.reflectionPrompt
         ? '<div class="rp"><img class="ri" aria-hidden="true" alt="" src="assets/life/cp-mobile/' +
-          (active === "move" ? "ic-leaf-move.webp" : "ic-leaf.webp") + '">' +
+          (LEAF_ICON[active] || "ic-leaf.webp") + '">' +
           '<span class="k">' + esc0(dpT("想一想", "A question")) + "</span>" +
           "<p>" + esc0(c.reflectionPrompt) + "</p></div>"
         : "";
