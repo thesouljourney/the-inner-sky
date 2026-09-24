@@ -28,6 +28,11 @@
   var INPUT_CONTRACT_VERSION = "compass-input-1.0";
   /* 生成层自己的 explanation 长度契约(与 v1.1 / v1.2 的写作指令一致) */
   var EXPL_MIN = 60, EXPL_MAX = 130;
+  /* v1.4 新增的两个字段(见 SYSTEM_V14【长度】)。旧版本不产出这两个字段,
+     所以只在非空时才检查长度 —— 不把「没有这两个字段」变成硬性失败,
+     避免 v1/v1.1/v1.2/v1.3 的既有行为被追溯性改掉。 */
+  var OPENING_MIN = 12, OPENING_MAX = 24;
+  var SHORT_MIN = 50, SHORT_MAX = 100;
   var OUTPUT_SCHEMA_VERSION = "compass-output-1.0";
 
   /* ──────────────────────────────────────────────────────────
@@ -742,32 +747,258 @@
     "只为 status 是 ready 的方向输出。status 是 insufficient_evidence 的方向【不要】出现在结果里。"
   ].join("\n");
 
+  /* ──────────────────────────────────────────────────────────
+     3e. compass-v1.4 —— 补回「先认出来,才知道为什么」的两层(Phase 6.5)
+     ------------------------------------------------------------
+     手机版把「为什么这适合我」(coreInsight/explanation)做成一直展开的
+     方块之后,发现上面只剩【情境层的 situation/text,认不认得出来
+     全看有没有命中既有语料】——认不出来的方向,点开卡片第一眼看到的
+     就是 coreInsight,跟方块里的 coreInsight 一字不差,等于同一句话
+     出现两次。
+
+     这一版加两个新字段,专门负责【点开卡片最先看到的那两层】,跟
+     coreInsight/explanation(为什么这适合我)分工:
+       openingLine   —— 点开的第一句,只负责「认出来」
+       shortInsight  —— 底下一小段,说这个模式平常怎么发生
+       coreInsight   —— 「为什么这适合我」方块的第一句,要比 shortInsight
+                         再往下一层,开始碰「为什么会这样」
+       explanation   —— 把这个内在机制完整讲清楚
+     v1/v1.1/v1.2/v1.3 都原封不动留着,v1.3 的所有规则这一版一条都没丢,
+     只是多了两个字段跟对应的写作规则。 */
+  var SYSTEM_V14 = [
+    "你在为 The Inner Sky 的「我的内在指南」写文案。",
+    "",
+    "系统已经完成所有判断。你【只负责表达】。",
+    "· 你不重新判断这个人是谁。",
+    "· 你不重新分析任何资料。",
+    "· 你不更改、扩充或重新诠释收到的机制。",
+    "你收到的每一条 mechanism,都是系统已经确认「够格被说」而且「值得被说」的结论。",
+    "",
+    "【这次要写五个字段,一层一层往下】",
+    "openingLine、shortInsight、coreInsight、explanation、reflectionPrompt。",
+    "它们分工不同,不能互相重复,也不能只是换句话说同一件事:",
+    "openingLine     点开卡片看到的第一句,只负责让人「感觉被说中」。",
+    "shortInsight    openingLine 底下的一小段,说清楚这个模式平常怎么发生。",
+    "coreInsight     「为什么这适合我?」那个方块里的第一句,要比 shortInsight",
+    "                再往下一层,开始碰到「为什么会这样」。",
+    "explanation     coreInsight 底下的说明,把这个内在机制完整讲清楚。",
+    "reflectionPrompt  最后的一句问题。",
+    "读者应该感觉自己在一层一层靠近自己,不是一直看到同一句话换个说法。",
+    "",
+    "【你要写成什么样子】",
+    "想像一个很了解这个人的朋友,把他平常说不清楚的东西说出来,",
+    "然后轻轻帮他看见:这件事跟他现在的生活有什么关系。",
+    "不是心理报告,不是人生哲理,不是疗愈散文,不是鸡汤,不是建议清单。",
+    "",
+    "语气参考(这是目标):",
+    "「你不是每次累的时候都想休息。有时候你只是想暂时不用回应任何人。",
+    "等外面的声音安静一点,你才比较容易知道自己到底怎么了。",
+    "有些时候,先让自己安静一会儿就够了,不一定要马上解释。」",
+    "",
+    "不要写成:「你具有高度内在处理需求,因此在外部刺激过多时需要撤退。」",
+    "也不要写成:「你的灵魂需要一片安静的天空。」",
+    "",
+    "【openingLine】",
+    "12–24 个中文字。这是整段最重要的一句 ——「被看见」的感觉,不是结论,",
+    "不是建议清单。不要重复方向标题,不要用占星术语。",
+    "语气安静、准确、克制,避免鸡汤。",
+    "不要跟 coreInsight 讲同一件事、换句话说 —— openingLine 只负责「认出来」,",
+    "「为什么会这样」留给 coreInsight/explanation 去讲。",
+    "",
+    "【shortInsight】",
+    "50–100 个中文字,写在 openingLine 底下,只解释一个核心机制 ——",
+    "这个模式平常长什么样子、怎么出现,不要一次塞入童年、爱情、事业、",
+    "人际、家庭。",
+    "不写「你是一个……」「你总是……」「你一定……」「你天生……」「注定……」。",
+    "优先:「你比较容易……」「对你来说……」「有时候你会发现……」",
+    "「当……的时候,你可能……」「你往往要先……才比较容易……」。",
+    "不要跟 openingLine 或 coreInsight 讲同一件事、换句话说。",
+    "",
+    "【explanation 的三段】",
+    "A 认出来  —— 一个具体、认得出来的生活画面(某个时刻、某个动作)",
+    "B 是什么  —— 说清楚真正发生的是什么。【不要过度解释为什么】",
+    "C 轻轻一步 —— 认出自己之后,多看到一个可以站的位置。",
+    "",
+    "★【C 不要变成模板】",
+    "四张卡会被连着读。如果每一张的最后一句都是「所以……」,",
+    "整组就会变成公式,读起来像 AI 产生的建议清单 —— 这比写得不好更糟。",
+    "所以:",
+    "· 【不要】每一张都用「所以」「因此」收尾。四张里最多一张可以。",
+    "· C 可以是独立一句,也可以直接融进最后半句话,不必自成一句建议。",
+    "· 句式要换着用,例如:",
+    "  「有些时候……」「这时候……」「对你来说……」「慢一点没有关系。」",
+    "  「如果最近刚好遇到这种情况……」「也许真正值得留意的是……」",
+    "  「没力气的时候,可以先看看……」「你可以先不用急着……」",
+    "  「有些时候,不急着……反而比较容易……」",
+    "",
+    "★【C 不是建议】",
+    "它的作用不是告诉这个人该怎么做,而是让他认出自己之后,多看到一个可以选的位置。",
+    "目标是「原来我可以这样理解自己」,不是「好,我照做」。",
+    "绝对不写:你应该 / 你必须 / 你需要学会 / 你最好 / 你应该试着。",
+    "",
+    "★★【只能说证据授权你说的事】",
+    "机制成立,不代表你可以从它推出一个关于【现实】的结论。",
+    "例如机制是「靠近之前会反覆确认」:",
+    "  可以写:反覆确认本身会让人累。",
+    "  【不可以】写:这个人其实已经值得你信任 / 你已经不用确认了 /",
+    "            你可以放心靠近 / 对方其实是安全的。",
+    "你【不可以】替这个人判断:",
+    "  某个人值不值得信任、某段关系安不安全、某份工作该不该继续、",
+    "  某个选择对不对、他准备好了没有、他该留下还是离开、",
+    "  某件事其实没有风险、他只是想太多。",
+    "你能帮他看见的是【他自己的过程】,不是外面的现实是什么。",
+    "reflectionPrompt 同样不准把结论偷偷写进问题里。",
+    "  不要问:「有没有一个人,其实你已经不用再防备了?」(预设了对方是安全的)",
+    "  可以问:「最近有没有一段关系,让你发现自己一直在等一个可以放心的感觉?」",
+    "",
+    "★★【不要发明固定步骤】",
+    "机制如果本身是一个连续的过程,就照原样写成连续的句子,",
+    "不要包装成「三步」「四个阶段」「这几步不能跳过」这种人为的次数或阶段。",
+    "只有 composite 明确标出 sequence 时,才可以写「先……再……」这种顺序,",
+    "而且顺序来自 composite.sequence,不是你自己发明的步骤数。",
+    "不要写:「这四步对你来说不能跳过。」",
+    "要写:「对你来说,这几个过程往往是连在一起的:先减少外界的声音,",
+    "再给自己一点整理的时间,等感觉逐渐有了形状,表达也会比较自然地出现。」",
+    "",
+    "★★【判断力道要抓准】",
+    "不要把话说死,也不要把话说得没有立场。",
+    "太绝对(不可以):你必须先独处才能恢复 / 你一定需要…… / 这对你来说不能跳过 /",
+    "  你的星盘决定了…… / 你的问题在于…… / 你的性格就是…… / 永远…… / 绝对…… / 无法……",
+    "太虚(也不可以):你可能也许有时会比较想独处 —— 这种没有任何判断的句子。",
+    "理想:当外界的信息太多时,你往往需要先退回一点自己的空间,才比较容易重新听见自己的想法。",
+    "「可能」「也许」「似乎」可以用,但不要整段都是这些词,读起来要有判断,只是不绝对。",
+    "",
+    "【少用分析腔】",
+    "尽量不要出现:机制、成本、登记、结构、系统、判断、处理方式、模式本身、",
+    "运作、输入、输出、验证、确认流程、资源、效率。",
+    "例:不要写「成本要等结束之后才会完整地登记进来」,",
+    "要写「很多时候,你是在事情结束以后,才发现自己其实已经累了一阵子」。",
+    "",
+    "【不要硬推因果】",
+    "描述看得到的模式,不要替这个人解释「为什么会这样」。",
+    "不要写「你愿意说多少,取决于上一次说了以后发生什么」(因果太强)。",
+    "要写「你可能会先说一点,看看对方怎么接」「真正走近以前,你通常会多确认几次」。",
+    "",
+    "【四个方向各司其职】",
+    "grounds 我乱掉、累、卡住的时候,什么真的能让我回来?结尾要帮他回到稳定。",
+    "moves   什么真的让我愿意投入、愿意往前?",
+    "        【不要】写成消耗 —— 不要出现「事后才发现累」「撑到最后」「成本」这类东西。",
+    "        也避免「耗很久」这种带消耗意味的说法,改用「做很久」「愿意花时间」。",
+    "drains  什么样的反覆过程正在慢慢耗掉我?要讲清楚耗在哪一段。",
+    "        方向那一句只能看向【他自己现在正在经历什么】,不能评断外面的人或事。",
+    "★ calls  我反覆会被什么样的经验、问题、方向吸引?",
+    "        就算没有人要求、就算没有实际用途,我还是会一直往哪里靠近?",
+    "        这是【orientation / 反覆的好奇】,不是 motivation、不是怎样恢复动力、",
+    "        不是怎样继续投入 —— 那些是 moves 的事。",
+    "        写之前先自问:如果把这张卡的标题换成「怎样让我重新有动力?」,",
+    "        内容是不是照样成立?如果是,代表你把 calls 写成 moves 了,重写。",
+    "        calls 可以有方向感,但不准写成命运、使命、注定、人生道路、灵魂召唤、",
+    "        宇宙安排、「你来到这里是为了」、「真正的你」、「更高版本的自己」。",
+    "",
+    "【绝对禁止:占星语言】",
+    "不得出现:星座、宫位、行星、太阳、月亮、水星、金星、火星、木星、土星、天王星、",
+    "海王星、冥王星、上升、天顶、天底、北交、南交、节点、相位、逆行、元素、",
+    "固定宫、变动宫、基本宫、守护星、度数、星盘、命盘、配置,以及它们的英文同义词。",
+    "也不得出现「你的星盘显示」「你的命盘告诉你」「你的配置说明」「你的星盘决定」这类说法。",
+    "你收到的资料里本来就没有这些东西 —— 如果你想写,那代表你在自己编。",
+    "",
+    "【绝对禁止:玄学语言】",
+    "宇宙、命运、灵魂、能量、召唤、蜕变、绽放、丰盛、疗愈旅程、更高的自己、生命安排。",
+    "",
+    "【绝对禁止:心理诊断】",
+    "创伤、依恋、回避型、焦虑型、神经系统、失调、内在小孩、防御机制、讨好型人格、过度警觉。",
+    "「累」「紧张」「在意」「不确定」这些日常词可以自然使用,但不要下诊断。",
+    "",
+    "【绝对禁止:编造原因】",
+    "只能写收到的机制里有的东西。不得推测童年、家庭、父母、感情史、工作经历、",
+    "性别、疾病,也不得替这个人安上机制里没有的动机。",
+    "例如机制是「先承担 → 事后才发现累」,",
+    "就不可以写成「你害怕别人失望,所以总是承担」——「害怕别人失望」不在机制里。",
+    "",
+    "【不要贴标签】",
+    "不写「你是一个……」「你天生……」「你的性格就是……」「你属于……」「你注定……」",
+    "「你的问题在于……」。",
+    "",
+    "【coreInsight 不要像报告标题】",
+    "少用「X 决定 Y」「真正的 X 是 Y」「你之所以……是因为……」。",
+    "优先:「你比较容易在……之后,才发现……」「让你慢慢回来的,通常是……」",
+    "「你真正容易累的地方,可能在……」「你容易被……吸引」",
+    "",
+    "★【五个字段都不能互相重复】",
+    "openingLine、shortInsight、coreInsight、explanation 四句话如果拿掉字段名,",
+    "读起来像同一句话讲了四次,就是没有分层。coreInsight 是一句概括,",
+    "explanation 要往下一层讲清楚【怎么发生的】,不是把 coreInsight 换个字",
+    "重讲一次;explanation 的第一句如果和 coreInsight 讲的是同一件事、只是",
+    "换了说法,就重写 explanation 的开头,让它往前推进。openingLine 与",
+    "shortInsight 也是同样的道理,而且这两句【不可以】提早把 coreInsight",
+    "要讲的「为什么会这样」讲掉。",
+    "",
+    "【长度】",
+    "openingLine   12–24 个中文字,一句话",
+    "shortInsight  50–100 个中文字",
+    "coreInsight   15–35 个中文字,一句话",
+    "explanation   60–130 个中文字。以读起来自然为准,不要为了凑字数硬塞。",
+    "reflectionPrompt  一句。",
+    "",
+    "【reflectionPrompt 要让人想起最近发生的事】",
+    "不是行为统计题,不是治疗作业,不是测验,也不准把答案预设在问题里。",
+    "优先:「最近有没有一件事……」「现在有没有一段关系……」",
+    "「最近哪件事让你发现……」「有没有什么你一直以为是……,后来发现其实是……」",
+    "不要问「上一次你……之前,你一个人待了多久?」这种要人回去计算行为的题目。",
+    "",
+    "【四张卡一起读】",
+    "四张要像同一个人,但【不能像同一个模板】。",
+    "开头方式、句子长短、收尾方式都要有变化;",
+    "每一张只能写自己那一条机制,不要把别的方向的机制写进来。",
+    "特别注意 moves 与 calls 不可以只是同一件事换句话说。",
+    "",
+    "【composite】",
+    "收到 composite 时,写的是一个【有顺序的过程】,不是把两段机制拼在一起。",
+    "",
+    "【tension】",
+    "收到 tension 时,不要「解决」矛盾。两边都是真的,重点是什么时候哪一边先出现。",
+    "不要写成「你既内向又外向」。",
+    "",
+    "★【写完先自己检查】",
+    "· 换一个星盘的人,这段话是否照样成立?如果是,重写到更具体。",
+    "· 是不是只是把占星关键词翻成中文?如果是,重新综合成一个心理过程。",
+    "· 四个方向是否明显在回答四个不同的问题?如果没有,重新区分。",
+    "· openingLine / shortInsight 是不是只是把 coreInsight 提早讲了一次?",
+    "  如果是,重写 openingLine 或 shortInsight,让它们只负责「认出来」。",
+    "",
+    "【输出】",
+    "只输出 JSON,不要任何说明文字、不要 markdown 代码围栏。格式:",
+    '{ "directions": [ { "direction": "grounds", "openingLine": "…", "shortInsight": "…", "coreInsight": "…", "explanation": "…", "reflectionPrompt": "…" } ] }',
+    "只为 status 是 ready 的方向输出。status 是 insufficient_evidence 的方向【不要】出现在结果里。"
+  ].join("\n");
+
   /* 版本表。v1 一个字都没动 —— 要 A/B 就靠这张表。 */
   var SYSTEMS = {
     "compass-v1": SYSTEM,
     "compass-v1.1": SYSTEM_V11,
     "compass-v1.2": SYSTEM_V12,
-    "compass-v1.3": SYSTEM_V13
+    "compass-v1.3": SYSTEM_V13,
+    "compass-v1.4": SYSTEM_V14
   };
-  var PROMPT_VERSIONS = ["compass-v1", "compass-v1.1", "compass-v1.2", "compass-v1.3"];
-  /* 预设版本。Phase 6.4 起新的生成走 v1.3;前三版仍然叫得出来。 */
-  var DEFAULT_PROMPT_VERSION = "compass-v1.3";
+  var PROMPT_VERSIONS = ["compass-v1", "compass-v1.1", "compass-v1.2", "compass-v1.3", "compass-v1.4"];
+  /* 预设版本。Phase 6.5 起新的生成走 v1.4;前四版仍然叫得出来。 */
+  var DEFAULT_PROMPT_VERSION = "compass-v1.4";
 
   /* ★★ VOICE LOCK ★★
-     compass-v1.3 已经通过人工 voice review,是目前中文 Compass 的声音基准。
-     v1 / v1.1 / v1.2 只留作历史与 A/B 对照,不再使用。
+     compass-v1.4 已经通过人工 voice review,是目前中文 Compass 的声音基准。
+     v1 / v1.1 / v1.2 / v1.3 只留作历史与 A/B 对照,不再使用。
 
      这不只是一句宣告 —— tests/run-tests.js 用 sha256 把每一份写作指令逐字钉住,
-     任何一个字被改动,整批测试立刻红。要改 v1.3 的写法,正确做法是:
-       开 compass-v1.4,把它加进 SYSTEMS,让 v1.3 原样留着当基准。
-     不要就地编辑 v1.3。 */
+     任何一个字被改动,整批测试立刻红。要改 v1.4 的写法,正确做法是:
+       开 compass-v1.5,把它加进 SYSTEMS,让 v1.4 原样留着当基准。
+     不要就地编辑 v1.4。 */
   var VOICE_BASELINE = {
-    version: "compass-v1.3",
+    version: "compass-v1.4",
     language: "zh",
     lockedAt: "2026-09-24",
     lockedBy: "human voice review",
     note: "改写法请开新版本,不要就地编辑已锁的版本",
-    history: ["compass-v1", "compass-v1.1", "compass-v1.2"]
+    history: ["compass-v1", "compass-v1.1", "compass-v1.2", "compass-v1.3"]
   };
 
   function buildPrompt(input, retryNote, version) {
@@ -811,6 +1042,8 @@
     o.directions.forEach(function (d) {
       if (!d || !d.direction) return;
       out[String(d.direction)] = {
+        openingLine: String(d.openingLine || ""),
+        shortInsight: String(d.shortInsight || ""),
         coreInsight: String(d.coreInsight || ""),
         explanation: String(d.explanation || ""),
         reflectionPrompt: String(d.reflectionPrompt || "")
@@ -842,6 +1075,10 @@
 
   function has(text, list) { return list.some(function (w) { return text.indexOf(w) >= 0; }); }
   function hits(text, list) { return list.filter(function (w) { return text.indexOf(w) >= 0; }); }
+  /* 跟 compass-translation.js 的 len() 用同一种数法(去标点再数字数),
+     那一份没有 export,这里自己配一份,不去动冻结的档案。 */
+  var LEN_CJK = /[，。！？；：、（）「」“”\s]/g;
+  function flatLen(s) { return String(s || "").replace(LEN_CJK, "").length; }
 
   /* §6.2:两项【量测】,不是硬性拒收。
      校准阶段要先看得到,再决定要不要变成硬门槛 —— 现在就挡会挡到没必要挡的句子。 */
@@ -1063,6 +1300,38 @@
       fails.push({ rule: "reflectionQuestion", detail: "不是一句" });
     if (!q.concreteBehaviourPresent) fails.push({ rule: "specificity", detail: "没有具体的时间 + 动作" });
     if (/[A-Za-z]/.test(all)) fails.push({ rule: "chineseOnly", detail: "混进英文" });
+
+    /* v1.4 新字段:只在非空时检查 —— 旧版本本来就不产出这两个字段,
+       不能把「没有」变成失败。存在的话,长度、英文混入、编造原因
+       这几条跟其他字段一视同仁;不跑 CT.checkCopy(那一层冻结,
+       只认 coreInsight/explanation/reflectionPrompt 三个键)。 */
+    var opening = copy.openingLine || "", short = copy.shortInsight || "";
+    if (opening) {
+      var openLen = flatLen(opening);
+      if (openLen < OPENING_MIN || openLen > OPENING_MAX)
+        fails.push({ rule: "lengthOpeningLine",
+          detail: openLen + " 字(要 " + OPENING_MIN + "–" + OPENING_MAX + ")" });
+      if (/[A-Za-z]/.test(opening)) fails.push({ rule: "chineseOnly", detail: "openingLine 混进英文" });
+      if (hits(opening, UNSUPPORTED).length)
+        fails.push({ rule: "unsupportedInference", detail: "openingLine:" + hits(opening, UNSUPPORTED).join("、"), noRetry: true });
+    }
+    if (short) {
+      var shortLen = flatLen(short);
+      if (shortLen < SHORT_MIN || shortLen > SHORT_MAX)
+        fails.push({ rule: "lengthShortInsight",
+          detail: shortLen + " 字(要 " + SHORT_MIN + "–" + SHORT_MAX + ")" });
+      if (/[A-Za-z]/.test(short)) fails.push({ rule: "chineseOnly", detail: "shortInsight 混进英文" });
+      if (hits(short, UNSUPPORTED).length)
+        fails.push({ rule: "unsupportedInference", detail: "shortInsight:" + hits(short, UNSUPPORTED).join("、"), noRetry: true });
+    }
+    /* openingLine / shortInsight 不能只是把 coreInsight 提早讲一次 ——
+       用既有的 CT.similarity(与跨卡重复用的是同一把量尺),不新造一套。 */
+    if (opening && copy.coreInsight && CT.similarity(opening, copy.coreInsight) > 0.6)
+      fails.push({ rule: "openingLineRepeatsCoreInsight", detail: "openingLine 与 coreInsight 太像" });
+    if (short && copy.coreInsight && CT.similarity(short, copy.coreInsight) > 0.6)
+      fails.push({ rule: "shortInsightRepeatsCoreInsight", detail: "shortInsight 与 coreInsight 太像" });
+    if (opening && short && CT.similarity(opening, short) > 0.6)
+      fails.push({ rule: "openingLineRepeatsShortInsight", detail: "openingLine 与 shortInsight 太像" });
 
     // 10 · mechanism fidelity
     var fid = { unsupported: [], shapeKept: true, shape: null };
@@ -1304,6 +1573,7 @@
     SYSTEM_V11: SYSTEM_V11,
     SYSTEM_V12: SYSTEM_V12,
     SYSTEM_V13: SYSTEM_V13,
+    SYSTEM_V14: SYSTEM_V14,
     SYSTEMS: SYSTEMS,
     PROMPT_VERSIONS: PROMPT_VERSIONS,
     DEFAULT_PROMPT_VERSION: DEFAULT_PROMPT_VERSION,

@@ -1838,8 +1838,8 @@ function testCompassVoiceV11() {
   checkEq("[v11] compass-v1 仍然存在且未被覆盖", G.SYSTEMS["compass-v1"] === G.SYSTEM, true);
   checkEq("[v11] v1 的写作指令内容没有变",
     require("crypto").createHash("sha256").update(G.SYSTEM).digest("hex").slice(0, 16), "df3b0a8385d86155");
-  checkEq("[v11] 四个版本都在", G.PROMPT_VERSIONS.join(","), "compass-v1,compass-v1.1,compass-v1.2,compass-v1.3");
-  checkEq("[v11] 预设走 v1.3", G.DEFAULT_PROMPT_VERSION, "compass-v1.3");
+  checkEq("[v11] 五个版本都在", G.PROMPT_VERSIONS.join(","), "compass-v1,compass-v1.1,compass-v1.2,compass-v1.3,compass-v1.4");
+  checkEq("[v11] 预设走 v1.4", G.DEFAULT_PROMPT_VERSION, "compass-v1.4");
   checkEq("[v11] v1 与 v1.1 不是同一份", G.SYSTEM === G.SYSTEM_V11, false);
 
   // 2 · v1.1 里写进了这一阶段的三件事
@@ -2447,9 +2447,9 @@ function testCompassVoiceV12() {
   const crypto = require("crypto");
   const h = (t) => crypto.createHash("sha256").update(t).digest("hex").slice(0, 16);
 
-  /* ★ VOICE LOCK:四份写作指令全部逐字钉住。
+  /* ★ VOICE LOCK:五份写作指令全部逐字钉住。
      改写法的正确做法是开新版本,不是就地编辑 —— 就地改会让这几条立刻红。 */
-  checkEq("[lock] 声音基准是 compass-v1.3", G.VOICE_BASELINE.version, "compass-v1.3");
+  checkEq("[lock] 声音基准是 compass-v1.4", G.VOICE_BASELINE.version, "compass-v1.4");
   checkEq("[lock] 基准的语言是中文", G.VOICE_BASELINE.language, "zh");
   checkEq("[lock] 预设生成走的就是基准版本",
     G.DEFAULT_PROMPT_VERSION, G.VOICE_BASELINE.version);
@@ -2458,7 +2458,8 @@ function testCompassVoiceV12() {
   checkEq("[lock] compass-v1 逐字未动", h(G.SYSTEMS["compass-v1"]), "df3b0a8385d86155");
   checkEq("[lock] compass-v1.1 逐字未动", h(G.SYSTEMS["compass-v1.1"]), "f81a63bee5bb64d2");
   checkEq("[lock] compass-v1.2 逐字未动(历史版本)", h(G.SYSTEMS["compass-v1.2"]), "a06710405bc99c8e");
-  checkEq("[lock] compass-v1.3 逐字未动(已锁)", h(G.SYSTEMS["compass-v1.3"]), "921e386f119d02a3");
+  checkEq("[lock] compass-v1.3 逐字未动(历史版本)", h(G.SYSTEMS["compass-v1.3"]), "921e386f119d02a3");
+  checkEq("[lock] compass-v1.4 逐字未动(已锁)", h(G.SYSTEMS["compass-v1.4"]), "e294efa87d56594e");
   checkEq("[lock] 已锁的 v1.2 样本文案逐字未动",
     h(JSON.stringify(RC.RAW_V12.C1)), "afd185f8e09f4739");
 
@@ -2623,7 +2624,7 @@ function testCompassVoiceV13() {
     ["compass-v1", "compass-v1.1", "compass-v1.2", "compass-v1.3"]
       .filter(v => !G.SYSTEMS[v]).join(","), "");
   checkEq("[v13] PROMPT_VERSIONS 含 v1.3", G.PROMPT_VERSIONS.indexOf("compass-v1.3") >= 0, true);
-  checkEq("[v13] 预设已经是 v1.3", G.DEFAULT_PROMPT_VERSION, "compass-v1.3");
+  checkEq("[v13] 预设现在是 v1.4(v1.3 已经交棒)", G.DEFAULT_PROMPT_VERSION, "compass-v1.4");
 
   // 5 · v1.2 的录制样本借来当 v1.3 fixture 时,共用的校验管线仍然全过
   //     (真正的 v1.3 专属量测,要等有真人写的 v1.3 样本才能补)
@@ -2633,6 +2634,108 @@ function testCompassVoiceV13() {
   ).then(r => {
     checkEq("[v13] 借用 v1.2 样本作 fixture 时,v1.3 的验证管线也全过", r.status, "ok");
   });
+}
+
+/* ---------- 21c. 内在指南 Phase 6.5 · openingLine / shortInsight ----------
+   手机版把「为什么这适合我」做成一直展开的方块之后才发现:认不出情境的
+   方向,点开卡片第一眼看到的 coreInsight,跟方块里的 coreInsight 一字
+   不差。这一版加两个新字段专门顶在 coreInsight/explanation 前面,
+   跟它们分工,不重复。v1.3 的每一条规则原样留着(下面逐一核对)。 */
+function testCompassVoiceV14() {
+  const fs = require("fs");
+  const G = require(path.join(__dirname, "..", "assets", "compass-generation.js"));
+  const PV = require(path.join(__dirname, "..", "assets", "compass-preview.js"));
+  const RC = require(path.join(__dirname, "..", "assets", "compass-recorded.js"));
+  const CT = require(path.join(__dirname, "..", "assets", "compass-translation.js"));
+  const edge = fs.readFileSync(path.join(__dirname, "..", "docs", "edge", "compass-generate.ts"), "utf8");
+
+  // 1 · v1.3 原封不动,v1.4 不是它的复制品
+  checkEq("[v14] compass-v1.3 未被改动", G.SYSTEMS["compass-v1.3"] === G.SYSTEM_V13, true);
+  checkEq("[v14] v1.4 不是 v1.3 的复制品", G.SYSTEM_V13 === G.SYSTEM_V14, false);
+  const m14 = edge.match(/const COMPASS_SYSTEM_V14 = `([\s\S]*?)`;/);
+  checkEq("[v14] 服务端的 v1.4 与前端逐字相同",
+    m14 ? firstDiff(m14[1], G.SYSTEM_V14) : "缺 COMPASS_SYSTEM_V14", "");
+
+  // 2 · v1.3 建立的东西一条都没丢
+  checkEq("[v14] v1.3 的规则一条都没丢",
+    ["认出来", "是什么", "轻轻一步", "不要发明固定步骤", "判断力道要抓准",
+     "太绝对", "太虚", "五个字段都不能互相重复",
+     "绝对禁止:占星语言", "绝对禁止:玄学语言", "绝对禁止:心理诊断", "绝对禁止:编造原因",
+     "不要贴标签", "少用分析腔", "写完先自己检查"]
+      .filter(x => G.SYSTEM_V14.indexOf(x) < 0).join(","), "");
+
+  // 3 · 新字段的规则都写进去了
+  checkEq("[v14] 写明五个字段的分工",
+    /这次要写五个字段[\s\S]{0,400}openingLine[\s\S]{0,100}shortInsight/.test(G.SYSTEM_V14), true);
+  checkEq("[v14] openingLine 12–24 字",
+    /【openingLine】[\s\S]{0,60}12–24 个中文字/.test(G.SYSTEM_V14), true);
+  checkEq("[v14] shortInsight 50–100 字",
+    /【shortInsight】[\s\S]{0,60}50–100 个中文字/.test(G.SYSTEM_V14), true);
+  checkEq("[v14] openingLine 不准提早讲 coreInsight 的「为什么」",
+    /openingLine 只负责「认出来」/.test(G.SYSTEM_V14), true);
+  checkEq("[v14] 写明五个字段都不能互相重复",
+    /五个字段都不能互相重复/.test(G.SYSTEM_V14), true);
+  checkEq("[v14] 输出格式含新字段",
+    /"openingLine": "…", "shortInsight": "…", "coreInsight"/.test(G.SYSTEM_V14), true);
+
+  // 4 · 版本表与预设版本都已经切过来
+  checkEq("[v14] 五个版本都在 SYSTEMS 里",
+    ["compass-v1", "compass-v1.1", "compass-v1.2", "compass-v1.3", "compass-v1.4"]
+      .filter(v => !G.SYSTEMS[v]).join(","), "");
+  checkEq("[v14] PROMPT_VERSIONS 含 v1.4", G.PROMPT_VERSIONS.indexOf("compass-v1.4") >= 0, true);
+  checkEq("[v14] 预设是 v1.4", G.DEFAULT_PROMPT_VERSION, "compass-v1.4");
+
+  // 5 · parseOutput 认得两个新字段
+  const parsed = G.parseOutput(JSON.stringify({ directions: [
+    { direction: "grounds", openingLine: "测试开场", shortInsight: "测试简介", coreInsight: "测试洞察",
+      explanation: "测试说明", reflectionPrompt: "测试问题？" }
+  ] }));
+  checkEq("[v14] parseOutput 读得到 openingLine", parsed.grounds.openingLine, "测试开场");
+  checkEq("[v14] parseOutput 读得到 shortInsight", parsed.grounds.shortInsight, "测试简介");
+
+  // 6 · 旧版本没有这两个字段时,不会被当成必填拒收(向下相容)
+  const di = G.buildInput(PV.buildCase("C1")).directions.grounds;
+  const legacy = Object.assign({}, RC.RAW_V12.C1.grounds); // 没有 openingLine/shortInsight
+  checkEq("[v14] 旧版本(没有新字段)不会因此被拒收",
+    (G.validateOne(legacy, di).fails || []).filter(f =>
+      f.rule === "lengthOpeningLine" || f.rule === "lengthShortInsight").length, 0);
+
+  // 7 · 新字段存在时,长度不对会被挡下
+  checkEq("[v14] openingLine 太短会被挡下",
+    (G.validateOne(Object.assign({}, RC.RAW_V14.C1.grounds, { openingLine: "太短" }), di).fails || [])
+      .some(f => f.rule === "lengthOpeningLine"), true);
+  checkEq("[v14] shortInsight 太短会被挡下",
+    (G.validateOne(Object.assign({}, RC.RAW_V14.C1.grounds, { shortInsight: "太短了不够长" }), di).fails || [])
+      .some(f => f.rule === "lengthShortInsight"), true);
+
+  // 8 · openingLine / shortInsight 跟 coreInsight 太像会被挡下
+  const dup = Object.assign({}, RC.RAW_V14.C1.grounds,
+    { openingLine: RC.RAW_V14.C1.grounds.coreInsight });
+  checkEq("[v14] openingLine 抄 coreInsight 会被挡下",
+    (G.validateOne(dup, di).fails || []).some(f => f.rule === "openingLineRepeatsCoreInsight"), true);
+
+  // 9 · R14 的样本本身:长度合规,而且跟 coreInsight 不是换句话说
+  ["grounds", "moves", "drains", "calls"].forEach(k => {
+    const c = RC.RAW_V14.C1[k];
+    const openLen = c.openingLine.replace(/[，。！？；：、（）「」“”\s]/g, "").length;
+    const shortLen = c.shortInsight.replace(/[，。！？；：、（）「」“”\s]/g, "").length;
+    checkEq("[v14] " + k + " openingLine 长度在 12–24", openLen >= 12 && openLen <= 24, true);
+    checkEq("[v14] " + k + " shortInsight 长度在 50–100", shortLen >= 50 && shortLen <= 100, true);
+    checkEq("[v14] " + k + " openingLine 不是 coreInsight 换句话说",
+      CT.similarity(c.openingLine, c.coreInsight) < 0.6, true);
+    checkEq("[v14] " + k + " shortInsight 不是 coreInsight 换句话说",
+      CT.similarity(c.shortInsight, c.coreInsight) < 0.6, true);
+  });
+
+  // 10 · 端到端:R14 fixture 跑完整条生成 + 验证管线
+  return G.generate(PV.buildCase("C1"), RC.transportFor("C1"), { promptVersion: "compass-v1.4" })
+    .then(r => {
+      checkEq("[v14] R14 fixture 跑完整条管线全过", r.status, "ok");
+      checkEq("[v14] 回传带 openingLine",
+        ["grounds", "moves", "drains", "calls"].every(k => !!(r.copies[k] && r.copies[k].openingLine)), true);
+      checkEq("[v14] 回传带 shortInsight",
+        ["grounds", "moves", "drains", "calls"].every(k => !!(r.copies[k] && r.copies[k].shortInsight)), true);
+    });
 }
 
 /* ---------- 22. 内在指南 Phase 7 · 真实认证路径 ----------
@@ -4587,6 +4690,7 @@ function main() {
   const voiceJobs = testCompassVoiceV11();
   const v12Jobs = testCompassVoiceV12();
   const v13Jobs = testCompassVoiceV13();
+  const v14Jobs = testCompassVoiceV14();
   testCompassLiveAuthPath();
   testCompassShadowPermission();
   testCompassProductPage();
@@ -4604,7 +4708,7 @@ function main() {
   testTopicLayout();
   testTopicPreviews();
   testCompassZhOnlyLabels();
-  return Promise.all([genJobs, liveJobs, voiceJobs, v12Jobs, v13Jobs]).then(function () { return testPlaces(); }).then(function () {
+  return Promise.all([genJobs, liveJobs, voiceJobs, v12Jobs, v13Jobs, v14Jobs]).then(function () { return testPlaces(); }).then(function () {
     console.log("\n对照来源:" + REF.reference);
     console.log("设置:" + JSON.stringify(REF.settings));
     console.log("\n通过 " + pass + " / 失败 " + fail);

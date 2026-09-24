@@ -170,20 +170,53 @@
     }
   };
 
+  /* ── compass-v1.4 的校准样本(Phase 6.5)──────────────────────
+     在 R12 的 coreInsight/explanation/reflectionPrompt 上原样不动,
+     只加 openingLine / shortInsight 这两个新字段 ——「为什么这适合我」
+     那一段的文案已经通过人工 review,没有理由重写。
+     两个新字段与 coreInsight 的相似度都跑过 CT.similarity 核对,
+     全部低于 0.2(拒收线是 0.6),不是换句话说同一件事。 */
+  var R14 = {
+    C1: {
+      grounds: Object.assign({}, R12.C1.grounds, {
+        openingLine: "外面吵的时候，你反而更难听清自己。",
+        shortInsight: "事情刚发生时，你常常还分不清楚自己的感受和别人的反应。等外界安静一点，那些感觉才会慢慢有顺序，你也才知道自己真正想说什么。"
+      }),
+      moves: Object.assign({}, R12.C1.moves, {
+        openingLine: "你的力气，其实是跟着理由走的。",
+        shortInsight: "同一件事，有理由的时候你能一直撑下去，一旦只剩下交差这个理由，力气就掉得特别快。别人常以为你是没耐心，其实是那个理由不见了。"
+      }),
+      drains: Object.assign({}, R12.C1.drains, {
+        openingLine: "真正累人的，往往是靠近之前。",
+        shortInsight: "你很少一次就靠近一个人，而是先说一点、看看对方怎么接，再决定要不要往前。这样一段一段来比较安心，但每一次掂量都在悄悄花掉力气。"
+      }),
+      calls: Object.assign({}, R12.C1.calls, {
+        openingLine: "一件事还没被看完，你就走不开。",
+        shortInsight: "只要一件事背后还连着没被理解的部分，你就容易一直回去想它，哪怕没有人要求你、也没有实际用处，纯粹是想把它看完而已。"
+      })
+    }
+  };
+
   /* 包成 transport 可以吃的形状 —— 与真实 API 回来的文字格式完全一致,
      这样验证管线跑的是同一条路径。 */
   function textFor(caseId, version) {
     /* compass-v1.3 只改了写作指令(不发明步骤、力道抓准、不重复),
        没有新的录制样本 —— v1.2 的样本本来就没有踩到这些新规则,
-       借来当 v1.3 的 fixture 完全站得住,等有真的 v1.3 输出再换掉。 */
-    var byVersion = { "compass-v1.1": R11, "compass-v1.2": R12, "compass-v1.3": R12 };
+       借来当 v1.3 的 fixture 完全站得住。
+       compass-v1.4 加了 openingLine / shortInsight 两个新字段,
+       有自己的 R14(coreInsight/explanation/reflectionPrompt 原样
+       借自 R12,新字段另外写)。 */
+    var byVersion = { "compass-v1.1": R11, "compass-v1.2": R12, "compass-v1.3": R12, "compass-v1.4": R14 };
     var pick = byVersion[version];
     var m = (pick && pick[caseId]) ? pick[caseId] : R[caseId];
     if (!m) return null;
     return JSON.stringify({
       directions: Object.keys(m).map(function (k) {
-        return { direction: k, coreInsight: m[k].coreInsight,
+        var d = { direction: k, coreInsight: m[k].coreInsight,
                  explanation: m[k].explanation, reflectionPrompt: m[k].reflectionPrompt };
+        if (m[k].openingLine) d.openingLine = m[k].openingLine;
+        if (m[k].shortInsight) d.shortInsight = m[k].shortInsight;
+        return d;
       })
     });
   }
@@ -197,8 +230,8 @@
 
   return {
     PROMPT_VERSION: PROMPT_VERSION, MODEL: MODEL,
-    CASES: Object.keys(R), RAW: R, RAW_V11: R11, RAW_V12: R12, RAW_V13: R12,
-    CASES_V11: Object.keys(R11), CASES_V12: Object.keys(R12),
+    CASES: Object.keys(R), RAW: R, RAW_V11: R11, RAW_V12: R12, RAW_V13: R12, RAW_V14: R14,
+    CASES_V11: Object.keys(R11), CASES_V12: Object.keys(R12), CASES_V14: Object.keys(R14),
     textFor: textFor, transportFor: transportFor,
     isRecorded: true
   };
