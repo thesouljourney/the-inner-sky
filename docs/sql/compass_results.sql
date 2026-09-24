@@ -59,13 +59,14 @@ create table if not exists public.compass_results (
   -- 「同一个人有两份正式指南」在这个 schema 里无法表示。
   user_id        uuid primary key references auth.users(id) on delete cascade,
 
-  -- 出身资讯(provenance)。promptVersion 只是纪录,
-  -- 【不是】自动汰换的理由 —— 旧版本不代表比较差。
+  -- 出身资讯(provenance)。R6 起 promptVersion 同时也是内容版本号:
+  -- 前端拿它跟 generation 层的 DEFAULT_PROMPT_VERSION 比对,不一样就在背景
+  -- 重新生成一次、成功才换上去 —— 旧内容在那之前一个字都不会被动。
   prompt_version text        not null,
   generated_at   timestamptz not null,
 
-  -- 乐观并发用。R1 的前端只会 INSERT,不会 UPDATE;
-  -- 这一栏是留给将来「明确地重新生成」用的条件更新。
+  -- 乐观并发用。R1 上线时前端只会 INSERT;R6 起版本升级会走一次条件 UPDATE
+  -- (WHERE revision=eq.<旧值>,对不上就是 0 列,不会覆盖别人刚写的那一份)。
   revision       smallint    not null default 1,
 
   -- 四个方向。每个方向的必要三句,加上 v1.4 起新增的两个可选栏位
@@ -136,9 +137,10 @@ create policy "compass result read own"   on public.compass_results
 create policy "compass result write own"  on public.compass_results
   for insert with check (auth.uid() = user_id);
 
--- UPDATE 开着,但 R1 的前端【不会】呼叫它。
--- 它的存在是为了将来「重新生成我的内在指南」那个明确动作
--- 不需要再改一次 schema;届时会走 revision 的条件更新。
+-- UPDATE 政策本来是为了「以后要用」先开着(R1 上线时前端还不会呼叫它)。
+-- R6 起真的会呼叫了:内容版本升级时,前端会做一次带 revision=eq. 条件的
+-- PATCH,把新生成、已经通过验证的内容换上去。RLS 这一层只管「是不是本人」,
+-- 乐观并发(避免两台装置互相覆盖)由前端那条 revision 过滤条件负责。
 create policy "compass result update own" on public.compass_results
   for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
