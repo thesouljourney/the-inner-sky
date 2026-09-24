@@ -4301,6 +4301,225 @@
   }
 
 
+  /* ============================================================
+     02 想留给自己的几句话 + 此刻的我(全宽度共用;桌机再放大一号)
+     ------------------------------------------------------------
+     高级感靠留白,不靠更多装饰:标题上方只留一颗很细的小金星芒,
+     卡片里不再放分隔线;边框一律是极细的香槟金。背景图不动。
+     ============================================================ */
+  /* 「02」跟「01」一样不显示(编号结构仍在 markup 里,见测试) */
+  #dpage.compass-page .cp-keep .cp-no{display:none}
+  /* 「想留给自己的几句话」:标题上下各一条 细线—✦—细线 */
+  #dpage.compass-page .cp-keep .cp-sh::before,
+  #dpage.compass-page .cp-keep .cp-sh::after{
+    content:"✦";display:block;width:min(78%,300px);margin:0 auto;
+    line-height:1;font-size:11px;color:rgba(176,132,62,.72);text-align:center;
+    background-image:
+      linear-gradient(90deg,transparent,rgba(176,132,62,.42)),
+      linear-gradient(90deg,rgba(176,132,62,.42),transparent);
+    background-size:calc(50% - 14px) 1px,calc(50% - 14px) 1px;
+    background-position:left center,right center;background-repeat:no-repeat
+  }
+  #dpage.compass-page .cp-keep .cp-sh::before{margin-bottom:12px}
+  #dpage.compass-page .cp-keep .cp-sh::after{margin-top:12px;width:min(62%,240px)}
+  /* 「此刻的我」:标题上方只有一颗小金星芒,没有横线 */
+  #dpage.compass-page .cp-now .cp-sh::before{
+    content:"✦";display:block;margin:0 auto 10px;
+    font-size:9px;line-height:1;color:rgba(184,155,105,.78)
+  }
+  #dpage.compass-page .cp-keep .cp-sh .cp-h,
+  #dpage.compass-page .cp-now .cp-sh .cp-h{margin-top:0}
+
+  /* 句子卡:半透明珍珠卡,右上角淡淡的月亮与云(沿用「安定」那张插画,
+     椭圆遮罩淡出,不形成图片边界),文字留在左侧 */
+  #dpage.compass-page .cp-lines{
+    position:relative;overflow:hidden;
+    max-width:min(100%,600px);margin:20px auto 0;padding:24px 22px;border-radius:22px;
+    background:linear-gradient(135deg,rgba(255,255,255,.74),rgba(248,245,255,.6));
+    border:1px solid rgba(214,204,232,.55);
+    box-shadow:0 14px 34px rgba(96,80,140,.08),inset 0 1px 0 rgba(255,255,255,.9);
+    -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)
+  }
+  #dpage.compass-page .cp-lines::before{
+    content:"";position:absolute;top:0;right:0;width:52%;height:100%;z-index:0;pointer-events:none;
+    background:url(assets/life/cp-mobile/panel-ground.webp) right top / contain no-repeat;opacity:.7;
+    -webkit-mask-image:radial-gradient(ellipse 100% 90% at 100% 0%,#000 35%,transparent 100%);
+            mask-image:radial-gradient(ellipse 100% 90% at 100% 0%,#000 35%,transparent 100%)
+  }
+  #dpage.compass-page .cp-lines > p{position:relative;z-index:1;margin:0;padding-right:16%}
+  #dpage.compass-page .cp-keep-lead,
+  #dpage.compass-page .cp-lines .cp-line{
+    padding-top:0;padding-bottom:0;border:0;
+    font-family:var(--dp-serif);font-weight:500;font-size:15.5px;line-height:1.95;
+    letter-spacing:.02em;color:var(--dp-ink)
+  }
+  #dpage.compass-page .cp-lines .cp-line:last-child{border-bottom:0}
+  /* 段落之间:一条中间有 ✦ 的细金线 */
+  #dpage.compass-page .cp-lines > p + p{margin-top:16px;padding-top:18px}
+  #dpage.compass-page .cp-lines > p + p::before{
+    content:"✦";position:absolute;top:-6px;left:0;right:0;
+    line-height:1;font-size:10px;color:rgba(176,132,62,.7);text-align:center;
+    background-image:
+      linear-gradient(90deg,transparent,rgba(176,132,62,.36)),
+      linear-gradient(90deg,rgba(176,132,62,.36),transparent);
+    background-size:calc(50% - 12px) 1px,calc(50% - 12px) 1px;
+    background-position:left center,right center;background-repeat:no-repeat
+  }
+
+  /* 此刻的我 */
+  #dpage.compass-page .cp-now > .cp-q:not(.cp-q2){
+    margin-top:8px;font-family:var(--dp-sans);font-weight:400;
+    font-size:13.5px;letter-spacing:.2em;color:rgba(52,51,70,.72)
+  }
+  #dpage.compass-page .cp-now .cp-q2{
+    margin-top:40px;font-family:var(--dp-serif);font-weight:600;
+    font-size:16.5px;letter-spacing:.04em;color:var(--dp-ink)
+  }
+  /* 心情:文字标签 + 极小线稿。未选时几乎融进背景,只有 hover / 选中
+     才变成奶油白;不发光、不上彩色 */
+  #dpage.compass-page .cp-now .cp-moods{
+    display:flex;flex-wrap:wrap;justify-content:center;gap:10px;
+    max-width:min(100%,600px);margin:20px auto 0;padding:0
+  }
+  #dpage.compass-page .cp-now .cp-mood{
+    display:inline-flex;align-items:center;gap:7px;flex:0 0 auto;
+    min-height:40px;padding:0 16px 0 13px;border-radius:22px;
+    font-family:var(--dp-sans);font-weight:400;font-size:13px;letter-spacing:.05em;color:#5a5870;
+    background:rgba(255,253,249,.26);border:1px solid rgba(184,155,105,.28);box-shadow:none;
+    transition:background .25s ease,border-color .25s ease,color .25s ease
+  }
+  #dpage.compass-page .cp-now .cp-mood .mi{
+    display:block;width:16px;height:16px;flex:0 0 auto;
+    fill:none;stroke:currentColor;stroke-width:1.2;stroke-linecap:round;stroke-linejoin:round
+  }
+  #dpage.compass-page .cp-now .cp-mood .mi.g{color:#b89b69}
+  #dpage.compass-page .cp-now .cp-mood .mi.b{color:#7f88a4}
+  @media(hover:hover){
+    #dpage.compass-page .cp-now .cp-mood:hover{
+      background:rgba(255,251,244,.78);border-color:rgba(184,155,105,.42);color:#3d3b52
+    }
+  }
+  #dpage.compass-page .cp-now .cp-mood.on{
+    background:rgba(255,251,242,.94);border-color:rgba(184,155,105,.62);color:var(--dp-ink)
+  }
+  /* 写字的地方:一张私人信纸,很淡的底、极细边、角落淡淡的羽毛水印 */
+  #dpage.compass-page .cp-now .cp-ta{
+    max-width:min(100%,600px);min-height:120px;margin-top:16px;padding:18px 20px 30px;
+    border-radius:18px;resize:vertical;
+    background:
+      url(assets/life/cp-mobile/note-feather.webp) right 12px bottom 8px / 130px auto no-repeat,
+      rgba(255,253,249,.56);
+    border:1px solid rgba(184,155,105,.2);box-shadow:none;
+    font-size:14.5px
+  }
+  #dpage.compass-page .cp-now .cp-ta::placeholder{color:rgba(119,119,138,.48)}
+  #dpage.compass-page .cp-now .cp-ta:focus{border-color:rgba(184,155,105,.45);background-color:rgba(255,253,249,.8)}
+  /* 按钮:淡紫到粉的胶囊,右边一个箭头 */
+  #dpage.compass-page .cp-now .cp-act{margin-top:24px}
+  #dpage.compass-page .cp-now .dp-cta{
+    display:inline-flex;align-items:center;justify-content:center;gap:12px;
+    min-width:240px;min-height:52px;padding:0 34px;border-radius:30px;
+    background:linear-gradient(135deg,#8f88c6 0%,#b39bc9 55%,#dcb1bd 100%);
+    border:1px solid rgba(255,255,255,.55);
+    font-family:var(--dp-serif);font-size:15.5px;letter-spacing:.12em;color:#fff;
+    box-shadow:0 12px 28px rgba(120,100,170,.26)
+  }
+  #dpage.compass-page .cp-now .dp-cta::after{content:"→";font-family:var(--dp-sans);font-size:16px;letter-spacing:0}
+
+  @media(max-width:767px){
+    #dpage.compass-page .cp-keep-lead,
+    #dpage.compass-page .cp-lines .cp-line{font-size:15px}
+    #dpage.compass-page .cp-now .cp-moods{gap:8px}
+    #dpage.compass-page .cp-now .cp-mood{min-height:38px;padding:0 13px 0 11px;gap:6px;font-size:12.5px;letter-spacing:.03em}
+    #dpage.compass-page .cp-now .cp-mood .mi{width:15px;height:15px}
+    #dpage.compass-page .cp-now .cp-ta{min-height:112px;font-size:15px;background-size:110px auto,auto}
+    #dpage.compass-page .cp-now .dp-cta{min-width:220px;min-height:50px}
+  }
+  /* 段落间距(照用户给的手机实拍):四张卡 → 几句话 → 此刻的我 紧紧接着,
+     不再各自隔一大段。cp-keep 不一定存在,所以 cp-now 自己也设同样的上距。 */
+  #dpage.compass-page .cp-compass,
+  #dpage.compass-page .cp-keep{margin-bottom:0}
+  #dpage.compass-page .cp-keep .cp-sh::after{margin-top:8px}
+  @media(min-width:768px){
+  }
+  /* ── 「想留给自己的几句话」:星月信笺卡(照用户的效果图) ──────────
+     标题上方一颗小金星芒、标题下方一条 细线—✦—细线;卡片本身是奶油色
+     信笺 + 1px 香槟金细边,左上角半月、右上角金色星轨、底部一整排淡云
+     都画在卡片「里面」(被圆角裁切),文字置中,两段之间同样一条 — ✦ —。
+     卡片高度随句子多寡变化,装饰各自贴在角落,不会被拉伸。 */
+  #dpage.compass-page .cp-keep .cp-sh::before{
+    content:"";width:18px;height:18px;margin:0 auto 10px;
+    background:url(assets/life/cp-mobile/keep-star.webp) center / contain no-repeat
+  }
+  #dpage.compass-page .cp-keep .cp-sh::after,
+  #dpage.compass-page .cp-lines > p + p::before{
+    content:"✦";display:block;width:min(64%,280px);margin:12px auto 0;
+    line-height:1;font-size:10px;color:rgba(190,150,80,.85);text-align:center;
+    background-image:
+      linear-gradient(90deg,transparent,rgba(201,168,105,.55)),
+      linear-gradient(90deg,rgba(201,168,105,.55),transparent);
+    background-size:calc(50% - 12px) 1px,calc(50% - 12px) 1px;
+    background-position:left center,right center;background-repeat:no-repeat
+  }
+  #dpage.compass-page .cp-lines{
+    position:relative;overflow:hidden;box-sizing:border-box;
+    width:100%;max-width:680px;margin:20px auto 0;padding:46px 28px 58px;
+    text-align:center;
+    background:
+      url(assets/life/cp-mobile/kc-star.webp) right top / 92px auto no-repeat,
+      url(assets/life/cp-mobile/kc-moon.webp) left top / 80px auto no-repeat,
+      linear-gradient(180deg,rgba(255,251,244,.9),rgba(255,248,240,.84));
+    -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+    border:1px solid rgba(201,168,105,.55);border-radius:26px;
+    box-shadow:0 12px 35px rgba(70,78,120,.08)
+  }
+  /* 底部一整排淡云(在卡片里、被圆角裁切) */
+  #dpage.compass-page .cp-lines::before{
+    content:"";position:absolute;z-index:0;pointer-events:none;
+    left:0;right:0;bottom:0;top:auto;width:auto;height:auto;aspect-ratio:1288/300;opacity:.5;
+    background:url(assets/life/cp-mobile/kc-clouds.webp) center bottom / 100% auto no-repeat;
+    -webkit-mask-image:none;mask-image:none
+  }
+  #dpage.compass-page .cp-lines::after{content:none}
+  #dpage.compass-page .cp-lines > p{position:relative;z-index:1;margin:0;padding:0}
+  #dpage.compass-page .cp-keep-lead,
+  #dpage.compass-page .cp-lines .cp-line{
+    font-family:var(--dp-serif);font-weight:400;font-size:15px;line-height:1.85;
+    letter-spacing:.03em;color:#26324A
+  }
+  /* 两段之间的 — ✦ —:放在第二段上方,跟标题下那条同一个样式 */
+  #dpage.compass-page .cp-lines > p + p{margin-top:0;padding-top:0}
+  #dpage.compass-page .cp-lines > p + p::before{
+    position:static;transform:none;height:auto;margin:12px auto 12px;width:min(44%,180px)
+  }
+  /* 三段以上(有些人会有 3–4 句):分隔线收成只剩一颗小星芒、上下留白
+     也收紧,不要一张卡里出现一排 — ✦ — */
+  #dpage.compass-page .cp-lines:has(> p:nth-child(3)) > p + p::before{
+    background-image:none;width:auto;margin:8px auto 8px;font-size:8px;color:rgba(190,150,80,.7)
+  }
+  @media(min-width:768px){
+    #dpage.compass-page .cp-keep{max-width:720px}
+    #dpage.compass-page .cp-lines{
+      padding:56px 80px 84px;
+      background-size:130px auto,112px auto,auto
+    }
+    #dpage.compass-page .cp-lines::before{opacity:.42}
+    #dpage.compass-page .cp-keep-lead,
+    #dpage.compass-page .cp-lines .cp-line{font-size:16.5px}
+  }
+  /* 桌机:两段都收在正中间一栏,跟指南盘对齐;字与图示放大一号 */
+  @media(min-width:768px){
+    #dpage.compass-page .cp-keep{max-width:720px;margin-left:auto;margin-right:auto}
+    #dpage.compass-page .cp-now{max-width:640px;margin-left:auto;margin-right:auto}
+    #dpage.compass-page .cp-now > .cp-q:not(.cp-q2){font-size:14.5px}
+    #dpage.compass-page .cp-now .cp-q2{font-size:18px}
+    /* 两行各四个 */
+    #dpage.compass-page .cp-now .cp-moods{display:grid;grid-template-columns:repeat(4,auto);justify-content:center;gap:12px}
+    #dpage.compass-page .cp-now .cp-mood{font-size:14px;min-height:44px;justify-content:center}
+    #dpage.compass-page .cp-now .cp-mood .mi{width:17px;height:17px}
+    #dpage.compass-page .cp-now .cp-ta{min-height:136px;background-size:150px auto,auto}
+  }
+
   /* 记录:展开长在自己下面 */
   #dpage.compass-page .cp-sky-card.open{background:var(--dp-cloud)}
   #dpage.compass-page .cp-sky-card .qz{
@@ -4322,15 +4541,16 @@
   #dpage.compass-page .cp-open:focus-visible,
   #dpage.compass-page .cp-del:focus-visible{outline:2px solid rgba(154,140,205,.8);outline-offset:3px}
 
-  /* 越往下越安静 */
-  #dpage.compass-page .cp-keep{margin-top:clamp(74px,9vw,120px)}
-  #dpage.compass-page .cp-now,
+  /* 越往下越安静。四张卡 → 几句话 → 此刻的我 三段紧紧接着(照用户的
+     手机实拍),之后的段落才拉开 */
+  #dpage.compass-page .cp-keep,
+  #dpage.compass-page .cp-now{margin-top:36px}
   #dpage.compass-page .cp-ask{margin-top:clamp(84px,10vw,136px)}
   #dpage.compass-page .cp-sky{margin-top:clamp(96px,12vw,160px)}
 
   @media(max-width:767px){
-    #dpage.compass-page .cp-keep{margin-top:56px}
-    #dpage.compass-page .cp-now,
+    #dpage.compass-page .cp-keep,
+    #dpage.compass-page .cp-now{margin-top:16px}
     #dpage.compass-page .cp-ask{margin-top:64px}
     #dpage.compass-page .cp-sky{margin-top:72px}
     #dpage.compass-page .cp-open,
@@ -11595,13 +11815,27 @@ window.Guide = (function () {
        1 句、2 句、3 句都是完整的结果,版面上不暗示三句才是正常。 */
     if (!list.length) return "";
     return '<section class="cp-sec cp-keep">' +
-      compassSecHead("02", dpT("想留给自己的几句话", "Worth Keeping"), "WORTH KEEPING",
-        dpT("不需要一直记得。需要的时候，再回来看看就好。",
-            "You don’t have to hold on to these. Come back to them when you need to.")) +
-      '<div class="cp-lines">' + list.map(function (a) {
+      compassSecHead("02", dpT("想留给自己的几句话", "Worth Keeping"), "WORTH KEEPING") +
+      /* 引言收进卡片里当第一段,跟底下的句子用同一条星芒分隔线隔开 */
+      '<div class="cp-lines"><p class="cp-keep-lead">' +
+      esc0(dpT("不需要一直记得。需要的时候，再回来看看就好。",
+               "You don’t have to hold on to these. Come back to them when you need to.")) + "</p>" +
+      list.map(function (a) {
         return '<p class="cp-line">' + esc0(a.line) + "</p>";
       }).join("") + "</div></section>";
   }
+
+  /* 心情线稿:20×20、1.2px 描边、不填色 */
+  var CP_MOOD_ICON = [
+    ["b", '<path d="M6 15h8.5a3 3 0 0 0 .3-6 4.5 4.5 0 0 0-8.6-1A3.5 3.5 0 0 0 6 15z"/>'],
+    ["b", '<path d="M6 15h8.5a3 3 0 0 0 .3-6 4.5 4.5 0 0 0-8.6-1A3.5 3.5 0 0 0 6 15z"/><path d="M8 11.6q.8.7 1.6 0M11 11.6q.8.7 1.6 0"/>'],
+    ["b", '<ellipse cx="10" cy="10" rx="7.5" ry="2.8" transform="rotate(30 10 10)"/><ellipse cx="10" cy="10" rx="7.5" ry="2.8" transform="rotate(-30 10 10)"/><circle cx="10" cy="10" r=".9"/>'],
+    ["g", '<circle cx="10" cy="10" r="3.2"/><path d="M10 2.6v1.8M10 15.6v1.8M2.6 10h1.8M15.6 10h1.8M4.8 4.8l1.3 1.3M13.9 13.9l1.3 1.3M4.8 15.2l1.3-1.3M13.9 6.1l1.3-1.3"/>'],
+    ["b", '<path d="M13.2 3.4a6.6 6.6 0 1 0 3.4 11.4A5.6 5.6 0 0 1 13.2 3.4z"/>'],
+    ["g", '<path d="M10 17.2v-6M10 11.2c0-3 2.4-5 5.8-5 0 3.2-2.4 5-5.8 5zM10 12.6c0-2.5-2-4.2-5-4.2 0 2.7 2 4.2 5 4.2z"/>'],
+    ["g", '<path d="M3 14.2h14M6 14.2a4 4 0 0 1 8 0M10 7.4v1.6M5 9.6l1 1M15 9.6l-1 1"/>'],
+    ["g", '<path d="M10 2.6c.6 4 2.3 5.8 6.4 7.4-4.1 1.6-5.8 3.4-6.4 7.4-.6-4-2.3-5.8-6.4-7.4 4.1-1.6 5.8-3.4 6.4-7.4z"/>']
+  ];
 
   function compassNowHtml() {
     return '<section class="cp-sec cp-now">' +
@@ -11609,11 +11843,17 @@ window.Guide = (function () {
       '<p class="cp-q">' + esc0(dpT("今天的天空怎么样？", "How is your sky today?")) + "</p>" +
       '<div class="cp-moods" role="group" aria-label="' +
       esc0(dpT("今天的心情", "Today’s weather")) + '">' +
-      window.Compass.MOODS.map(function (m) {
+      window.Compass.MOODS.map(function (m, i) {
         const label = dpT(m[0], m[1]);
+        /* 每个心情一个极小的线稿图示,跟 MOODS 同顺序;纯装饰,文字才是按钮名称。
+           只用两种色:香槟金(g)与雾蓝灰(b),不是每颗各一个颜色。 */
+        const icon = CP_MOOD_ICON[i];
         return '<button type="button" class="cp-mood' + (compassMood === label ? " on" : "") +
           '" data-mood="' + esc0(label) + '" aria-pressed="' +
-          (compassMood === label ? "true" : "false") + '">' + esc0(label) + "</button>";
+          (compassMood === label ? "true" : "false") + '">' +
+          (icon ? '<svg class="mi ' + icon[0] + '" viewBox="0 0 20 20" aria-hidden="true" focusable="false">' +
+                  icon[1] + "</svg>" : "") +
+          "<span>" + esc0(label) + "</span></button>";
       }).join("") + "</div>" +
       '<p class="cp-q cp-q2">' +
       esc0(dpT("今天有什么事情，一直停留在你心里？",
