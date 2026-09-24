@@ -3853,6 +3853,11 @@
     /* 罗盘比最初缩小约 16%(152→128px):这一段只是地图,不该占掉
        大半个萤幕,让底下真正可以点的四张卡尽早出现。 */
     #dpage.compass-page .cp-rose{width:min(35vw,128px);grid-area:rose;position:relative}
+    /* 手机版中央换成单独的八芒主星(桌机仍是 compass.webp 整张盘面),
+       外圈照旧叠 orbit-ring;星星本身比盘面「空」,缩一点留出轨道。 */
+    #dpage.compass-page .cp-rose{
+      background:url(assets/life/cp-mobile/qm-star.webp) center / 92% auto no-repeat;filter:none
+    }
     /* —— 罗盘插图本身就是那颗星:四个方向的短名 + 一句固定的方向说明
        直接排在它的上下左右,不是另外画一颗小的。用 grid-template-areas
        把 .cp-rose 跟四个 .qm-cell 一起摆位,内容跟底下的 .cp-ent
@@ -3883,8 +3888,21 @@
     }
     #dpage.compass-page .qm-top{grid-area:top;padding-bottom:2px}
     #dpage.compass-page .qm-bottom{grid-area:bottom;padding-top:2px}
-    #dpage.compass-page .qm-left{grid-area:left;align-items:flex-end;text-align:right;max-width:94px}
-    #dpage.compass-page .qm-right{grid-area:right;align-items:flex-start;text-align:left;max-width:94px}
+    #dpage.compass-page .qm-left{grid-area:left;align-items:center;text-align:center;max-width:94px}
+    #dpage.compass-page .qm-right{grid-area:right;align-items:center;text-align:center;max-width:94px}
+    /* 每个方向名字上面一个小天体(太阳/月亮/星/云),固定身分,跟底下
+       卡片的 .ic 是同一组意象。纯装饰:::before 没有文字,qm-cell 本身
+       已是 aria-hidden。::after 留给 .qm-bottom 的叶子,所以用 ::before。 */
+    #dpage.compass-page .qm-cell::before{
+      content:"";display:block;width:32px;height:32px;margin:0 auto 4px;
+      background:center / contain no-repeat;pointer-events:none
+    }
+    #dpage.compass-page .qm-top::before{width:36px;height:36px;background-image:url(assets/life/cp-mobile/qm-sun.webp)}
+    #dpage.compass-page .qm-left::before{width:28px;background-image:url(assets/life/cp-mobile/qm-moon.webp)}
+    #dpage.compass-page .qm-right::before{width:34px;height:34px;background-image:url(assets/life/cp-mobile/qm-star.webp)}
+    #dpage.compass-page .qm-bottom::before{
+      width:50px;height:20px;margin-bottom:2px;background-image:url(assets/life/cp-mobile/qm-cloud.webp)
+    }
     /* 指南盘四个边角各一丛淡叶子(hero 上不放任何装饰)。素材是左右
        各一丛的一张图,每个角落只露其中一丛:宽度卡在单丛那么宽,用
        background-position 选左丛或右丛。上面两丛垂直翻转,从角落往下
