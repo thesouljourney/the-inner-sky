@@ -3790,6 +3790,19 @@
   #dpage.compass-page .cp-why > summary::after{content:"↓";font-size:11px}
   #dpage.compass-page .cp-why[open] > summary::after{content:"↑"}
   #dpage.compass-page .cp-why > summary:focus-visible{outline:2px solid rgba(154,140,205,.8);outline-offset:3px}
+  /* 「想一想」:这一条方向自己的 reflectionPrompt,长在「为什么这适合我」
+     底下,同一张卡里——跟 .cp-pv-card .rp(开发预览)是同一套视觉语言。 */
+  #dpage.compass-page .cp-panel .rp{
+    margin-top:clamp(18px,2.2vw,24px);padding:16px 18px;border-radius:14px;
+    background:rgba(170,160,213,.09);border:1px solid rgba(170,160,213,.18)
+  }
+  #dpage.compass-page .cp-panel .rp .k{
+    display:block;font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;
+    color:rgba(119,119,138,.9)
+  }
+  #dpage.compass-page .cp-panel .rp p{
+    margin:8px 0 0;font-family:var(--dp-serif);font-size:15px;line-height:1.95;color:var(--dp-ink)
+  }
   #dpage.compass-page .cp-close{
     margin-top:clamp(16px,2vw,22px);padding:6px 0;min-height:36px;
     background:none;border:0;cursor:pointer;
@@ -4024,6 +4037,8 @@
     #dpage.compass-page .cp-panel{padding:22px 18px;border-radius:16px}
     #dpage.compass-page .cp-panel .bd{font-size:14.5px;line-height:2.05}
     #dpage.compass-page .cp-panel .tx{font-size:14px;line-height:2.05}
+    #dpage.compass-page .cp-panel .rp{padding:14px 15px}
+    #dpage.compass-page .cp-panel .rp p{font-size:14px}
     /* 手机版:「为什么这适合我？」从点开才有的收合区块,
        改成夹在中间、一直看得到的一个小方块——資料、<details> 標籤、
        点击处理完全没动。真正让它一直展开的是 JS 帮 <details> 补上
@@ -10926,23 +10941,31 @@ window.Guide = (function () {
         return '<details class="cp-why"><summary>' +
           esc0(dpT("为什么这适合我？", "Why this fits me")) + "</summary>" + body + "</details>";
       };
+      /* 「想一想」:这一条方向自己的 reflectionPrompt,长在「为什么这适合我」
+         底下——跟页面下面那个【一天只挑一句、四选一轮换】的「今天想问自己的
+         一个问题」是两件事,那一个不动,这里只是把这一条方向自己的问题
+         摆回它自己的卡片里。没有就整段不印,不用空标签占位。 */
+      const think = c && c.reflectionPrompt
+        ? '<div class="rp"><span class="k">' + esc0(dpT("想一想", "A question")) + "</span>" +
+          "<p>" + esc0(c.reflectionPrompt) + "</p></div>"
+        : "";
       if (!c) {
         /* 这一段生成时就没有足够线索 —— 与情境层无关,照实说 */
         panel = '<p class="cp-pending">' +
           esc0(dpT("这个方向目前没有足够的线索。",
                    "There isn’t enough to say about this direction yet.")) + "</p>";
       } else if (st) {
-        /* 情境 → 那几句 → 可选的第二句 → 披露里是【原本那两段,一字不改】 */
+        /* 情境 → 那几句 → 可选的第二句 → 披露里是【原本那两段,一字不改】 → 想一想 */
         panel = '<p class="hd">' + esc0(st.situation) + "</p>" +
           '<p class="bd">' + esc0(st.text) + "</p>" +
           (st.micro ? '<p class="bd sub">' + esc0(st.micro) + "</p>" : "") +
           why('<p class="ci">' + esc0(c.coreInsight) + "</p>" +
-              '<p class="tx">' + esc0(c.explanation) + "</p>");
+              '<p class="tx">' + esc0(c.explanation) + "</p>") + think;
       } else {
         /* 认不出情境:他自己的 coreInsight 当主角,explanation 收到披露后面。
            结构与上面那一支【完全一样】,只是没有中间那几句。 */
         panel = '<p class="hd">' + esc0(c.coreInsight) + "</p>" +
-          why('<p class="tx">' + esc0(c.explanation) + "</p>");
+          why('<p class="tx">' + esc0(c.explanation) + "</p>") + think;
       }
       panel = '<div class="cp-panel" id="cpPanel" data-for="' + esc0(active) + '">' +
         panel + '<button type="button" class="cp-close" id="cpPanelClose">' +
