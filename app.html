@@ -4418,13 +4418,16 @@
   #dpage.compass-page .cp-now .cp-act{margin-top:24px}
   #dpage.compass-page .cp-now .dp-cta{
     display:inline-flex;align-items:center;justify-content:center;gap:12px;
-    min-width:240px;min-height:52px;padding:0 34px;border-radius:30px;
+    min-width:200px;min-height:46px;padding:0 28px;border-radius:30px;gap:10px;
     /* 用户给的星光胶囊素材(已裁到内圈白边),拉满整颗按钮;外面只留一层柔光 */
-    background:url(assets/life/cp-mobile/cta-pill.webp) center / 100% 100% no-repeat,#b39bd8;
+    /* 上面叠一层半透明白,整体淡一点 */
+    background:
+      linear-gradient(rgba(255,255,255,.3),rgba(255,255,255,.3)),
+      url(assets/life/cp-mobile/cta-pill.webp) center / 100% 100% no-repeat,#c9b8e6;
     border:0;
-    font-family:var(--dp-serif);font-size:15.5px;letter-spacing:.12em;color:#fff;
-    text-shadow:0 1px 6px rgba(90,60,140,.35);
-    box-shadow:0 10px 30px rgba(170,130,220,.35),0 0 18px rgba(230,190,240,.35)
+    font-family:var(--dp-serif);font-size:14.5px;letter-spacing:.12em;color:#fff;
+    text-shadow:0 1px 5px rgba(90,60,140,.45);
+    box-shadow:0 8px 22px rgba(170,130,220,.22),0 0 14px rgba(230,190,240,.25)
   }
   #dpage.compass-page .cp-now .dp-cta::after{content:"→";font-family:var(--dp-sans);font-size:16px;letter-spacing:0}
 
@@ -4435,7 +4438,7 @@
     #dpage.compass-page .cp-now .cp-mood{min-height:38px;padding:0 13px 0 11px;gap:6px;font-size:12.5px;letter-spacing:.03em}
     #dpage.compass-page .cp-now .cp-mood .mi{width:15px;height:15px}
     #dpage.compass-page .cp-now .cp-ta{min-height:112px;font-size:15px;background-size:110px auto,auto}
-    #dpage.compass-page .cp-now .dp-cta{min-width:240px;min-height:54px}
+    #dpage.compass-page .cp-now .dp-cta{min-width:200px;min-height:46px}
   }
   /* 段落间距(照用户给的手机实拍):四张卡 → 几句话 → 此刻的我 紧紧接着,
      不再各自隔一大段。cp-keep 不一定存在,所以 cp-now 自己也设同样的上距。 */
@@ -4515,7 +4518,7 @@
     #dpage.compass-page .cp-now{max-width:640px;margin-left:auto;margin-right:auto}
     #dpage.compass-page .cp-now > .cp-q:not(.cp-q2){font-size:14.5px}
     #dpage.compass-page .cp-now .cp-q2{font-size:18px}
-    #dpage.compass-page .cp-now .dp-cta{min-width:300px;min-height:60px;font-size:16.5px}
+    #dpage.compass-page .cp-now .dp-cta{min-width:230px;min-height:50px;font-size:15px}
     /* 两行各四个 */
     #dpage.compass-page .cp-now .cp-moods{display:grid;grid-template-columns:repeat(4,auto);justify-content:center;gap:12px}
     #dpage.compass-page .cp-now .cp-mood{font-size:14px;min-height:44px;justify-content:center}
