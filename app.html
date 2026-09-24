@@ -3927,7 +3927,7 @@
     }
     #dpage.compass-page .cp-compass::before,
     #dpage.compass-page .cp-compass::after{
-      top:-6px;z-index:0;transform:scaleY(-1);width:72px;height:112px;background-size:172px auto
+      top:-40px;z-index:0;transform:scaleY(-1);width:72px;height:112px;background-size:172px auto
     }
     #dpage.compass-page .cp-compass::before{left:-20px;background-position:left bottom}
     #dpage.compass-page .cp-compass::after{right:-20px;background-position:right bottom}
@@ -4194,6 +4194,95 @@
     #dpage.compass-page .cp-lines{margin-top:24px}
     #dpage.compass-page .cp-line{padding:18px 0;font-size:16px}
     #dpage.compass-page .cp-ask-card .qt{font-size:18px}
+  }
+
+  /* ============================================================
+     四个方向的主题配色(桌机 + 手机共用)
+     ------------------------------------------------------------
+     以「前进」的暖金展开区为基准,让另外三个方向也有自己的色层,
+     不是大面积纯白。只动 background / border / 极淡的 glow,
+     文字、版面、插画、图示、间距都不变。「前进」展开区维持原样。
+       安定 Moonlight Blue / Soft Periwinkle
+       前进 暖金(卡片只加一层淡奶油金)
+       消耗 Soft Blush / Sakura
+       吸引 Starlight Lavender / Celestial Blue
+     ============================================================ */
+  /* 未展开的卡片:ivory 底上叠约 5–8% 的主题色。用 background-image
+     叠在原本的底色上,hover / 选中时原本的底色变化照样看得到。 */
+  #dpage.compass-page .cp-ent.d1{
+    background-image:linear-gradient(135deg,rgba(250,250,255,.9),rgba(239,241,253,.88));
+    border-color:rgba(206,208,236,.75)
+  }
+  #dpage.compass-page .cp-ent.d2{
+    background-image:linear-gradient(135deg,rgba(255,252,245,.9),rgba(251,244,229,.88));
+    border-color:rgba(226,206,164,.55)
+  }
+  #dpage.compass-page .cp-ent.d3{
+    background-image:linear-gradient(135deg,rgba(255,251,250,.9),rgba(252,239,242,.88));
+    border-color:rgba(239,213,221,.8)
+  }
+  #dpage.compass-page .cp-ent.d4{
+    background-image:linear-gradient(135deg,rgba(251,250,255,.9),rgba(242,240,253,.88));
+    border-color:rgba(216,218,238,.8)
+  }
+
+  /* 展开区:由上到下的三段色(文字区一直是最浅的那一段),右上角一团
+     很淡的主题色 glow,让插画像是从背景里长出来,不是一块贴上去的图。 */
+  #dpage.compass-page .cp-panel[data-for="ground"]{
+    background:
+      radial-gradient(75% 48% at 100% 0%,rgba(190,200,246,.42),rgba(190,200,246,0) 72%),
+      linear-gradient(180deg,#FCFBF8 0%,#F6F6FF 55%,#EDF1FF 100%);
+    border-color:#DCDCEE
+  }
+  #dpage.compass-page .cp-panel[data-for="drain"]{
+    background:
+      radial-gradient(72% 46% at 100% 0%,rgba(248,212,224,.42),rgba(248,212,224,0) 72%),
+      radial-gradient(60% 30% at 0% 100%,rgba(252,226,234,.35),rgba(252,226,234,0) 70%),
+      linear-gradient(180deg,#FFFDFB 0%,#FFF5F7 55%,#FCECEF 100%);
+    border-color:#EFD5DD
+  }
+  #dpage.compass-page .cp-panel[data-for="call"]{
+    background:
+      radial-gradient(circle at 70% 9%,rgba(255,247,222,.9) 0,rgba(255,247,222,0) 3px),
+      radial-gradient(circle at 58% 30%,rgba(255,247,222,.75) 0,rgba(255,247,222,0) 2px),
+      radial-gradient(circle at 88% 38%,rgba(255,247,222,.8) 0,rgba(255,247,222,0) 2.5px),
+      radial-gradient(75% 50% at 100% 0%,rgba(186,192,246,.45),rgba(186,192,246,0) 72%),
+      linear-gradient(180deg,#FCFBFF 0%,#F3F3FF 55%,#E9EDFF 100%);
+    border-color:#D8DAEE
+  }
+
+  @media(max-width:767px){
+    /* 插画的淡出改成从右上角往外的椭圆,不再是水平 + 垂直两条直线,
+       看不到图片的边界(「前进」不动)。 */
+    #dpage.compass-page .cp-panel[data-for="ground"]::before,
+    #dpage.compass-page .cp-panel[data-for="drain"]::before,
+    #dpage.compass-page .cp-panel[data-for="call"]::before{
+      -webkit-mask-image:radial-gradient(ellipse 100% 95% at 100% 0%,#000 40%,transparent 100%);
+      -webkit-mask-composite:source-over;
+              mask-image:radial-gradient(ellipse 100% 95% at 100% 0%,#000 40%,transparent 100%);
+              mask-composite:add
+    }
+    /* 「为什么这适合我？」:各方向自己的底色与边框 */
+    #dpage.compass-page .cp-panel[data-for="ground"] .cp-why{background:#F4F3FC;border-color:#DCDCEE}
+    #dpage.compass-page .cp-panel[data-for="drain"] .cp-why{background:#FFF1F5;border-color:#EFD5DD}
+    #dpage.compass-page .cp-panel[data-for="call"] .cp-why{background:#F1F2FC;border-color:#D8DAEE}
+  }
+
+  /* 桌机/平板:标题区跟手机一致——不放「01」、显示两行副标、
+     上方两个角各一丛淡叶子(从 hero 下缘往下垂)。罗盘与四张卡的
+     版面不变,所以下方两丛叶子只在手机版(桌机那里是卡片)。 */
+  @media(min-width:768px){
+    #dpage.compass-page .cp-compass .cp-no{display:none}
+    #dpage.compass-page .cp-compass .cp-lead{display:block;white-space:pre-line;margin-top:12px}
+    #dpage.compass-page .cp-compass > *{position:relative;z-index:1}
+    #dpage.compass-page .cp-compass::before,
+    #dpage.compass-page .cp-compass::after{
+      content:"";position:absolute;top:-36px;width:118px;height:180px;z-index:0;
+      pointer-events:none;opacity:.6;transform:scaleY(-1);
+      background:url(assets/life/cp-mobile/leaves.webp) no-repeat;background-size:282px auto
+    }
+    #dpage.compass-page .cp-compass::before{left:0;background-position:left bottom}
+    #dpage.compass-page .cp-compass::after{right:0;background-position:right bottom}
   }
 
   /* 记录:展开长在自己下面 */
