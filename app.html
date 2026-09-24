@@ -3853,13 +3853,10 @@
     /* 罗盘比最初缩小约 16%(152→128px):这一段只是地图,不该占掉
        大半个萤幕,让底下真正可以点的四张卡尽早出现。 */
     #dpage.compass-page .cp-rose{width:min(35vw,128px);grid-area:rose;position:relative}
-    /* 手机版中央:底下一整张盘面(qm-disc),上面再叠单独的八芒主星
-       (qm-star),外圈照旧叠 orbit-ring。桌机仍是 compass.webp。
-       多重背景第一层在最上面,所以星写在前、盘面写在后。 */
+    /* 手机版中央:一整张主星盘面(qm-center),外圈照旧叠 orbit-ring。
+       桌机仍是 compass.webp。 */
     #dpage.compass-page .cp-rose{
-      background:
-        url(assets/life/cp-mobile/qm-star.webp) center / 92% auto no-repeat,
-        url(assets/life/cp-mobile/qm-disc.webp) center / 100% auto no-repeat;
+      background:url(assets/life/cp-mobile/qm-center.webp) center / contain no-repeat;
       filter:none
     }
     /* —— 罗盘插图本身就是那颗星:四个方向的短名 + 一句固定的方向说明
@@ -3938,6 +3935,8 @@
     /* .cp-compass 自己的副标(见 JS 里的 compassSecHead 第四个参数)——
        桌机/平板预设 display:none(见基础规则),只在这里打开。 */
     #dpage.compass-page .cp-compass .cp-lead{display:block}
+    /* 手机版这一段标题上面不放「01」编号 */
+    #dpage.compass-page .cp-compass .cp-no{display:none}
     #dpage.compass-page .cp-lead{font-size:14.5px}
     /* 本段副标固定两行(文案里的 \n 用 pre-line 断行),字比其他段小一号。
        左右各留 52px:上面两丛叶子(比下面两丛小一点)从萤幕边往内伸到
