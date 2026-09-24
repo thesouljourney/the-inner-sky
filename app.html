@@ -4182,6 +4182,13 @@
     #dpage.compass-page .cp-startfrom,
     #dpage.compass-page .cp-ent,
     #dpage.compass-page .cp-panel{width:100%;max-width:600px;justify-self:center}
+    /* 桌机卡片加高:600px 宽配 112px 高太扁,右侧插画会被高度缩得很小。
+       加到 132px,比例接近手机,插画跟着变大,说明也更容易完整放下。 */
+    #dpage.compass-page .cp-ent{height:132px;padding:0 20px;column-gap:16px;grid-template-columns:60px 1fr 36px}
+    #dpage.compass-page .cp-ent .ic{width:60px;height:60px}
+    #dpage.compass-page .cp-ent .zh{font-size:16.5px}
+    #dpage.compass-page .cp-ent .sit{font-size:13.5px}
+    #dpage.compass-page .cp-ent .arrow{width:34px;height:34px}
     /* 大萤幕上盘面与四个方向放大 */
     #dpage.compass-page .cp-rose{width:240px}
     #dpage.compass-page .qm-cell b{font-size:16.5px}
