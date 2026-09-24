@@ -4115,7 +4115,7 @@
     #dpage.compass-page .cp-panel[data-for="drain"] .cp-eyebrow,
     #dpage.compass-page .cp-panel[data-for="drain"] .cp-close{color:#a86c80}
     #dpage.compass-page .cp-panel[data-for="drain"] .cp-eyebrow::before{color:rgba(214,138,160,.8)}
-    #dpage.compass-page .cp-panel[data-for="call"]::before{background-image:url(assets/life/cp-mobile/card-call.webp)}
+    #dpage.compass-page .cp-panel[data-for="call"]::before{background-image:url(assets/life/cp-mobile/panel-call.webp)}
     #dpage.compass-page .cp-panel > *{position:relative;z-index:1}
     #dpage.compass-page .cp-panel .cp-eyebrow{
       display:inline-flex;align-items:center;gap:7px;
@@ -11107,8 +11107,8 @@ window.Guide = (function () {
       const st = sits[KEYS[active]];
       /* .wi / .ri / .cp-eyebrow 是手机版展开区的小图示与眉标,纯装饰;
          桌机/平板用 CSS 藏起来,版面一个像素都不变。 */
-      const WHY_ICON = { ground: "why-moon.webp", drain: "why-drain.webp" };
-      const LEAF_ICON = { move: "ic-leaf-move.webp", drain: "ic-leaf-drain.webp" };
+      const WHY_ICON = { ground: "why-moon.webp", drain: "why-drain.webp", call: "why-call.webp" };
+      const LEAF_ICON = { move: "ic-leaf-move.webp", drain: "ic-leaf-drain.webp", call: "ic-leaf-call.webp" };
       const whyIcon = WHY_ICON[active] ? "assets/life/cp-mobile/" + WHY_ICON[active] : (CP_ICON[active] || "");
       const why = function (body) {
         return '<details class="cp-why"><summary>' +
