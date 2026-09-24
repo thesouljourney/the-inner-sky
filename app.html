@@ -3402,16 +3402,6 @@
       padding-bottom:clamp(48px,14vw,80px);
       position:relative
     }
-    /* 手机专属:hero 两个角落各一枝淡叶子,纯装饰——这张素材本身就是
-       左右各一丛(不用另外镜像一次),压在照片之上、文字之下。不给
-       z-index、不碰 isolation:::before 生成内容本来就排在真正子元素
-       前面,账号选单原本的层叠(.dp-topbar/.dp-hero-grid 都是
-       z-index:auto)不会被这层改动影响。 */
-    #dpage.compass-page .dp-hero::before{
-      content:"";position:absolute;left:0;right:0;top:0;height:150px;
-      background:url(assets/life/cp-mobile/leaves.webp) center top / 100% auto no-repeat;
-      opacity:.55;pointer-events:none
-    }
     /* 页尾的返回区块在窄萤幕会把长按钮挤到折行 —— 这一页改成直排置中。
        .dp-return 是共用元件,所以这条规则锁在 .compass-page 底下,
        其他页面的页尾一个像素都不受影响。 */
@@ -3898,25 +3888,31 @@
       display:block;grid-area:now;font-family:var(--dp-sans);font-weight:300;
       font-size:10.5px;letter-spacing:.16em;color:rgba(34,35,58,.6)
     }
-    /* 罗盘两侧各配一枝花:左白右粉,不再贴在标题那一行,改成靠着
-       指南盘(前进/安定/吸引/消耗那一圈)——白花偏中下,对齐「安定」
-       往下到「消耗」;粉花偏中上,对齐说明文字下面到「吸引」。两枝
-       都整枝压在 .cp-compass 内容左右外侧(负 left/right,只留一点
-       探进画面),量过 .qm-left/.qm-right 实际位置,确保不会挡到
-       「安定」「吸引」那两个字。 */
+    /* 指南盘四个边角各一丛淡叶子(hero 上不放任何装饰)。素材是左右
+       各一丛的一张图,每个角落只露其中一丛:宽度卡在单丛那么宽,用
+       background-position 选左丛或右丛。上面两丛垂直翻转,从角落往下
+       垂;挂在 .cp-compass 顶端(跟标题同高)。下面两丛原样,从底部往上
+       长;挂在 .cp-wheel-core 底边(「消耗」底下)——.qm-bottom 没有
+       position,它的 ::after 定位基准一样是 .cp-wheel-core。left/right
+       -20px 刚好抵到 .dp-body 的 20px 内距,贴齐萤幕边、不会撑出横向卷动。
+       z-index:-1 压在字底下:.cp-compass/.cp-wheel 都是 z-index:1 的
+       堆叠层,所以只会退到本段背后,不会掉到页面底色后面。 */
     #dpage.compass-page .cp-compass::before,
-    #dpage.compass-page .cp-compass::after{
-      content:"";position:absolute;width:48px;
-      z-index:0;pointer-events:none;opacity:.7;background-repeat:no-repeat;background-size:contain
+    #dpage.compass-page .cp-compass::after,
+    #dpage.compass-page .cp-wheel-core::after,
+    #dpage.compass-page .qm-bottom::after{
+      content:"";position:absolute;width:84px;height:130px;
+      pointer-events:none;opacity:.6;
+      background:url(assets/life/cp-mobile/leaves.webp) no-repeat;background-size:200px auto
     }
-    #dpage.compass-page .cp-compass::before{
-      left:-28px;top:220px;height:210px;
-      background-image:url(assets/life/cp-mobile/branch-white.webp);background-position:left top
-    }
-    #dpage.compass-page .cp-compass::after{
-      right:-28px;top:130px;height:190px;
-      background-image:url(assets/life/cp-mobile/branch-pink.webp);background-position:right bottom
-    }
+    #dpage.compass-page .cp-compass::before,
+    #dpage.compass-page .cp-compass::after{top:-6px;z-index:0;transform:scaleY(-1)}
+    #dpage.compass-page .cp-compass::before{left:-20px;background-position:left bottom}
+    #dpage.compass-page .cp-compass::after{right:-20px;background-position:right bottom}
+    #dpage.compass-page .cp-wheel-core::after,
+    #dpage.compass-page .qm-bottom::after{bottom:-24px;z-index:-1}
+    #dpage.compass-page .cp-wheel-core::after{left:-20px;background-position:left bottom}
+    #dpage.compass-page .qm-bottom::after{right:-20px;background-position:right bottom}
     #dpage.compass-page .cp-compass > *{position:relative;z-index:1}
     /* .cp-compass 自己的副标(见 JS 里的 compassSecHead 第四个参数)——
        桌机/平板预设 display:none(见基础规则),只在这里打开。 */
