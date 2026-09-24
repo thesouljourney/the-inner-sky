@@ -3934,7 +3934,7 @@
     }
     #dpage.compass-page .cp-startfrom{
       position:relative;display:flex;order:8;flex-direction:column;align-items:center;gap:6px;
-      text-align:center;margin:6px 0 14px;padding:24px 0
+      text-align:center;margin:20px 0 26px;padding:40px 0
     }
     /* 天空从这里开始慢慢安静下来:往下一路铺到四张卡底下,盖过中间
        卡与卡的缝隙,让卡片区变成视觉主角,而不是天空/罗盘/卡片素材
@@ -3976,8 +3976,8 @@
        所以这里的绝对定位其实是相对 b/span 自己算,不是相对
        .cp-startfrom——top/bottom 要用负值把线推到文字外面
        (.cp-startfrom 已经留了 26px 的 padding 装它)。 */
-    #dpage.compass-page .cp-startfrom b::before{width:min(84vw,320px);top:-22px}
-    #dpage.compass-page .cp-startfrom span::after{width:min(64vw,260px);bottom:-22px}
+    #dpage.compass-page .cp-startfrom b::before{width:min(84vw,320px);top:-34px}
+    #dpage.compass-page .cp-startfrom span::after{width:min(64vw,260px);bottom:-34px}
     /* —— 四个方向的入口:圆角卡片,左边一颗统一规格的圆形章节点 + 编号,
        右边一圈细框的箭头按钮,卡片右侧衬一点淡淡的实景。点击行为、
        资料完全没有动,只是外观。卡面用极淡的斜向珍珠渐层 + 内高光,
@@ -4241,20 +4241,22 @@
      ============================================================ */
   /* 未展开的卡片:ivory 底上叠约 5–8% 的主题色。用 background-image
      叠在原本的底色上,hover / 选中时原本的底色变化照样看得到。 */
+  /* 卡片更透一点,底下的天空透得出来;加一层轻模糊,字仍然清楚 */
+  #dpage.compass-page .cp-ent{-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
   #dpage.compass-page .cp-ent.d1{
-    background-image:linear-gradient(135deg,rgba(250,250,255,.9),rgba(239,241,253,.88));
+    background-image:linear-gradient(135deg,rgba(250,250,255,.68),rgba(239,241,253,.6));
     border-color:rgba(206,208,236,.75)
   }
   #dpage.compass-page .cp-ent.d2{
-    background-image:linear-gradient(135deg,rgba(255,252,245,.9),rgba(251,244,229,.88));
+    background-image:linear-gradient(135deg,rgba(255,252,245,.68),rgba(251,244,229,.6));
     border-color:rgba(226,206,164,.55)
   }
   #dpage.compass-page .cp-ent.d3{
-    background-image:linear-gradient(135deg,rgba(255,251,250,.9),rgba(252,239,242,.88));
+    background-image:linear-gradient(135deg,rgba(255,251,250,.68),rgba(252,239,242,.6));
     border-color:rgba(239,213,221,.8)
   }
   #dpage.compass-page .cp-ent.d4{
-    background-image:linear-gradient(135deg,rgba(251,250,255,.9),rgba(242,240,253,.88));
+    background-image:linear-gradient(135deg,rgba(251,250,255,.68),rgba(242,240,253,.6));
     border-color:rgba(216,218,238,.8)
   }
 
