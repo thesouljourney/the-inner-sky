@@ -4107,8 +4107,8 @@ function testCompassSituations() {
   checkEq("[sit] 四个方向永远都在", /DIRS\.map\(function \(d, i\)/.test(dir), true);
   checkEq("[sit] 有情境时,披露里是原本那两段",
     /why\('<p class="ci">' \+ esc0\(c\.coreInsight\)[\s\S]{0,160}c\.explanation/.test(dir), true);
-  checkEq("[sit] 没有情境时,coreInsight 当主角、explanation 收进披露",
-    /'<p class="hd">' \+ esc0\(c\.coreInsight\) \+ "<\/p>" \+\n\s*why\('<p class="tx">' \+ esc0\(c\.explanation\)/.test(dir), true);
+  checkEq("[sit] 没有 openingLine 又没有情境时,coreInsight 退回来当 opening",
+    /const opening = \(c && c\.openingLine\) \|\| \(st && st\.situation\) \|\| \(c && c\.coreInsight\)/.test(dir), true);
   checkEq("[sit] 画面上没有 schema 标签",
     /一小步|Micro-action|试试看|练习|Cost Signal|Recognition|Orientation|RETURN|NOTICE|FOLLOW/
       .test(dirCode), false);
@@ -4277,7 +4277,7 @@ function testAnchorsV11AndRenderV2() {
     (html.slice(html.indexOf("function compassRoseSvg"), html.indexOf("var CP_GLYPH"))
       .match(/fill="none"/g) || []).length, 0);
   checkEq("[v2] 展开的说明一律收在披露后面",
-    (dir.match(/c\.explanation/g) || []).length === 2 &&
+    (dir.match(/c\.explanation/g) || []).length === 1 &&
     (dir.match(/class="cp-why"/g) || []).length === 1, true);
 
   /* ═══ F. 案例 A / B / C:每个有文案的方向都看得到个人化内容 ═══ */
@@ -4334,24 +4334,27 @@ function testCanonicalStorage() {
   dirty.input = { systemPrompt: "你在为…" };
   const row = CC.toRow(dirty);
   /* 三个不一样的数字,分别钉住,不要互相冒充:
-       资料表 18 栏 / toRow() 14 个键 / INSERT body 15 个键(多一个 user_id) */
-  checkEq("[r1] toRow() 输出 14 个键", Object.keys(row).length, 14);
+       资料表 26 栏 / toRow() 22 个键(v1.4 起每个方向多两个可选栏位)
+       / INSERT body 23 个键(多一个 user_id) */
+  checkEq("[r1] toRow() 输出 22 个键", Object.keys(row).length, 22);
   checkEq("[r1] toRow() 不碰由资料库产生的栏位",
     ["user_id", "revision", "created_at", "updated_at"]
       .filter(function (k) { return k in row; }).join(","), "");
-  checkEq("[r1] 资料表实际是 18 栏",
+  checkEq("[r1] 资料表实际是 26 栏",
     (sql.slice(sql.indexOf("create table if not exists public.compass_results ("),
                sql.indexOf("\n);")).replace(/--.*$/gm, "")
-       .match(/\b([a-z_]+)\s+(uuid|text|timestamptz|smallint)\b/g) || []).length, 18);
+       .match(/\b([a-z_]+)\s+(uuid|text|timestamptz|smallint)\b/g) || []).length, 26);
   checkEq("[r1] INSERT 只多送一个 user_id",
     /var row = Cc\.toRow\(v\.result\);\s*\n\s*row\.user_id = owner;\s*\n\s*return nf\(/
       .test(html), true);
   checkEq("[r1] INSERT 不送 revision / created_at / updated_at",
     /row\.(revision|created_at|updated_at)\s*=/.test(html), false);
   checkEq("[r1] 栏位名逐字固定", Object.keys(row).join(","),
-    "prompt_version,generated_at,grounds_core,grounds_expl,grounds_prompt," +
-    "moves_core,moves_expl,moves_prompt,drains_core,drains_expl,drains_prompt," +
-    "calls_core,calls_expl,calls_prompt");
+    "prompt_version,generated_at," +
+    "grounds_core,grounds_expl,grounds_prompt,grounds_opening,grounds_short," +
+    "moves_core,moves_expl,moves_prompt,moves_opening,moves_short," +
+    "drains_core,drains_expl,drains_prompt,drains_opening,drains_short," +
+    "calls_core,calls_expl,calls_prompt,calls_opening,calls_short");
   const blob = JSON.stringify(row);
   ["mechanism", "livedMechanism", "support", "tension", "composite", "selectionReason",
    "selectionScore", "structuralAnchors", "strength", "distinctiveness", "anchors",
@@ -4366,7 +4369,7 @@ function testCanonicalStorage() {
   checkEq("[r1] 读回来的不带 anchors", "anchors" in CC.rowOut(row), false);
   /* toRow 是白名单:快取里将来多出任何东西都上不去 */
   checkEq("[r1] 未知栏位不会被带上云",
-    Object.keys(CC.toRow(Object.assign({ whatever: 1 }, A))).length, 14);
+    Object.keys(CC.toRow(Object.assign({ whatever: 1 }, A))).length, 22);
 
   /* ═══ 2. 窄 schema 验证 ═══ */
   checkEq("[r1] 正常的一列通过", CC.validateRow(row).ok, true);

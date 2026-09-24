@@ -68,11 +68,16 @@ create table if not exists public.compass_results (
   -- 这一栏是留给将来「明确地重新生成」用的条件更新。
   revision       smallint    not null default 1,
 
-  -- 四个方向。每个方向只有使用者看得到的那三句。
+  -- 四个方向。每个方向的必要三句,加上 v1.4 起新增的两个可选栏位
+  -- (opening/short——跟 prompt 一样,不参与这个方向存不存在的判断)。
   grounds_core   text, grounds_expl   text, grounds_prompt text,
+  grounds_opening text, grounds_short text,
   moves_core     text, moves_expl     text, moves_prompt   text,
+  moves_opening  text, moves_short   text,
   drains_core    text, drains_expl    text, drains_prompt  text,
+  drains_opening text, drains_short  text,
   calls_core     text, calls_expl     text, calls_prompt   text,
+  calls_opening  text, calls_short   text,
 
   created_at     timestamptz not null default now(),
   updated_at     timestamptz not null default now(),
@@ -96,6 +101,18 @@ create table if not exists public.compass_results (
     char_length(coalesce(moves_prompt,   '')) <= 300 and
     char_length(coalesce(drains_prompt,  '')) <= 300 and
     char_length(coalesce(calls_prompt,   '')) <= 300),
+
+  constraint cr_opening_len_chk check (
+    char_length(coalesce(grounds_opening, '')) <= 40 and
+    char_length(coalesce(moves_opening,   '')) <= 40 and
+    char_length(coalesce(drains_opening,  '')) <= 40 and
+    char_length(coalesce(calls_opening,   '')) <= 40),
+
+  constraint cr_short_len_chk check (
+    char_length(coalesce(grounds_short, '')) <= 160 and
+    char_length(coalesce(moves_short,   '')) <= 160 and
+    char_length(coalesce(drains_short,  '')) <= 160 and
+    char_length(coalesce(calls_short,   '')) <= 160),
 
   -- 一份指南至少要有一个方向讲得出话,不收全空的列
   constraint cr_not_empty_chk check (
@@ -144,3 +161,34 @@ drop trigger if exists compass_results_touch_trg on public.compass_results;
 create trigger compass_results_touch_trg
   before update on public.compass_results
   for each row execute function public.compass_results_touch();
+
+-- ---------------------------------------------------------------
+-- v1.4 迁移:这张表如果是【在这次改动之前】就已经建好的,
+-- 上面的 create table if not exists 不会帮已存在的表加栏位——
+-- 要跑这一段,才会真的补上 opening/short 这四对新栏位。
+-- 在已有资料的表上跑是安全的:新栏位一律以 null 开始,
+-- 旧的列（v1.4 之前生成的内容）不受影响，也不需要重新生成才能读。
+-- ---------------------------------------------------------------
+alter table public.compass_results
+  add column if not exists grounds_opening text,
+  add column if not exists grounds_short   text,
+  add column if not exists moves_opening   text,
+  add column if not exists moves_short     text,
+  add column if not exists drains_opening  text,
+  add column if not exists drains_short    text,
+  add column if not exists calls_opening   text,
+  add column if not exists calls_short     text;
+
+alter table public.compass_results drop constraint if exists cr_opening_len_chk;
+alter table public.compass_results add constraint cr_opening_len_chk check (
+  char_length(coalesce(grounds_opening, '')) <= 40 and
+  char_length(coalesce(moves_opening,   '')) <= 40 and
+  char_length(coalesce(drains_opening,  '')) <= 40 and
+  char_length(coalesce(calls_opening,   '')) <= 40);
+
+alter table public.compass_results drop constraint if exists cr_short_len_chk;
+alter table public.compass_results add constraint cr_short_len_chk check (
+  char_length(coalesce(grounds_short, '')) <= 160 and
+  char_length(coalesce(moves_short,   '')) <= 160 and
+  char_length(coalesce(drains_short,  '')) <= 160 and
+  char_length(coalesce(calls_short,   '')) <= 160);

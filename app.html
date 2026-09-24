@@ -6679,7 +6679,9 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
           out.directions[k] = {
             coreInsight: String(c.coreInsight),
             explanation: String(c.explanation || ""),
-            reflectionPrompt: String(c.reflectionPrompt || "")
+            reflectionPrompt: String(c.reflectionPrompt || ""),
+            openingLine: String(c.openingLine || ""),
+            shortInsight: String(c.shortInsight || "")
           };
         });
         /* 只有 line 会进画面。其余是取舍过程的纪录,给开发追溯用,不显示。 */
@@ -10949,23 +10951,22 @@ window.Guide = (function () {
         ? '<div class="rp"><span class="k">' + esc0(dpT("想一想", "A question")) + "</span>" +
           "<p>" + esc0(c.reflectionPrompt) + "</p></div>"
         : "";
+      /* openingLine/shortInsight 是 v1.4 新字段,比 cardSubtitle 深一层;
+         旧内容没有就退回 st.situation/st.text 或 coreInsight,需要重新生成才能真正分层。 */
+      const opening = (c && c.openingLine) || (st && st.situation) || (c && c.coreInsight) || "";
+      const shortIns = (c && c.shortInsight) || (st && st.text) || "";
       if (!c) {
         /* 这一段生成时就没有足够线索 —— 与情境层无关,照实说 */
         panel = '<p class="cp-pending">' +
           esc0(dpT("这个方向目前没有足够的线索。",
                    "There isn’t enough to say about this direction yet.")) + "</p>";
-      } else if (st) {
-        /* 情境 → 那几句 → 可选的第二句 → 披露里是【原本那两段,一字不改】 → 想一想 */
-        panel = '<p class="hd">' + esc0(st.situation) + "</p>" +
-          '<p class="bd">' + esc0(st.text) + "</p>" +
-          (st.micro ? '<p class="bd sub">' + esc0(st.micro) + "</p>" : "") +
+      } else {
+        /* openingLine → shortInsight → 情境层第二句(如果有) → 披露 → 想一想 */
+        panel = '<p class="hd">' + esc0(opening) + "</p>" +
+          (shortIns ? '<p class="bd">' + esc0(shortIns) + "</p>" : "") +
+          (st && st.micro ? '<p class="bd sub">' + esc0(st.micro) + "</p>" : "") +
           why('<p class="ci">' + esc0(c.coreInsight) + "</p>" +
               '<p class="tx">' + esc0(c.explanation) + "</p>") + think;
-      } else {
-        /* 认不出情境:他自己的 coreInsight 当主角,explanation 收到披露后面。
-           结构与上面那一支【完全一样】,只是没有中间那几句。 */
-        panel = '<p class="hd">' + esc0(c.coreInsight) + "</p>" +
-          why('<p class="tx">' + esc0(c.explanation) + "</p>") + think;
       }
       panel = '<div class="cp-panel" id="cpPanel" data-for="' + esc0(active) + '">' +
         panel + '<button type="button" class="cp-close" id="cpPanelClose">' +
