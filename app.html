@@ -4463,11 +4463,11 @@
   }
   #dpage.compass-page .cp-lines{
     position:relative;overflow:hidden;box-sizing:border-box;
-    width:100%;max-width:680px;margin:20px auto 0;padding:74px 26px 92px;
+    width:100%;max-width:680px;margin:20px auto 0;padding:46px 28px 58px;
     text-align:center;
     background:
-      url(assets/life/cp-mobile/kc-star.webp) right top / 118px auto no-repeat,
-      url(assets/life/cp-mobile/kc-moon.webp) left top / 104px auto no-repeat,
+      url(assets/life/cp-mobile/kc-star.webp) right top / 92px auto no-repeat,
+      url(assets/life/cp-mobile/kc-moon.webp) left top / 80px auto no-repeat,
       linear-gradient(180deg,rgba(255,251,244,.9),rgba(255,248,240,.84));
     -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
     border:1px solid rgba(201,168,105,.55);border-radius:26px;
@@ -4476,7 +4476,7 @@
   /* 底部一整排淡云(在卡片里、被圆角裁切) */
   #dpage.compass-page .cp-lines::before{
     content:"";position:absolute;z-index:0;pointer-events:none;
-    left:0;right:0;bottom:0;top:auto;width:auto;height:auto;aspect-ratio:1288/300;opacity:.6;
+    left:0;right:0;bottom:0;top:auto;width:auto;height:auto;aspect-ratio:1288/300;opacity:.5;
     background:url(assets/life/cp-mobile/kc-clouds.webp) center bottom / 100% auto no-repeat;
     -webkit-mask-image:none;mask-image:none
   }
@@ -4490,15 +4490,15 @@
   /* 两段之间的 — ✦ —:放在第二段上方,跟标题下那条同一个样式 */
   #dpage.compass-page .cp-lines > p + p{margin-top:0;padding-top:0}
   #dpage.compass-page .cp-lines > p + p::before{
-    position:static;transform:none;height:auto;margin:20px auto 20px;width:min(56%,240px)
+    position:static;transform:none;height:auto;margin:14px auto 14px;width:min(56%,240px)
   }
   @media(min-width:768px){
     #dpage.compass-page .cp-keep{max-width:720px}
     #dpage.compass-page .cp-lines{
-      padding:90px 72px 150px;
-      background-size:170px auto,150px auto,auto
+      padding:56px 80px 84px;
+      background-size:130px auto,112px auto,auto
     }
-    #dpage.compass-page .cp-lines::before{opacity:.5}
+    #dpage.compass-page .cp-lines::before{opacity:.42}
     #dpage.compass-page .cp-keep-lead,
     #dpage.compass-page .cp-lines .cp-line{font-size:19px}
   }
