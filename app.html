@@ -4024,6 +4024,26 @@
     #dpage.compass-page .cp-panel{padding:22px 18px;border-radius:16px}
     #dpage.compass-page .cp-panel .bd{font-size:14.5px;line-height:2.05}
     #dpage.compass-page .cp-panel .tx{font-size:14px;line-height:2.05}
+    /* 手机版:「为什么这适合我？」从点开才有的收合区块,
+       改成夹在中间、一直看得到的一个小方块——資料、<details> 標籤、
+       点击处理完全没动。真正让它一直展开的是 JS 帮 <details> 补上
+       .open(见 cpBindDirections),这里只负责把 summary 变成一句
+       安静的小标签(不能再点、没有箭头),再画一个底色方块装内容。 */
+    #dpage.compass-page .cp-why{
+      margin:16px 0 0;background:rgba(233,238,248,.6);
+      border:1px solid rgba(154,140,205,.18);border-radius:16px;
+      padding:14px 16px 16px
+    }
+    #dpage.compass-page .cp-why > summary{
+      pointer-events:none;cursor:default;min-height:0;
+      font-size:11.5px;letter-spacing:.08em;color:#6b5fa0
+    }
+    /* 一直是 open 状态,所以要连 [open] 那条一起盖掉,不然箭头还是会跑出来
+       (那条选择器多了一个属性选择器,优先度比这里原本这条高)。 */
+    #dpage.compass-page .cp-why > summary::after,
+    #dpage.compass-page .cp-why[open] > summary::after{content:none}
+    #dpage.compass-page .cp-why > .ci{margin-top:8px;font-size:14.5px}
+    #dpage.compass-page .cp-why > .tx{margin-top:8px;font-size:13.5px;line-height:1.9}
     /* 手机:内容区长在【被点的那一列】底下,不是跳到整段最下面。
        DOM 里内容区永远在最后,这里只用 order 把它挪上去。 */
     #dpage.compass-page .cp-wheel-core{order:0}
@@ -12201,6 +12221,14 @@ window.Guide = (function () {
       });
       const cl = document.getElementById("cpPanelClose");
       if (cl) cl.addEventListener("click", function () { cpSelect(compassDirOpen); });
+      /* 手机版:「为什么这适合我？」一直展开,不是点开才有的收合区块。
+         用 .open 属性做,不是硬改 CSS 去对抗浏览器原生收合的内部渲染
+         (那一层在 Chrome 是靠 content-visibility 藏起来的,CSS 覆写
+         不动它,文字会进 DOM 但画面上量不出高度)。点击行为、资料
+         结构完全没动,桌机一个像素都不受影响。 */
+      if (window.matchMedia("(max-width:767px)").matches) {
+        host.querySelectorAll(".cp-why").forEach(function (d) { d.open = true; });
+      }
     }
     cpBindDirections();
 
