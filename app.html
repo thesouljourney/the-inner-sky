@@ -3853,10 +3853,14 @@
     /* 罗盘比最初缩小约 16%(152→128px):这一段只是地图,不该占掉
        大半个萤幕,让底下真正可以点的四张卡尽早出现。 */
     #dpage.compass-page .cp-rose{width:min(35vw,128px);grid-area:rose;position:relative}
-    /* 手机版中央换成单独的八芒主星(桌机仍是 compass.webp 整张盘面),
-       外圈照旧叠 orbit-ring;星星本身比盘面「空」,缩一点留出轨道。 */
+    /* 手机版中央:底下一整张盘面(qm-disc),上面再叠单独的八芒主星
+       (qm-star),外圈照旧叠 orbit-ring。桌机仍是 compass.webp。
+       多重背景第一层在最上面,所以星写在前、盘面写在后。 */
     #dpage.compass-page .cp-rose{
-      background:url(assets/life/cp-mobile/qm-star.webp) center / 92% auto no-repeat;filter:none
+      background:
+        url(assets/life/cp-mobile/qm-star.webp) center / 92% auto no-repeat,
+        url(assets/life/cp-mobile/qm-disc.webp) center / 100% auto no-repeat;
+      filter:none
     }
     /* —— 罗盘插图本身就是那颗星:四个方向的短名 + 一句固定的方向说明
        直接排在它的上下左右,不是另外画一颗小的。用 grid-template-areas
