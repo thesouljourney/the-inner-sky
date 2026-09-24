@@ -4082,7 +4082,22 @@
               mask-composite:intersect
     }
     #dpage.compass-page .cp-panel[data-for="ground"]::before{background-image:url(assets/life/cp-mobile/panel-ground.webp)}
-    #dpage.compass-page .cp-panel[data-for="move"]::before{background-image:url(assets/life/cp-mobile/card-move.webp)}
+    #dpage.compass-page .cp-panel[data-for="move"]::before{background-image:url(assets/life/cp-mobile/panel-move.webp)}
+    /* 前进:整张展开区换成暖金的云底(淡星、角落淡云),「为什么这适合我」
+       小卡跟着改成暖米色,不用其他方向的淡紫。 */
+    #dpage.compass-page .cp-panel[data-for="move"]{
+      background:
+        linear-gradient(180deg,rgba(255,252,245,.55),rgba(255,251,244,.35)),
+        url(assets/life/cp-mobile/panel-move-bg.webp) center / cover no-repeat,
+        #fdf8ef
+    }
+    #dpage.compass-page .cp-panel[data-for="move"] .cp-eyebrow,
+    #dpage.compass-page .cp-panel[data-for="move"] .cp-close{color:#9a7440}
+    #dpage.compass-page .cp-panel[data-for="move"] .cp-eyebrow::before{color:rgba(196,152,72,.7)}
+    #dpage.compass-page .cp-panel[data-for="move"] .cp-why{
+      background:linear-gradient(135deg,rgba(255,249,236,.86),rgba(253,244,226,.78));
+      border-color:rgba(214,172,96,.26)
+    }
     #dpage.compass-page .cp-panel[data-for="drain"]::before{background-image:url(assets/life/cp-mobile/card-drain.webp)}
     #dpage.compass-page .cp-panel[data-for="call"]::before{background-image:url(assets/life/cp-mobile/card-call.webp)}
     #dpage.compass-page .cp-panel > *{position:relative;z-index:1}
@@ -11087,7 +11102,8 @@ window.Guide = (function () {
          一个问题」是两件事,那一个不动,这里只是把这一条方向自己的问题
          摆回它自己的卡片里。没有就整段不印,不用空标签占位。 */
       const think = c && c.reflectionPrompt
-        ? '<div class="rp"><img class="ri" aria-hidden="true" alt="" src="assets/life/cp-mobile/ic-leaf.webp">' +
+        ? '<div class="rp"><img class="ri" aria-hidden="true" alt="" src="assets/life/cp-mobile/' +
+          (active === "move" ? "ic-leaf-move.webp" : "ic-leaf.webp") + '">' +
           '<span class="k">' + esc0(dpT("想一想", "A question")) + "</span>" +
           "<p>" + esc0(c.reflectionPrompt) + "</p></div>"
         : "";
