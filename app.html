@@ -3927,7 +3927,7 @@
     }
     #dpage.compass-page .cp-compass::before,
     #dpage.compass-page .cp-compass::after{
-      top:-6px;z-index:0;transform:scaleY(-1);width:72px;height:112px;background-size:172px auto
+      top:-40px;z-index:0;transform:scaleY(-1);width:72px;height:112px;background-size:172px auto
     }
     #dpage.compass-page .cp-compass::before{left:-20px;background-position:left bottom}
     #dpage.compass-page .cp-compass::after{right:-20px;background-position:right bottom}
@@ -4266,6 +4266,23 @@
     #dpage.compass-page .cp-panel[data-for="ground"] .cp-why{background:#F4F3FC;border-color:#DCDCEE}
     #dpage.compass-page .cp-panel[data-for="drain"] .cp-why{background:#FFF1F5;border-color:#EFD5DD}
     #dpage.compass-page .cp-panel[data-for="call"] .cp-why{background:#F1F2FC;border-color:#D8DAEE}
+  }
+
+  /* 桌机/平板:标题区跟手机一致——不放「01」、显示两行副标、
+     上方两个角各一丛淡叶子(从 hero 下缘往下垂)。罗盘与四张卡的
+     版面不变,所以下方两丛叶子只在手机版(桌机那里是卡片)。 */
+  @media(min-width:768px){
+    #dpage.compass-page .cp-compass .cp-no{display:none}
+    #dpage.compass-page .cp-compass .cp-lead{display:block;white-space:pre-line;margin-top:12px}
+    #dpage.compass-page .cp-compass > *{position:relative;z-index:1}
+    #dpage.compass-page .cp-compass::before,
+    #dpage.compass-page .cp-compass::after{
+      content:"";position:absolute;top:-36px;width:118px;height:180px;z-index:0;
+      pointer-events:none;opacity:.6;transform:scaleY(-1);
+      background:url(assets/life/cp-mobile/leaves.webp) no-repeat;background-size:282px auto
+    }
+    #dpage.compass-page .cp-compass::before{left:0;background-position:left bottom}
+    #dpage.compass-page .cp-compass::after{right:0;background-position:right bottom}
   }
 
   /* 记录:展开长在自己下面 */
