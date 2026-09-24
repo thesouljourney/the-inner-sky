@@ -4436,6 +4436,15 @@
     #dpage.compass-page .cp-now .cp-ta{min-height:112px;font-size:15px;background-size:110px auto,auto}
     #dpage.compass-page .cp-now .dp-cta{min-width:220px;min-height:50px}
   }
+  /* 段落间距(照用户给的手机实拍):四张卡 → 几句话 → 此刻的我 紧紧接着,
+     不再各自隔一大段。cp-keep 不一定存在,所以 cp-now 自己也设同样的上距。 */
+  #dpage.compass-page .cp-compass,
+  #dpage.compass-page .cp-keep{margin-bottom:0}
+  #dpage.compass-page .cp-keep .cp-sh::after{margin-top:8px}
+  #dpage.compass-page .cp-lines{margin-top:10px}
+  @media(min-width:768px){
+    #dpage.compass-page .cp-lines{margin-top:16px}
+  }
   /* 桌机:两段都收在正中间一栏,跟指南盘对齐;字与图示放大一号 */
   @media(min-width:768px){
     #dpage.compass-page .cp-keep,
@@ -4473,15 +4482,16 @@
   #dpage.compass-page .cp-open:focus-visible,
   #dpage.compass-page .cp-del:focus-visible{outline:2px solid rgba(154,140,205,.8);outline-offset:3px}
 
-  /* 越往下越安静 */
-  #dpage.compass-page .cp-keep{margin-top:clamp(74px,9vw,120px)}
-  #dpage.compass-page .cp-now,
+  /* 越往下越安静。四张卡 → 几句话 → 此刻的我 三段紧紧接着(照用户的
+     手机实拍),之后的段落才拉开 */
+  #dpage.compass-page .cp-keep,
+  #dpage.compass-page .cp-now{margin-top:36px}
   #dpage.compass-page .cp-ask{margin-top:clamp(84px,10vw,136px)}
   #dpage.compass-page .cp-sky{margin-top:clamp(96px,12vw,160px)}
 
   @media(max-width:767px){
-    #dpage.compass-page .cp-keep{margin-top:56px}
-    #dpage.compass-page .cp-now,
+    #dpage.compass-page .cp-keep,
+    #dpage.compass-page .cp-now{margin-top:16px}
     #dpage.compass-page .cp-ask{margin-top:64px}
     #dpage.compass-page .cp-sky{margin-top:72px}
     #dpage.compass-page .cp-open,
