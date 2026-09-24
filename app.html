@@ -3915,11 +3915,25 @@
     }
     #dpage.compass-page .cp-startfrom > *{position:relative;z-index:1}
     #dpage.compass-page .cp-startfrom b{
-      font-family:var(--dp-serif);font-weight:600;font-size:16px;color:var(--dp-ink)
+      font-family:var(--dp-serif);font-weight:600;font-size:18px;color:var(--dp-ink)
     }
     #dpage.compass-page .cp-startfrom span{
-      font-size:13px;font-weight:300;color:rgba(34,35,58,.68)
+      font-size:13.5px;font-weight:300;color:rgba(34,35,58,.6)
     }
+    /* 标题上下各一条「细线—小星—细线」的过场装饰,纯视觉、跟内容
+       资料无关,两个方向共用同一份写法。 */
+    #dpage.compass-page .cp-startfrom b::before,
+    #dpage.compass-page .cp-startfrom span::after{
+      content:"✦";display:block;width:min(72%,260px);margin:0 auto;
+      text-align:center;line-height:1;font-size:11px;color:rgba(154,106,52,.62);
+      background-image:
+        linear-gradient(90deg,transparent,rgba(154,106,52,.4)),
+        linear-gradient(90deg,rgba(154,106,52,.4),transparent);
+      background-size:calc(50% - 13px) 1px,calc(50% - 13px) 1px;
+      background-position:left center,right center;background-repeat:no-repeat
+    }
+    #dpage.compass-page .cp-startfrom b::before{margin-bottom:16px}
+    #dpage.compass-page .cp-startfrom span::after{margin-top:16px}
     /* —— 四个方向的入口:圆角卡片,左边一颗统一规格的圆形章节点 + 编号,
        右边一圈细框的箭头按钮,卡片右侧衬一点淡淡的实景。点击行为、
        资料完全没有动,只是外观。卡面用极淡的斜向珍珠渐层 + 内高光,
