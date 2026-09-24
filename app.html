@@ -4608,6 +4608,23 @@
     #dpage.compass-page .cp-ask-card .cp-act{padding:0 12px}
   }
 
+  /* ── 这一页所有「细线—✦—细线」分隔线统一换成用户给的金色星芒线素材 ──
+     (divider.webp,两端自带淡出)。只换画法,位置与间距不变。 */
+  #dpage.compass-page .cp-keep .cp-sh::after,
+  #dpage.compass-page .cp-lines > p + p::before,
+  #dpage.compass-page .cp-ask .cp-sh::after,
+  #dpage.compass-page .cp-ask-card .mk,
+  #dpage.compass-page .cp-startfrom b::before,
+  #dpage.compass-page .cp-startfrom span::after{
+    content:"";font-size:0;color:transparent;height:20px;
+    background:url(assets/life/cp-mobile/divider.webp) center / contain no-repeat
+  }
+  #dpage.compass-page .cp-ask-card .mk{width:150px;height:14px}
+  /* 三句以上时仍是缩短版:只取中间那颗星附近 */
+  #dpage.compass-page .cp-lines:has(> p:nth-child(3)) > p + p::before{
+    width:90px;height:12px;background-size:auto 100%
+  }
+
   /* 记录:展开长在自己下面 */
   #dpage.compass-page .cp-sky-card.open{background:var(--dp-cloud)}
   #dpage.compass-page .cp-sky-card .qz{
