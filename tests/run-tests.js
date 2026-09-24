@@ -4050,7 +4050,7 @@ function testCompassCentredLayout() {
   /* 罗盘改用品牌自己那张天体素材,不再是手画的线稿 */
   checkEq("[layout] 罗盘用的是品牌的天体素材",
     /background:url\(assets\/life\/compass\.webp\)/.test(css), true);
-  checkEq("[layout] 手机上罗盘缩小", /\.cp-rose\{width:min\(42vw,152px\)/.test(css), true);
+  checkEq("[layout] 手机上罗盘缩小", /\.cp-rose\{width:min\(35vw,128px\)/.test(css), true);
   checkEq("[layout] 旧的两栏 / 环绕规则已清掉",
     /cp-grid4|\.cp-dirs|cp-keep-card|\.cp-anchor\b|cp-wd\b/.test(html), false);
   const keep = html.slice(html.indexOf("function compassAnchorsHtml()"), html.indexOf("function compassNowHtml()"));
