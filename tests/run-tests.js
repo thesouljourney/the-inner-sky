@@ -2997,7 +2997,7 @@ function testCompassProductPage() {
     /cp-empty4[\s\S]{0,400}你的内在指南还没有生成/.test(page), true);
   /* 一句都取不出来的时候,整段【不出现】—— 不把系统内部的不足写给使用者看 */
   checkEq("[prod] 锚点一句都没有就整段不出现",
-    /if \(!lines\.length\) return "";/.test(page), true);
+    /if \(lines && !lines\.length\) return "";/.test(page), true);
   checkEq("[prod] 不再印任何「还没有可以带走的句子」",
     /这一份指南里，还没有可以单独带走的句子|等上面的内在指南生成之后/.test(html), false);
   checkEq("[prod] 今天的问题来自已通过验证的 reflectionPrompt",
@@ -4430,7 +4430,7 @@ function testAnchorsV11AndRenderV2() {
   /* ═══ D. 页面:02 的 0 / 1 / 2 / 3 ═══ */
   const keep = html.slice(html.indexOf("function compassAnchorsHtml()"),
                           html.indexOf("function compassNowHtml()"));
-  checkEq("[a32] 0 句 → 整段不出现", /if \(!lines\.length\) return "";/.test(keep), true);
+  checkEq("[a32] 0 句 → 整段不出现", /if \(lines && !lines\.length\) return "";/.test(keep), true);
   checkEq("[a32] 02 不再有任何空状态文案",
     /cp-pending|还没有可以单独带走|等上面的内在指南/.test(keep), false);
   checkEq("[a32] 卡片里不再固定印引言(只印这个人的几句话)",
@@ -4844,7 +4844,9 @@ function testSelfNotes() {
 
   const keep = html.slice(html.indexOf("function compassAnchorsHtml()"), html.indexOf("function compassNowHtml()"));
   checkEq("[selfnotes] 有 selfNotes 就用 selfNotes", /sn\.state === "ready"\) lines = sn\.notes/.test(keep), true);
-  checkEq("[selfnotes] AI 还在写的那一次先不出现", /sn\.state === "pending"\) lines = \[\]/.test(keep), true);
+  checkEq("[selfnotes] AI 还在写时保留标题与卡片,显示等待文字",
+    /sn\.state === "pending"\) lines = null/.test(keep) && /有几句话，想慢慢对你说。/.test(keep) &&
+    /正在为你整理属于你的提醒…/.test(keep), true);
   checkEq("[selfnotes] 其他情况退回旧的句型挑选(fallback)",
     /else lines = compassAnchorsFor\(saved\)\.map/.test(keep), true);
   checkEq("[selfnotes] 没有任何空状态文案",
