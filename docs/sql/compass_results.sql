@@ -194,3 +194,37 @@ alter table public.compass_results add constraint cr_short_len_chk check (
   char_length(coalesce(moves_short,   '')) <= 160 and
   char_length(coalesce(drains_short,  '')) <= 160 and
   char_length(coalesce(calls_short,   '')) <= 160);
+
+-- ---------------------------------------------------------------
+-- selfNotes 迁移:「想留给自己的几句话」改成 AI 生成、一次存好。
+-- ---------------------------------------------------------------
+-- 在这之前,这一段是每次进页面从四段文案里「挑句子」现算的(推导层,不存)。
+-- 现在改成:一份指南定案之后,请 AI 根据这个人【已经看到的】四段文案写 2–4 句,
+-- 存进这一列;之后每次进页面直接读,不再呼叫 AI。
+--
+-- 仍然守着这张表的隐私契约:存的只是使用者在页面上会读到的那几句话。
+-- 不存 prompt、不存模型原始输出、不存检查的内部状态。
+--
+--   self_notes          那几句话本身(1–4 句)
+--   self_notes_for      这几句是替哪一份文案写的(那一份的 generatedAt)。
+--                       内容升级(R6)换了新文案之后,对不上就会自动重写一次,
+--                       所以升级那条 PATCH 不必知道这几个栏位的存在。
+--   self_notes_version  写作指令版本(selfnotes-v1)
+--
+-- 在已有资料的表上跑是安全的:新栏位一律以 null 开始,旧的列不受影响。
+-- 还没跑这段之前,前端会探测到栏位不存在,安静地只存在本机,页面照常显示。
+alter table public.compass_results
+  add column if not exists self_notes         text[],
+  add column if not exists self_notes_for     text,
+  add column if not exists self_notes_version text;
+
+alter table public.compass_results drop constraint if exists cr_self_notes_chk;
+alter table public.compass_results add constraint cr_self_notes_chk check (
+  self_notes is null or (
+    cardinality(self_notes) between 1 and 4 and
+    char_length(array_to_string(self_notes, '')) <= 400));
+
+alter table public.compass_results drop constraint if exists cr_self_notes_meta_chk;
+alter table public.compass_results add constraint cr_self_notes_meta_chk check (
+  char_length(coalesce(self_notes_for, ''))     <= 40 and
+  char_length(coalesce(self_notes_version, '')) <= 40);
