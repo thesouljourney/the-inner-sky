@@ -4563,7 +4563,7 @@
     background-position:left center,right center;background-repeat:no-repeat
   }
   #dpage.compass-page .cp-ask-card .qt{
-    margin:18px auto 0;max-width:22em;font-family:var(--dp-serif);font-weight:500;
+    margin:0 auto;max-width:22em;font-family:var(--dp-serif);font-weight:500;
     font-size:15.5px;line-height:1.9;letter-spacing:.03em;color:#2a2848
   }
   #dpage.compass-page .cp-ask-card .cp-ta{
@@ -4657,6 +4657,18 @@
     }
     #dpage.compass-page .dp-return .say{display:block;margin-bottom:24px;font-size:15.5px}
     #dpage.compass-page .dp-return .dp-cta{display:inline-flex;align-items:center;white-space:nowrap;min-height:44px}
+  }
+
+  /* 页尾「回到主页」:跟上面「留下这个回答」同一颗星光胶囊素材,尺寸再小一点 */
+  #dpage.compass-page .dp-return .dp-cta{
+    display:inline-flex;align-items:center;justify-content:center;
+    min-width:124px;min-height:34px;padding:0 16px;border-radius:30px;border:0;
+    background:
+      linear-gradient(rgba(255,255,255,.3),rgba(255,255,255,.3)),
+      url(assets/life/cp-mobile/cta-pill.webp) center / 100% 100% no-repeat,#c9b8e6;
+    font-family:var(--dp-serif);font-size:12px;letter-spacing:.1em;color:#fff;
+    text-shadow:0 1px 5px rgba(90,60,140,.45);
+    box-shadow:0 8px 22px rgba(170,130,220,.22),0 0 14px rgba(230,190,240,.25)
   }
 
   /* 「此刻的我」标题上方:用户给的珍珠金星芒素材,取代原本的 ✦ 字符 */
@@ -12272,7 +12284,7 @@ window.Guide = (function () {
     }
     return '<section class="cp-sec cp-ask">' +
       compassSecHead("", dpT("今天想问自己的一个问题", "One Question"), "ONE QUESTION") +
-      '<div class="cp-ask-card"><span class="mk" aria-hidden="true">✦</span>' +
+      '<div class="cp-ask-card">' +
       '<p class="qt">' + esc0(q.text).replace(/\n/g, "<br>") + "</p>" +
       '<textarea id="cpAnswer" class="cp-ta" rows="3" placeholder="' +
       esc0(dpT("写下此刻想到的……", "Write what comes to mind…")) + '"></textarea>' +
