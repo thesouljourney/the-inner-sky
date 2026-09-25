@@ -4642,6 +4642,23 @@
     #dpage.compass-page .cp-wait-b{font-size:14px}
   }
 
+  /* 页尾「你不是来寻找答案」卡片:衬用户给的月亮、星芒与云的天空图(foot-sky.webp),
+     cover 铺满、圆角裁切;字与按钮不动。手机、桌机共用。 */
+  #dpage.compass-page .dp-return{
+    position:relative;overflow:hidden;
+    background:url(assets/life/cp-mobile/foot-sky.webp) center / cover no-repeat,#fbeee8;
+    border-color:rgba(233,214,226,.9)
+  }
+  /* 桌机:不再是一条横跨整页的扁长条(图会被裁到只剩一角),
+     改成置中、直排的卡片,比例接近这张图,月亮与两侧的云都看得到 */
+  @media(min-width:768px){
+    #dpage.compass-page .dp-return{
+      display:block;text-align:center;max-width:680px;margin:26px auto 0;padding:44px 48px 48px
+    }
+    #dpage.compass-page .dp-return .say{display:block;margin-bottom:24px;font-size:15.5px}
+    #dpage.compass-page .dp-return .dp-cta{display:inline-flex;align-items:center;white-space:nowrap;min-height:44px}
+  }
+
   /* 「此刻的我」标题上方:用户给的珍珠金星芒素材,取代原本的 ✦ 字符 */
   #dpage.compass-page .cp-now .cp-sh::before{
     content:"";display:block;width:34px;height:34px;margin:0 auto 10px;font-size:0;
