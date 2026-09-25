@@ -4486,6 +4486,9 @@
   #dpage.compass-page .cp-lines::before{
     content:"";position:absolute;z-index:0;pointer-events:none;
     left:0;right:0;bottom:0;top:auto;width:auto;height:auto;aspect-ratio:1288/300;opacity:.5;
+    /* 云图最底下约 4% 是渐淡的透明,会在卡片下缘上方留一条浅色细缝;
+       往下推同样比例(以图自己的高度计),手机、桌机都贴齐下缘 */
+    transform:translateY(4.5%);
     background:url(assets/life/cp-mobile/kc-clouds.webp) center bottom / 100% auto no-repeat;
     -webkit-mask-image:none;mask-image:none
   }
