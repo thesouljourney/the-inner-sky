@@ -4573,20 +4573,18 @@
     font-size:14.5px
   }
   #dpage.compass-page .cp-ask-card .cp-ta::placeholder{color:rgba(119,110,150,.55)}
-  /* 三栏:「留下这个回答」在正中间,「今天先不回答 →」小字靠右 */
+  /* 「留下这个回答」置中,「今天先不回答 →」小字放在它正下方 */
   #dpage.compass-page .cp-ask-card .cp-act{
-    display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;margin-top:22px
+    display:flex;flex-direction:column;align-items:center;gap:2px;margin-top:22px
   }
-  #dpage.compass-page .cp-ask-card .cp-act .dp-cta{grid-column:2}
-  #dpage.compass-page .cp-ask-card .cp-act .cp-skip{grid-column:3;justify-self:end;white-space:nowrap}
-  #dpage.compass-page .cp-ask-card .cp-act .cp-hint{grid-column:1/-1}
+  #dpage.compass-page .cp-ask-card .cp-act .cp-skip{white-space:nowrap}
   #dpage.compass-page .cp-ask-card .dp-cta{
     display:inline-flex;align-items:center;justify-content:center;gap:8px;
-    min-width:170px;min-height:42px;padding:0 22px;border-radius:30px;border:0;
+    min-width:140px;min-height:36px;padding:0 18px;border-radius:30px;border:0;
     background:
       linear-gradient(rgba(255,255,255,.3),rgba(255,255,255,.3)),
       url(assets/life/cp-mobile/cta-pill.webp) center / 100% 100% no-repeat,#c9b8e6;
-    font-family:var(--dp-serif);font-size:13.5px;letter-spacing:.1em;color:#fff;
+    font-family:var(--dp-serif);font-size:12.5px;letter-spacing:.1em;color:#fff;
     text-shadow:0 1px 5px rgba(90,60,140,.45);
     box-shadow:0 8px 22px rgba(170,130,220,.22),0 0 14px rgba(230,190,240,.25)
   }
@@ -4594,10 +4592,9 @@
   @media(max-width:767px){
     #dpage.compass-page .cp-ask-card{padding:28px 18px 22px;border-radius:24px}
     #dpage.compass-page .cp-ask-card .qt{font-size:14.5px}
-    #dpage.compass-page .cp-ask-card .cp-act{gap:4px}
     #dpage.compass-page .cp-ask-card .cp-skip{font-size:11px;letter-spacing:.04em;padding:6px 0}
     #dpage.compass-page .cp-ask-card .cp-ta{min-height:112px}
-    #dpage.compass-page .cp-ask-card .dp-cta{min-width:170px;padding:0 18px}
+    #dpage.compass-page .cp-ask-card .dp-cta{min-width:140px;padding:0 16px}
   }
   @media(min-width:768px){
     #dpage.compass-page .cp-ask{max-width:720px;margin-left:auto;margin-right:auto}
