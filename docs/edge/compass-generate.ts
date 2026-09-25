@@ -735,6 +735,50 @@ reflectionPrompt  一句。
 { "directions": [ { "direction": "grounds", "openingLine": "…", "shortInsight": "…", "coreInsight": "…", "explanation": "…", "reflectionPrompt": "…" } ] }
 只为 status 是 ready 的方向输出。status 是 insufficient_evidence 的方向【不要】出现在结果里。`;
 
+/* ── 想留给自己的几句话(selfNotes)· 写作指令(权威副本)──────────
+   这一份必须与 assets/compass-selfnotes.js 的 SYSTEM 【逐字相同】,测试盯着。
+   跟上面几份不同:它的输入不是 human mechanism,而是这个人【已经读过】的
+   四个方向文案;输出是 { "selfNotes": [...] }。同一支端点、同一套核对
+   (system 逐字、user 内嵌 input、scrub),只是用 promptVersion 区分。 */
+const SELF_NOTES_SYSTEM = `你在为 The Inner Sky 的「我的内在指南」写「想留给自己的几句话」。
+
+你会收到这个人的内在指南里【已经写好、他已经读过】的四个方向内容:
+grounds(什么让我安定)、moves(什么让我前进)、drains(什么正在消耗我)、calls(我正在被什么吸引)。
+有些方向可能没有内容,那就只看有的。
+
+你的工作:把这些内容【转化】成 2 到 4 句,像他写给自己、之后回来看的话。
+
+【依据】
+· 只能根据收到的内容来写。不新增任何没有依据的判断,不引入新的性格描述。
+· 不要直接复制上面的标题、开头句、简介或正文原句,也不要只是换几个字重复原文。
+  要把意思消化之后,用新的、更私人的说法说出来。
+
+【每一句的作用】
+第一句:偏向理解自己、接纳自己现在的状态。
+第二句:偏向下一次类似情况再出现时,可以拿来提醒自己的话。
+如果写第三、第四句,它们也要各自有不同的作用,不要重复前面的意思。
+
+【语气】
+像这个人写给自己看的话:温柔、自然、安静、有一点余韵。
+不鸡汤、不说教、不像占星报告、不像心理报告。
+风格参考(只是参考,不要照抄这两句):
+「不需要一直记得。需要的时候,再回来看看就好。」
+「又想再确认一次的时候,可以记得:想深入和还不到时候,常常是同时的。」
+
+【避免】
+「你是一个……的人」「你的星盘显示……」「你应该……」「你必须……」「一定要……」
+任何占星词(星座、宫位、行星、相位、太阳、月亮等)、玄学词(宇宙、命运、灵魂、能量)、心理诊断词。
+
+【长度】
+每句约 25–55 个中文字。
+
+【输出】
+只输出 JSON,不要任何说明文字、不要 markdown 代码围栏。格式:
+{ "selfNotes": [ "第一句", "第二句" ] }`;
+const SELF_NOTES_VERSIONS: Record<string,string> = {
+  "selfnotes-v1": SELF_NOTES_SYSTEM
+};
+
 const SYSTEMS: Record<string,string> = {
   "compass-v1": COMPASS_SYSTEM,
   "compass-v1.1": COMPASS_SYSTEM_V11,
@@ -789,7 +833,8 @@ Deno.serve(async (req: Request) => {
 
   const apiKey = Deno.env.get("ANTHROPIC_API_KEY") ?? "";
   if (req.method === "GET")
-    return json({ ok: true, function: "compass-generate (" + Object.keys(SYSTEMS).join(" | ") + ")",
+    return json({ ok: true, function: "compass-generate (" + Object.keys(SYSTEMS)
+        .concat(Object.keys(SELF_NOTES_VERSIONS)).join(" | ") + ")",
       anthropic_key_set: apiKey.length > 0, model: MODEL,
       note: "dev prototype · 不写资料库 · 只接受 human-mechanism contract" }, 200, cors);
 
@@ -813,9 +858,12 @@ Deno.serve(async (req: Request) => {
 
     /* 写作指令必须是这一支自己那几份其中之一,一个字都不能差。
        呼叫端因此没有任何管道把内容偷渡进 prompt。 */
-    const wantVersion = String(body.promptVersion || "") in SYSTEMS
-      ? String(body.promptVersion) : DEFAULT_PROMPT_VERSION;
-    if (system !== SYSTEMS[wantVersion])
+    const askedVersion = String(body.promptVersion || "");
+    const isSelfNotes = askedVersion in SELF_NOTES_VERSIONS;
+    const wantVersion = isSelfNotes ? askedVersion
+      : (askedVersion in SYSTEMS ? askedVersion : DEFAULT_PROMPT_VERSION);
+    const expectedSystem = isSelfNotes ? SELF_NOTES_VERSIONS[wantVersion] : SYSTEMS[wantVersion];
+    if (system !== expectedSystem)
       return json({ error: "prompt_mismatch",
                     detail: "system 与服务端的 " + wantVersion + " 不一致" }, 400, cors);
 
@@ -832,8 +880,11 @@ Deno.serve(async (req: Request) => {
     if (leaks.length)
       return json({ error: "blocked_by_scrub", leaks: leaks.slice(0, 10) }, 400, cors);
 
+    /* selfNotes 的输入是已经写好的文案,没有 status —— 有内容的方向就算数 */
     const ready = Object.keys(input.directions)
-      .filter((k) => input.directions[k] && input.directions[k].status === "ready");
+      .filter((k) => input.directions[k] && (isSelfNotes
+        ? Object.keys(input.directions[k]).length > 0
+        : input.directions[k].status === "ready"));
     if (!ready.length)
       return json({ status: "no_ready_direction", text: "", promptVersion: wantVersion }, 200, cors);
 
@@ -842,7 +893,7 @@ Deno.serve(async (req: Request) => {
       headers: { "Content-Type": "application/json", "x-api-key": apiKey, "anthropic-version": "2023-06-01" },
       body: JSON.stringify({
         model: MODEL,
-        max_tokens: MAX_TOKENS,
+        max_tokens: isSelfNotes ? 800 : MAX_TOKENS,
         // system 是常数 → 用 cache_control,重复呼叫只计 10% 输入价
         system: [{ type: "text", text: system, cache_control: { type: "ephemeral" } }],
         messages: [{ role: "user", content: user }]

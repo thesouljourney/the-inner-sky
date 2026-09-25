@@ -7130,7 +7130,10 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
           all[key] = { result: result, sync: sync || "canonical",
                        revision: typeof revision === "number" ? revision : (prev.revision || 1),
                        at: new Date().toISOString(),
-                       candidate: prev.candidate || null };
+                       candidate: prev.candidate || null,
+                       /* 想留给自己的几句话:跟着同一桶走。它自己记得是替哪一份
+                          文案写的(for),文案换了就不会被拿来用 —— 这里原样保留。 */
+                       selfNotes: prev.selfNotes || null };
           return writeV2(all) ? all[key] : null;
         },
         /* 另一份有效、但这一次不呈现的文案。留着,不覆盖、不合并、不呈现。 */
@@ -7213,6 +7216,53 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
               note("canonical_insert_failed", { reason: "network" });
               return { status: "failed", reason: "network" };
             });
+        },
+
+        /* ── selfNotes(想留的几句话)的储存────────────────────
+           跟四段文案同一个人、同一桶 / 同一列,但刻意【不】走 validateRow /
+           toRow 那一套白名单:那是文案本身的契约,这几句是定案之后才补上的。
+           每一笔都带 for = 它替哪一份文案(generatedAt)写的,对不上就不用。 */
+        readSelfNotes: function (owner) {
+          var e = readV2()[owner || "anon"];
+          return (e && e.selfNotes && Array.isArray(e.selfNotes.notes)) ? e.selfNotes : null;
+        },
+        writeSelfNotes: function (owner, rec) {
+          var all = readV2(), key = owner || "anon";
+          var prev = all[key] || {};
+          prev.selfNotes = rec;
+          all[key] = prev;
+          return writeV2(all);
+        },
+        /* 云端读。self_notes 这几个栏位要跑过 docs/sql 的迁移才会有;
+           还没跑的话 PostgREST 回 400,这里就回 unsupported,呼叫端改用本机。 */
+        fetchSelfNotes: function (owner) {
+          if (!cfg().url || !owner) return Promise.resolve({ status: "error" });
+          return nf(urlR("?select=self_notes,self_notes_for,self_notes_version&user_id=eq." +
+                         encodeURIComponent(owner) + "&limit=1"), { headers: authHeaders() }, 8000)
+            .then(function (r) {
+              if (r.status === 400) return { status: "unsupported" };
+              if (!r.ok) return { status: "error", httpStatus: r.status };
+              return r.json().then(function (rows) {
+                var row = Array.isArray(rows) && rows[0];
+                if (!row || !Array.isArray(row.self_notes) || !row.self_notes.length) return { status: "absent" };
+                return { status: "valid", rec: { notes: row.self_notes.slice(0, 4),
+                  for: String(row.self_notes_for || ""), v: String(row.self_notes_version || "") } };
+              }, function () { return { status: "error" }; });
+            }, function () { return { status: "error" }; });
+        },
+        /* 云端写。只写这三个栏位;不动 revision(那是文案的乐观并发用的)。 */
+        saveSelfNotes: function (owner, rec) {
+          if (!cfg().url || !owner) return Promise.resolve({ status: "error" });
+          return nf(urlR("?user_id=eq." + encodeURIComponent(owner)),
+              { method: "PATCH",
+                headers: Object.assign({}, authHeaders(), { "Prefer": "return=minimal" }),
+                body: JSON.stringify({ self_notes: rec.notes, self_notes_for: rec.for,
+                                       self_notes_version: rec.v }) }, 10000)
+            .then(function (r) {
+              if (r.status === 400) return { status: "unsupported" };
+              if (!r.ok) { note("selfnotes_save_failed", { httpStatus: r.status }); return { status: "error" }; }
+              return { status: "saved" };
+            }, function () { return { status: "error" }; });
         },
 
         /* 版本升级用的条件更新。只有一个呼叫点:generation 升版之后的背景重新生成
@@ -11662,7 +11712,11 @@ window.Guide = (function () {
       var r = AN3 ? AN3.derive(saved.directions) : (AN ? AN.derive(saved.directions) : null);
       if (r && r.status === "ok") {
         var v = AN3 ? AN3.verifySemantic(r, saved.directions) : AN.verifyDerived(r, saved.directions);
-        if (v.ok) list = r.anchors;          // 回查不过就当作没有 —— 宁可空着,也不给没根据的句子
+        /* 逐句过滤:哪一句回查不过就只拿掉那一句,其他通过的照样留着。
+           (以前是一句不过就整组清空 —— 常常因此整段消失。) */
+        var badLines = {};
+        (v.offenders || []).forEach(function (o) { if (o && o.line) badLines[o.line] = 1; });
+        list = r.anchors.filter(function (a) { return !badLines[a.line]; });
       }
     } catch (e) { list = []; }
     /* 现算不出来的时候,才退回快取里那一份(旧版算过、已经看过的那三句) */
@@ -11871,6 +11925,8 @@ window.Guide = (function () {
               compassCanonState = "CANONICAL";
               compassCanonResult = fresh;
               can.writeLocal(owner, fresh, "canonical", res.revision);
+              /* 文案换新了,旧的几句话是替旧文案写的 —— 替新的这一份重写一次 */
+              compassEnsureSelfNotes(owner, fresh);
               if (curRoute && curRoute.k === "compass") compassRepaint();
             }
             // conflict / failed:安静放弃,旧内容留着,下一次页面生命周期再试一次
@@ -11919,21 +11975,186 @@ window.Guide = (function () {
     return map;
   }
 
+  /* ── selfNotes · 「想留」这一段的正式来源 ─────────────────────
+     这一段的正式来源是 AI 在指南定案后【一次】写好、存起来的 2–4 句
+     (见 compassEnsureSelfNotes)。进页面时的顺序:
+       1. 已经存好(记忆体 → 本机 → 云端)而且是替【这一份】文案写的 → 直接显示
+       2. 没有 → 背景请 AI 写一次(旧用户补生成);写好就存,之后不再呼叫
+       3. AI 这次写不出来 → 退回旧的句型挑选(逐句过滤),一句都没有才整段隐藏
+     生成中的那一次,这一段先不出现,写好或失败后重画一次。 */
+  var compassSelfNotesMemo = {};      // key = owner|generatedAt → { state, notes }
+  var compassSelfNotesBusy = {};
+  var compassSelfNotesCloudOff = false;   // 云端还没跑 selfNotes 迁移:这一轮只用本机
+  var CP_SELFNOTES_RETRY_MS = 24 * 3600 * 1000;   // 失败后隔一天才再试,不每次进页面都打
+
+  function compassSelfNotesKey(owner, saved) {
+    return owner + "|" + ((saved && saved.generatedAt) || "");
+  }
+  /* 两个时间字串是不是同一刻(DB 回来的格式跟本机的 ISO 可能不一样) */
+  function compassSameGen(a, b) {
+    if (!a || !b) return false;
+    if (a === b) return true;
+    var ta = Date.parse(a), tb = Date.parse(b);
+    return !isNaN(ta) && ta === tb;
+  }
+  function compassSelfNotesUsable(rec, saved) {
+    return !!(rec && Array.isArray(rec.notes) && rec.notes.length &&
+              saved && compassSameGen(rec.for, saved.generatedAt));
+  }
+  /* 这一份文案【目前】可以显示的几句话;没有就回 null(同时在背景补生成) */
+  function compassSelfNotesFor(saved) {
+    if (!saved || !saved.directions) return { state: "none" };
+    var owner = compassOwner();
+    var key = compassSelfNotesKey(owner, saved);
+    var m = compassSelfNotesMemo[key];
+    if (m) return m;
+    var can = window.Compass.canonical;
+    var local = can.readSelfNotes(owner);
+    if (compassSelfNotesUsable(local, saved)) {
+      m = { state: "ready", notes: local.notes.slice(0, 4) };
+      compassSelfNotesMemo[key] = m;
+      if (!local.synced) compassSyncSelfNotes(owner, local);   // 本机有、云端还没有:补传一次
+      return m;
+    }
+    compassEnsureSelfNotes(owner, saved);
+    return compassSelfNotesMemo[key] || { state: "pending" };
+  }
+
+  /* 把本机那几句写上云端那一列。只在文案已经是账号层正式那一份(CANONICAL)
+     时才写 —— 还在上传中的时候那一列可能根本还不存在,写了等于没写。
+     成功就在本机记 synced,之后不再重传;还没跑迁移就这一轮都不再试。 */
+  var compassSelfNotesSyncTried = {};
+  function compassSyncSelfNotes(owner, rec) {
+    var authed = !!(window.Cloud && window.Cloud.hasSession && window.Cloud.hasSession()) &&
+                 owner && owner !== "anon";
+    if (!authed || compassSelfNotesCloudOff || compassCanonState !== "CANONICAL") return;
+    var k = owner + "|" + rec.for;
+    if (compassSelfNotesSyncTried[k]) return;
+    compassSelfNotesSyncTried[k] = true;
+    var can = window.Compass.canonical;
+    can.saveSelfNotes(owner, rec).then(function (r) {
+      if (r.status === "unsupported") { compassSelfNotesCloudOff = true; return; }
+      if (r.status === "saved") {
+        var cur = can.readSelfNotes(owner);
+        if (cur && cur.for === rec.for) { cur.synced = true; can.writeSelfNotes(owner, cur); }
+      }
+    });
+  }
+
+  function compassEnsureSelfNotes(owner, saved) {
+    if (!saved || !saved.directions || !saved.generatedAt) return;
+    var key = compassSelfNotesKey(owner, saved);
+    if (compassSelfNotesBusy[key] || (compassSelfNotesMemo[key] &&
+        compassSelfNotesMemo[key].state !== "pending")) return;
+    compassSelfNotesBusy[key] = true;
+    var can = window.Compass.canonical;
+    var authed = !!(window.Cloud && window.Cloud.hasSession && window.Cloud.hasSession()) &&
+                 owner && owner !== "anon";
+
+    function done(state, notes) {
+      compassSelfNotesBusy[key] = false;
+      compassSelfNotesMemo[key] = state === "ready" ? { state: "ready", notes: notes } : { state: "failed" };
+      /* 同一个人、同一份文案还在画面上,才重画 */
+      if (curRoute && curRoute.k === "compass" && compassOwner() === owner &&
+          compassCanonResult && compassSameGen(compassCanonResult.generatedAt, saved.generatedAt)) {
+        compassRepaint();
+      }
+    }
+    function keep(rec, toCloud) {
+      can.writeSelfNotes(owner, rec);
+      if (toCloud) compassSyncSelfNotes(owner, rec);
+    }
+
+    /* ① 云端已经有(另一台装置写过)→ 直接用,不呼叫 AI */
+    var cloudStep = (authed && !compassSelfNotesCloudOff)
+      ? can.fetchSelfNotes(owner) : Promise.resolve({ status: "skip" });
+    cloudStep.then(function (c) {
+      if (c.status === "unsupported") compassSelfNotesCloudOff = true;
+      if (c.status === "valid" && compassSelfNotesUsable(c.rec, saved)) {
+        c.rec.synced = true;
+        keep(c.rec, false);
+        return done("ready", c.rec.notes.slice(0, 4));
+      }
+      /* ② 要呼叫 AI:需要登入中的 session;最近失败过就先不再试 */
+      if (!cpLiveSession()) return done("failed");
+      var prev = can.readSelfNotes(owner);
+      if (prev && prev.failFor && compassSameGen(prev.failFor, saved.generatedAt) &&
+          Date.now() - (Date.parse(prev.failAt) || 0) < CP_SELFNOTES_RETRY_MS) {
+        return done("failed");
+      }
+      return compassGenerateSelfNotes(saved).then(function (notes) {
+        if (notes && notes.length) {
+          var SN = window.CompassSelfNotes;
+          var rec = { notes: notes, for: saved.generatedAt, v: SN ? SN.VERSION : "",
+                      at: new Date().toISOString() };
+          keep(rec, true);
+          return done("ready", notes);
+        }
+        /* 失败:只记下「什么时候、替哪一份失败的」,不覆盖本机原本存的东西 */
+        var old = can.readSelfNotes(owner) || {};
+        can.writeSelfNotes(owner, { notes: old.notes || [], for: old.for || "", v: old.v || "",
+          failFor: saved.generatedAt, failAt: new Date().toISOString() });
+        done("failed");
+      });
+    }).catch(function () { done("failed"); });
+  }
+
+  /* 呼叫 AI 写几句话。最多两次(第一次不理想才重试一次),回传通过检查的句子,
+     失败回 null。永远不丢例外。 */
+  function compassGenerateSelfNotes(saved) {
+    return cpPvLoadOne("assets/compass-selfnotes.js").then(function () {
+      var SN = window.CompassSelfNotes;
+      if (!SN) return null;
+      var input = SN.buildInput(saved.directions);
+      if (!SN.hasContent(input)) return null;
+      var p = SN.buildPrompt(input);
+      p._input = input;
+      /* 比对「上面卡片已经显示的字」:文案本身 + 卡片上的方向标题 + 情境句 */
+      var extra = [];
+      try {
+        (window.Compass.DIRECTIONS || []).forEach(function (d) { extra.push(d.zh); });
+        var sits = compassSituationsFor(saved);
+        Object.keys(sits || {}).forEach(function (k) {
+          if (sits[k].situation) extra.push(sits[k].situation);
+          if (sits[k].text) extra.push(sits[k].text);
+        });
+      } catch (e) { }
+      var sources = SN.sourcesFrom(saved.directions, extra);
+      var live = cpLiveTransport();
+      function attempt() {
+        return live(p).then(function (text) {
+          var notes = SN.parse(text);
+          return notes ? SN.check(notes, sources).clean : [];
+        }, function () { return []; });
+      }
+      return attempt().then(function (first) {
+        if (first.length >= 2) return first;
+        /* 太少(解析不出来 / 几乎照抄 / 太长太短)→ 重试一次,取比较好的那一次 */
+        return attempt().then(function (second) {
+          var best = second.length > first.length ? second : first;
+          return best.length ? best : null;
+        });
+      });
+    }).catch(function () { return null; });
+  }
+
   function compassAnchorsHtml() {
     const saved = compassSavedResult();
-    const list = compassAnchorsFor(saved);
-    /* 一句都没有就【整段不出现】。不印「还没有可以带走的句子」——
+    const sn = compassSelfNotesFor(saved);
+    let lines;
+    if (sn.state === "ready") lines = sn.notes;
+    else if (sn.state === "pending") lines = [];       // AI 这一次还在写:先不出现,写好再重画
+    else lines = compassAnchorsFor(saved).map(function (a) { return a.line; });   // fallback
+    /* 一句都没有就【整段不出现】。不印「暂无内容」「无法生成」之类的空状态 ——
        那是把系统内部的不足写给使用者看,而且他也不能拿它做什么。
-       1 句、2 句、3 句都是完整的结果,版面上不暗示三句才是正常。 */
-    if (!list.length) return "";
+       1 句、2 句、3 句、4 句都是完整的结果。 */
+    if (!lines.length) return "";
     return '<section class="cp-sec cp-keep">' +
       compassSecHead("02", dpT("想留给自己的几句话", "Worth Keeping"), "WORTH KEEPING") +
-      /* 引言收进卡片里当第一段,跟底下的句子用同一条星芒分隔线隔开 */
-      '<div class="cp-lines"><p class="cp-keep-lead">' +
-      esc0(dpT("不需要一直记得。需要的时候，再回来看看就好。",
-               "You don’t have to hold on to these. Come back to them when you need to.")) + "</p>" +
-      list.map(function (a) {
-        return '<p class="cp-line">' + esc0(a.line) + "</p>";
+      /* 两句以上:句子之间是同一条星芒分隔线;一句:置中一句 */
+      '<div class="cp-lines">' +
+      lines.map(function (line) {
+        return '<p class="cp-line">' + esc0(line) + "</p>";
       }).join("") + "</div></section>";
   }
 
@@ -12802,6 +13023,8 @@ window.Guide = (function () {
             if (res.status === "created") {
               compassCanonState = "CANONICAL";
               can.writeLocal(owner, accepted, "canonical", res.revision);
+              /* 指南一定案,就把「想留给自己的几句话」一起写好存起来 */
+              compassEnsureSelfNotes(owner, accepted);
               if (curRoute && curRoute.k === "compass") compassRepaint();
               return;
             }

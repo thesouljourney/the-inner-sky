@@ -1736,6 +1736,9 @@ function testCompassLivePathAsync(K) {
   const { G, PV, RC, edgePath } = K;
   const shim = require(path.join(__dirname, "..", "tools", "deno-shim.js"));
   const restore = shim.stubAnthropic((body) => {
+    /* selfNotes 的请求:回一份固定的 JSON(用来测 edge 端的 selfNotes 路径) */
+    if (JSON.stringify(body.system || "").indexOf("想留给自己的几句话") >= 0)
+      return '{ "selfNotes": ["慢一点也没关系,安静下来的时候,答案常常自己会浮上来。", "下次又急着要一个结论时,可以先让自己停一下,再决定要不要往前。"] }';
     /* 依 user 讯息里出现的 patternKey 决定回哪一份已录制的输出 */
     const u = JSON.stringify(body);
     const id = RC.CASES.filter(c => u.indexOf(
@@ -1812,6 +1815,26 @@ function testCompassLivePathAsync(K) {
           checkEq("[live] C10 走真实 HTTP 也回 200", r.http, 200);
           checkEq("[live] 服务端只处理 ready 的方向",
             (r.o.readyDirections || []).indexOf("moves") < 0, true);
+          /* selfNotes:同一支端点,用 promptVersion 区分 */
+          const SN = require(path.join(__dirname, "..", "assets", "compass-selfnotes.js"));
+          const sIn = SN.buildInput({
+            grounds: { openingLine: "先不用急着弄清楚。", coreInsight: "你在信息太多的时候需要先安静下来。",
+                       explanation: "当外界的声音太多,你会更难知道自己真正想要什么。" },
+            moves: { coreInsight: "让你投入的,是还有意思的那种感觉。" } });
+          const sp = SN.buildPrompt(sIn);
+          K.sn = { post, sIn, sp, SN };
+          return post({ input: sIn, system: sp.system, user: sp.user, promptVersion: sp.promptVersion });
+        })
+        .then(function (r) {
+          const { post, sIn, sp, SN } = K.sn;
+          checkEq("[selfnotes] edge 收 selfnotes-v1 请求,回 200", r.http, 200);
+          checkEq("[selfnotes] edge 回传 status=ok", r.o.status, "ok");
+          checkEq("[selfnotes] edge 回传的 promptVersion 是 selfnotes-v1", r.o.promptVersion, "selfnotes-v1");
+          checkEq("[selfnotes] 回来的文字解析得出几句话", (SN.parse(r.o.text) || []).length, 2);
+          return post({ input: sIn, system: sp.system + "偷渡一句", user: sp.user, promptVersion: sp.promptVersion });
+        })
+        .then(function (r) {
+          checkEq("[selfnotes] selfNotes 的 system 被改过也会拒收", r.o.error, "prompt_mismatch");
           return srv.close();
         })
         .then(function () { restore(); })
@@ -1860,7 +1883,8 @@ function testCompassVoiceV11() {
   checkEq("[v11] 服务端的 v1.1 与前端逐字相同",
     m2 ? firstDiff(m2[1], G.SYSTEM_V11) : "缺 COMPASS_SYSTEM_V11", "");
   checkEq("[v11] 服务端依 promptVersion 选版本核对",
-    /system !== SYSTEMS\[wantVersion\]/.test(edge), true);
+    /expectedSystem = isSelfNotes \? SELF_NOTES_VERSIONS\[wantVersion\] : SYSTEMS\[wantVersion\]/.test(edge) &&
+    /system !== expectedSystem/.test(edge), true);
 
   // 4 · 命令句是硬性拒收,但否定形不算命令
   const base = RC.RAW_V11.C1.grounds;
@@ -2973,7 +2997,7 @@ function testCompassProductPage() {
     /cp-empty4[\s\S]{0,400}你的内在指南还没有生成/.test(page), true);
   /* 一句都取不出来的时候,整段【不出现】—— 不把系统内部的不足写给使用者看 */
   checkEq("[prod] 锚点一句都没有就整段不出现",
-    /if \(!list\.length\) return "";/.test(page), true);
+    /if \(!lines\.length\) return "";/.test(page), true);
   checkEq("[prod] 不再印任何「还没有可以带走的句子」",
     /这一份指南里，还没有可以单独带走的句子|等上面的内在指南生成之后/.test(html), false);
   checkEq("[prod] 今天的问题来自已通过验证的 reflectionPrompt",
@@ -3147,7 +3171,7 @@ function testCompassAnchorSelection() {
   checkEq("[anc] 画面不再显示灰色的来源说明", /cp-anchor[\s\S]*?class="sp"/.test(fn), false);
   checkEq("[anc] 画面不显示来源方向 / 功能 / 取舍理由",
     /sourceDirection|selectionReason|sourceFields|score|function"\]/.test(fn), false);
-  checkEq("[anc] 画面只印那一句话", /esc0\(a\.line\)/.test(fn), true);
+  checkEq("[anc] 画面只印那一句话", /esc0\(line\)/.test(fn), true);
   checkEq("[anc] .sp 的样式也一起收掉",
     /#dpage\.compass-page \.cp-anchor \.sp\{/.test(html), false);
 
@@ -3765,8 +3789,10 @@ function testCompassAnchorsSemantic() {
   const fn = html.slice(html.indexOf("function compassAnchorsFor(saved)"),
                         html.indexOf("function compassNowHtml()"));
   checkEq("[sem] 渲染时从已存的四段文案现算", /AN3\.derive\(saved\.directions\)/.test(fn), true);
-  checkEq("[sem] 现算的结果要重新授权过才给",
-    /verifySemantic\(r, saved\.directions\)/.test(fn) && /if \(v\.ok\) list = r\.anchors/.test(fn), true);
+  checkEq("[sem] 现算的结果要重新授权过才给(逐句过滤,不再一句不过就整组清空)",
+    /verifySemantic\(r, saved\.directions\)/.test(fn) &&
+    /list = r\.anchors\.filter\(function \(a\) \{ return !badLines\[a\.line\]; \}\)/.test(fn) &&
+    !/if \(v\.ok\) list = r\.anchors/.test(fn), true);
   checkEq("[sem] 现算不出来才退回快取里那一份", /if \(!list\.length && saved\.anchors/.test(fn), true);
   checkEq("[sem] 现算有记忆化", /compassAnchorCache\.key === key/.test(fn), true);
   const ens = html.slice(html.indexOf("function compassEnsureAnchors()"),
@@ -4061,7 +4087,8 @@ function testCompassCentredLayout() {
   checkEq("[layout] 02 没有编号,一句就是一句",
     /<div class="cp-lines">/.test(keep) && /class="cp-line"/.test(keep) &&
     !/class="n"/.test(keep), true);
-  checkEq("[layout] 02 的引言是核准过的那一句", /不需要一直记得。需要的时候，再回来看看就好。/.test(keep), true);
+  /* selfNotes 起:卡片里只有这个人自己的几句话,不再固定印一句引言 */
+  checkEq("[layout] 02 不再固定印引言", /不需要一直记得。需要的时候，再回来看看就好。/.test(keep), false);
   checkEq("[layout] 02 没有语境标签 / 来源", /sourceDirection|function"\]|selectionReason/.test(keep), false);
   checkEq("[layout] 05 只读 Compass.store",
     /window\.Compass\.store\.list\(compassOwner\(\)\)/.test(html) && !/Guide\.history/.test(
@@ -4403,13 +4430,13 @@ function testAnchorsV11AndRenderV2() {
   /* ═══ D. 页面:02 的 0 / 1 / 2 / 3 ═══ */
   const keep = html.slice(html.indexOf("function compassAnchorsHtml()"),
                           html.indexOf("function compassNowHtml()"));
-  checkEq("[a32] 0 句 → 整段不出现", /if \(!list\.length\) return "";/.test(keep), true);
+  checkEq("[a32] 0 句 → 整段不出现", /if \(!lines\.length\) return "";/.test(keep), true);
   checkEq("[a32] 02 不再有任何空状态文案",
     /cp-pending|还没有可以单独带走|等上面的内在指南/.test(keep), false);
-  checkEq("[a32] 引言仍然是核准的那一句",
-    /不需要一直记得。需要的时候，再回来看看就好。/.test(keep), true);
+  checkEq("[a32] 卡片里不再固定印引言(只印这个人的几句话)",
+    /cp-keep-lead/.test(keep), false);
   checkEq("[a32] 一句一段,没有编号、没有标签",
-    /'<p class="cp-line">' \+ esc0\(a\.line\)/.test(keep) &&
+    /'<p class="cp-line">' \+ esc0\(line\)/.test(keep) &&
     !/练习|建议|Micro|Recognition|Cost Signal|class="n"/.test(keep), true);
 
   /* ═══ E. 渲染模型 v2:情境不是内容的门槛 ═══ */
@@ -4635,9 +4662,15 @@ function testCanonicalStorage() {
     /method: "DELETE"/.test(canBlk), false);
   /* R6:版本升级允许【恰好一次】条件更新(PATCH),不是随时可覆盖的通用写入——
      必须用 revision=eq. 当乐观并发的 WHERE 过滤,对不上就是 0 列而不是覆盖。 */
-  checkEq("[r1] canonical 只用一次 PATCH,而且是版本升级的条件更新",
-    (canBlk.match(/method: "PATCH"/g) || []).length === 1 &&
+  /* 文案本身只有一条 PATCH(版本升级,revision 条件);另一条是 selfNotes 专用,
+     body 只准带那三个栏位 —— 碰不到任何一句文案。 */
+  checkEq("[r1] canonical 只有两条 PATCH:文案升级 + selfNotes",
+    (canBlk.match(/method: "PATCH"/g) || []).length === 2 &&
     /revision=eq\./.test(canBlk), true);
+  const snPatch = canBlk.slice(canBlk.indexOf("saveSelfNotes:"), canBlk.indexOf("replace:"));
+  checkEq("[r1] selfNotes 的 PATCH 只送 self_notes 三个栏位",
+    /body: JSON\.stringify\(\{ self_notes: rec\.notes, self_notes_for: rec\.for,\s*self_notes_version: rec\.v \}\)/.test(snPatch) &&
+    !/toRow|_core|_expl|_prompt|revision/.test(snPatch), true);
   checkEq("[r1] PATCH 没有过滤条件就不算数(不能变成随时可覆盖)",
     /method: "PATCH"[\s\S]{0,600}revision=eq\./.test(canBlk) ||
     /revision=eq\.[\s\S]{0,600}method: "PATCH"/.test(canBlk), true);
@@ -4730,6 +4763,115 @@ function testCompassVersionUpgrade() {
     true);
 }
 
+/* ---------- selfNotes:想留给自己的几句话改成 AI 一次生成、存起来 ---------- */
+function testSelfNotes() {
+  const fs = require("fs");
+  const SN = require(path.join(__dirname, "..", "assets", "compass-selfnotes.js"));
+  const html = fs.readFileSync(path.join(__dirname, "..", "app.html"), "utf8");
+  const edge = fs.readFileSync(path.join(__dirname, "..", "docs", "edge", "compass-generate.ts"), "utf8");
+  const sql = fs.readFileSync(path.join(__dirname, "..", "docs", "sql", "compass_results.sql"), "utf8");
+
+  /* 1 · 写作指令两边逐字相同 */
+  const m = edge.match(/const SELF_NOTES_SYSTEM = `([\s\S]*?)`;/);
+  checkEq("[selfnotes] 服务端与前端的写作指令逐字相同", m ? firstDiff(m[1], SN.SYSTEM) : "缺 SELF_NOTES_SYSTEM", "");
+  checkEq("[selfnotes] 版本号", SN.VERSION, "selfnotes-v1");
+  checkEq("[selfnotes] 指令要求第一句理解自己、第二句提醒自己",
+    /第一句:偏向理解自己/.test(SN.SYSTEM) && /第二句:偏向下一次/.test(SN.SYSTEM), true);
+  checkEq("[selfnotes] 指令要求只输出 { selfNotes: [...] }", /"selfNotes"/.test(SN.SYSTEM), true);
+
+  /* 2 · 送出去的只有使用者看得到的字 */
+  const dirs = {
+    grounds: { openingLine: "先不用急着弄清楚。", shortInsight: "外界声音太多时,你会更难知道自己要什么。",
+               coreInsight: "你在信息太多的时候需要先安静下来。",
+               explanation: "当外界的声音太多,你会更难知道自己真正想要什么。先把世界调小一点,思绪会慢慢归位。",
+               reflectionPrompt: "最近一次觉得乱的时候,是哪一个声音最大?", mechanism: "不该被送出去" },
+    moves: { coreInsight: "让你投入的,是还有意思的那种感觉。" }
+  };
+  const input = SN.buildInput(dirs);
+  checkEq("[selfnotes] input 只带四个方向里使用者看得到的栏位",
+    JSON.stringify(input).indexOf("mechanism") < 0 && Object.keys(input.directions).join(","), "grounds,moves");
+  const p = SN.buildPrompt(input);
+  checkEq("[selfnotes] user 讯息内嵌同一份 input(服务端会核对)",
+    p.user.indexOf(JSON.stringify(input, null, 1)) >= 0, true);
+  checkEq("[selfnotes] 空的指南不会送出", SN.hasContent(SN.buildInput({})), false);
+
+  /* 3 · 解析 */
+  checkEq("[selfnotes] 解析普通 JSON", (SN.parse('{"selfNotes":["一","二"]}') || []).length, 2);
+  checkEq("[selfnotes] 解析带 ```json 围栏的回应",
+    (SN.parse('```json\n{"selfNotes":["一句话"]}\n```') || []).length, 1);
+  checkEq("[selfnotes] 坏掉的 JSON 回 null", SN.parse("这不是 JSON"), null);
+  checkEq("[selfnotes] 没有 selfNotes 阵列回 null", SN.parse('{"notes":"x"}'), null);
+
+  /* 4 · 逐句检查:只挡明显照抄,主题相近不挡 */
+  const sources = SN.sourcesFrom(dirs, ["什么让我安定"]);
+  const good1 = "慢一点也没关系,安静下来的时候,答案常常自己会浮上来。";
+  const good2 = "下次又急着要一个结论时,可以先让自己停一下,再决定要不要往前。";
+  const copy = "当外界的声音太多,你会更难知道自己真正想要什么。";            // 原句照抄
+  const nearCopy = "当外界的声音太多时,你会更难知道自己真正想要什么啊。";   // 换一两个字
+  const r = SN.check([good1, good2, copy, nearCopy, "太短",
+                      "你应该先安静下来,不然会一直很乱很乱很乱。",
+                      "你的星盘显示你需要安静,所以先把世界调小一点再说。"], sources);
+  checkEq("[selfnotes] 好的两句都留下", r.clean.join("|"), good1 + "|" + good2);
+  checkEq("[selfnotes] 原句照抄被挡", r.rejected.some(x => x.note === copy && x.why === "near_copy"), true);
+  checkEq("[selfnotes] 只换几个字也被挡", r.rejected.some(x => x.note === nearCopy && x.why === "near_copy"), true);
+  checkEq("[selfnotes] 太短被挡", r.rejected.some(x => x.why === "too_short"), true);
+  checkEq("[selfnotes] 说教句被挡", r.rejected.some(x => /你应该/.test(x.note) && x.why === "banned_phrase"), true);
+  checkEq("[selfnotes] 占星说法被挡", r.rejected.some(x => /星盘/.test(x.note) && x.why === "banned_phrase"), true);
+  checkEq("[selfnotes] 主题相近(都在讲安静)但是新的说法,不会被误删",
+    SN.isNearCopy("安静下来之后,很多事情会自己变清楚一点。", sources), false);
+  checkEq("[selfnotes] 最多留四句",
+    SN.check(["第一句是很安静的一句话呀。", "第二句是很安静的一句话哦。", "第三句也是安静的一句话吧。",
+              "第四句依然是安静的话语呢。", "第五句还是一样安静的话。"], []).clean.length, 4);
+  checkEq("[selfnotes] usable:空阵列不算", SN.usable([]), false);
+  checkEq("[selfnotes] usable:一句就算", SN.usable(["一句"]), true);
+
+  /* 5 · 页面:读取顺序与呼叫次数 */
+  const blk = html.slice(html.indexOf("var compassSelfNotesMemo"), html.indexOf("function compassAnchorsHtml()"));
+  checkEq("[selfnotes] 先读记忆体 / 本机,已存好就不呼叫 AI",
+    /compassSelfNotesMemo\[key\][\s\S]{0,400}can\.readSelfNotes\(owner\)[\s\S]{0,300}state: "ready"/.test(blk), true);
+  checkEq("[selfnotes] 云端已经有就直接用,不呼叫 AI",
+    /can\.fetchSelfNotes\(owner\)[\s\S]{0,500}compassSelfNotesUsable\(c\.rec, saved\)[\s\S]{0,200}done\("ready"/.test(blk), true);
+  checkEq("[selfnotes] 只有替【这一份】文案写的才拿来用(generatedAt 对得上)",
+    /compassSameGen\(rec\.for, saved\.generatedAt\)/.test(blk), true);
+  checkEq("[selfnotes] 没有登入中的 session 就不呼叫 AI", /if \(!cpLiveSession\(\)\) return done\("failed"\)/.test(blk), true);
+  checkEq("[selfnotes] AI 最多呼叫两次(重试一次)", (blk.match(/attempt\(\)\.then/g) || []).length, 2);
+  checkEq("[selfnotes] 失败后隔一天才再试,不每次进页面都打",
+    /CP_SELFNOTES_RETRY_MS = 24 \* 3600 \* 1000/.test(blk) && /failAt/.test(blk), true);
+  checkEq("[selfnotes] 同一份文案同时只跑一次", /compassSelfNotesBusy\[key\]/.test(blk), true);
+  checkEq("[selfnotes] 云端只在 CANONICAL 时写(那一列确定存在)",
+    /compassCanonState !== "CANONICAL"\) return;/.test(blk), true);
+  checkEq("[selfnotes] 本机有、云端还没有就补传一次", /if \(!local\.synced\) compassSyncSelfNotes/.test(blk), true);
+
+  const keep = html.slice(html.indexOf("function compassAnchorsHtml()"), html.indexOf("function compassNowHtml()"));
+  checkEq("[selfnotes] 有 selfNotes 就用 selfNotes", /sn\.state === "ready"\) lines = sn\.notes/.test(keep), true);
+  checkEq("[selfnotes] AI 还在写的那一次先不出现", /sn\.state === "pending"\) lines = \[\]/.test(keep), true);
+  checkEq("[selfnotes] 其他情况退回旧的句型挑选(fallback)",
+    /else lines = compassAnchorsFor\(saved\)\.map/.test(keep), true);
+  checkEq("[selfnotes] 没有任何空状态文案",
+    /暂无内容|无法生成|没有句子|cp-pending/.test(keep.replace(/\/\*[\s\S]*?\*\//g, "")), false);
+
+  /* 6 · 生成时就一起写好 */
+  checkEq("[selfnotes] 新指南定案(建立成功)后就生成",
+    /can\.writeLocal\(owner, accepted, "canonical", res\.revision\);[\s\S]{0,120}compassEnsureSelfNotes\(owner, accepted\)/.test(html), true);
+  checkEq("[selfnotes] 内容升级换新文案后替新文案重写",
+    /can\.writeLocal\(owner, fresh, "canonical", res\.revision\);[\s\S]{0,120}compassEnsureSelfNotes\(owner, fresh\)/.test(html), true);
+
+  /* 7 · 储存:本机跟着同一桶走,v2 写入时不会弄丢 */
+  checkEq("[selfnotes] writeLocal 保留原本的 selfNotes", /selfNotes: prev\.selfNotes \|\| null/.test(html), true);
+  checkEq("[selfnotes] 云端栏位还没建好(400)就退回本机",
+    /if \(r\.status === 400\) return \{ status: "unsupported" \}/.test(html), true);
+  checkEq("[selfnotes] SQL 迁移加了三个栏位",
+    /add column if not exists self_notes\s+text\[\]/.test(sql) &&
+    /self_notes_for\s+text/.test(sql) && /self_notes_version text/.test(sql), true);
+  checkEq("[selfnotes] SQL 限制 1–4 句", /cardinality\(self_notes\) between 1 and 4/.test(sql), true);
+
+  /* 8 · 模组在浏览器里挂到 window */
+  const win = {};
+  require("vm").runInNewContext(
+    fs.readFileSync(path.join(__dirname, "..", "assets", "compass-selfnotes.js"), "utf8"), { window: win });
+  checkEq("[selfnotes] 浏览器里挂成 window.CompassSelfNotes", typeof win.CompassSelfNotes, "object");
+}
+
 function main() {
   testTimezones();
   testCharts();
@@ -4771,6 +4913,7 @@ function main() {
   testTopicLayout();
   testTopicPreviews();
   testCompassZhOnlyLabels();
+  testSelfNotes();
   return Promise.all([genJobs, liveJobs, voiceJobs, v12Jobs, v13Jobs, v14Jobs]).then(function () { return testPlaces(); }).then(function () {
     console.log("\n对照来源:" + REF.reference);
     console.log("设置:" + JSON.stringify(REF.settings));
