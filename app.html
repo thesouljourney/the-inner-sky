@@ -3934,7 +3934,7 @@
     }
     #dpage.compass-page .cp-startfrom{
       position:relative;display:flex;order:8;flex-direction:column;align-items:center;gap:6px;
-      text-align:center;margin:6px 0 14px;padding:24px 0
+      text-align:center;margin:20px 0 26px;padding:40px 0
     }
     /* 天空从这里开始慢慢安静下来:往下一路铺到四张卡底下,盖过中间
        卡与卡的缝隙,让卡片区变成视觉主角,而不是天空/罗盘/卡片素材
@@ -3976,8 +3976,8 @@
        所以这里的绝对定位其实是相对 b/span 自己算,不是相对
        .cp-startfrom——top/bottom 要用负值把线推到文字外面
        (.cp-startfrom 已经留了 26px 的 padding 装它)。 */
-    #dpage.compass-page .cp-startfrom b::before{width:min(84vw,320px);top:-22px}
-    #dpage.compass-page .cp-startfrom span::after{width:min(64vw,260px);bottom:-22px}
+    #dpage.compass-page .cp-startfrom b::before{width:min(84vw,320px);top:-34px}
+    #dpage.compass-page .cp-startfrom span::after{width:min(64vw,260px);bottom:-34px}
     /* —— 四个方向的入口:圆角卡片,左边一颗统一规格的圆形章节点 + 编号,
        右边一圈细框的箭头按钮,卡片右侧衬一点淡淡的实景。点击行为、
        资料完全没有动,只是外观。卡面用极淡的斜向珍珠渐层 + 内高光,
@@ -4241,20 +4241,22 @@
      ============================================================ */
   /* 未展开的卡片:ivory 底上叠约 5–8% 的主题色。用 background-image
      叠在原本的底色上,hover / 选中时原本的底色变化照样看得到。 */
+  /* 卡片更透一点,底下的天空透得出来;加一层轻模糊,字仍然清楚 */
+  #dpage.compass-page .cp-ent{-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
   #dpage.compass-page .cp-ent.d1{
-    background-image:linear-gradient(135deg,rgba(250,250,255,.9),rgba(239,241,253,.88));
+    background-image:linear-gradient(135deg,rgba(250,250,255,.68),rgba(239,241,253,.6));
     border-color:rgba(206,208,236,.75)
   }
   #dpage.compass-page .cp-ent.d2{
-    background-image:linear-gradient(135deg,rgba(255,252,245,.9),rgba(251,244,229,.88));
+    background-image:linear-gradient(135deg,rgba(255,252,245,.68),rgba(251,244,229,.6));
     border-color:rgba(226,206,164,.55)
   }
   #dpage.compass-page .cp-ent.d3{
-    background-image:linear-gradient(135deg,rgba(255,251,250,.9),rgba(252,239,242,.88));
+    background-image:linear-gradient(135deg,rgba(255,251,250,.68),rgba(252,239,242,.6));
     border-color:rgba(239,213,221,.8)
   }
   #dpage.compass-page .cp-ent.d4{
-    background-image:linear-gradient(135deg,rgba(251,250,255,.9),rgba(242,240,253,.88));
+    background-image:linear-gradient(135deg,rgba(251,250,255,.68),rgba(242,240,253,.6));
     border-color:rgba(216,218,238,.8)
   }
 
@@ -4418,13 +4420,18 @@
   #dpage.compass-page .cp-now .cp-act{margin-top:24px}
   #dpage.compass-page .cp-now .dp-cta{
     display:inline-flex;align-items:center;justify-content:center;gap:12px;
-    min-width:240px;min-height:52px;padding:0 34px;border-radius:30px;
-    background:linear-gradient(135deg,#8f88c6 0%,#b39bc9 55%,#dcb1bd 100%);
-    border:1px solid rgba(255,255,255,.55);
-    font-family:var(--dp-serif);font-size:15.5px;letter-spacing:.12em;color:#fff;
-    box-shadow:0 12px 28px rgba(120,100,170,.26)
+    min-width:170px;min-height:40px;padding:0 22px;border-radius:30px;gap:8px;
+    /* 用户给的星光胶囊素材(已裁到内圈白边),拉满整颗按钮;外面只留一层柔光 */
+    /* 上面叠一层半透明白,整体淡一点 */
+    background:
+      linear-gradient(rgba(255,255,255,.3),rgba(255,255,255,.3)),
+      url(assets/life/cp-mobile/cta-pill.webp) center / 100% 100% no-repeat,#c9b8e6;
+    border:0;
+    font-family:var(--dp-serif);font-size:13px;letter-spacing:.1em;color:#fff;
+    text-shadow:0 1px 5px rgba(90,60,140,.45);
+    box-shadow:0 8px 22px rgba(170,130,220,.22),0 0 14px rgba(230,190,240,.25)
   }
-  #dpage.compass-page .cp-now .dp-cta::after{content:"→";font-family:var(--dp-sans);font-size:16px;letter-spacing:0}
+  #dpage.compass-page .cp-now .dp-cta::after{content:"→";font-family:var(--dp-sans);font-size:13px;letter-spacing:0}
 
   @media(max-width:767px){
     #dpage.compass-page .cp-keep-lead,
@@ -4433,7 +4440,7 @@
     #dpage.compass-page .cp-now .cp-mood{min-height:38px;padding:0 13px 0 11px;gap:6px;font-size:12.5px;letter-spacing:.03em}
     #dpage.compass-page .cp-now .cp-mood .mi{width:15px;height:15px}
     #dpage.compass-page .cp-now .cp-ta{min-height:112px;font-size:15px;background-size:110px auto,auto}
-    #dpage.compass-page .cp-now .dp-cta{min-width:220px;min-height:50px}
+    #dpage.compass-page .cp-now .dp-cta{min-width:170px;min-height:40px}
   }
   /* 段落间距(照用户给的手机实拍):四张卡 → 几句话 → 此刻的我 紧紧接着,
      不再各自隔一大段。cp-keep 不一定存在,所以 cp-now 自己也设同样的上距。 */
@@ -4513,11 +4520,116 @@
     #dpage.compass-page .cp-now{max-width:640px;margin-left:auto;margin-right:auto}
     #dpage.compass-page .cp-now > .cp-q:not(.cp-q2){font-size:14.5px}
     #dpage.compass-page .cp-now .cp-q2{font-size:18px}
+    #dpage.compass-page .cp-now .dp-cta{min-width:190px;min-height:42px;font-size:13.5px}
     /* 两行各四个 */
     #dpage.compass-page .cp-now .cp-moods{display:grid;grid-template-columns:repeat(4,auto);justify-content:center;gap:12px}
     #dpage.compass-page .cp-now .cp-mood{font-size:14px;min-height:44px;justify-content:center}
     #dpage.compass-page .cp-now .cp-mood .mi{width:17px;height:17px}
     #dpage.compass-page .cp-now .cp-ta{min-height:136px;background-size:150px auto,auto}
+  }
+
+  /* ============================================================
+     今天想问自己的一个问题(照用户的范例图;手机 + 桌机)
+     ------------------------------------------------------------
+     标题下一条 — ✦ —;问题卡是一张雾面玻璃卡,顶端一颗小星芒,
+     写字处是卡片里的一块更透的玻璃;下面左边星光胶囊按钮、
+     右边「今天先不回答 →」。背景图不动。
+     ============================================================ */
+  #dpage.compass-page .cp-ask .cp-sh::after{
+    content:"✦";display:block;width:min(64%,260px);margin:12px auto 0;
+    line-height:1;font-size:10px;color:rgba(190,150,80,.85);text-align:center;
+    background-image:
+      linear-gradient(90deg,transparent,rgba(201,168,105,.55)),
+      linear-gradient(90deg,rgba(201,168,105,.55),transparent);
+    background-size:calc(50% - 12px) 1px,calc(50% - 12px) 1px;
+    background-position:left center,right center;background-repeat:no-repeat
+  }
+  #dpage.compass-page .cp-ask-card{
+    overflow:visible;max-width:640px;margin:22px auto 0;padding:30px 24px 26px;border-radius:28px;
+    background:linear-gradient(180deg,rgba(255,252,248,.52),rgba(252,247,244,.4));
+    -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+    border:1px solid rgba(255,255,255,.7);
+    box-shadow:0 14px 38px rgba(96,80,140,.1),inset 0 1px 0 rgba(255,255,255,.9)
+  }
+  /* 顶端一颗小星芒,两侧极短的淡线 */
+  #dpage.compass-page .cp-ask-card .mk{
+    display:block;width:120px;margin:0 auto;font-size:13px;line-height:1;color:rgba(190,150,80,.85);
+    background-image:
+      linear-gradient(90deg,transparent,rgba(201,168,105,.4)),
+      linear-gradient(90deg,rgba(201,168,105,.4),transparent);
+    background-size:calc(50% - 12px) 1px,calc(50% - 12px) 1px;
+    background-position:left center,right center;background-repeat:no-repeat
+  }
+  #dpage.compass-page .cp-ask-card .qt{
+    margin:18px auto 0;max-width:22em;font-family:var(--dp-serif);font-weight:500;
+    font-size:15.5px;line-height:1.9;letter-spacing:.03em;color:#2a2848
+  }
+  #dpage.compass-page .cp-ask-card .cp-ta{
+    max-width:none;min-height:130px;margin-top:22px;padding:16px 18px;border-radius:20px;
+    background:
+      url(assets/life/cp-mobile/note-feather.webp) right 10px bottom 8px / 90px auto no-repeat,
+      rgba(255,255,255,.34);
+    border:1px solid rgba(255,255,255,.75);box-shadow:inset 0 1px 6px rgba(120,100,150,.06);
+    font-size:14.5px
+  }
+  #dpage.compass-page .cp-ask-card .cp-ta::placeholder{color:rgba(119,110,150,.55)}
+  /* 「留下这个回答」置中,「今天先不回答 →」小字放在它正下方 */
+  #dpage.compass-page .cp-ask-card .cp-act{
+    display:flex;flex-direction:column;align-items:center;gap:12px;margin-top:22px
+  }
+  #dpage.compass-page .cp-ask-card .cp-act .cp-skip{white-space:nowrap}
+  #dpage.compass-page .cp-ask-card .dp-cta{
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    min-width:140px;min-height:36px;padding:0 18px;border-radius:30px;border:0;
+    background:
+      linear-gradient(rgba(255,255,255,.3),rgba(255,255,255,.3)),
+      url(assets/life/cp-mobile/cta-pill.webp) center / 100% 100% no-repeat,#c9b8e6;
+    font-family:var(--dp-serif);font-size:12.5px;letter-spacing:.1em;color:#fff;
+    text-shadow:0 1px 5px rgba(90,60,140,.45);
+    box-shadow:0 8px 22px rgba(170,130,220,.22),0 0 14px rgba(230,190,240,.25)
+  }
+  #dpage.compass-page .cp-ask-card .cp-skip{font-size:11.5px;letter-spacing:.08em;color:#7a72a0;padding:6px 4px;min-height:32px}
+  @media(max-width:767px){
+    #dpage.compass-page .cp-ask-card{padding:28px 18px 22px;border-radius:24px}
+    #dpage.compass-page .cp-ask-card .qt{font-size:14.5px}
+    #dpage.compass-page .cp-ask-card .cp-skip{font-size:11px;letter-spacing:.04em;padding:6px 0}
+    #dpage.compass-page .cp-ask-card .cp-ta{min-height:112px}
+    #dpage.compass-page .cp-ask-card .dp-cta{min-width:140px;padding:0 16px}
+  }
+  @media(min-width:768px){
+    #dpage.compass-page .cp-ask{max-width:720px;margin-left:auto;margin-right:auto}
+    #dpage.compass-page .cp-ask-card{padding:40px 44px 32px}
+    #dpage.compass-page .cp-ask-card .qt{font-size:17px}
+    #dpage.compass-page .cp-ask-card .cp-ta{min-height:150px}
+    #dpage.compass-page .cp-ask-card .cp-skip{font-size:12px}
+  }
+
+  /* ── 这一页所有「细线—✦—细线」分隔线统一换成用户给的金色星芒线素材 ──
+     (divider.webp,两端自带淡出)。只换画法,位置与间距不变。 */
+  #dpage.compass-page .cp-keep .cp-sh::after,
+  #dpage.compass-page .cp-lines > p + p::before,
+  #dpage.compass-page .cp-ask .cp-sh::after,
+  #dpage.compass-page .cp-ask-card .mk,
+  #dpage.compass-page .cp-startfrom b::before,
+  #dpage.compass-page .cp-startfrom span::after{
+    content:"";font-size:0;color:transparent;height:20px;
+    background:url(assets/life/cp-mobile/divider.webp) center / contain no-repeat
+  }
+  #dpage.compass-page .cp-ask-card .mk{width:150px;height:14px}
+  /* 三句以上时仍是缩短版:只取中间那颗星附近 */
+  #dpage.compass-page .cp-lines:has(> p:nth-child(3)) > p + p::before{
+    width:90px;height:12px;background-size:auto 100%
+  }
+
+  /* 「此刻的我」标题上方:用户给的珍珠金星芒素材,取代原本的 ✦ 字符 */
+  #dpage.compass-page .cp-now .cp-sh::before{
+    content:"";display:block;width:34px;height:34px;margin:0 auto 10px;font-size:0;
+    background:url(assets/life/cp-mobile/now-star.webp) center / contain no-repeat;
+    /* 素材本身偏淡,在米色底上加一点金色光晕与饱和度,才看得出星芒 */
+    filter:saturate(1.35) contrast(1.1) drop-shadow(0 0 5px rgba(230,180,90,.55))
+  }
+  @media(min-width:768px){
+    #dpage.compass-page .cp-now .cp-sh::before{width:40px;height:40px}
   }
 
   /* 记录:展开长在自己下面 */
@@ -4544,13 +4656,13 @@
   /* 越往下越安静。四张卡 → 几句话 → 此刻的我 三段紧紧接着(照用户的
      手机实拍),之后的段落才拉开 */
   #dpage.compass-page .cp-keep,
-  #dpage.compass-page .cp-now{margin-top:36px}
+  #dpage.compass-page .cp-now{margin-top:68px}
   #dpage.compass-page .cp-ask{margin-top:clamp(84px,10vw,136px)}
   #dpage.compass-page .cp-sky{margin-top:clamp(96px,12vw,160px)}
 
   @media(max-width:767px){
     #dpage.compass-page .cp-keep,
-    #dpage.compass-page .cp-now{margin-top:16px}
+    #dpage.compass-page .cp-now{margin-top:40px}
     #dpage.compass-page .cp-ask{margin-top:64px}
     #dpage.compass-page .cp-sky{margin-top:72px}
     #dpage.compass-page .cp-open,
@@ -11899,7 +12011,7 @@ window.Guide = (function () {
       '<div class="cp-ask-card"><span class="mk" aria-hidden="true">✦</span>' +
       '<p class="qt">' + esc0(q.text).replace(/\n/g, "<br>") + "</p>" +
       '<textarea id="cpAnswer" class="cp-ta" rows="3" placeholder="' +
-      esc0(dpT("写下你的回答……", "Write your answer…")) + '"></textarea>' +
+      esc0(dpT("写下此刻想到的……", "Write what comes to mind…")) + '"></textarea>' +
       '<div class="cp-act"><button type="button" class="dp-cta" id="cpSaveAnswer">' +
       esc0(dpT("留下这个回答", "Keep this answer")) + "</button>" +
       '<button type="button" class="cp-skip" id="cpSkip">' +
