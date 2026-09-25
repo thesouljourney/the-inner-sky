@@ -4621,6 +4621,25 @@
     width:90px;height:12px;background-size:auto 100%
   }
 
+  /* 「想留给自己的几句话」AI 还在写的时候:卡片照常,中间两行安静的等待文字 */
+  #dpage.compass-page .cp-wait{position:relative;z-index:1;padding:18px 0 10px}
+  #dpage.compass-page .cp-wait p{margin:0}
+  #dpage.compass-page .cp-wait-a{
+    font-family:var(--dp-serif);font-weight:400;font-size:15px;line-height:1.85;
+    letter-spacing:.03em;color:#26324A
+  }
+  #dpage.compass-page .cp-wait-b{
+    margin-top:10px !important;font-size:13px;line-height:1.8;letter-spacing:.04em;
+    color:rgba(38,50,74,.55);animation:cpWaitBreath 2.6s ease-in-out infinite
+  }
+  @keyframes cpWaitBreath{0%,100%{opacity:.45}50%{opacity:1}}
+  @media(prefers-reduced-motion:reduce){#dpage.compass-page .cp-wait-b{animation:none}}
+  @media(min-width:768px){
+    #dpage.compass-page .cp-wait{padding:26px 0 14px}
+    #dpage.compass-page .cp-wait-a{font-size:16.5px}
+    #dpage.compass-page .cp-wait-b{font-size:14px}
+  }
+
   /* 「此刻的我」标题上方:用户给的珍珠金星芒素材,取代原本的 ✦ 字符 */
   #dpage.compass-page .cp-now .cp-sh::before{
     content:"";display:block;width:34px;height:34px;margin:0 auto 10px;font-size:0;
@@ -12143,19 +12162,24 @@ window.Guide = (function () {
     const sn = compassSelfNotesFor(saved);
     let lines;
     if (sn.state === "ready") lines = sn.notes;
-    else if (sn.state === "pending") lines = [];       // AI 这一次还在写:先不出现,写好再重画
+    else if (sn.state === "pending") lines = null;     // AI 这一次还在写:标题与卡片先出现,里面放等待文字
     else lines = compassAnchorsFor(saved).map(function (a) { return a.line; });   // fallback
     /* 一句都没有就【整段不出现】。不印「暂无内容」「无法生成」之类的空状态 ——
        那是把系统内部的不足写给使用者看,而且他也不能拿它做什么。
        1 句、2 句、3 句、4 句都是完整的结果。 */
-    if (!lines.length) return "";
+    if (lines && !lines.length) return "";
     return '<section class="cp-sec cp-keep">' +
       compassSecHead("02", dpT("想留给自己的几句话", "Worth Keeping"), "WORTH KEEPING") +
       /* 两句以上:句子之间是同一条星芒分隔线;一句:置中一句 */
       '<div class="cp-lines">' +
-      lines.map(function (line) {
+      (lines ? lines.map(function (line) {
         return '<p class="cp-line">' + esc0(line) + "</p>";
-      }).join("") + "</div></section>";
+      }).join("")
+      /* 写好之前:同一张卡片里放两行等待文字(包在 div 里,不会被当成两句而加分隔线) */
+      : '<div class="cp-wait" role="status" aria-live="polite">' +
+          '<p class="cp-wait-a">' + esc0(dpT("有几句话，想慢慢对你说。", "A few words, to say to you slowly.")) + "</p>" +
+          '<p class="cp-wait-b">' + esc0(dpT("正在为你整理属于你的提醒…", "Gathering the reminders that are yours…")) + "</p>" +
+        "</div>") + "</div></section>";
   }
 
   /* 心情线稿:20×20、1.2px 描边、不填色 */
