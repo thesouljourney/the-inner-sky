@@ -4627,7 +4627,9 @@
   /* 「此刻的我」标题上方:用户给的珍珠金星芒素材,取代原本的 ✦ 字符 */
   #dpage.compass-page .cp-now .cp-sh::before{
     content:"";display:block;width:34px;height:34px;margin:0 auto 10px;font-size:0;
-    background:url(assets/life/cp-mobile/now-star.webp) center / contain no-repeat
+    background:url(assets/life/cp-mobile/now-star.webp) center / contain no-repeat;
+    /* 素材本身偏淡,在米色底上加一点金色光晕与饱和度,才看得出星芒 */
+    filter:saturate(1.35) contrast(1.1) drop-shadow(0 0 5px rgba(230,180,90,.55))
   }
   @media(min-width:768px){
     #dpage.compass-page .cp-now .cp-sh::before{width:40px;height:40px}
