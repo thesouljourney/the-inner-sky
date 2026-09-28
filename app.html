@@ -3504,14 +3504,15 @@
      它压在最底下(z-index:0),hero 与页脚本来就是不透明的深蓝,
      所以那两段看不到它,只有正文这一段会透出来。
 
-     ⚠ 淡到什么程度:--tp-bg-a 预设 .14。正文是深墨色写在白卡上,
-       卡片自己还有 .82 的底,所以对比度几乎不受影响。
+     ⚠ 用户要求拿掉白罩:--tp-bg-a 预设从 .14 改成 1,底图原样显示,
+       不再让米色底透上来把整张图洗白。正文写在卡片自己的半透明白底上,
+       文字可读交给卡片,不交给把背景调淡。
      ------------------------------------------------------------ */
   #dpage.topic-page::before{
     content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
     background-image:var(--tp-bg,none);
     background-size:cover;background-position:center top;
-    opacity:calc(var(--tp-bg-on,0) * var(--tp-bg-a,.14))
+    opacity:calc(var(--tp-bg-on,0) * var(--tp-bg-a,1))
   }
   #dpage.topic-page > *{position:relative;z-index:1}
   /* ⚠ 账号选单开着的时候,要盖住它底下所有内容 —— 但 dp-hero 与
