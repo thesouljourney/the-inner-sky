@@ -1611,10 +1611,9 @@
   #dpage.thread-page .dp-body::before{
     content:"";position:absolute;top:0;bottom:0;left:calc(50% - 50vw);width:100vw;
     z-index:0;pointer-events:none;
-    background:
-      radial-gradient(58% 26% at 10% 4%,rgba(170,160,213,.11),rgba(170,160,213,0) 72%),
-      radial-gradient(50% 24% at 94% 34%,rgba(232,211,162,.11),rgba(232,211,162,0) 74%),
-      radial-gradient(60% 26% at 16% 74%,rgba(170,160,213,.09),rgba(170,160,213,0) 72%)
+    /* 用户给的星月云朵底图。原图是直式一张,这里用的是「原图 + 上下翻转」
+       接成的一张(thread-bg.webp),往下重复时接缝对得上,长页面也不会断。 */
+    background:url(assets/life/thread-bg.webp) center top / 100% auto repeat-y,#fcf6ef
   }
   #dpage.thread-page .dp-body > *{position:relative;z-index:1}
   /* 这一页不要一格一格的白卡片:等待 / 进度 / 错误那几种状态卡保持原样,
@@ -14323,10 +14322,23 @@ window.Guide = (function () {
         const full = sec.querySelector(".ch-full");
         if (!open || !full) return;
         const set = function (on) {
-          sec.classList.toggle("open", on);
           open.setAttribute("aria-expanded", on ? "true" : "false");
-          grow(full, on);
-          if (!on) open.focus();
+          if (on) { sec.classList.add("open"); grow(full, true); return; }
+          /* 收起:一次收好,不做高度动画 —— 动画期间引子已经回来、原文还没收完,
+             同一段字会叠两次;而且「收起」在长长的原文最底下,收完之后画面
+             会停在下一章。所以直接收起,再把这一章的开头带回视线里。 */
+          full.style.transition = "none";
+          full.classList.remove("on");
+          full.style.maxHeight = "0px";
+          sec.classList.remove("open");
+          full.getBoundingClientRect();
+          full.style.transition = "";
+          const top = sec.getBoundingClientRect().top;
+          if (top < 72) {
+            const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion:reduce)").matches;
+            window.scrollTo({ top: window.scrollY + top - 88, behavior: reduce ? "auto" : "smooth" });
+          }
+          open.focus({ preventScroll: true });
         };
         open.addEventListener("click", function () { set(true); });
         if (shut) shut.addEventListener("click", function () { set(false); });
