@@ -1975,7 +1975,15 @@
     #dpage .sky-core .sky-card:last-child{margin-right:8%}
     #dpage .sky-houses .sky-house:first-child{margin-left:12%}
     #dpage .sky-houses .sky-house:last-child{margin-right:12%}
+    /* 卡片投影原本 14–44px,被横向滑动容器裁掉之后,卡片后面会出现一块
+       方形的淡底(像一张大卡片)。投影收小到容器留白装得下 */
+    #dpage .sky-core .sky-card{box-shadow:0 3px 8px rgba(9,18,46,.05)}
+    #dpage .sky-houses .sky-house{box-shadow:0 3px 8px rgba(80,60,40,.05)}
   }
+  /* 十二个生命领域:卡片后面那张分组大卡片完全透明(用户要求不透明度降到最低),
+     只留卡片本身;底色、边框、投影、轨道装饰一起拿掉 */
+  #dpage .sky-group{background:none;border-color:transparent;box-shadow:none}
+  #dpage .sky-group .atmos{display:none}
   /* ============================================================
      属于我的生命脉络(#/map)—— 编辑式的「一条线」版面
      ------------------------------------------------------------
