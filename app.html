@@ -1686,18 +1686,76 @@
   #dpage .sky-gdots{display:flex;justify-content:center;gap:8px;margin-top:14px}
   #dpage .sky-gdots i{width:7px;height:7px;border-radius:50%;background:rgba(59,63,120,.2)}
   #dpage .sky-gdots i.on{background:#3b3f78}
+  /* 相位(依设计稿):左边大标题 + ✦ 金线、说明、胶囊按钮,左下一幅淡淡的雪山月亮;
+     右边一张象牙卡,每列「行星 → 相位 — 行星  容许度」 */
+  #dpage .sky-asp-sec{position:relative;isolation:isolate;padding-bottom:clamp(10px,2vw,30px)}
+  #dpage .sky-asp-sec .asp-l{position:relative;min-height:clamp(200px,20vw,260px)}
+  #dpage .sky-asp-sec .asp-l::before{
+    content:"";position:absolute;z-index:-1;pointer-events:none;
+    left:calc(-1 * var(--sky-pad,24px));bottom:clamp(-60px,-4vw,-30px);width:min(380px,70%);aspect-ratio:1;
+    background:url(assets/houses/core-mc.webp) left bottom / cover no-repeat;opacity:.55;
+    -webkit-mask-image:radial-gradient(ellipse 46% 44% at 44% 58%,#000 30%,transparent 100%);
+            mask-image:radial-gradient(ellipse 46% 44% at 44% 58%,#000 30%,transparent 100%)
+  }
+  #dpage .sky-asp-sec .sky-hd h2{
+    display:flex;align-items:center;gap:14px;font-size:clamp(24px,2.8vw,34px);line-height:1.4;letter-spacing:.04em
+  }
+  #dpage .sky-asp-sec .sky-hd h2 .orn{flex:1;display:flex;align-items:center;gap:8px;min-width:40px;max-width:180px}
+  #dpage .sky-asp-sec .sky-hd h2 .orn b{font-weight:400;font-size:15px;color:#c49848}
+  #dpage .sky-asp-sec .sky-hd h2 .orn i{flex:1;height:1px;background:linear-gradient(90deg,rgba(196,152,72,.6),rgba(196,152,72,0))}
+  #dpage .sky-asp-sec .sky-hd .note{font-size:14.5px;line-height:1.9;color:#4d4b62;max-width:24em;margin-top:12px}
+  #dpage .sky-asp-sec .sky-expand{
+    margin:clamp(18px,2.4vw,28px) 0 0 clamp(60px,14vw,220px);padding:12px 30px;border-radius:999px;
+    background:rgba(255,253,249,.92);border:1px solid rgba(201,178,140,.3);
+    box-shadow:0 8px 22px rgba(80,60,40,.06);color:#23264f;font-size:14px;letter-spacing:.06em
+  }
+  #dpage .sky-asp-sec .sky-asps{
+    background:rgba(255,253,249,.9);border-color:rgba(201,178,140,.22);border-radius:20px;
+    padding:clamp(10px,1.2vw,16px) clamp(20px,2.4vw,32px)
+  }
+  #dpage .sky-asp-sec .sky-asp{
+    grid-template-columns:minmax(0,1fr) minmax(0,1.15fr) minmax(0,1fr) 56px;
+    padding:clamp(14px,1.6vw,18px) 0;border-bottom:0
+  }
+  #dpage .sky-asp-sec .sky-asp .pn{font-family:var(--dp-sans);font-size:14px;gap:14px}
+  #dpage .sky-asp-sec .sky-asp .pn svg{color:#23264f}
+  #dpage .sky-asp-sec .sky-asp .pn.b{justify-content:flex-start;text-align:left}
+  #dpage .sky-asp-sec .sky-asp .lk .ln:first-child{flex:none;width:22px;background:rgba(184,166,120,.55);position:relative}
+  #dpage .sky-asp-sec .sky-asp .lk .ln:first-child::after{
+    content:"";position:absolute;right:-1px;top:-2px;border:2.5px solid transparent;border-left:4px solid rgba(184,166,120,.8);border-right:0
+  }
+  #dpage .sky-asp-sec .sky-asp .lk .ln+.rel+.ln{flex:none;width:26px;background:rgba(184,166,120,.4)}
+  #dpage .sky-asp-sec .sky-asp .lk{justify-content:center;gap:8px}
+  #dpage .sky-asp-sec .sky-asp .rel{font-size:13px;color:#8a8398}
+  #dpage .sky-asp-sec .sky-asp .rel .g{display:none}
+  #dpage .sky-asp-sec .sky-asp .orb{font-size:13px;color:#6f6a7e}
+  @media(max-width:900px){
+    /* 手机:每条相位维持一列(行星 → 相位 — 行星  容许度),不拆成三行 */
+    #dpage .sky-asp-sec .sky-asp{
+      grid-template-columns:minmax(0,1fr) auto minmax(0,1fr) auto;column-gap:8px;row-gap:0;padding:14px 0
+    }
+    #dpage .sky-asp-sec .sky-asp .pn{grid-column:auto;grid-row:auto;font-size:13px;gap:8px}
+    #dpage .sky-asp-sec .sky-asp .pn.b{grid-column:auto;justify-content:flex-start}
+    #dpage .sky-asp-sec .sky-asp .lk{grid-column:auto;grid-row:auto;gap:5px}
+    #dpage .sky-asp-sec .sky-asp .lk .ln:first-child{width:12px}
+    #dpage .sky-asp-sec .sky-asp .lk .ln+.rel+.ln{display:none}
+    #dpage .sky-asp-sec .sky-asp .rel{font-size:12px}
+    #dpage .sky-asp-sec .sky-asp .orb{grid-column:auto;grid-row:auto;font-size:12px;text-align:right}
+    #dpage .sky-asp-sec .sky-asps{padding:6px 16px}
+    #dpage .sky-asp-sec .asp-l{min-height:0}
+    #dpage .sky-asp-sec .sky-expand{margin-left:0;padding:10px 24px;font-size:13px}
+    #dpage .sky-asp-sec .asp-l::before{width:240px;left:auto;right:-30px;bottom:-40px;opacity:.4}
+  }
   /* 相位:左边标题与按钮,右边一张卡 */
   #dpage .sky-asp-sec{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:clamp(20px,3vw,48px);align-items:start}
   #dpage .sky-asp-sec .sky-asps{
     padding:clamp(8px,1vw,12px) clamp(16px,2vw,26px);border-radius:18px;
     background:rgba(255,252,246,.82);border:1px solid rgba(201,178,140,.3);box-shadow:0 10px 28px rgba(80,60,40,.05)
   }
-  #dpage .sky-asp-sec .sky-asp{grid-template-columns:minmax(0,1fr) minmax(0,1.1fr) minmax(0,1fr) 60px}
   @media(max-width:900px){
     #dpage .sky-overview,#dpage .sky-asp-sec{grid-template-columns:minmax(0,1fr)}
     #dpage .sky-overview{margin-top:0}
     #dpage .sky-overview .ov-moon{display:none}
-    #dpage .sky-asp-sec .sky-asp{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
   }
   @media(max-width:767px){
     #dpage.sky-page .dp-hero{padding-bottom:40px}
@@ -14548,9 +14606,10 @@ window.Guide = (function () {
         };
         body += '<section class="sky-sec sky-air air-dust sky-asp-sec">' +
           '<span class="l" aria-hidden="true"></span><div class="asp-l"><div class="sky-hd">' +
-          '<h2>' + esc0(dpT("星盘之间的对话", "Conversations inside your chart")) + '</h2>' +
-          '<div class="note">' + esc0(dpT("相位显示行星之间的角度关系，揭示这些能量如何互动、流动。",
-            "Aspects are the angles between planets — how these energies meet and move together.")) + '</div></div>' +
+          '<h2>' + esc0(dpT("星盘之间的对话", "Conversations inside your chart")) +
+          '<span class="orn" aria-hidden="true"><b>✦</b><i></i></span></h2>' +
+          '<div class="note">' + esc0(dpT("行星之间的角度关系，揭示这些能量如何互动、流动，也展现你内在的矛盾与天赋。",
+            "Aspects are the angles between planets — how these energies meet and move, and where your tensions and gifts live.")) + '</div></div>' +
           (asps.length > 3 ? skyExpandBtn("skyMoreAsp",
             dpT("查看全部相位 · " + asps.length + " 条", "See all " + asps.length + " aspects"),
             dpT("收起", "Collapse")) : "") + '</div>' +
