@@ -1804,11 +1804,18 @@
   #dpage .sky-asp-sec .sky-hd h2 .orn b{font-weight:400;font-size:15px;color:#c49848}
   #dpage .sky-asp-sec .sky-hd h2 .orn i{flex:1;height:1px;background:linear-gradient(90deg,rgba(196,152,72,.6),rgba(196,152,72,0))}
   #dpage .sky-asp-sec .sky-hd .note{font-size:14.5px;line-height:1.9;color:#4d4b62;max-width:24em;margin-top:12px}
-  #dpage .sky-asp-sec .sky-expand{
-    margin:clamp(18px,2.4vw,28px) 0 0 clamp(60px,14vw,220px);padding:12px 30px;border-radius:999px;
-    background:rgba(255,253,249,.92);border:1px solid rgba(201,178,140,.3);
-    box-shadow:0 8px 22px rgba(80,60,40,.06);color:#23264f;font-size:14px;letter-spacing:.06em
+  /* 卡片底部的「查看全部 N 条相位 ⌄」:整行、上面一条细线、文字置中,不是胶囊按钮 */
+  #dpage .sky-asp-sec .sky-asps .sky-expand{
+    display:flex;justify-content:center;width:100%;margin:6px 0 0;padding:14px 0 6px;min-height:44px;
+    background:none;border:0;border-top:1px solid rgba(201,178,140,.28);border-radius:0;box-shadow:none;
+    font-family:var(--dp-serif);font-size:14px;letter-spacing:.06em;color:#6f6a96;gap:10px
   }
+  #dpage .sky-asp-sec .sky-asps .sky-expand:hover{background:none;color:#4d4880}
+  #dpage .sky-asp-sec .sky-asps .sky-expand .cv{
+    width:8px;height:8px;font-size:0;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;
+    transform:translateY(-2px) rotate(45deg);color:inherit
+  }
+  #dpage .sky-asp-sec .sky-asps .sky-expand[aria-expanded="true"] .cv{transform:translateY(2px) rotate(225deg)}
   #dpage .sky-asp-sec .sky-asps{
     background:rgba(255,253,249,.9);border-color:rgba(201,178,140,.22);border-radius:20px;
     padding:clamp(10px,1.2vw,16px) clamp(20px,2.4vw,32px)
@@ -1843,7 +1850,7 @@
     #dpage .sky-asp-sec .sky-asp .orb{grid-column:auto;grid-row:auto;font-size:12px;text-align:right}
     #dpage .sky-asp-sec .sky-asps{padding:6px 16px}
     #dpage .sky-asp-sec .asp-l{min-height:0}
-    #dpage .sky-asp-sec .sky-expand{margin-left:0;padding:10px 24px;font-size:13px}
+    #dpage .sky-asp-sec .sky-asps .sky-expand{font-size:13px;padding:12px 0 4px}
     #dpage .sky-asp-sec .asp-l::before{width:240px;left:auto;right:-30px;bottom:-40px;opacity:.4}
   }
   /* 相位:左边标题与按钮,右边一张卡 */
@@ -15681,11 +15688,13 @@ window.Guide = (function () {
           '<span class="orn" aria-hidden="true"><b>✦</b><i></i></span></h2>' +
           '<div class="note">' + esc0(dpT("行星之间的角度关系，揭示这些能量如何互动、流动，也展现你内在的矛盾与天赋。",
             "Aspects are the angles between planets — how these energies meet and move, and where your tensions and gifts live.")) + '</div></div>' +
-          (asps.length > 3 ? skyExpandBtn("skyMoreAsp",
-            dpT("查看全部相位 · " + asps.length + " 条", "See all " + asps.length + " aspects"),
-            dpT("收起", "Collapse")) : "") + '</div>' +
+          '</div>' +
+          /* 「查看全部」按钮搬进卡片底部(依设计图):一条细分隔线 + 置中的文字与 ⌄ */
           '<div class="sky-asps">' + asps.slice(0, 3).map(aspRow).join("") +
-          '<div class="sky-more" id="skyMoreAsp" aria-hidden="true">' + asps.slice(3).map(aspRow).join("") + '</div></div>' +
+          '<div class="sky-more" id="skyMoreAsp" aria-hidden="true">' + asps.slice(3).map(aspRow).join("") + '</div>' +
+          (asps.length > 3 ? skyExpandBtn("skyMoreAsp",
+            dpT("查看全部 " + asps.length + " 条相位", "See all " + asps.length + " aspects"),
+            dpT("收起", "Collapse")) : "") + '</div>' +
           '</section>';
       }
 
