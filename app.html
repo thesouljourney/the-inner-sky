@@ -1634,6 +1634,11 @@
      ============================================================ */
   #dpage.sky-page .dp-hero{padding-bottom:clamp(60px,9vw,150px)}
   @media(min-width:1101px){#dpage.sky-page .dp-hero-grid{grid-template-columns:minmax(0,1fr) minmax(0,1.2fr)}}
+  /* 左边 hero 文字上下置中(用户:偏上):把底部留白挪一部分到文字上方,hero 总高不变 */
+  @media(min-width:1101px){
+    #dpage.sky-page .dp-hero-grid{padding-top:clamp(0px,3vw,50px)}
+    #dpage.sky-page .dp-hero{padding-bottom:calc(clamp(60px,9vw,150px) - clamp(0px,3vw,50px))}
+  }
   #dpage.sky-page .sky-meta{
     display:inline-block;max-width:none;border:1px solid rgba(201,178,140,.5);border-top-color:rgba(201,178,140,.5);
     border-radius:999px;padding:8px 20px;background:rgba(255,252,246,.7)
@@ -1892,7 +1897,9 @@
     #dpage .sky-overview{margin-top:0}
   }
   @media(max-width:767px){
-    #dpage.sky-page .dp-hero{padding-bottom:40px}
+    /* 文字落在拱门场景(约 100vw 高)与 hero 底(160vw)之间的正中;
+       文字块约 186px,所以底部留白 = 30vw - 93px,最少 20px */
+    #dpage.sky-page .dp-hero{padding-bottom:max(20px,calc(30vw - 93px))}
     #dpage .sky-hd h2 .scr{display:block;margin:2px 0 0;font-size:22px}
     #dpage .sky-overview .ov-table{grid-template-columns:minmax(0,1fr)}
     #dpage .sky-core .sky-card{flex:0 0 84%;min-height:190px}
@@ -1959,7 +1966,26 @@
     #dpage .sky-group .sky-group-hd .nos{flex:1 1 100%;order:0;font-size:12.5px}
     #dpage .sky-group .sky-houses{display:flex}
     #dpage .sky-houses .sky-house{flex:0 0 76%;min-height:300px}
+    /* 滑动后卡片停在正中间(用户要求):snap 对齐改成 center,
+       左右内距改由第一 / 最后一张卡的外距提供 = (100% − 卡宽) / 2,
+       这样第一张、最后一张也能停在正中,不会贴边 */
+    #dpage .sky-core,#dpage .sky-group .sky-houses{padding-left:0;padding-right:0;scroll-padding:0}
+    #dpage .sky-core .sky-card,#dpage .sky-houses .sky-house{scroll-snap-align:center}
+    #dpage .sky-core .sky-card:first-child{margin-left:8%}
+    #dpage .sky-core .sky-card:last-child{margin-right:8%}
+    #dpage .sky-houses .sky-house:first-child{margin-left:12%}
+    #dpage .sky-houses .sky-house:last-child{margin-right:12%}
+    /* 卡片投影原本 14–44px,被横向滑动容器裁掉之后,卡片后面会出现一块
+       方形的淡底(像一张大卡片)。投影收小到容器留白装得下 */
+    #dpage .sky-core .sky-card{box-shadow:0 3px 8px rgba(9,18,46,.05)}
+    #dpage .sky-houses .sky-house{box-shadow:0 3px 8px rgba(80,60,40,.05)}
+    /* 分页签与卡片之间收窄(用户要求):分组大卡片已经透明,不需要它的上下内距 */
+    #dpage .sky-gwrap > .sky-group{padding-top:2px;padding-bottom:10px}
   }
+  /* 十二个生命领域:卡片后面那张分组大卡片完全透明(用户要求不透明度降到最低),
+     只留卡片本身;底色、边框、投影、轨道装饰一起拿掉 */
+  #dpage .sky-group{background:none;border-color:transparent;box-shadow:none}
+  #dpage .sky-group .atmos{display:none}
   /* ============================================================
      属于我的生命脉络(#/map)—— 编辑式的「一条线」版面
      ------------------------------------------------------------
@@ -1976,17 +2002,22 @@
 
   /* —— Hero:云天底 + 右侧大月亮,再柔和地化进象牙色的正文区 —— */
   #dpage.thread-page .dp-hero{
+    /* 深蓝暗罩(试过白罩,用户要求换回黑罩) */
     background:
       linear-gradient(180deg,rgba(9,18,46,.66) 0%,rgba(9,18,46,.24) 42%,rgba(9,18,46,.42) 100%),
       /* 底图右上角自己带一颗月亮 —— 放大并靠左取景把它推出画面,
          这一页只留 asset 02 那一颗,不要两颗月亮打架 */
       url(assets/life/hero-sky.webp) left 56% / 142% auto no-repeat,
       var(--dp-navy);
-    padding-bottom:clamp(66px,9vw,124px)
+    /* hero 比其他页高很多(1280 宽约 672px vs 其他页 300–540px):
+       底部留白、格子最小高度、星链与结语的间距一起收 */
+    padding-bottom:clamp(44px,5.4vw,84px)
   }
   #dpage.thread-page .dp-hero .dp-stars i{opacity:calc(var(--o,.5) * .55)}
   /* 底缘化进正文的象牙色 —— hero 不设 overflow:hidden(账号选单会被切掉) */
+  /* 用户要求:拿掉 hero 最下面那一段化进象牙色的白色渐层,云天直接到底(display:none) */
   #dpage.thread-page .dp-hero::after{
+    display:none;
     content:"";position:absolute;left:0;right:0;bottom:0;z-index:1;pointer-events:none;
     height:clamp(104px,15vw,208px);
     /* 多给几个停点,而且中段刻意走得慢 —— 天空是「化」进纸里的,不是被一条边切断 */
@@ -2002,8 +2033,8 @@
   #dpage.thread-page .dp-hero-grid{
     z-index:2;grid-template-columns:minmax(0,1fr);overflow:hidden;
     text-align:center;justify-items:center;
-    padding:calc(clamp(26px,5vw,62px) + 20px) 0 clamp(18px,4vw,40px);
-    min-height:clamp(230px,30vw,400px);align-content:center
+    padding:calc(clamp(18px,3vw,40px) + 16px) 0 clamp(12px,2.4vw,28px);
+    min-height:clamp(200px,22vw,300px);align-content:center
   }
   #dpage.thread-page .dp-hero-grid > div{max-width:min(100%,var(--dp-text))}
   #dpage.thread-page .dp-sub{max-width:30em;margin:0 auto}
@@ -2026,7 +2057,7 @@
   /* 九颗星:读过的点亮,还没读的留一点微光。不是进度条,不显示数字。
      辅助文案下面不再放记号 —— 这段距离由星链自己接住。 */
   #dpage.thread-page .thread-vow .stars{
-    display:block;width:min(340px,76vw);margin:clamp(24px,3vw,38px) 0 0
+    display:block;width:min(340px,76vw);margin:clamp(16px,2vw,24px) 0 0
   }
   #dpage.thread-page .thread-vow .stars svg{display:block;width:100%;height:auto}
   /* 出现的那几颗用素材本身的颜色,不套滤镜。
@@ -2035,18 +2066,21 @@
   #dpage.thread-page .thread-vow .stars .orb{
     filter:drop-shadow(0 1px 3px rgba(22,20,44,.45))
   }
+  /* 结语改成一行、字小一点(用户要求):「直到九颗星　连成只属于你的生命脉络」 */
   #dpage.thread-page .thread-vow .b{
-    display:flex;flex-direction:column;align-items:center;gap:3px;
-    font-family:var(--dp-serif);font-weight:400;line-height:1.6;
-    letter-spacing:.12em;margin-top:clamp(38px,4.4vw,50px)
+    display:flex;flex-direction:row;flex-wrap:wrap;justify-content:center;align-items:baseline;
+    column-gap:.9em;row-gap:0;
+    font-family:var(--dp-serif);font-weight:400;line-height:1.7;
+    letter-spacing:.12em;margin-top:clamp(20px,2.4vw,30px)
   }
   #dpage.thread-page .thread-vow .b1{
-    font-size:clamp(18px,2vw,21.5px);color:rgba(240,233,222,.6)
+    font-size:clamp(14px,1.3vw,16px);color:rgba(240,233,222,.78)
   }
+  /* hero 变矮之后这一行落在比较亮的云上:一层暗色投影托住字(跟手机同一做法) */
+  #dpage.thread-page .thread-vow .b > span{text-shadow:0 1px 12px rgba(26,24,48,.55)}
   #dpage.thread-page .thread-vow .b2{
-    font-weight:300;font-size:clamp(16.5px,1.8vw,20px);
-    letter-spacing:.2em;color:rgba(240,231,217,.74);
-    text-shadow:0 1px 22px rgba(170,160,213,.16)
+    font-weight:300;font-size:clamp(14px,1.3vw,16px);
+    letter-spacing:.14em;color:rgba(240,231,217,.86)
   }
   #dpage.thread-page .dp-hero-art{
     position:absolute;right:clamp(-46px,-1vw,0px);top:50%;transform:translateY(-50%);
@@ -2061,13 +2095,25 @@
   }
   /* 那几片辉光原本画在正文区自己的底上 —— 正文区比视窗窄,所以左右会留下一道
      看得见的直边。改成一层满版的底,光就化在纸上,而不是化在一个方框里。 */
+  /* 用户给的新底图:电脑一张横式、手机一张直式。两张都是「中间留白的纸、
+     四周一圈星空水彩」的画框构图,所以固定在视窗、铺满不重复 —— 卷动时画框
+     留在原地,只有内容在动(position:fixed,不用 background-attachment:fixed,
+     后者在 iOS Safari 上会跳)。上面盖一层很浅的 8% 黑罩(用户要求试试看;
+     之前是 50% 象牙白罩)。 */
   #dpage.thread-page .dp-body::before{
-    content:"";position:absolute;top:0;bottom:0;left:calc(50% - 50vw);width:100vw;
+    content:"";position:fixed;inset:0;
     z-index:0;pointer-events:none;
-    /* 用户给的星月云朵底图。原图是直式一张,这里用的是「原图 + 上下翻转」
-       接成的一张(thread-bg.webp),往下重复时接缝对得上,长页面也不会断。 */
-    background:url(assets/life/thread-bg.webp) center top / 100% auto repeat-y,#fcf6ef
+    background:linear-gradient(rgba(0,0,0,.08),rgba(0,0,0,.08)),
+      url(assets/life/thread-bg-d.webp) center / cover no-repeat,#fbf3e8
   }
+  @media(max-width:767px){
+    #dpage.thread-page .dp-body::before{
+      background:linear-gradient(rgba(0,0,0,.08),rgba(0,0,0,.08)),
+        url(assets/life/thread-bg-m.webp) center / cover no-repeat,#fbf3e8
+    }
+  }
+  /* 固定底图会盖过 hero(两者在同一层叠顺序里),hero 往上提一层 */
+  #dpage.thread-page > .dp-hero{position:relative;z-index:2}
   #dpage.thread-page .dp-body > *{position:relative;z-index:1}
   /* 这一页不要一格一格的白卡片:等待 / 进度 / 错误那几种状态卡保持原样,
      只有读完之后的长文版面走开放式排版。 */
@@ -2552,21 +2598,21 @@
            下缘是云,再交给 ::after 化进象牙色 —— 中间不会出现一条硬边。 */
         url(assets/life/hero-sky.webp) left bottom / 215% auto no-repeat,
         var(--dp-navy);
-      padding-bottom:clamp(52px,15vw,86px)
+      padding-bottom:clamp(40px,11vw,64px)
     }
     #dpage.thread-page .dp-hero-grid{
       min-height:0;padding:calc(clamp(18px,5vw,30px) + 12px) 0 clamp(14px,4vw,22px)
     }
     #dpage.thread-page .thread-vow{margin-top:14px}
     #dpage.thread-page .thread-vow .a{font-size:12px;letter-spacing:.16em}
-    #dpage.thread-page .thread-vow .stars{width:min(310px,86vw);margin-top:22px}
-    #dpage.thread-page .thread-vow .b{margin-top:30px;gap:2px;letter-spacing:.08em}
+    #dpage.thread-page .thread-vow .stars{width:min(310px,86vw);margin-top:16px}
+    #dpage.thread-page .thread-vow .b{margin-top:18px;column-gap:.6em;letter-spacing:.04em}
     /* 手机上这两行正好压在最亮的云带上,靠一点暗色投影拉开对比,而不是把字调亮 */
     #dpage.thread-page .thread-vow .b1{
-      font-size:16px;text-shadow:0 1px 10px rgba(26,24,48,.5)
+      font-size:13px;text-shadow:0 1px 10px rgba(26,24,48,.5)
     }
     #dpage.thread-page .thread-vow .b2{
-      font-size:15px;letter-spacing:.15em;
+      font-size:13px;letter-spacing:.06em;
       text-shadow:0 1px 12px rgba(26,24,48,.5)
     }
     #dpage.thread-page h1.dp-title{font-size:26px;letter-spacing:.08em;line-height:1.5}
@@ -2912,7 +2958,10 @@
   /* 插画:占满卡片的一侧,往文字那一侧淡出 */
   #dpage.thread-page .thread-trail > .thread-ch > .ch-art{
     grid-area:art;position:relative;align-self:stretch;justify-self:stretch;
-    width:auto;max-width:none;min-height:100%;margin:0;transform:none;z-index:0
+    /* min-height 不用 100%:它量的是这张卡自己的格子高度,是循环参照。
+       Safari 会沿用「展开时」算出来的高度,收起后卡片缩不回去。
+       align-self:stretch 已经让插画填满整张卡,不需要再撑。 */
+    width:auto;max-width:none;min-height:0;margin:0;transform:none;z-index:0
   }
   #dpage.thread-page .thread-trail > .thread-ch > .ch-art::before{content:none}
   /* ── 插画处理(依用户的 Sample):大插画 + editorial 文字,两者都是卡片的主角 ──
@@ -3008,9 +3057,10 @@
     text-align:center;margin:clamp(4px,1vw,12px) auto clamp(26px,3.4vw,40px);max-width:34em
   }
   /* 顶端很轻的章节引言:一句 + 一小段,之后留白 */
+  /* 用户要求放大加粗:16–20 → 20–27px,字重 400 → 700 */
   #dpage.thread-page .thread-intro .a{
-    margin:0;font-family:var(--dp-serif);font-weight:400;
-    font-size:clamp(16px,1.9vw,20px);line-height:1.9;letter-spacing:.08em;color:#3b3f68
+    margin:0;font-family:var(--dp-serif);font-weight:700;
+    font-size:clamp(20px,2.3vw,27px);line-height:1.7;letter-spacing:.08em;color:#2b2e5e
   }
   #dpage.thread-page .thread-intro .b{
     margin:clamp(12px,1.6vw,18px) 0 0;font-family:var(--dp-serif);font-size:clamp(12.5px,1.4vw,14.5px);
@@ -3040,6 +3090,24 @@
     font-size:clamp(16px,1.9vw,20px);line-height:2;letter-spacing:.04em;color:#23264f
   }
   #dpage.thread-page .star-quote p + p{margin-top:clamp(12px,1.6vw,18px);font-weight:400;color:#3d4066}
+  /* 依用户的设计图重排:拿掉卡片(底色 / 边框 / 内框 / 光晕),改成开放式的一段引文 ——
+     左边一条细金线,线的左侧一颗金色星芒引导视线,文字靠左 */
+  #dpage.thread-page .star-quote{
+    max-width:860px;text-align:left;border:0;border-radius:0;background:none;box-shadow:none;
+    padding:clamp(22px,3vw,34px) 0 clamp(22px,3vw,34px) clamp(34px,4.4vw,60px);
+    margin-left:auto;margin-right:auto
+  }
+  #dpage.thread-page .star-quote::before{
+    inset:0 auto 0 clamp(14px,1.8vw,24px);width:1px;border:0;border-radius:0;
+    background:linear-gradient(180deg,rgba(196,152,72,0),rgba(196,152,72,.7) 18%,rgba(196,152,72,.7) 82%,rgba(196,152,72,0))
+  }
+  #dpage.thread-page .star-quote .st{
+    position:absolute;left:clamp(-10px,-1vw,-4px);top:30%;margin:0;
+    font-size:clamp(18px,2vw,24px);color:#c49848
+  }
+  /* 字级小一点(用户要求):17–22 → 15–18px */
+  #dpage.thread-page .star-quote p{font-weight:400;font-size:clamp(15px,1.6vw,18px);line-height:2;letter-spacing:.05em}
+  #dpage.thread-page .star-quote p + p{margin-top:0;color:#23264f}
 
   /* 过场:上方一枚星环、右侧一轮花月 */
   #dpage.thread-page .thread-bridge .cp{
@@ -3140,6 +3208,17 @@
   }
   #dpage.thread-page .thread-chapters .ch-card[data-ch="1"] .gl{background-image:url(assets/life/thread/mark-moon.webp)}
   #dpage.thread-page .thread-chapters .ch-card .gl svg{display:none}
+  /* 号码下面的记号改放在号码右边(用户要求):卡片改成两栏 grid,
+     第一列是「01 ✦」,其余每一段都横跨整张卡 */
+  #dpage.thread-page .thread-chapters .ch-card{
+    display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:12px;
+    align-items:center;justify-items:start
+  }
+  #dpage.thread-page .thread-chapters .ch-card > *{grid-column:1 / -1}
+  #dpage.thread-page .thread-chapters .ch-card > .no{grid-column:1}
+  #dpage.thread-page .thread-chapters .ch-card > .gl{grid-column:2;margin:0}
+  /* 插画是 absolute:在 grid 里要保持 auto,才会以整张卡为定位基准(不然会被塞进某一格) */
+  #dpage.thread-page .thread-chapters .ch-card > .art{grid-column:auto;grid-row:auto}
   #dpage.thread-page .thread-chapters .ch-card .t{
     font-family:var(--dp-serif);font-weight:600;font-size:clamp(17px,1.9vw,21px);line-height:1.5;color:#23264f
   }
@@ -3154,7 +3233,7 @@
     font-family:var(--dp-serif);font-size:13px;letter-spacing:.1em;color:#3b3f78
   }
   @media(max-width:767px){
-    #dpage.thread-page .thread-intro .a{font-size:15.5px}
+    #dpage.thread-page .thread-intro .a{font-size:19px;letter-spacing:.04em}
     #dpage.thread-page .thread-bridge .moon-art{width:110px;right:0;top:70px;opacity:.75}
     #dpage.thread-page .thread-chapters .ch-card{padding:20px 40% 20px 18px;min-height:210px;border-radius:18px}
     #dpage.thread-page .thread-chapters .ch-card .art{width:48%}
@@ -12011,18 +12090,19 @@ window.Guide = (function () {
        生命线从这里之后才开始,所以它移进 .thread-trail 里(原本罩着整页)。 */
     /* 开场两段是版面文案(所有人都一样),不是针对谁的解读;tagline 才是他自己的那一句 */
     h += '<div class="thread-intro"><p class="a">' +
-      dpT("你的经历，从来不是彼此独立的。", "Nothing you have lived through stands on its own.") +
+      dpT("你的经历，从来不是彼此独立的", "Nothing you have lived through stands on its own") +
       '</p><p class="b">' +
-      dpT("有些事情发生在很久以前，<br>却仍然影响着你今天看待自己、关系和世界的方式。",
-          "Some of it happened long ago,<br>yet it still shapes how you see yourself, your relationships and the world.") +
+      dpT("有些事情发生在很久以前，<br>却仍然影响着你今天看待自己、关系和世界的方式",
+          "Some of it happened long ago,<br>yet it still shapes how you see yourself, your relationships and the world") +
       "</p></div>";
     /* 星语 Quote Card:这个人自己的那一句(tagline),单独放进一张半透明的星空卡。
-       原文一字不改,只在句号后分段,让它读起来像一段留给自己的话。 */
+       原文一字不改,只在句号后分段,让它读起来像一段留给自己的话。
+       用户要求:这一区块不显示句号 —— 只拿掉每一段结尾的「。」,内文其他标点不动 */
     if (data.tagline)
       h += '<div class="thread-open"><figure class="star-quote">' +
         '<span class="st" aria-hidden="true">✦</span>' +
         String(data.tagline).split(/(?<=。)/).filter(function (x) { return x.trim(); })
-          .map(function (x) { return "<p>" + esc0(x.trim()) + "</p>"; }).join("") +
+          .map(function (x) { return "<p>" + esc0(x.trim().replace(/[。.]+$/, "")) + "</p>"; }).join("") +
         "</figure></div>";
     h += dpThreadMap((data.sections || []).length);
     h += '<div class="thread-trail">' + dpThreadLine();
@@ -15788,6 +15868,33 @@ window.Guide = (function () {
       const pv = document.querySelector("#dpage .sky-garr.prev"), nx = document.querySelector("#dpage .sky-garr.next");
       if (pv) pv.addEventListener("click", function (e) { e.stopPropagation(); show(cur - 1); });
       if (nx) nx.addEventListener("click", function (e) { e.stopPropagation(); show(cur + 1); });
+      /* 手机:滑到这一组最后一张之后再往左滑,直接进下一个领域(从第一张);
+         在第一张再往右滑,回到上一个领域的最后一张。只在卡片列能横向滑动时生效 */
+      groups.forEach(function (g, k) {
+        const row = g.querySelector(".sky-houses");
+        if (!row) return;
+        let x0 = null, y0 = 0, atEnd = false, atStart = false;
+        row.addEventListener("touchstart", function (e) {
+          if (row.scrollWidth <= row.clientWidth + 2) { x0 = null; return; }
+          const t = e.touches[0];
+          x0 = t.clientX; y0 = t.clientY;
+          atEnd = row.scrollLeft + row.clientWidth >= row.scrollWidth - 4;
+          atStart = row.scrollLeft <= 4;
+        }, { passive: true });
+        row.addEventListener("touchend", function (e) {
+          if (x0 === null) return;
+          const t = e.changedTouches[0], dx = t.clientX - x0, dy = t.clientY - y0;
+          x0 = null;
+          if (Math.abs(dx) < 40 || Math.abs(dx) < Math.abs(dy) * 1.2) return;
+          const go = function (to, toEnd) {
+            show(to);
+            const r2 = groups[to].querySelector(".sky-houses");
+            if (r2) r2.scrollLeft = toEnd ? r2.scrollWidth : 0;
+          };
+          if (dx < 0 && atEnd && k < groups.length - 1) go(k + 1, false);
+          else if (dx > 0 && atStart && k > 0) go(k - 1, true);
+        }, { passive: true });
+      });
     })();
     skyAspAlign();
     if (!window.__skyAspAlignOn) {
