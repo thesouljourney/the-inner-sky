@@ -963,18 +963,21 @@
      标题与文字都在 hero 里,落在左下的云上。只作用在 ≤767px,桌机不动。 */
   @media(max-width:767px){
     #dpage.sky-page .dp-hero{
-      position:relative;overflow:hidden;min-height:max(850px,218vw);box-sizing:border-box;
+      position:relative;overflow:hidden;min-height:max(650px,164vw);box-sizing:border-box;
       display:flex;flex-direction:column;
       /* 手机专用的直式版本(sky-hero-arch-m.webp):上半拱门场景、下半是同一张图自己的云层,
          已在素材里融成一张。上面再叠一层很柔的奶油色渐变,只托住文字区 */
       background:
-        linear-gradient(to bottom,transparent 48%,rgba(248,244,238,.35) 60%,rgba(248,244,238,.7) 78%,rgba(248,244,238,.86) 100%),
+        linear-gradient(to bottom,transparent 44%,rgba(248,244,238,.4) 54%,rgba(248,244,238,.72) 70%,rgba(248,244,238,.8) 88%,rgba(248,244,238,.3) 100%),
         url(assets/atmos/sky-hero-arch-m.webp) center top / 100% auto no-repeat,
         #f8f4ee;
-      padding-bottom:7%
+      padding-bottom:20px
     }
     #dpage.sky-page .dp-hero-grid{padding:0 calc(7% - 23px);margin:auto 0 0;width:auto;max-width:none;align-self:stretch}
-    #dpage.sky-page h1.dp-title{margin-bottom:12px}
+    #dpage.sky-page h1.dp-title{margin-bottom:10px}
+    #dpage.sky-page .dp-hero .dp-sub{font-size:14px;line-height:1.85}
+    #dpage.sky-page .sky-latin{margin-top:10px;font-size:14px;line-height:1.6}
+    #dpage.sky-page .sky-meta{margin-top:14px;padding:6px 16px}
   }
   /* 新 hero 图的右上方是深蓝夜空:桌机上导航改成浅色字,才读得到 */
   @media(min-width:1101px){
