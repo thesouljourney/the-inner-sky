@@ -3160,6 +3160,84 @@
   }
   #dpage.thread-page .thread-bridge .insight p + p{margin-top:8px}
 
+  /* ── 过场 v2(依用户设计稿):左侧星芒竖线 + 靠左排版 + 花叶洞察卡 ── */
+  #dpage.thread-page .thread-bridge{text-align:left}
+  #dpage.thread-page .thread-bridge .br-main{
+    position:relative;max-width:820px;margin:0 auto;
+    padding:clamp(10px,1.6vw,20px) clamp(60px,9vw,120px) clamp(10px,1.6vw,20px) clamp(64px,8vw,104px)
+  }
+  /* 竖线素材:细金线 + 中间一颗星芒 + 上下几颗金珠。星芒对着引子那两行 */
+  /* 素材的星芒在自身高度 45% 处:素材只画上面 80%,让星芒落在引子旁;
+     下面接一条同色细线一路到这一段的底 */
+  #dpage.thread-page .thread-bridge .br-rule{
+    position:absolute;left:0;top:-10%;height:80%;width:clamp(40px,4.4vw,56px);pointer-events:none;
+    background:url(assets/life/thread/bridge-rule.webp) center top / auto 100% no-repeat
+  }
+  #dpage.thread-page .thread-bridge .br-rule::after{
+    content:"";position:absolute;left:50%;top:100%;width:1px;height:calc(37.5% + 12px);
+    background:linear-gradient(180deg,rgba(214,168,92,.8),rgba(214,168,92,0))
+  }
+  #dpage.thread-page .thread-bridge .lead{
+    max-width:none;margin:0;font-size:clamp(16px,1.8vw,19px);line-height:2;color:#2c2d48
+  }
+  #dpage.thread-page .thread-bridge .br-div{
+    display:flex;align-items:center;gap:14px;margin:clamp(22px,2.8vw,32px) 0 clamp(18px,2.2vw,24px)
+  }
+  #dpage.thread-page .thread-bridge .br-div i{flex:1;height:1px;background:rgba(196,152,72,.45)}
+  #dpage.thread-page .thread-bridge .br-div b{font-weight:400;font-size:14px;line-height:1;color:#c49848}
+  #dpage.thread-page .thread-bridge .pat-hd{margin:0;text-align:left}
+  #dpage.thread-page .thread-bridge .pattern{max-width:none;margin:clamp(10px,1.4vw,14px) 0 0}
+  #dpage.thread-page .thread-bridge .pattern .tx,
+  #dpage.thread-page .thread-bridge .pattern .lk{margin-top:0;color:#2c2d48;font-size:clamp(15px,1.7vw,18px);line-height:2}
+  #dpage.thread-page .thread-bridge .pattern .q{font-size:clamp(17px,2vw,21px)}
+  /* 右上的花月缩小一点,贴在引子右边 */
+  #dpage.thread-page .thread-bridge .moon-art{
+    z-index:0;top:clamp(0px,1vw,16px);right:clamp(0px,2vw,30px);width:clamp(110px,15vw,200px);opacity:1
+  }
+  /* 小洞察卡:放宽、半透明米白,标题两侧细线,正文靠左;左下 / 右下角各一枝花叶 */
+  #dpage.thread-page .thread-bridge .br-card{position:relative;max-width:1000px;margin:clamp(22px,3vw,36px) auto 0}
+  #dpage.thread-page .thread-bridge .insight{
+    position:relative;overflow:hidden;max-width:none;margin:0;text-align:left;
+    padding:clamp(24px,3vw,34px) clamp(28px,6vw,110px) clamp(34px,4.4vw,52px) clamp(28px,6vw,110px);
+    border-radius:22px;background:rgba(253,248,240,.62);border:1px solid rgba(201,168,105,.35);
+    box-shadow:0 10px 34px rgba(96,86,150,.07)
+  }
+  #dpage.thread-page .thread-bridge .insight .lb{
+    display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:clamp(14px,1.8vw,20px)
+  }
+  #dpage.thread-page .thread-bridge .insight .lb > i{flex:0 1 200px;height:1px;background:rgba(196,152,72,.4)}
+  #dpage.thread-page .thread-bridge .insight p{position:relative;z-index:1;font-size:clamp(15px,1.7vw,18px);line-height:2}
+  #dpage.thread-page .thread-bridge .insight p + p{margin-top:0}
+  #dpage.thread-page .thread-bridge .insight .sp-l,
+  #dpage.thread-page .thread-bridge .insight .sp-r{position:absolute;z-index:0;bottom:0;pointer-events:none}
+  #dpage.thread-page .thread-bridge .insight .sp-l{
+    left:clamp(4px,1.4vw,20px);width:clamp(110px,17vw,230px);aspect-ratio:1547/914;
+    background:url(assets/life/thread/bridge-sprig-corner.webp) left bottom / contain no-repeat;opacity:.85
+  }
+  #dpage.thread-page .thread-bridge .insight .sp-r{
+    right:clamp(6px,1.6vw,24px);width:clamp(70px,9vw,120px);aspect-ratio:894/1240;
+    background:url(assets/life/thread/bridge-sprig.webp) right bottom / contain no-repeat;
+    transform:scaleX(-1);opacity:.85
+  }
+  /* 卡片左外侧那一枝:往上长,压在页面底图上 */
+  #dpage.thread-page .thread-bridge .br-sprig-out{
+    position:absolute;z-index:-1;pointer-events:none;
+    left:clamp(-150px,-11vw,-60px);bottom:40%;width:clamp(90px,11vw,160px);aspect-ratio:894/1240;
+    background:url(assets/life/thread/bridge-sprig.webp) left bottom / contain no-repeat
+  }
+  @media(max-width:767px){
+    #dpage.thread-page .thread-bridge .br-main{padding:6px 8px 6px 46px}
+    #dpage.thread-page .thread-bridge .br-rule{width:34px;left:-2px}
+    #dpage.thread-page .thread-bridge .lead{font-size:15.5px;margin-top:0;padding-right:70px}
+    #dpage.thread-page .thread-bridge .moon-art{width:92px;top:-6px;right:-6px;opacity:.9}
+    #dpage.thread-page .thread-bridge .pattern .tx,
+    #dpage.thread-page .thread-bridge .pattern .lk{font-size:15px}
+    #dpage.thread-page .thread-bridge .insight{padding:22px 20px 70px}
+    #dpage.thread-page .thread-bridge .insight .lb > i{flex-basis:40px}
+    #dpage.thread-page .thread-bridge .insight p{font-size:15px}
+    #dpage.thread-page .thread-bridge .br-sprig-out{display:none}
+  }
+
   /* 从这里开始:星环 + 置中大标题 + 一行引导 */
   #dpage.thread-page .thread-chapters .dp-start-hd{
     flex-direction:column;justify-content:center;gap:0;margin-bottom:8px
@@ -3234,7 +3312,7 @@
   }
   @media(max-width:767px){
     #dpage.thread-page .thread-intro .a{font-size:19px;letter-spacing:.04em}
-    #dpage.thread-page .thread-bridge .moon-art{width:110px;right:0;top:70px;opacity:.75}
+    #dpage.thread-page .thread-bridge .moon-art{width:84px;right:-4px;top:-14px;opacity:.9}
     #dpage.thread-page .thread-chapters .ch-card{padding:20px 40% 20px 18px;min-height:210px;border-radius:18px}
     #dpage.thread-page .thread-chapters .ch-card .art{width:48%}
     #dpage.thread-page .thread-chapters .ch-card .t{font-size:16px}
@@ -12003,18 +12081,24 @@ window.Guide = (function () {
      aha 是空的时候只留过场文案,绝不在前端补一句心理解读。 */
   function dpThreadBridge(aha) {
     const lines = (aha || []).filter(Boolean);
+    /* 版面依用户的设计稿:左边一条金色星芒竖线(bridge-rule)引导视线,
+       引子 → 一条中间带 ✦ 的细线 → 模式小标 + 正文,都靠左;
+       下面一张半透明的小洞察卡,左右下角各一枝花叶,卡片左外侧再一枝 */
     return '<div class="thread-bridge"><span class="mist" aria-hidden="true"></span>' +
-      '<span class="cp" aria-hidden="true"></span>' +
       '<span class="moon-art" aria-hidden="true"></span>' +
+      '<div class="br-main"><span class="br-rule" aria-hidden="true"></span>' +
       '<p class="lead">' +
       dpT("有些事情已经过去了，<br>但它们留下的方式，可能比你想象中更深。",
           "Some of it is over,<br>but the way it stayed may run deeper than you think.") + "</p>" +
       (lines.length
-        ? '<p class="pat-hd"><span aria-hidden="true">✦</span> ' +
+        ? '<div class="br-div" aria-hidden="true"><i></i><b>✦</b><i></i></div>' +
+          '<p class="pat-hd"><span aria-hidden="true">✦</span> ' +
             dpT("我们看见了一个重复出现的模式", "A pattern that keeps returning") + "</p>" +
-          dpThreadPattern(lines[0]) +
-          (lines[1] ? dpThreadInsight(lines[1]) : "")
+          dpThreadPattern(lines[0])
         : "") +
+      "</div>" +
+      (lines[1] ? '<div class="br-card"><span class="br-sprig-out" aria-hidden="true"></span>' +
+        dpThreadInsight(lines[1]) + "</div>" : "") +
       "</div>";
   }
   /* 第一句 aha 的排版:句子里用「」括起来的问句单独成行、放大,
@@ -12035,8 +12119,9 @@ window.Guide = (function () {
   /* 第二句 aha 放进小洞察卡:逐句一行 */
   function dpThreadInsight(text) {
     const ss = String(text).split(/(?<=[。！？])/).map(function (x) { return x.trim(); }).filter(Boolean);
-    return '<div class="insight"><span class="lb"><span aria-hidden="true">✦</span> ' +
-      dpT("一个小小的洞察", "A small insight") + "</span>" +
+    return '<div class="insight"><span class="sp-l" aria-hidden="true"></span><span class="sp-r" aria-hidden="true"></span>' +
+      '<span class="lb"><i aria-hidden="true"></i><span aria-hidden="true">✦</span> ' +
+      dpT("一个小小的洞察", "A small insight") + '<i aria-hidden="true"></i></span>' +
       ss.map(function (x) { return "<p>" + esc0(x) + "</p>"; }).join("") + "</div>";
   }
   /* —— 手机版的「这一次会经过几段」——————————————————————
