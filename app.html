@@ -3411,6 +3411,103 @@
   }
 
   /* ============================================================
+     生命蓝图 · 五章那张卡(.dp-detail)—— 照用户给的 example 图重做
+     ------------------------------------------------------------
+     · 卡片:几乎不透明的暖米白 + 一圈淡蜜桃色边,四角几颗金色星芒
+     · 五个标签排成一行、平均分开(手机上改成可横向滑动的一行)
+     · 章名:宋体加粗、深墨色;分隔线延伸到底
+     · 摘要:宋体、字大一点、行距放宽
+     · 章末建议卡 / 上下章导航:实心米白卡、蜜桃色细边、宋体粗体标题
+     只作用在 .dp-detail 里,上方「专属建议」2×2 卡不受影响。
+     ============================================================ */
+  #dpage.reading-page .dp-detail{
+    background:rgba(250,246,242,.95);
+    border:1px solid rgba(232,190,160,.55);border-radius:28px;
+    box-shadow:0 24px 60px -28px rgba(34,35,58,.38),inset 0 0 0 1px rgba(255,255,255,.6)
+  }
+  #dpage.reading-page .dp-detail::before,
+  #dpage.reading-page .dp-detail::after{
+    content:"✦";position:absolute;pointer-events:none;
+    color:#e4b98c;line-height:1;text-shadow:0 0 10px rgba(228,185,140,.55)
+  }
+  /* 星芒都落在卡片的内距里,不压到任何字 */
+  #dpage.reading-page .dp-detail::before{left:9px;top:46%;font-size:17px}
+  #dpage.reading-page .dp-detail::after{right:9px;top:25%;font-size:16px}
+  #dpage.reading-page .dp-detail .dp-read{max-width:900px}
+  #dpage.reading-page .dp-detail .dp-read::after{
+    content:"✦";position:absolute;right:12px;bottom:17%;pointer-events:none;
+    color:#e4b98c;font-size:17px;line-height:1;text-shadow:0 0 10px rgba(228,185,140,.55)
+  }
+  #dpage.reading-page .dp-detail .dp-tabs{
+    display:flex;flex-wrap:nowrap;justify-content:space-between;align-items:center;
+    gap:6px;margin:0 0 30px
+  }
+  #dpage.reading-page .dp-detail .dp-tabs button{
+    flex:none;white-space:nowrap;padding:11px 16px;
+    font-size:14px;letter-spacing:.04em;color:#6f6c82
+  }
+  #dpage.reading-page .dp-detail .dp-tabs button:hover{color:var(--dp-ink)}
+  #dpage.reading-page .dp-detail .dp-tabs button.on{
+    padding:11px 22px;color:#fff;
+    box-shadow:0 10px 22px -10px rgba(129,118,173,.65)
+  }
+  #dpage.reading-page .dp-detail h3.dp-h{
+    font-weight:700;font-size:clamp(20px,2.1vw,24px);letter-spacing:.04em;color:#1f2036
+  }
+  #dpage.reading-page .dp-detail .dp-h-row{margin-bottom:14px}
+  #dpage.reading-page .dp-detail .fav-btn{font-size:20px}
+  #dpage.reading-page .dp-detail .dp-div .st{font-size:12px}
+  #dpage.reading-page .dp-detail .dp-div .ln{
+    background:linear-gradient(90deg,rgba(129,118,173,.38),rgba(129,118,173,.16))
+  }
+  #dpage.reading-page .dp-detail .rd-sum{
+    font-family:var(--dp-serif);font-size:16px!important;line-height:2.3;margin:0;max-width:none;
+    letter-spacing:.03em;color:#26273d;padding:12px 0 18px!important
+  }
+  #dpage.reading-page .dp-detail .fold-btn{font-size:14px;font-weight:500;gap:10px}
+  #dpage.reading-page .dp-detail .fold-btn .cv{font-size:14px}
+  #dpage.reading-page .dp-detail .c4{
+    background:#fcf7f2;border:1px solid rgba(232,190,160,.6);border-radius:22px;
+    padding:24px 28px;gap:18px;align-items:center;
+    box-shadow:0 10px 30px -22px rgba(34,35,58,.3)
+  }
+  #dpage.reading-page .dp-detail .c4 b{font-weight:700;font-size:16px;margin-bottom:8px}
+  #dpage.reading-page .dp-detail .c4 .bd > div{font-size:13.5px;color:rgba(34,35,58,.72)}
+  #dpage.reading-page .dp-detail .dp-chnav{
+    background:#fcf7f2;border-color:rgba(232,190,160,.6);border-radius:22px;
+    box-shadow:0 10px 30px -22px rgba(34,35,58,.3)
+  }
+  #dpage.reading-page .dp-detail .dp-chnav > *{padding:22px 28px}
+  #dpage.reading-page .dp-detail .dp-chnav > .nx::before{background:rgba(232,190,160,.7)}
+  #dpage.reading-page .dp-detail .dp-chnav .lb{font-size:12px;letter-spacing:.14em;margin-bottom:6px}
+  #dpage.reading-page .dp-detail .dp-chnav .tt{font-size:15.5px;color:#1f2036}
+  /* 首章 / 末章那一侧:example 里是灰色的宋体,还读得到,不是几乎透明 */
+  #dpage.reading-page .dp-detail .dp-chnav .off{opacity:1}
+  #dpage.reading-page .dp-detail .dp-chnav .off .lb,
+  #dpage.reading-page .dp-detail .dp-chnav .off .tt{color:rgba(34,35,58,.38)}
+  @media(max-width:767px){
+    #dpage.reading-page .dp-detail{border-radius:22px}
+    #dpage.reading-page .dp-detail::before{left:4px;top:52%;font-size:12px}
+    #dpage.reading-page .dp-detail::after{right:4px;top:24%;font-size:12px}
+    #dpage.reading-page .dp-detail .dp-read::after{display:none}
+    /* 手机:五个标签一行排不下,改成可以左右滑的一行,不折成四排 */
+    #dpage.reading-page .dp-detail .dp-tabs{
+      justify-content:flex-start;overflow-x:auto;scrollbar-width:none;
+      margin:0 -20px 24px;padding:4px 20px 10px;
+      scroll-padding:0 20px;-webkit-overflow-scrolling:touch
+    }
+    #dpage.reading-page .dp-detail .dp-tabs::-webkit-scrollbar{display:none}
+    #dpage.reading-page .dp-detail .dp-tabs button{padding:10px 12px;font-size:13.5px}
+    #dpage.reading-page .dp-detail .dp-tabs button.on{padding:10px 18px}
+    #dpage.reading-page .dp-detail h3.dp-h{font-size:20px}
+    #dpage.reading-page .dp-detail .rd-sum{font-size:15.5px!important;line-height:2.15}
+    #dpage.reading-page .dp-detail .c4{padding:20px 18px;gap:14px;border-radius:18px}
+    #dpage.reading-page .dp-detail .dp-chnav{border-radius:18px}
+    #dpage.reading-page .dp-detail .dp-chnav > *{padding:18px 18px}
+    #dpage.reading-page .dp-detail .dp-chnav .tt{font-size:14.5px}
+  }
+
+  /* ============================================================
      我的收藏(#/favorites)—— 专属 hero 实景
      ------------------------------------------------------------
      跟生命蓝图那页同一个做法:hero 换成用户给的实景图,上面叠一层
@@ -12428,7 +12525,7 @@ window.Guide = (function () {
         }).join("") + "</div>" +
         '<div class="dp-h-row"><h3 class="dp-h">' + esc0(chName(ch, readingTab)) + "</h3>" + favB + "</div>" +
         '<div class="dp-div"><span class="st">✦</span><span class="ln"></span></div>' +
-        (ch.summary ? '<div class="dp-quote" style="text-align:left;padding:8px 0 16px;font-size:15.5px"' +
+        (ch.summary ? '<div class="dp-quote rd-sum" style="text-align:left;padding:8px 0 16px;font-size:15.5px"' +
           ' data-saveable data-source="' + esc0(favSrc) + '" data-source-type="life_blueprint"' +
           ' data-section="' + esc0(chName(ch, readingTab)) + '">' + esc0(ch.summary) + "</div>" : "") +
         '<div class="dp-prose" data-saveable data-source="' + esc0(favSrc) +
@@ -12464,6 +12561,13 @@ window.Guide = (function () {
     $("dpage").querySelectorAll("[data-rtab]").forEach(function (b) {
       b.addEventListener("click", function () { location.hash = "#/reading/" + b.getAttribute("data-rtab"); });
     });
+    /* 手机上五个标签是一行可以左右滑的列:把目前这一章的标签带进可视范围,
+       只卷这一列,不动整页 */
+    (function () {
+      const row = document.querySelector("#dpDetail .dp-tabs"), on = row && row.querySelector("button.on");
+      if (on && row.scrollWidth > row.clientWidth + 1)
+        row.scrollLeft = Math.max(0, on.offsetLeft - (row.clientWidth - on.offsetWidth) / 2);
+    })();
     /* 每一章的正文默认收起,只露标题跟摘要,要点「继续探索」才展开——
        用户要求的呈现方式。用既有的渐进展开机制(dpMakeFoldable),
        keep:0 表示一段都不先露,跟"属于我的生命脉络"那边只是文案不同,
