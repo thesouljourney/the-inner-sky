@@ -1524,6 +1524,124 @@
   /* v3 的 600 段把章节容器的内距收成 18px —— 横向滑动的负 margin 要跟着收 */
   @media(max-width:600px){#dpage .sky-group{--sky-gx:18px}}
   /* ============================================================
+     我的星空 · 整页排版(依用户的整页设计稿)
+     hero 只放标题 → 星盘一览(左盘面 / 右行星表)→ 四个核心横式卡 →
+     十二个生命领域分页签 → 相位左右两栏
+     ============================================================ */
+  #dpage.sky-page .dp-hero{padding-bottom:clamp(60px,9vw,150px)}
+  @media(min-width:1101px){#dpage.sky-page .dp-hero-grid{grid-template-columns:minmax(0,1fr) minmax(0,1.2fr)}}
+  #dpage.sky-page .sky-meta{
+    display:inline-block;max-width:none;border:1px solid rgba(201,178,140,.5);border-top-color:rgba(201,178,140,.5);
+    border-radius:999px;padding:8px 20px;background:rgba(255,252,246,.7)
+  }
+  /* 标题旁的英文小字 */
+  #dpage .sky-hd h2 .scr{
+    margin-left:clamp(12px,2vw,28px);font-family:var(--dp-display);font-style:italic;font-weight:400;
+    font-size:clamp(22px,3vw,40px);letter-spacing:.02em;color:rgba(190,160,110,.45);vertical-align:-4px
+  }
+  /* 星盘一览 */
+  #dpage .sky-overview{
+    position:relative;display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);
+    gap:clamp(20px,3vw,48px);align-items:center;margin-top:clamp(-120px,-8vw,-40px)
+  }
+  #dpage .sky-overview .isky2{max-width:min(620px,100%);margin:0 auto}
+  #dpage .sky-overview .ov-panel{position:relative}
+  #dpage .sky-overview .ov-moon{
+    position:absolute;right:0;top:-40px;width:clamp(90px,10vw,140px);aspect-ratio:1;pointer-events:none;
+    background:url(assets/life/thread/mark-moon.webp) center / 46% no-repeat;opacity:.9
+  }
+  #dpage .sky-overview h2{
+    font-family:var(--dp-serif);font-weight:600;font-size:clamp(20px,2.2vw,26px);color:var(--dp-ink);margin:0
+  }
+  #dpage .sky-overview .note{font-size:13.5px;line-height:1.9;color:var(--dp-mut);margin:8px 0 0;max-width:22em}
+  #dpage .sky-overview .isky2-tools{justify-content:flex-start;margin:16px 0 0}
+  #dpage .sky-overview .ov-table{
+    margin-top:18px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:clamp(16px,2vw,28px);
+    padding:clamp(16px,2vw,22px) clamp(18px,2.2vw,26px);border-radius:18px;
+    background:rgba(255,252,246,.82);border:1px solid rgba(201,178,140,.3);
+    box-shadow:0 10px 28px rgba(80,60,40,.05)
+  }
+  #dpage .sky-overview .ov-row{
+    display:grid;grid-template-columns:20px 3.2em minmax(0,1fr) auto;align-items:center;gap:8px;
+    padding:7px 0;font-size:12.5px;color:#4d4b62;border-bottom:1px solid rgba(201,178,140,.16)
+  }
+  #dpage .sky-overview .ov-row .g{display:inline-flex;color:#8a7b52}
+  #dpage .sky-overview .ov-row b{font-weight:500;color:var(--dp-ink)}
+  #dpage .sky-overview .ov-row .h{text-align:right;font-variant-numeric:tabular-nums}
+  #dpage .sky-overview .ov-row .rx{font-style:normal;color:#b4645a;font-size:11px}
+  /* 四个核心:横式卡,插画在左 */
+  #dpage .air-core{margin-top:clamp(50px,6vw,90px)}
+  #dpage .sky-core .sky-card{
+    display:grid;grid-template-columns:40% minmax(0,1fr);grid-template-rows:auto auto auto auto 1fr auto;
+    column-gap:clamp(12px,1.4vw,18px);min-height:clamp(200px,17vw,230px);
+    padding:clamp(16px,1.6vw,20px) clamp(16px,1.6vw,20px) clamp(16px,1.6vw,20px) 0;border-radius:20px
+  }
+  #dpage .sky-core .sky-card .art{
+    position:absolute;left:0;top:0;bottom:0;right:auto;width:44%;height:100%;
+    object-fit:cover;object-position:50% 60%;opacity:1;z-index:0;
+    -webkit-mask-image:linear-gradient(90deg,#000 72%,transparent);mask-image:linear-gradient(90deg,#000 72%,transparent)
+  }
+  #dpage .sky-core .sky-card > :not(.art){grid-column:2}
+  #dpage .sky-core .sky-card .hd{margin-bottom:10px}
+  #dpage .sky-core .sky-card .sign{font-size:clamp(20px,2vw,25px)}
+  #dpage .sky-core .sky-card .lat{display:none}
+  #dpage .sky-core .sky-card .hs{margin-top:4px}
+  #dpage .sky-core .sky-card .rule{margin:10px 0 8px}
+  #dpage .sky-core .sky-card .ttl{font-size:14.5px}
+  #dpage .sky-core .sky-card .sub{font-size:12px;line-height:1.7}
+  @media(hover:hover){#dpage .sky-core .sky-card:hover .art{opacity:1}}
+  /* 十二个生命领域:分页签 */
+  #dpage .sky-tabs{
+    display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;margin:0 0 clamp(14px,1.8vw,20px);
+    border-radius:16px;background:rgba(255,252,246,.72);border:1px solid rgba(201,178,140,.26);overflow:hidden
+  }
+  #dpage .sky-tab{
+    display:flex;flex-direction:column;align-items:center;gap:3px;padding:12px 8px 11px;cursor:pointer;
+    background:none;border:0;border-bottom:2px solid transparent;font-family:var(--dp-serif);color:var(--dp-mut)
+  }
+  #dpage .sky-tab + .sky-tab{border-left:1px solid rgba(201,178,140,.2)}
+  #dpage .sky-tab b{font-weight:600;font-size:14.5px;color:#4d4b62}
+  #dpage .sky-tab span{font-size:11.5px;letter-spacing:.1em}
+  #dpage .sky-tab.on{background:rgba(255,255,255,.75);border-bottom-color:#3b3f78}
+  #dpage .sky-tab.on b{color:var(--dp-ink)}
+  #dpage .sky-tab:focus-visible{outline:1px solid rgba(129,118,173,.7);outline-offset:-3px}
+  #dpage .sky-gwrap{position:relative}
+  #dpage .sky-gwrap > .sky-group.off{display:none}
+  #dpage .sky-gwrap > .sky-group .sky-intro{display:none}
+  #dpage .sky-garr{
+    position:absolute;top:50%;z-index:6;width:44px;height:44px;margin-top:-30px;border-radius:50%;cursor:pointer;
+    background:#fffdf9;border:1px solid rgba(201,178,140,.35);box-shadow:0 6px 18px rgba(80,60,40,.1);
+    font-size:24px;line-height:1;color:#3b3f78
+  }
+  #dpage .sky-garr.prev{left:-22px}
+  #dpage .sky-garr.next{right:-22px}
+  #dpage .sky-gdots{display:flex;justify-content:center;gap:8px;margin-top:14px}
+  #dpage .sky-gdots i{width:7px;height:7px;border-radius:50%;background:rgba(59,63,120,.2)}
+  #dpage .sky-gdots i.on{background:#3b3f78}
+  /* 相位:左边标题与按钮,右边一张卡 */
+  #dpage .sky-asp-sec{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:clamp(20px,3vw,48px);align-items:start}
+  #dpage .sky-asp-sec .sky-asps{
+    padding:clamp(8px,1vw,12px) clamp(16px,2vw,26px);border-radius:18px;
+    background:rgba(255,252,246,.82);border:1px solid rgba(201,178,140,.3);box-shadow:0 10px 28px rgba(80,60,40,.05)
+  }
+  #dpage .sky-asp-sec .sky-asp{grid-template-columns:minmax(0,1fr) minmax(0,1.1fr) minmax(0,1fr) 60px}
+  @media(max-width:900px){
+    #dpage .sky-overview,#dpage .sky-asp-sec{grid-template-columns:minmax(0,1fr)}
+    #dpage .sky-overview{margin-top:0}
+    #dpage .sky-overview .ov-moon{display:none}
+    #dpage .sky-asp-sec .sky-asp{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+  }
+  @media(max-width:767px){
+    #dpage.sky-page .dp-hero{padding-bottom:40px}
+    #dpage .sky-hd h2 .scr{display:block;margin:2px 0 0;font-size:22px}
+    #dpage .sky-overview .ov-table{grid-template-columns:minmax(0,1fr)}
+    #dpage .sky-core .sky-card{flex:0 0 84%;min-height:190px}
+    #dpage .sky-tab b{font-size:13px}
+    #dpage .sky-tab span{font-size:10.5px;letter-spacing:.04em}
+    #dpage .sky-garr{display:none}
+  }
+
+  /* ============================================================
      十二个生命领域 · 插画卡片版(依用户的设计稿)
      ------------------------------------------------------------
      · 每一组:标题列在上(符号 + 组名 + 宫位号 + 英文 + 一行说明),四张卡在下
@@ -14118,13 +14236,29 @@ window.Guide = (function () {
          盘面不再是 body 里独立的一段:它跟标题一起放进 hero(dpScaffold 新加的
          side 插槽),云天、标题与盘面属于同一个开场,不再上下切成两块。
          drawInnerSkyWheel 与 #dpFullWheel / #dpAspToggle 都没有改动。 */
-      heroSide =
-        '<div class="isky2" id="dpFullWheel" role="img" aria-label="' +
-        esc0(dpT("完整星盘", "Full natal chart")) + '"></div>' +
+      /* 版面依设计稿:hero 只放标题与拱门底图;盘面搬到下面的「星盘一览」,
+         左边盘面、右边一张行星落点表。drawInnerSkyWheel 与两个 id 都没变。 */
+      heroSide = "";
+      const ovRows = DP_MAJOR.map(function (k) {
+        const pl = dpPlacement(k);
+        if (!pl) return "";
+        return '<div class="ov-row"><span class="g" aria-hidden="true">' +
+          (GL.symbolSVG ? GL.symbolSVG(pl.glyph, 15, "currentColor") : "") + '</span>' +
+          '<b>' + esc0(EN ? (res.planets.find(function (x) { return x.key === k; }) || {}).en || pl.name : pl.name) + '</b>' +
+          '<span class="s">' + esc0(pl.sign) + '</span>' +
+          '<span class="h">' + esc0(window.I18N.houseLabel(pl.house)) +
+          (pl.retro ? ' <i class="rx">R</i>' : "") + '</span></div>';
+      }).join("");
+      body += '<section class="sky-overview">' +
+        '<div class="ov-wheel"><div class="isky2" id="dpFullWheel" role="img" aria-label="' +
+        esc0(dpT("完整星盘", "Full natal chart")) + '"></div></div>' +
+        '<div class="ov-panel"><span class="ov-moon" aria-hidden="true"></span>' +
+        '<h2>' + esc0(dpT("星盘一览", "Your chart at a glance")) + '</h2>' +
+        '<p class="note">' + esc0(dpT("行星落在星座与宫位的位置，构成了你独特的能量图谱。",
+          "Where each planet falls, by sign and house — the shape of your own sky.")) + '</p>' +
         '<div class="isky2-tools"><button type="button" id="dpAspToggle">' +
         dpT("隐藏相位线", "Hide aspects") + '</button></div>' +
-        '<div class="sky-script" aria-hidden="true">' +
-        '<span class="a">Same sky.<br></span><span class="b">Different you.</span></div>';
+        '<div class="ov-table">' + ovRows + '</div></div></section>';
       heroLead =
         '<div class="sky-latin">A map of the sky,<br>for the one and only you.</div>' +
         (sub ? '<div class="sky-meta">' + sub + '</div>' : "");
@@ -14139,30 +14273,31 @@ window.Guide = (function () {
       const lat = function (idx) { return EN ? "" : (C.SIGNS[idx] ? C.SIGNS[idx].en : ""); };
       if (sun) {
         const i = C.lonToSign(res.planets.find(function (p) { return p.key === "Sun"; }).lon).idx;
-        core.push({ gl: GL.symbolSVG ? GL.symbolSVG(sun.glyph, 15, "currentColor") : "", tx: "",
+        core.push({ art: "assets/houses/h09.webp", gl: GL.symbolSVG ? GL.symbolSVG(sun.glyph, 15, "currentColor") : "", tx: "",
           lb: dpT("太阳 SUN", "SUN"), sign: sun.sign, lat: lat(i), idx: i,
           house: sun.house, ttl: dpT("核心自我", "Core Self"), sb: dpT("你如何发光", "How you shine") });
       }
       if (moon) {
         const i = C.lonToSign(res.planets.find(function (p) { return p.key === "Moon"; }).lon).idx;
-        core.push({ gl: GL.symbolSVG ? GL.symbolSVG(moon.glyph, 15, "currentColor") : "", tx: "",
+        core.push({ art: "assets/houses/h12.webp", gl: GL.symbolSVG ? GL.symbolSVG(moon.glyph, 15, "currentColor") : "", tx: "",
           lb: dpT("月亮 MOON", "MOON"), sign: moon.sign, lat: lat(i), idx: i,
           house: moon.house, ttl: dpT("情绪世界", "Inner Weather"), sb: dpT("你如何感受", "How you feel") });
       }
-      core.push({ gl: "", tx: "AC", lb: dpT("上升 ASC", "RISING"), sign: ascS.name, lat: lat(ascS.idx), idx: ascS.idx, house: 1,
+      core.push({ art: "assets/houses/h01.webp", gl: "", tx: "AC", lb: dpT("上升 ASC", "RISING"), sign: ascS.name, lat: lat(ascS.idx), idx: ascS.idx, house: 1,
         ttl: dpT("外在形象", "Outer Self"), sb: dpT("你如何与世界相遇", "How you meet the world") });
-      core.push({ gl: "", tx: "MC", lb: dpT("天顶 MC", "MIDHEAVEN"), sign: mcS.name, lat: lat(mcS.idx), idx: mcS.idx, house: 10,
+      core.push({ art: "assets/houses/h10.webp", gl: "", tx: "MC", lb: dpT("天顶 MC", "MIDHEAVEN"), sign: mcS.name, lat: lat(mcS.idx), idx: mcS.idx, house: 10,
         ttl: dpT("人生方向", "Direction"), sb: dpT("你渴望成为的样子", "Who you're becoming") });
 
       body += '<div class="sky-air air-core"><span class="l" aria-hidden="true"></span>' +
         '<div class="sky-hd lead">' +
-        '<h2>' + esc0(dpT("先认识你的四个核心", "Start with your four cornerstones")) + '</h2>' +
+        '<h2>' + esc0(dpT("先认识你的四个核心", "Start with your four cornerstones")) +
+        '<span class="scr" aria-hidden="true">Your Core</span></h2>' +
         '<div class="note">' + esc0(dpT("这四个位置，构成了你生命的基本轮廓。",
           "These four placements outline the basic shape of a life.")) + '</div></div>' +
         '<div class="sky-core">' +
         core.map(function (k) {
           return '<article class="sky-card">' +
-            '<img class="art" src="' + skyArtSrc(k.idx) + '" alt="" aria-hidden="true" loading="lazy" decoding="async">' +
+            '<img class="art" src="' + (k.art || skyArtSrc(k.idx)) + '" alt="" aria-hidden="true" loading="lazy" decoding="async">' +
             '<div class="hd"><span class="gl' + (k.tx ? " tx" : "") + '" aria-hidden="true">' + (k.tx ? esc0(k.tx) : k.gl) + '</span>' +
             '<span class="lb">' + esc0(k.lb) + '</span></div>' +
             '<div class="sign">' + esc0(k.sign) + '</div>' +
@@ -14274,14 +14409,23 @@ window.Guide = (function () {
       ];
       body += '<section class="sky-sec sky-air air-house">' +
         '<span class="l" aria-hidden="true"></span><div class="sky-hd">' +
-        '<h2>' + esc0(dpT("你的十二个生命领域", "Your twelve fields of life")) + '</h2>' +
+        '<h2>' + esc0(dpT("你的十二个生命领域", "Your twelve fields of life")) +
+        '<span class="scr" aria-hidden="true">Twelve Houses</span></h2>' +
         '<div class="note">' + esc0(dpT("十二宫位象徵人生不同的领域，落在其中的行星，就是那个领域里正在运作的能量。",
           "The twelve houses mark the different areas a life is lived in. The planets inside them are the energies at work there.")) +
         '</div></div>' +
+        /* 三组改成分页签:一次看一组,左右箭头与三个点也可以切换 */
+        '<div class="sky-tabs" role="tablist">' + SKY_GROUPS.map(function (gp, gi) {
+          return '<button type="button" role="tab" class="sky-tab' + (gi ? "" : " on") + '" data-g="' + gi + '"' +
+            ' aria-selected="' + (gi ? "false" : "true") + '">' +
+            '<b>' + esc0(gp.nm[EN ? 1 : 0]) + '</b>' +
+            '<span>' + gp.ids.map(function (n) { return ("0" + n).slice(-2); }).join(" · ") + '</span></button>';
+        }).join("") + '</div>' +
+        '<div class="sky-gwrap">' +
+        '<button type="button" class="sky-garr prev" aria-label="' + esc0(dpT("上一组", "Previous")) + '">‹</button>' +
+        '<button type="button" class="sky-garr next" aria-label="' + esc0(dpT("下一组", "Next")) + '">›</button>' +
         SKY_GROUPS.map(function (gp, gi) {
-          return (gi ? '<div class="sky-sep" aria-hidden="true"><i class="l"></i>' +
-              '<span class="mo">' + SKY_MOTIF + '</span><i class="r"></i></div>' : "") +
-            '<div class="sky-group ' + gp.cls + '">' +
+          return '<div class="sky-group ' + gp.cls + (gi ? " off" : "") + '" data-g="' + gi + '" role="tabpanel">' +
             '<span class="atmos" aria-hidden="true"><i class="o1"></i><i class="o2"></i><i class="o3"></i><i class="dust"></i></span>' +
             '<img class="art" src="assets/atmos/band-' + gp.cls + '.webp" alt="" aria-hidden="true" loading="lazy" decoding="async">' +
             '<div class="sky-row">' +
@@ -14302,17 +14446,14 @@ window.Guide = (function () {
                 houseDetail(n - 1) + '</div>';
             }).join("") +
             '</div>';
-        }).join("") + '</section>';
+        }).join("") +
+        '<div class="sky-gdots" aria-hidden="true">' + SKY_GROUPS.map(function (gp, gi) {
+          return '<i class="' + (gi ? "" : "on") + '"></i>'; }).join("") + '</div>' +
+        '</div></section>';
 
       /* —— 4. 中场:十二宫之后、相位之前的一次呼吸 ——
          纯编辑文案,不下任何新的占星判断。 */
-      body += '<section class="sky-pause sky-air air-note">' +
-        '<span class="l" aria-hidden="true"></span>' +
-        '<span class="st" aria-hidden="true">✦</span>' +
-        '<div class="say">' + esc0(dpT("你的星空里，\n有些领域承载着更多能量，\n也更容易被你感受到。",
-          "In your sky, some areas carry\nmore energy than others —\nand you feel them more.")) + '</div>' +
-        '<span class="st end" aria-hidden="true">✦</span>' +
-        '</section>';
+      /* 中场那一段停顿:整页设计稿没有,拿掉 */
 
       /* —— 5. 相位:预设只露三条 ——
          配对 / 类型 / 容许度都没动;这里只是照容许度由紧到松排一次序,
@@ -14337,16 +14478,16 @@ window.Guide = (function () {
             nm(pb, " b") +
             '<span class="orb">' + esc0(C.fmtDeg(Math.abs(a.orb))) + '</span></div>';
         };
-        body += '<section class="sky-sec sky-air air-dust">' +
-          '<span class="l" aria-hidden="true"></span><div class="sky-hd">' +
+        body += '<section class="sky-sec sky-air air-dust sky-asp-sec">' +
+          '<span class="l" aria-hidden="true"></span><div class="asp-l"><div class="sky-hd">' +
           '<h2>' + esc0(dpT("星盘之间的对话", "Conversations inside your chart")) + '</h2>' +
           '<div class="note">' + esc0(dpT("相位显示行星之间的角度关系，揭示这些能量如何互动、流动。",
             "Aspects are the angles between planets — how these energies meet and move together.")) + '</div></div>' +
-          '<div class="sky-asps">' + asps.slice(0, 3).map(aspRow).join("") +
-          '<div class="sky-more" id="skyMoreAsp" aria-hidden="true">' + asps.slice(3).map(aspRow).join("") + '</div></div>' +
           (asps.length > 3 ? skyExpandBtn("skyMoreAsp",
             dpT("查看全部相位 · " + asps.length + " 条", "See all " + asps.length + " aspects"),
-            dpT("收起", "Collapse")) : "") +
+            dpT("收起", "Collapse")) : "") + '</div>' +
+          '<div class="sky-asps">' + asps.slice(0, 3).map(aspRow).join("") +
+          '<div class="sky-more" id="skyMoreAsp" aria-hidden="true">' + asps.slice(3).map(aspRow).join("") + '</div></div>' +
           '</section>';
       }
 
@@ -14380,6 +14521,25 @@ window.Guide = (function () {
       backHref: LANDING_URL,
       seed: 77
     });
+    /* 十二个生命领域:三组分页签 + 左右箭头 + 三个点,一次只显示一组 */
+    (function () {
+      const tabs = Array.prototype.slice.call(document.querySelectorAll("#dpage .sky-tab"));
+      const groups = Array.prototype.slice.call(document.querySelectorAll("#dpage .sky-gwrap > .sky-group"));
+      const dots = Array.prototype.slice.call(document.querySelectorAll("#dpage .sky-gdots i"));
+      if (!tabs.length || groups.length !== tabs.length) return;
+      let cur = 0;
+      const show = function (i) {
+        cur = (i + groups.length) % groups.length;
+        groups.forEach(function (g, k) { g.classList.toggle("off", k !== cur); });
+        tabs.forEach(function (t, k) { t.classList.toggle("on", k === cur); t.setAttribute("aria-selected", k === cur ? "true" : "false"); });
+        dots.forEach(function (d, k) { d.classList.toggle("on", k === cur); });
+        document.dispatchEvent(new Event("click"));   // 换组时把开着的浮层收起来
+      };
+      tabs.forEach(function (t, k) { t.addEventListener("click", function (e) { e.stopPropagation(); show(k); }); });
+      const pv = document.querySelector("#dpage .sky-garr.prev"), nx = document.querySelector("#dpage .sky-garr.next");
+      if (pv) pv.addEventListener("click", function (e) { e.stopPropagation(); show(cur - 1); });
+      if (nx) nx.addEventListener("click", function (e) { e.stopPropagation(); show(cur + 1); });
+    })();
     // 展开 / 收起:每次重画后重新绑定(dpScaffold 会换掉整块 innerHTML)
     document.querySelectorAll("#dpage .sky-expand").forEach(function (btn) {
       const box = document.getElementById(btn.getAttribute("data-more"));
