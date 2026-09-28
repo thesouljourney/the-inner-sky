@@ -1694,15 +1694,33 @@
     #dpage .sky-overview .isky2{max-width:min(590px,90%)}
   }
   #dpage .sky-overview .ov-panel{position:relative}
-  #dpage .sky-overview .ov-moon{
-    position:absolute;right:0;top:-40px;width:clamp(90px,10vw,140px);aspect-ratio:1;pointer-events:none;
-    background:url(assets/life/thread/mark-moon.webp) center / 46% no-repeat;opacity:.9
-  }
   #dpage .sky-overview h2{
     font-family:var(--dp-serif);font-weight:600;font-size:clamp(20px,2.2vw,26px);color:var(--dp-ink);margin:0
   }
   #dpage .sky-overview .note{font-size:13.5px;line-height:1.9;color:var(--dp-mut);margin:8px 0 0;max-width:22em}
   #dpage .sky-overview .isky2-tools{justify-content:flex-start;margin:16px 0 0}
+  /* 标题 + 相位线开关同一行 */
+  #dpage .sky-overview .ov-hd{display:flex;align-items:center;flex-wrap:wrap;gap:10px clamp(20px,3vw,40px)}
+  #dpage .sky-overview .ov-sw{
+    display:inline-flex;align-items:center;gap:12px;padding:6px 0;min-height:44px;
+    background:none;border:0;cursor:pointer;font-family:var(--dp-sans);-webkit-tap-highlight-color:transparent
+  }
+  #dpage .sky-overview .ov-sw .lb{font-size:14px;font-weight:500;letter-spacing:.04em;color:#4d4880}
+  #dpage .sky-overview .ov-sw .st{font-size:13.5px;color:var(--dp-mut);min-width:2.2em;text-align:left}
+  #dpage .sky-overview .ov-sw .tr{
+    position:relative;flex:none;width:44px;height:24px;border-radius:999px;
+    background:linear-gradient(90deg,#8f86c8,#a79ee0);
+    box-shadow:inset 0 1px 3px rgba(60,50,120,.25);transition:background .25s ease
+  }
+  #dpage .sky-overview .ov-sw .tr i{
+    position:absolute;top:3px;left:23px;width:18px;height:18px;border-radius:50%;
+    background:#fff;box-shadow:0 1px 4px rgba(40,30,90,.3);transition:left .25s ease
+  }
+  #dpage .sky-overview .ov-sw[aria-checked="false"] .tr{background:rgba(160,154,190,.35)}
+  #dpage .sky-overview .ov-sw[aria-checked="false"] .tr i{left:3px}
+  #dpage .sky-overview .ov-sw:focus-visible{outline:none}
+  #dpage .sky-overview .ov-sw:focus-visible .tr{outline:2px solid rgba(129,118,173,.6);outline-offset:3px}
+  @media (prefers-reduced-motion:reduce){#dpage .sky-overview .ov-sw .tr,#dpage .sky-overview .ov-sw .tr i{transition:none}}
   #dpage .sky-overview .ov-table{
     margin-top:18px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:clamp(16px,2vw,28px);
     padding:clamp(16px,2vw,22px) clamp(18px,2.2vw,26px);border-radius:18px;
@@ -1836,7 +1854,6 @@
   @media(max-width:900px){
     #dpage .sky-overview,#dpage .sky-asp-sec{grid-template-columns:minmax(0,1fr)}
     #dpage .sky-overview{margin-top:0}
-    #dpage .sky-overview .ov-moon{display:none}
   }
   @media(max-width:767px){
     #dpage.sky-page .dp-hero{padding-bottom:40px}
@@ -10872,7 +10889,11 @@ window.Guide = (function () {
         state.aspectsOn = !state.aspectsOn;
         const g = svg.querySelector("#dpIsky2Aspects");
         if (g) g.setAttribute("opacity", state.aspectsOn ? "1" : "0");
-        toggle.textContent = state.aspectsOn ? dpT("隐藏相位线", "Hide aspects") : dpT("显示相位线", "Show aspects");
+        const st = toggle.querySelector(".st");
+        if (st) {   /* 「我的星空」的开关样式:只换状态字与 aria-checked */
+          st.textContent = state.aspectsOn ? dpT("开启", "On") : dpT("关闭", "Off");
+          toggle.setAttribute("aria-checked", state.aspectsOn ? "true" : "false");
+        } else toggle.textContent = state.aspectsOn ? dpT("隐藏相位线", "Hide aspects") : dpT("显示相位线", "Show aspects");
       });
     }
   }
@@ -15425,12 +15446,15 @@ window.Guide = (function () {
         '<div class="ov-wheel">' +
         '<div class="isky2" id="dpFullWheel" role="img" aria-label="' +
         esc0(dpT("完整星盘", "Full natal chart")) + '"></div></div>' +
-        '<div class="ov-panel"><span class="ov-moon" aria-hidden="true"></span>' +
-        '<h2>' + esc0(dpT("星盘一览", "Your chart at a glance")) + '</h2>' +
+        /* 紫色月亮拿掉;「隐藏相位线」按钮换成标题旁边的开关(相位线 ◯ 开启) */
+        '<div class="ov-panel">' +
+        '<div class="ov-hd"><h2>' + esc0(dpT("星盘一览", "Your chart at a glance")) + '</h2>' +
+        '<button type="button" id="dpAspToggle" class="ov-sw" role="switch" aria-checked="true">' +
+        '<span class="lb">' + esc0(dpT("相位线", "Aspects")) + '</span>' +
+        '<span class="tr" aria-hidden="true"><i></i></span>' +
+        '<span class="st">' + esc0(dpT("开启", "On")) + '</span></button></div>' +
         '<p class="note">' + esc0(dpT("行星落在星座与宫位的位置，构成了你独特的能量图谱。",
           "Where each planet falls, by sign and house — the shape of your own sky.")) + '</p>' +
-        '<div class="isky2-tools"><button type="button" id="dpAspToggle">' +
-        dpT("隐藏相位线", "Hide aspects") + '</button></div>' +
         '<div class="ov-table">' + ovRows + '</div></div></section>';
       heroLead =
         '<div class="sky-latin">A map of the sky,<br>for the one and only you.</div>';
