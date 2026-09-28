@@ -3477,10 +3477,11 @@
     background:#fcf7f2;border-color:rgba(232,190,160,.6);border-radius:22px;
     box-shadow:0 10px 30px -22px rgba(34,35,58,.3)
   }
-  #dpage.reading-page .dp-detail .dp-chnav > *{padding:22px 28px}
-  #dpage.reading-page .dp-detail .dp-chnav > .nx::before{background:rgba(232,190,160,.7)}
-  #dpage.reading-page .dp-detail .dp-chnav .lb{font-size:12px;letter-spacing:.14em;margin-bottom:6px}
-  #dpage.reading-page .dp-detail .dp-chnav .tt{font-size:15.5px;color:#1f2036}
+  /* 用户反馈太高:内距与字级都收小,卡片变窄 */
+  #dpage.reading-page .dp-detail .dp-chnav > *{padding:13px 24px}
+  #dpage.reading-page .dp-detail .dp-chnav > .nx::before{background:rgba(232,190,160,.7);top:12px;bottom:12px}
+  #dpage.reading-page .dp-detail .dp-chnav .lb{font-size:11px;letter-spacing:.14em;margin-bottom:2px}
+  #dpage.reading-page .dp-detail .dp-chnav .tt{font-size:13.5px;color:#1f2036}
   /* 首章 / 末章那一侧:example 里是灰色的宋体,还读得到,不是几乎透明 */
   #dpage.reading-page .dp-detail .dp-chnav .off{opacity:1}
   #dpage.reading-page .dp-detail .dp-chnav .off .lb,
@@ -3503,8 +3504,8 @@
     #dpage.reading-page .dp-detail .rd-sum{font-size:15.5px!important;line-height:2.15}
     #dpage.reading-page .dp-detail .c4{padding:20px 18px;gap:14px;border-radius:18px}
     #dpage.reading-page .dp-detail .dp-chnav{border-radius:18px}
-    #dpage.reading-page .dp-detail .dp-chnav > *{padding:18px 18px}
-    #dpage.reading-page .dp-detail .dp-chnav .tt{font-size:14.5px}
+    #dpage.reading-page .dp-detail .dp-chnav > *{padding:12px 16px}
+    #dpage.reading-page .dp-detail .dp-chnav .tt{font-size:13px}
   }
 
   /* ============================================================
