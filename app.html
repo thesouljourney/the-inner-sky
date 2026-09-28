@@ -2554,20 +2554,39 @@
   #dpage.thread-page .thread-intro{
     text-align:center;margin:clamp(4px,1vw,12px) auto clamp(26px,3.4vw,40px);max-width:34em
   }
+  /* 顶端很轻的章节引言:一句 + 一小段,之后留白 */
   #dpage.thread-page .thread-intro .a{
-    margin:0;font-family:var(--dp-serif);font-weight:600;
-    font-size:clamp(16px,1.9vw,20px);line-height:1.95;letter-spacing:.04em;color:#23264f
-  }
-  #dpage.thread-page .thread-intro .st{
-    display:block;margin:clamp(14px,1.8vw,20px) auto;font-size:13px;line-height:1;color:rgba(196,152,72,.9)
+    margin:0;font-family:var(--dp-serif);font-weight:400;
+    font-size:clamp(16px,1.9vw,20px);line-height:1.9;letter-spacing:.08em;color:#3b3f68
   }
   #dpage.thread-page .thread-intro .b{
-    margin:0;font-family:var(--dp-serif);font-size:clamp(12.5px,1.4vw,14.5px);
-    line-height:2;letter-spacing:.03em;color:#5a5a78
+    margin:clamp(12px,1.6vw,18px) 0 0;font-family:var(--dp-serif);font-size:clamp(12.5px,1.4vw,14.5px);
+    line-height:2;letter-spacing:.04em;color:#6a6a86
   }
-  /* 开场之后的个人那一句:比开场文案小一级,仍然置中 */
-  #dpage.thread-page .thread-open{margin-bottom:clamp(30px,4vw,52px)}
-  #dpage.thread-page .thread-open .dp-quote{font-size:clamp(16px,1.9vw,21px)}
+  #dpage.thread-page .thread-intro{margin-bottom:clamp(40px,5.4vw,68px)}
+  /* 星语 Quote Card:Ivory 85% 透明 + 很淡的 lavender glow + 细金线,不是白色实心框 */
+  #dpage.thread-page .thread-open{margin:0 auto clamp(40px,5vw,64px);padding:0 4px}
+  #dpage.thread-page .star-quote{
+    position:relative;max-width:560px;margin:0 auto;
+    padding:clamp(30px,3.8vw,44px) clamp(24px,4vw,52px) clamp(28px,3.6vw,40px);
+    text-align:center;border-radius:22px;
+    background:rgba(255,251,243,.85);
+    border:1px solid rgba(201,168,105,.5);
+    box-shadow:0 0 0 5px rgba(255,251,243,.35),0 0 46px rgba(186,176,232,.32),0 14px 36px rgba(96,86,150,.08)
+  }
+  /* 内圈再一条极细金线,像星图的框 */
+  #dpage.thread-page .star-quote::before{
+    content:"";position:absolute;inset:7px;border-radius:16px;pointer-events:none;
+    border:1px solid rgba(201,168,105,.22)
+  }
+  #dpage.thread-page .star-quote .st{
+    display:block;margin:0 auto 14px;font-size:14px;line-height:1;color:rgba(196,152,72,.95)
+  }
+  #dpage.thread-page .star-quote p{
+    margin:0;font-family:var(--dp-serif);font-weight:500;
+    font-size:clamp(16px,1.9vw,20px);line-height:2;letter-spacing:.04em;color:#23264f
+  }
+  #dpage.thread-page .star-quote p + p{margin-top:clamp(12px,1.6vw,18px);font-weight:400;color:#3d4066}
 
   /* 过场:上方一枚星环、右侧一轮花月 */
   #dpage.thread-page .thread-bridge .cp{
@@ -11019,16 +11038,19 @@ window.Guide = (function () {
        生命线从这里之后才开始,所以它移进 .thread-trail 里(原本罩着整页)。 */
     /* 开场两段是版面文案(所有人都一样),不是针对谁的解读;tagline 才是他自己的那一句 */
     h += '<div class="thread-intro"><p class="a">' +
-      dpT("你一生发生的每一件事，<br>都不是单独的章节，而是织进人生的线，<br>慢慢连成现在的你。",
-          "Nothing that happened to you was a chapter on its own.<br>Each one is a thread woven through your life,<br>slowly becoming who you are now.") +
-      '</p><span class="st" aria-hidden="true">✦</span><p class="b">' +
-      dpT("在这一页里，我们不再只看过去，<br>而是看见它如何塑造了现在的你，也指向未来的可能。",
-          "On this page we don’t only look back —<br>we see how it shaped you, and where it points next.") +
+      dpT("你的经历，从来不是彼此独立的。", "Nothing you have lived through stands on its own.") +
+      '</p><p class="b">' +
+      dpT("有些事情发生在很久以前，<br>却仍然影响着你今天看待自己、关系和世界的方式。",
+          "Some of it happened long ago,<br>yet it still shapes how you see yourself, your relationships and the world.") +
       "</p></div>";
+    /* 星语 Quote Card:这个人自己的那一句(tagline),单独放进一张半透明的星空卡。
+       原文一字不改,只在句号后分段,让它读起来像一段留给自己的话。 */
     if (data.tagline)
-      h += '<div class="thread-open"><div class="dp-quote"><span class="q">“</span>' +
-        esc0(data.tagline) + "</div>" +
-        '<span class="st" aria-hidden="true">✦</span></div>';
+      h += '<div class="thread-open"><figure class="star-quote">' +
+        '<span class="st" aria-hidden="true">✦</span>' +
+        String(data.tagline).split(/(?<=。)/).filter(function (x) { return x.trim(); })
+          .map(function (x) { return "<p>" + esc0(x.trim()) + "</p>"; }).join("") +
+        "</figure></div>";
     h += dpThreadMap((data.sections || []).length);
     h += '<div class="thread-trail">' + dpThreadLine();
     h += (data.sections || []).map(function (sc, si) {
