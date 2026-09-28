@@ -1680,6 +1680,16 @@
     gap:clamp(20px,3vw,48px);align-items:center;margin-top:clamp(24px,3vw,44px)
   }
   #dpage .sky-overview .isky2{max-width:min(680px,100%);margin:0 auto;padding:4px}
+  /* 出生资料横跨两栏,在整个区块的正中间 */
+  #dpage .sky-overview .ov-birth{grid-column:1 / -1;width:100%}
+  /* 单栏(平板 / 手机)时抵掉 grid 的列间距,横幅跟盘面的距离维持原样 */
+  @media(max-width:900px){
+    #dpage .sky-overview .ov-birth{margin-bottom:calc(clamp(6px,1vw,14px) - clamp(20px,3vw,48px))}
+  }
+  /* 电脑版盘面缩小一点(用户反馈太大);手机那边另有 96vw 的规则,不受影响 */
+  @media(min-width:901px){
+    #dpage .sky-overview .isky2{max-width:min(590px,90%)}
+  }
   #dpage .sky-overview .ov-panel{position:relative}
   #dpage .sky-overview .ov-moon{
     position:absolute;right:0;top:-40px;width:clamp(90px,10vw,140px);aspect-ratio:1;pointer-events:none;
@@ -15398,8 +15408,9 @@ window.Guide = (function () {
           (pl.retro ? ' <i class="rx">R</i>' : "") + '</span></div>';
       }).join("");
       body += '<section class="sky-overview">' +
-        '<div class="ov-wheel">' +
-        /* 出生资料从 hero 搬到这里(依设计稿):标题 + 一条两端缺角的横幅 */
+        /* 出生资料从 hero 搬到这里(依设计稿):标题 + 一条两端缺角的横幅。
+           放在盘面栏外面、横跨整个区块,电脑上才会在页面正中间,
+           不是只在左边盘面的上方(手机本来就是单栏,顺序不变) */
         '<div class="ov-birth"><h2 class="ov-bt"><i aria-hidden="true"></i>' +
         esc0(dpT("你的出生星盘", "Your birth chart")) + '<i aria-hidden="true"></i></h2>' +
         '<span class="ov-bs" aria-hidden="true">✦</span>' +
@@ -15408,6 +15419,7 @@ window.Guide = (function () {
           .filter(Boolean).map(function (x, i) {
             return '<span class="' + (i ? "v" : "nm") + '">' + esc0(x) + '</span>';
           }).join('<b aria-hidden="true">✦</b>') + '</div></div>' +
+        '<div class="ov-wheel">' +
         '<div class="isky2" id="dpFullWheel" role="img" aria-label="' +
         esc0(dpT("完整星盘", "Full natal chart")) + '"></div></div>' +
         '<div class="ov-panel"><span class="ov-moon" aria-hidden="true"></span>' +
