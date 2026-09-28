@@ -1817,6 +1817,8 @@
   }
   #dpage .sky-asp-sec .sky-asps .sky-expand[aria-expanded="true"] .cv{transform:translateY(2px) rotate(225deg)}
   #dpage .sky-asp-sec .sky-asps{
+    /* gap 归零:原本前三行之间多 2px,展开的那几行没有,行距看起来不齐 */
+    gap:0;
     background:rgba(255,253,249,.9);border-color:rgba(201,178,140,.22);border-radius:20px;
     padding:clamp(10px,1.2vw,16px) clamp(20px,2.4vw,32px)
   }
