@@ -2938,7 +2938,10 @@
   /* 插画:占满卡片的一侧,往文字那一侧淡出 */
   #dpage.thread-page .thread-trail > .thread-ch > .ch-art{
     grid-area:art;position:relative;align-self:stretch;justify-self:stretch;
-    width:auto;max-width:none;min-height:100%;margin:0;transform:none;z-index:0
+    /* min-height 不用 100%:它量的是这张卡自己的格子高度,是循环参照。
+       Safari 会沿用「展开时」算出来的高度,收起后卡片缩不回去。
+       align-self:stretch 已经让插画填满整张卡,不需要再撑。 */
+    width:auto;max-width:none;min-height:0;margin:0;transform:none;z-index:0
   }
   #dpage.thread-page .thread-trail > .thread-ch > .ch-art::before{content:none}
   /* ── 插画处理(依用户的 Sample):大插画 + editorial 文字,两者都是卡片的主角 ──
