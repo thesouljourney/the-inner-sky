@@ -3161,8 +3161,9 @@
   #dpage.reading-page::before{
     content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
     background-image:url("assets/reading/bg.webp");
-    background-size:cover;background-position:center top;background-repeat:no-repeat;
-    opacity:.28
+    background-size:cover;background-position:center top;background-repeat:no-repeat
+    /* 用户要求拿掉白罩:原本 opacity:.28 让米色底透上来,整张图像蒙了一层白;
+       现在底图原样显示,文字可读交给卡片自己的半透明底 */
   }
   #dpage.reading-page > *{position:relative;z-index:1}
   /* ⚠ 账号选单开着的时候,要盖住它底下所有内容 —— 但 dp-hero 与
