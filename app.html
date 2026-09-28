@@ -3189,6 +3189,17 @@
   }
   #dpage.thread-page .thread-chapters .ch-card[data-ch="1"] .gl{background-image:url(assets/life/thread/mark-moon.webp)}
   #dpage.thread-page .thread-chapters .ch-card .gl svg{display:none}
+  /* 号码下面的记号改放在号码右边(用户要求):卡片改成两栏 grid,
+     第一列是「01 ✦」,其余每一段都横跨整张卡 */
+  #dpage.thread-page .thread-chapters .ch-card{
+    display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:12px;
+    align-items:center;justify-items:start
+  }
+  #dpage.thread-page .thread-chapters .ch-card > *{grid-column:1 / -1}
+  #dpage.thread-page .thread-chapters .ch-card > .no{grid-column:1}
+  #dpage.thread-page .thread-chapters .ch-card > .gl{grid-column:2;margin:0}
+  /* 插画是 absolute:在 grid 里要保持 auto,才会以整张卡为定位基准(不然会被塞进某一格) */
+  #dpage.thread-page .thread-chapters .ch-card > .art{grid-column:auto;grid-row:auto}
   #dpage.thread-page .thread-chapters .ch-card .t{
     font-family:var(--dp-serif);font-weight:600;font-size:clamp(17px,1.9vw,21px);line-height:1.5;color:#23264f
   }
