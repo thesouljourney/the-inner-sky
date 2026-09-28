@@ -2942,6 +2942,15 @@
     font-size:clamp(13.5px,1.35vw,15px);line-height:1.95;letter-spacing:.02em;color:#4a4a66
   }
   #dpage.thread-page .thread-trail > .thread-ch .dp-prose{margin-top:12px}
+  /* 展开后的详细解读跟上面的引子用同一套字(用户反馈两种字体读起来不舒服):
+     原本继承 .dp-prose 的细黑体(300),改成跟引子一样的宋体 400、同色、同字距 */
+  #dpage.thread-page .thread-trail > .thread-ch .ch-full .dp-prose,
+  #dpage.thread-page .thread-trail > .thread-ch .ch-full .dp-prose p{
+    font-family:var(--dp-serif);font-weight:400;letter-spacing:.02em;color:#4a4a66
+  }
+  #dpage.thread-page .thread-trail > .thread-ch .ch-full .dp-prose{
+    font-size:clamp(13.5px,1.35vw,15px);line-height:1.95
+  }
   /* 「探索这一章 →」/「收起 ↑」:香槟细框的胶囊 */
   #dpage.thread-page .thread-trail > .thread-ch .ch-open,
   #dpage.thread-page .thread-trail > .thread-ch .ch-shut{
@@ -3225,12 +3234,6 @@
     background:url(assets/life/thread/bridge-sprig-br.webp) right bottom / auto 100% no-repeat;opacity:.9;
     -webkit-mask-image:linear-gradient(270deg,#000 62%,transparent);mask-image:linear-gradient(270deg,#000 62%,transparent)
   }
-  /* 卡片左外侧那一枝:往上长,压在页面底图上 */
-  #dpage.thread-page .thread-bridge .br-sprig-out{
-    position:absolute;z-index:-1;pointer-events:none;
-    left:clamp(-150px,-11vw,-60px);bottom:40%;width:clamp(90px,11vw,160px);aspect-ratio:894/1240;
-    background:url(assets/life/thread/bridge-sprig.webp) left bottom / contain no-repeat
-  }
   @media(max-width:767px){
     #dpage.thread-page .thread-bridge .br-main{padding:6px 8px 6px 46px}
     #dpage.thread-page .thread-bridge .br-rule{width:34px;left:-2px}
@@ -3243,7 +3246,6 @@
     #dpage.thread-page .thread-bridge .insight .sp-r{height:92px}
     #dpage.thread-page .thread-bridge .insight .lb > i{flex-basis:40px}
     #dpage.thread-page .thread-bridge .insight p{font-size:15px}
-    #dpage.thread-page .thread-bridge .br-sprig-out{display:none}
   }
 
   /* 从这里开始:星环 + 置中大标题 + 一行引导 */
@@ -12091,7 +12093,7 @@ window.Guide = (function () {
     const lines = (aha || []).filter(Boolean);
     /* 版面依用户的设计稿:左边一条金色星芒竖线(bridge-rule)引导视线,
        引子 → 一条中间带 ✦ 的细线 → 模式小标 + 正文,都靠左;
-       下面一张半透明的小洞察卡,左右下角各一枝花叶,卡片左外侧再一枝 */
+       下面一张半透明的小洞察卡,左右下角各一枝花叶 */
     return '<div class="thread-bridge"><span class="mist" aria-hidden="true"></span>' +
       '<span class="moon-art" aria-hidden="true"></span>' +
       '<div class="br-main"><span class="br-rule" aria-hidden="true"></span>' +
@@ -12105,7 +12107,7 @@ window.Guide = (function () {
           dpThreadPattern(lines[0])
         : "") +
       "</div>" +
-      (lines[1] ? '<div class="br-card"><span class="br-sprig-out" aria-hidden="true"></span>' +
+      (lines[1] ? '<div class="br-card">' +
         dpThreadInsight(lines[1]) + "</div>" : "") +
       "</div>";
   }
