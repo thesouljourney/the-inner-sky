@@ -3900,6 +3900,9 @@
   }
   /* 星点与内容都要压在罩子上面 */
   #dpage.topic-page .dp-hero > *{position:relative;z-index:1}
+  /* 账号选单被 hero 的标签 / 标题 / 引言盖住:.dp-topbar 跟 .dp-hero-grid 同为
+     z-index:1 的兄弟,平手时后面的 grid 会盖过选单 —— 跟生命蓝图同一个补丁 */
+  #dpage.topic-page .dp-topbar{z-index:2}
   /* 有底图时星点收一点 —— 天空已经在图里了,不需要再画一层 */
   #dpage.topic-page .dp-hero .dp-stars i{opacity:calc(var(--o,.5) * .5)}
   /* 行星插画与实景叠在一起太满,有底图时让给照片 */
