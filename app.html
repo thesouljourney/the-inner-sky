@@ -3211,14 +3211,18 @@
   #dpage.thread-page .thread-bridge .insight p + p{margin-top:0}
   #dpage.thread-page .thread-bridge .insight .sp-l,
   #dpage.thread-page .thread-bridge .insight .sp-r{position:absolute;z-index:0;bottom:0;pointer-events:none}
+  /* 两枝花叶「直一点」(用户要求,依设计稿):只取素材里往上长的那一段
+     (叶子与花),长长横躺的尾巴裁掉并往内淡出 —— 框是直式的,
+     背景以高度铺满、贴着有叶子的那一侧 */
   #dpage.thread-page .thread-bridge .insight .sp-l{
-    left:clamp(4px,1.4vw,20px);width:clamp(110px,17vw,230px);aspect-ratio:1547/914;
-    background:url(assets/life/thread/bridge-sprig-corner.webp) left bottom / contain no-repeat;opacity:.85
+    left:clamp(4px,1.2vw,18px);bottom:0;height:82%;aspect-ratio:.72;
+    background:url(assets/life/thread/bridge-sprig-corner.webp) left bottom / auto 100% no-repeat;opacity:.9;
+    -webkit-mask-image:linear-gradient(90deg,#000 62%,transparent);mask-image:linear-gradient(90deg,#000 62%,transparent)
   }
-  /* 右下角换成用户给的专用花枝(往左下延伸的那一枝) */
   #dpage.thread-page .thread-bridge .insight .sp-r{
-    right:clamp(2px,1vw,14px);width:clamp(120px,18vw,240px);aspect-ratio:760/490;
-    background:url(assets/life/thread/bridge-sprig-br.webp) right bottom / contain no-repeat;opacity:.9
+    right:clamp(4px,1.2vw,18px);bottom:0;height:82%;aspect-ratio:.72;
+    background:url(assets/life/thread/bridge-sprig-br.webp) right bottom / auto 100% no-repeat;opacity:.9;
+    -webkit-mask-image:linear-gradient(270deg,#000 62%,transparent);mask-image:linear-gradient(270deg,#000 62%,transparent)
   }
   /* 卡片左外侧那一枝:往上长,压在页面底图上 */
   #dpage.thread-page .thread-bridge .br-sprig-out{
@@ -3234,6 +3238,8 @@
     #dpage.thread-page .thread-bridge .pattern .tx,
     #dpage.thread-page .thread-bridge .pattern .lk{font-size:15px}
     #dpage.thread-page .thread-bridge .insight{padding:22px 20px 70px}
+    #dpage.thread-page .thread-bridge .insight .sp-l,
+    #dpage.thread-page .thread-bridge .insight .sp-r{height:92px}
     #dpage.thread-page .thread-bridge .insight .lb > i{flex-basis:40px}
     #dpage.thread-page .thread-bridge .insight p{font-size:15px}
     #dpage.thread-page .thread-bridge .br-sprig-out{display:none}
