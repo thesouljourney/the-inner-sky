@@ -1611,10 +1611,9 @@
   #dpage.thread-page .dp-body::before{
     content:"";position:absolute;top:0;bottom:0;left:calc(50% - 50vw);width:100vw;
     z-index:0;pointer-events:none;
-    background:
-      radial-gradient(58% 26% at 10% 4%,rgba(170,160,213,.11),rgba(170,160,213,0) 72%),
-      radial-gradient(50% 24% at 94% 34%,rgba(232,211,162,.11),rgba(232,211,162,0) 74%),
-      radial-gradient(60% 26% at 16% 74%,rgba(170,160,213,.09),rgba(170,160,213,0) 72%)
+    /* 用户给的星月云朵底图。原图是直式一张,这里用的是「原图 + 上下翻转」
+       接成的一张(thread-bg.webp),往下重复时接缝对得上,长页面也不会断。 */
+    background:url(assets/life/thread-bg.webp) center top / 100% auto repeat-y,#fcf6ef
   }
   #dpage.thread-page .dp-body > *{position:relative;z-index:1}
   /* 这一页不要一格一格的白卡片:等待 / 进度 / 错误那几种状态卡保持原样,
@@ -2246,8 +2245,9 @@
     #dpage.thread-page .dp-cta .mob-only{display:inline}
 
     /* —— 1. 旅程记号:一条极细的线 + 几个小点,告诉他这一次会经过几段 —— */
+    /* 整页设计稿没有「这一次会经过几段」这个记号 —— 先收起来(节点与文案都还在) */
     #dpage.thread-page .thread-map{
-      text-align:center;margin:0 0 clamp(38px,9vw,54px)
+      display:none;text-align:center;margin:0 0 clamp(38px,9vw,54px)
     }
     #dpage.thread-page .thread-map .tx{
       display:block;font-family:var(--dp-sans);font-weight:300;
@@ -2378,6 +2378,337 @@
   /* 极窄的萤幕:装饰插画让位给文字(内容本身永远不隐藏) */
   @media(max-width:359px){
     #dpage.thread-page .ch-art{display:none}
+  }
+
+  /* ============================================================
+     章节卡片(用户给的参考图):每一章是一张圆角卡,
+     左 / 右交错放一张大插画,文字那一侧是「01 ✦ → 标题 → 引子 → 探索这一章 →」。
+     结构、资料、展开原文的行为都没动 —— 只是换版面。
+     选择器多带一层 .thread-trail >,盖过上面时间轴版面的所有规则(含手机)。
+     ============================================================ */
+  #dpage.thread-page .thread-trail > .thread-line{display:none}
+  #dpage.thread-page .thread-tail{padding-left:0}
+  #dpage.thread-page .thread-trail > .thread-ch{
+    position:relative;isolation:isolate;overflow:hidden;
+    display:grid;align-items:start;gap:0;
+    grid-template-columns:minmax(0,55fr) minmax(0,45fr);
+    grid-template-areas:"mk art" "bd art";
+    grid-template-rows:auto 1fr;
+    max-width:980px;margin:0 auto clamp(16px,2vw,24px);
+    min-height:clamp(300px,30vw,380px);
+    background:linear-gradient(180deg,rgba(255,253,250,.8),rgba(252,249,245,.68));
+    border:1px solid rgba(201,178,140,.24);border-radius:22px;
+    box-shadow:0 12px 34px rgba(60,50,90,.045)
+  }
+  #dpage.thread-page .thread-trail > .thread-ch:nth-of-type(even){
+    grid-template-columns:minmax(0,46fr) minmax(0,54fr);
+    grid-template-areas:"art mk" "art bd"
+  }
+  #dpage.thread-page .thread-trail > .thread-ch:last-of-type{margin-bottom:clamp(40px,6vw,72px)}
+  /* 01 ✦:横排在标题上方 */
+  #dpage.thread-page .thread-trail > .thread-ch > .ch-mark{
+    grid-area:mk;flex-direction:row;align-items:center;justify-content:flex-start;gap:12px;
+    padding:clamp(24px,3vw,36px) 0 0 clamp(22px,3.4vw,44px)
+  }
+  #dpage.thread-page .thread-trail > .thread-ch:nth-of-type(even) > .ch-mark{padding-left:clamp(8px,1.6vw,20px)}
+  #dpage.thread-page .thread-trail > .thread-ch .ch-mark .no{
+    font-family:var(--dp-serif);font-size:clamp(19px,2vw,24px);letter-spacing:.06em;color:#3b3f78
+  }
+  #dpage.thread-page .thread-trail > .thread-ch .ch-mark .nd{
+    width:auto;height:auto;border:0;background:none;color:rgba(196,152,72,.9)
+  }
+  /* 章节号旁的记号换成设计稿的素材:单数章圆圈星芒、双数章紫色弯月 */
+  #dpage.thread-page .thread-trail > .thread-ch .ch-mark .nd{
+    width:22px;height:22px;background:url(assets/life/thread/mark-star.webp) center / contain no-repeat
+  }
+  #dpage.thread-page .thread-trail > .thread-ch:nth-of-type(even) .ch-mark .nd{
+    background-image:url(assets/life/thread/mark-moon.webp);width:18px
+  }
+  #dpage.thread-page .thread-trail > .thread-ch .ch-mark .nd svg{display:none}
+  #dpage.thread-page .thread-trail > .thread-ch > .ch-body{
+    grid-area:bd;position:relative;z-index:1;
+    padding:clamp(8px,1vw,12px) clamp(14px,2vw,24px) clamp(24px,3vw,34px) clamp(22px,3.4vw,44px)
+  }
+  #dpage.thread-page .thread-trail > .thread-ch:nth-of-type(even) > .ch-body{
+    padding-left:clamp(8px,1.6vw,20px);padding-right:clamp(22px,3.4vw,44px)
+  }
+  #dpage.thread-page .thread-trail > .thread-ch h3.dp-h{
+    font-family:var(--dp-serif);font-weight:600;
+    font-size:clamp(19px,2.1vw,25px);line-height:1.5;letter-spacing:.02em;color:#23264f
+  }
+  #dpage.thread-page .thread-trail > .thread-ch .dp-div,
+  #dpage.thread-page .thread-trail > .thread-ch .ch-peek .ch-keys{display:none}
+  #dpage.thread-page .thread-trail > .thread-ch .ch-peek .pv{
+    margin-top:12px;font-family:var(--dp-serif);font-weight:400;
+    font-size:clamp(13.5px,1.35vw,15px);line-height:1.95;letter-spacing:.02em;color:#4a4a66
+  }
+  #dpage.thread-page .thread-trail > .thread-ch .dp-prose{margin-top:12px}
+  /* 「探索这一章 →」/「收起 ↑」:香槟细框的胶囊 */
+  #dpage.thread-page .thread-trail > .thread-ch .ch-open,
+  #dpage.thread-page .thread-trail > .thread-ch .ch-shut{
+    margin-top:18px;min-height:40px;padding:0 22px;border-radius:999px;
+    border:1px solid rgba(196,152,72,.55);background:rgba(255,253,249,.82);
+    font-family:var(--dp-serif);font-size:13.5px;letter-spacing:.12em;color:#3b3f78;
+    transition:background .3s ease,border-color .3s ease
+  }
+  #dpage.thread-page .thread-trail > .thread-ch .ch-open:hover,
+  #dpage.thread-page .thread-trail > .thread-ch .ch-shut:hover{
+    background:rgba(255,250,240,.9);border-color:rgba(196,152,72,.8);color:#23264f
+  }
+  #dpage.thread-page .thread-trail > .thread-ch .ch-open .cv{font-size:13px}
+  /* 插画:占满卡片的一侧,往文字那一侧淡出 */
+  #dpage.thread-page .thread-trail > .thread-ch > .ch-art{
+    grid-area:art;position:relative;align-self:stretch;justify-self:stretch;
+    width:auto;max-width:none;min-height:100%;margin:0;transform:none;z-index:0
+  }
+  #dpage.thread-page .thread-trail > .thread-ch > .ch-art::before{content:none}
+  /* ── 插画处理(依用户的 Sample):大插画 + editorial 文字,两者都是卡片的主角 ──
+     · 插画占卡片宽度约 45%,高度占满卡片;原色、不降透明度、不加滤镜
+     · 贴着卡片外缘(与下缘)出血,不是放在中间的一个孤立物件
+     · 只有靠文字那一侧做柔边 + 一层云雾:清楚的插画 → 云雾 → 卡片底 → 文字 */
+  #dpage.thread-page .thread-trail > .thread-ch > .ch-art img{
+    position:absolute;top:0;bottom:0;right:-6%;left:auto;width:112%;height:100%;max-height:none;
+    object-fit:contain;object-position:right center;padding:0;box-sizing:border-box;
+    opacity:.8;filter:none;transform:none;
+    -webkit-mask-image:linear-gradient(90deg,transparent 0,rgba(0,0,0,.55) 9%,#000 24%);
+            mask-image:linear-gradient(90deg,transparent 0,rgba(0,0,0,.55) 9%,#000 24%)
+  }
+  #dpage.thread-page .thread-trail > .thread-ch:nth-of-type(even) > .ch-art img{
+    right:auto;left:-6%;object-position:left center;
+    -webkit-mask-image:linear-gradient(270deg,transparent 0,rgba(0,0,0,.55) 9%,#000 24%);
+            mask-image:linear-gradient(270deg,transparent 0,rgba(0,0,0,.55) 9%,#000 24%)
+  }
+  /* 01 拱门:靠右、往右下延伸;04 门与阶梯:靠左、贴底 */
+  #dpage.thread-page .thread-trail > .thread-ch > .ch-art.a1 img{object-position:right bottom;top:4%;bottom:-4%}
+  #dpage.thread-page .thread-trail > .thread-ch > .ch-art.a4 img{object-position:left bottom;top:4%;bottom:-4%}
+  /* 图文交界的一层云雾:只在接缝上,往文字那边很快散掉 */
+  #dpage.thread-page .thread-trail > .thread-ch > .ch-art::after{
+    content:"";position:absolute;z-index:1;pointer-events:none;
+    top:0;bottom:0;left:-18%;width:36%;
+    background:
+      radial-gradient(ellipse 60% 34% at 50% 78%,rgba(236,232,248,.55),rgba(236,232,248,0) 72%),
+      radial-gradient(ellipse 55% 30% at 46% 34%,rgba(248,243,236,.45),rgba(248,243,236,0) 72%)
+  }
+  #dpage.thread-page .thread-trail > .thread-ch:nth-of-type(even) > .ch-art::after{left:auto;right:-18%}
+  /* 展开读原文时卡片会变高:插画停在上半部,不跟着拉长 */
+  #dpage.thread-page .thread-trail > .thread-ch.open > .ch-art img{height:min(100%,340px)}
+  /* 手机:同样左右交错,插画那一侧收窄;字小一号 */
+  @media(max-width:767px){
+    #dpage.thread-page .thread-trail > .thread-ch{
+      grid-template-columns:minmax(0,55fr) minmax(0,45fr);min-height:300px;border-radius:18px;
+      margin-bottom:14px
+    }
+    #dpage.thread-page .thread-trail > .thread-ch:nth-of-type(even){grid-template-columns:minmax(0,46fr) minmax(0,54fr)}
+    #dpage.thread-page .thread-trail > .thread-ch > .ch-mark{padding:22px 0 0 18px;gap:10px}
+    #dpage.thread-page .thread-trail > .thread-ch:nth-of-type(even) > .ch-mark{padding-left:6px}
+    #dpage.thread-page .thread-trail > .thread-ch > .ch-body{padding:6px 10px 20px 18px}
+    #dpage.thread-page .thread-trail > .thread-ch:nth-of-type(even) > .ch-body{padding:6px 18px 20px 6px}
+    #dpage.thread-page .thread-trail > .thread-ch .ch-mark .no{font-size:18px}
+    #dpage.thread-page .thread-trail > .thread-ch h3.dp-h{font-size:16.5px;line-height:1.55}
+    #dpage.thread-page .thread-trail > .thread-ch .ch-peek .pv{font-size:12.5px;line-height:1.85;margin-top:8px}
+    #dpage.thread-page .thread-trail > .thread-ch .dp-prose{font-size:14px;line-height:1.85}
+    #dpage.thread-page .thread-trail > .thread-ch .ch-open,
+    #dpage.thread-page .thread-trail > .thread-ch .ch-shut{
+      margin-top:14px;min-height:36px;padding:0 16px;font-size:12px;letter-spacing:.1em
+    }
+    /* 展开读原文:插画改成卡片顶端一条横幅,原文用整张卡的宽度,不挤在窄栏里 */
+    #dpage.thread-page .thread-trail > .thread-ch.open,
+    #dpage.thread-page .thread-trail > .thread-ch.open:nth-of-type(even){
+      grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto auto;
+      grid-template-areas:"art" "mk" "bd"
+    }
+    #dpage.thread-page .thread-trail > .thread-ch.open > .ch-art{min-height:150px;height:150px}
+    #dpage.thread-page .thread-trail > .thread-ch.open > .ch-art img,
+    #dpage.thread-page .thread-trail > .thread-ch.open:nth-of-type(even) > .ch-art img{
+      height:100%;
+      -webkit-mask-image:linear-gradient(180deg,#000 55%,transparent);
+              mask-image:linear-gradient(180deg,#000 55%,transparent)
+    }
+    #dpage.thread-page .thread-trail > .thread-ch.open > .ch-mark,
+    #dpage.thread-page .thread-trail > .thread-ch.open:nth-of-type(even) > .ch-mark{padding:4px 0 0 18px}
+    #dpage.thread-page .thread-trail > .thread-ch.open > .ch-body,
+    #dpage.thread-page .thread-trail > .thread-ch.open:nth-of-type(even) > .ch-body{padding:6px 18px 20px}
+    /* 手机一样是 55/45 的左右构图,插画不缩成角落装饰;
+       去背插画在窄栏里再往外出血多一点,主体才撑得满 */
+    /* 宽幅插画放进直的窄栏:整张塞进去会缩得很小,所以改成铺满这一栏
+       (高度约 88%、贴底),裁切两侧,留下置中的主体 —— 拱门 / 土星 / 月亮山谷 / 门与阶梯 */
+    #dpage.thread-page .thread-trail > .thread-ch > .ch-art img{
+      top:auto;bottom:0;height:88%;width:108%;right:-4%;
+      object-fit:cover;object-position:50% 100%
+    }
+    #dpage.thread-page .thread-trail > .thread-ch:nth-of-type(even) > .ch-art img{right:auto;left:-4%}
+    #dpage.thread-page .thread-trail > .thread-ch > .ch-art.a2 img{object-position:42% 50%;height:80%;bottom:6%}
+    #dpage.thread-page .thread-trail > .thread-ch > .ch-art.a3 img{object-position:56% 50%;height:80%;bottom:6%}
+    #dpage.thread-page .thread-trail > .thread-ch > .ch-art.a1 img,
+    #dpage.thread-page .thread-trail > .thread-ch > .ch-art.a4 img{top:auto;bottom:0;object-position:50% 100%}
+    #dpage.thread-page .thread-trail > .thread-ch.open > .ch-art img{transform:none}
+  }
+  @media(max-width:359px){
+    #dpage.thread-page .thread-trail > .thread-ch > .ch-art{display:block}
+  }
+
+  /* ============================================================
+     整页设计稿(第二轮):开场文案 / 过场的星环与大月亮 /
+     「从这里开始」置中标题 + 一张一列的横式卡片
+     ============================================================ */
+  #dpage.thread-page .thread-intro{
+    text-align:center;margin:clamp(4px,1vw,12px) auto clamp(26px,3.4vw,40px);max-width:34em
+  }
+  /* 顶端很轻的章节引言:一句 + 一小段,之后留白 */
+  #dpage.thread-page .thread-intro .a{
+    margin:0;font-family:var(--dp-serif);font-weight:400;
+    font-size:clamp(16px,1.9vw,20px);line-height:1.9;letter-spacing:.08em;color:#3b3f68
+  }
+  #dpage.thread-page .thread-intro .b{
+    margin:clamp(12px,1.6vw,18px) 0 0;font-family:var(--dp-serif);font-size:clamp(12.5px,1.4vw,14.5px);
+    line-height:2;letter-spacing:.04em;color:#6a6a86
+  }
+  #dpage.thread-page .thread-intro{margin-bottom:clamp(40px,5.4vw,68px)}
+  /* 星语 Quote Card:Ivory 85% 透明 + 很淡的 lavender glow + 细金线,不是白色实心框 */
+  #dpage.thread-page .thread-open{margin:0 auto clamp(40px,5vw,64px);padding:0 4px}
+  #dpage.thread-page .star-quote{
+    position:relative;max-width:560px;margin:0 auto;
+    padding:clamp(30px,3.8vw,44px) clamp(24px,4vw,52px) clamp(28px,3.6vw,40px);
+    text-align:center;border-radius:22px;
+    background:rgba(255,251,243,.85);
+    border:1px solid rgba(201,168,105,.5);
+    box-shadow:0 0 0 5px rgba(255,251,243,.35),0 0 46px rgba(186,176,232,.32),0 14px 36px rgba(96,86,150,.08)
+  }
+  /* 内圈再一条极细金线,像星图的框 */
+  #dpage.thread-page .star-quote::before{
+    content:"";position:absolute;inset:7px;border-radius:16px;pointer-events:none;
+    border:1px solid rgba(201,168,105,.22)
+  }
+  #dpage.thread-page .star-quote .st{
+    display:block;margin:0 auto 14px;font-size:14px;line-height:1;color:rgba(196,152,72,.95)
+  }
+  #dpage.thread-page .star-quote p{
+    margin:0;font-family:var(--dp-serif);font-weight:500;
+    font-size:clamp(16px,1.9vw,20px);line-height:2;letter-spacing:.04em;color:#23264f
+  }
+  #dpage.thread-page .star-quote p + p{margin-top:clamp(12px,1.6vw,18px);font-weight:400;color:#3d4066}
+
+  /* 过场:上方一枚星环、右侧一轮花月 */
+  #dpage.thread-page .thread-bridge .cp{
+    width:min(78%,420px);height:clamp(64px,9vw,120px);opacity:1;
+    background:url(assets/life/thread/ornament.webp) center / contain no-repeat
+  }
+  #dpage.thread-page .thread-bridge .moon-art{
+    position:absolute;z-index:-1;pointer-events:none;
+    right:0;top:clamp(40px,6vw,90px);
+    width:clamp(120px,24vw,300px);aspect-ratio:700/519;opacity:.9;
+    background:url(assets/life/thread/bridge-moon.webp) center / contain no-repeat
+  }
+  #dpage.thread-page .thread-bridge .said .ln{font-weight:600;color:#23264f}
+
+  /* 过场改成「引子 → 一个发现 → 一个问题 → 一个解释」:
+     安静的小字开场 → 小标题 → 两个问句放大、其余一般正文 → 小洞察卡 */
+  #dpage.thread-page .thread-bridge .lead{
+    font-size:clamp(14px,1.6vw,16px);line-height:2.05;color:rgba(58,56,82,.72)
+  }
+  #dpage.thread-page .thread-bridge .pat-hd{
+    margin:clamp(34px,4.4vw,52px) auto 0;font-family:var(--dp-serif);
+    font-size:clamp(13px,1.4vw,14.5px);letter-spacing:.14em;color:#8a7351
+  }
+  #dpage.thread-page .thread-bridge .pat-hd span{color:rgba(196,152,72,.95)}
+  #dpage.thread-page .thread-bridge .pattern{max-width:min(100%,30em);margin:clamp(18px,2.4vw,26px) auto 0}
+  #dpage.thread-page .thread-bridge .pattern p{margin:0;font-family:var(--dp-serif);font-weight:400}
+  #dpage.thread-page .thread-bridge .pattern .lk{
+    font-size:clamp(14.5px,1.6vw,16.5px);line-height:2;color:#4a4a66;margin-top:14px
+  }
+  #dpage.thread-page .thread-bridge .pattern .lk:first-child{margin-top:0}
+  #dpage.thread-page .thread-bridge .pattern .q{
+    margin-top:6px;font-weight:600;font-size:clamp(19px,2.3vw,25px);line-height:1.7;
+    letter-spacing:.03em;color:#23264f
+  }
+  #dpage.thread-page .thread-bridge .pattern .tx{
+    margin-top:clamp(20px,2.6vw,28px);font-size:clamp(14px,1.55vw,16px);line-height:2.05;color:#4a4a66
+  }
+  #dpage.thread-page .thread-bridge .insight{
+    max-width:min(100%,460px);margin:clamp(34px,4.4vw,48px) auto 0;
+    padding:clamp(22px,2.8vw,30px) clamp(22px,3.4vw,36px);border-radius:18px;text-align:center;
+    background:rgba(255,251,243,.85);border:1px solid rgba(201,168,105,.4);
+    box-shadow:0 0 34px rgba(186,176,232,.26),0 10px 26px rgba(96,86,150,.06)
+  }
+  #dpage.thread-page .thread-bridge .insight .lb{
+    display:block;margin-bottom:12px;font-family:var(--dp-serif);font-size:12.5px;letter-spacing:.2em;color:#8a7351
+  }
+  #dpage.thread-page .thread-bridge .insight .lb span{color:rgba(196,152,72,.95)}
+  #dpage.thread-page .thread-bridge .insight p{
+    margin:0;font-family:var(--dp-serif);font-size:clamp(14.5px,1.6vw,16px);line-height:2;color:#2c2d48
+  }
+  #dpage.thread-page .thread-bridge .insight p + p{margin-top:8px}
+
+  /* 从这里开始:星环 + 置中大标题 + 一行引导 */
+  #dpage.thread-page .thread-chapters .dp-start-hd{
+    flex-direction:column;justify-content:center;gap:0;margin-bottom:8px
+  }
+  #dpage.thread-page .thread-chapters .dp-start-hd::before{
+    content:"";display:block;width:min(64%,300px);height:clamp(46px,6vw,80px);margin:0 auto 6px;
+    background:url(assets/life/thread/ornament.webp) center / contain no-repeat
+  }
+  #dpage.thread-page .thread-chapters .dp-start-hd .ic,
+  #dpage.thread-page .thread-chapters .dp-start-hd .ln,
+  #dpage.thread-page .thread-chapters .dp-start-hd .en{display:none}
+  #dpage.thread-page .thread-chapters .dp-start-hd .tx{
+    font-family:var(--dp-serif);font-weight:600;font-size:clamp(22px,2.6vw,30px);
+    letter-spacing:.12em;color:#23264f
+  }
+  #dpage.thread-page .thread-chapters .dp-start-lead{
+    text-align:center;margin:0 auto clamp(20px,2.6vw,30px)
+  }
+  /* 三件事:一张一列的横式卡,插画在右 */
+  #dpage.thread-page .thread-chapters .ch-cards{
+    grid-template-columns:minmax(0,1fr);max-width:980px;margin:0 auto;gap:clamp(12px,1.6vw,18px)
+  }
+  #dpage.thread-page .thread-chapters .ch-card{
+    position:relative;overflow:hidden;isolation:isolate;
+    padding:clamp(22px,2.8vw,32px) 44% clamp(22px,2.8vw,30px) clamp(22px,3.4vw,44px);
+    min-height:clamp(200px,22vw,260px);
+    background:linear-gradient(180deg,rgba(255,253,250,.8),rgba(252,249,245,.68));
+    border:1px solid rgba(201,178,140,.24);border-radius:22px
+  }
+  #dpage.thread-page .thread-chapters .ch-card > *{position:relative;z-index:1}
+  #dpage.thread-page .thread-chapters .ch-card .art{
+    position:absolute;z-index:0;top:0;bottom:0;right:0;width:46%;pointer-events:none;
+    /* 三张都是满版插画:铺满卡片右侧,往文字那边淡出 */
+    background:url(assets/life/thread/step-1-desk.webp) center / cover no-repeat;
+    -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 30%);
+            mask-image:linear-gradient(90deg,transparent 0,#000 30%)
+  }
+  #dpage.thread-page .thread-chapters .ch-card .art.s2{background-image:url(assets/life/thread/step-2-window.webp)}
+  #dpage.thread-page .thread-chapters .ch-card .art.s3{background-image:url(assets/life/thread/step-3-armillary.webp)}
+  #dpage.thread-page .thread-chapters .ch-card .no{
+    font-family:var(--dp-serif);color:#3b3f78;font-size:clamp(18px,2vw,22px)
+  }
+  #dpage.thread-page .thread-chapters .ch-card .gl{
+    display:block;width:20px;height:20px;margin:8px 0 4px;
+    background:url(assets/life/thread/mark-star.webp) center / contain no-repeat
+  }
+  #dpage.thread-page .thread-chapters .ch-card[data-ch="1"] .gl{background-image:url(assets/life/thread/mark-moon.webp)}
+  #dpage.thread-page .thread-chapters .ch-card .gl svg{display:none}
+  #dpage.thread-page .thread-chapters .ch-card .t{
+    font-family:var(--dp-serif);font-weight:600;font-size:clamp(17px,1.9vw,21px);line-height:1.5;color:#23264f
+  }
+  #dpage.thread-page .thread-chapters .ch-card .pv{font-family:var(--dp-serif);color:#4a4a66}
+  #dpage.thread-page .thread-chapters .ch-card .ch-keys{border-top:0;padding-top:0;margin-top:10px}
+  #dpage.thread-page .thread-chapters .ch-card .ch-keys li i{
+    width:6px;height:6px;border-radius:0;transform:translateY(-2px) rotate(45deg);background:rgba(196,152,72,.85)
+  }
+  #dpage.thread-page .thread-chapters .ch-card .go{
+    display:inline-flex;align-items:center;margin-top:16px;min-height:36px;padding:0 18px;
+    border:1px solid rgba(196,152,72,.55);border-radius:999px;background:rgba(255,253,249,.6);
+    font-family:var(--dp-serif);font-size:13px;letter-spacing:.1em;color:#3b3f78
+  }
+  @media(max-width:767px){
+    #dpage.thread-page .thread-intro .a{font-size:15.5px}
+    #dpage.thread-page .thread-bridge .moon-art{width:110px;right:0;top:70px;opacity:.75}
+    #dpage.thread-page .thread-chapters .ch-card{padding:20px 40% 20px 18px;min-height:210px;border-radius:18px}
+    #dpage.thread-page .thread-chapters .ch-card .art{width:48%}
+    #dpage.thread-page .thread-chapters .ch-card .t{font-size:16px}
+    #dpage.thread-page .thread-chapters .ch-card .pv{font-size:12.5px;line-height:1.8}
+    #dpage.thread-page .thread-chapters .ch-card .ch-keys li{font-size:12px;line-height:1.7}
+    #dpage.thread-page .thread-chapters .ch-card .go{font-size:12px;padding:0 14px;min-height:34px}
   }
 
   /* —— 进场:只有 12px 的位移与淡入。JS 只在允许动态时才挂 .rise —— */
@@ -10024,11 +10355,12 @@ window.Guide = (function () {
   /* 每一章右侧那张插画:大小、位置、浓度刻意不一样,页面才有节奏。
      插画一律是装饰(aria-hidden + 空 alt),不承载任何内容。 */
   const THREAD_ART = [
-    { src: "assets/life/ch-gate.webp",    cls: "a1" },
-    { src: "assets/life/ch-planets.webp", cls: "a2" },
-    { src: "assets/life/ch-sky.webp",     cls: "a3" },
-    { src: "assets/life/ch-road.webp",    cls: "a4" },
-    { src: "assets/life/ch-clouds.webp",  cls: "a5" }
+    /* 顺序对应章节卡片的设计稿:01 拱门、02 星球、03 山谷、04 阶梯;第五章以后轮回云朵星球 */
+    { src: "assets/life/thread/ch-1-gate.webp",    cls: "a1" },
+    { src: "assets/life/thread/ch-2-planets.webp", cls: "a2" },
+    { src: "assets/life/thread/ch-3-valley.webp",  cls: "a3" },
+    { src: "assets/life/thread/ch-4-stairs.webp",  cls: "a4" },
+    { src: "assets/life/ch-clouds.webp",           cls: "a5" }
   ];
 
   /* 生命线上的记号:星芒 / 弦月 / 罗盘轮流出现。手写 inline SVG,不进图档。 */
@@ -10679,18 +11011,39 @@ window.Guide = (function () {
     const lines = (aha || []).filter(Boolean);
     return '<div class="thread-bridge"><span class="mist" aria-hidden="true"></span>' +
       '<span class="cp" aria-hidden="true"></span>' +
+      '<span class="moon-art" aria-hidden="true"></span>' +
       '<p class="lead">' +
-      dpT("有些事情已经过去了，但它们没有完全离开。",
-          "Some of it is over. Not all of it has left.") + "</p>" +
+      dpT("有些事情已经过去了，<br>但它们留下的方式，可能比你想象中更深。",
+          "Some of it is over,<br>but the way it stayed may run deeper than you think.") + "</p>" +
       (lines.length
-        ? '<div class="said">' + lines.map(function (q) {
-            return '<p class="ln">' + esc0(q) + "</p>";
-          }).join("") + "</div>"
+        ? '<p class="pat-hd"><span aria-hidden="true">✦</span> ' +
+            dpT("我们看见了一个重复出现的模式", "A pattern that keeps returning") + "</p>" +
+          dpThreadPattern(lines[0]) +
+          (lines[1] ? dpThreadInsight(lines[1]) : "")
         : "") +
-      '<p class="lead lo">' +
-      dpT("而当这些片段放在一起，有几件事开始慢慢浮现。",
-          "Put side by side, a few things begin to surface.") + "</p>" +
-      '<span class="st" aria-hidden="true">✦</span></div>';
+      "</div>";
+  }
+  /* 第一句 aha 的排版:句子里用「」括起来的问句单独成行、放大,
+     其余的字维持一般正文(不加粗)。原文一个字都不改,只是切开来排;
+     没有「」的句子就原样当一段正文。 */
+  function dpThreadPattern(text) {
+    const parts = String(text).split(/(「[^」]+」)/).filter(function (x) { return x !== ""; });
+    if (parts.length < 2) return '<div class="pattern"><p class="tx">' + esc0(text) + "</p></div>";
+    let seenQ = false;
+    return '<div class="pattern">' + parts.map(function (x) {
+      if (x.charAt(0) === "「") { seenQ = true; return '<p class="q">' + esc0(x) + "</p>"; }
+      const t = x.replace(/^[，,、——\s]+/, "").replace(/[，,、\s]+$/, "");
+      if (!t) return "";
+      // 问句之后的那一段是解释 → 一般正文;问句之前 / 之间的是引导短句
+      return '<p class="' + (seenQ && /[。！？]$/.test(t) ? "tx" : "lk") + '">' + esc0(t) + "</p>";
+    }).join("") + "</div>";
+  }
+  /* 第二句 aha 放进小洞察卡:逐句一行 */
+  function dpThreadInsight(text) {
+    const ss = String(text).split(/(?<=[。！？])/).map(function (x) { return x.trim(); }).filter(Boolean);
+    return '<div class="insight"><span class="lb"><span aria-hidden="true">✦</span> ' +
+      dpT("一个小小的洞察", "A small insight") + "</span>" +
+      ss.map(function (x) { return "<p>" + esc0(x) + "</p>"; }).join("") + "</div>";
   }
   /* —— 手机版的「这一次会经过几段」——————————————————————
      只是一个很小的编辑式记号:不吸顶、不可点、不随卷动变化,也不是进度条。
@@ -10711,8 +11064,8 @@ window.Guide = (function () {
       '<span class="tx">' + dpT("从这里开始", "Where To Start") + '</span>' +
       '<span class="ln"></span><span class="en" aria-hidden="true">✦</span></div>' +
       '<p class="dp-start-lead">' +
-      dpT("不必全部做完。挑一件现在做得到的，从那里开始就好。",
-          "None of this needs doing at once. Pick the one you can start with today.") + "</p>" +
+      dpT("不必全部改变。<br>先挑一件现在做得到的，就够了。",
+          "You don’t have to change it all.<br>One thing you can do now is enough.") + "</p>" +
       '<div class="ch-cards">' +
       steps.map(function (st, i) {
         const d = dpLead(st, pv && pv["a" + i]);
@@ -10729,6 +11082,7 @@ window.Guide = (function () {
           dpKeysHtml(d.keys.slice(0, 2)) +
           '<span class="go">' + dpT("沿着这条线索继续 →", "Follow this one →") + "</span>" +
           '<span class="ch-src" hidden>' + dpParaRich(st.body) + "</span>" +
+          '<span class="art s' + (i % 3 + 1) + '" aria-hidden="true"></span>' +
           "</button>" +
           '<div class="ch-slot" id="chSlot' + i + '" aria-live="polite"></div>';
       }).join("") + "</div>" +
@@ -10740,10 +11094,21 @@ window.Guide = (function () {
     let h = '<div class="thread-flow">';
     /* 开场:把 tagline 放到版心中间,底下一个很小的星记号 —— 像走进故事的第一句。
        生命线从这里之后才开始,所以它移进 .thread-trail 里(原本罩着整页)。 */
+    /* 开场两段是版面文案(所有人都一样),不是针对谁的解读;tagline 才是他自己的那一句 */
+    h += '<div class="thread-intro"><p class="a">' +
+      dpT("你的经历，从来不是彼此独立的。", "Nothing you have lived through stands on its own.") +
+      '</p><p class="b">' +
+      dpT("有些事情发生在很久以前，<br>却仍然影响着你今天看待自己、关系和世界的方式。",
+          "Some of it happened long ago,<br>yet it still shapes how you see yourself, your relationships and the world.") +
+      "</p></div>";
+    /* 星语 Quote Card:这个人自己的那一句(tagline),单独放进一张半透明的星空卡。
+       原文一字不改,只在句号后分段,让它读起来像一段留给自己的话。 */
     if (data.tagline)
-      h += '<div class="thread-open"><div class="dp-quote"><span class="q">“</span>' +
-        esc0(data.tagline) + "</div>" +
-        '<span class="st" aria-hidden="true">✦</span></div>';
+      h += '<div class="thread-open"><figure class="star-quote">' +
+        '<span class="st" aria-hidden="true">✦</span>' +
+        String(data.tagline).split(/(?<=。)/).filter(function (x) { return x.trim(); })
+          .map(function (x) { return "<p>" + esc0(x.trim()) + "</p>"; }).join("") +
+        "</figure></div>";
     h += dpThreadMap((data.sections || []).length);
     h += '<div class="thread-trail">' + dpThreadLine();
     h += (data.sections || []).map(function (sc, si) {
@@ -10766,8 +11131,8 @@ window.Guide = (function () {
         (d.preview ? '<p class="pv">' + esc0(d.preview) + "</p>" : "") +
         dpKeysHtml(d.keys) +
         '<button type="button" class="ch-open" aria-expanded="false" aria-controls="full-' + si + '">' +
-        '<span class="tx">' + dpT("看看它留下了什么", "See what it left behind") + '</span>' +
-        '<span class="cv" aria-hidden="true">↓</span></button></div>' +
+        '<span class="tx">' + dpT("探索这一章", "Explore this chapter") + '</span>' +
+        '<span class="cv" aria-hidden="true">→</span></button></div>' +
         '<div class="ch-full" id="full-' + si + '">' +
         '<span class="ch-layer mob-only" aria-hidden="true">✦ ' +
         esc0(dpT("更深一点", "A little deeper")) + '</span>' +
@@ -14182,10 +14547,23 @@ window.Guide = (function () {
         const full = sec.querySelector(".ch-full");
         if (!open || !full) return;
         const set = function (on) {
-          sec.classList.toggle("open", on);
           open.setAttribute("aria-expanded", on ? "true" : "false");
-          grow(full, on);
-          if (!on) open.focus();
+          if (on) { sec.classList.add("open"); grow(full, true); return; }
+          /* 收起:一次收好,不做高度动画 —— 动画期间引子已经回来、原文还没收完,
+             同一段字会叠两次;而且「收起」在长长的原文最底下,收完之后画面
+             会停在下一章。所以直接收起,再把这一章的开头带回视线里。 */
+          full.style.transition = "none";
+          full.classList.remove("on");
+          full.style.maxHeight = "0px";
+          sec.classList.remove("open");
+          full.getBoundingClientRect();
+          full.style.transition = "";
+          const top = sec.getBoundingClientRect().top;
+          if (top < 72) {
+            const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion:reduce)").matches;
+            window.scrollTo({ top: window.scrollY + top - 88, behavior: reduce ? "auto" : "smooth" });
+          }
+          open.focus({ preventScroll: true });
         };
         open.addEventListener("click", function () { set(true); });
         if (shut) shut.addEventListener("click", function () { set(false); });
@@ -14234,6 +14612,9 @@ window.Guide = (function () {
           const card = cards[i];
           const src = card.querySelector(".ch-src");
           const pv = card.querySelector(".pv");
+          /* 桌机的卡片现在也是一张一列:共用阅读区搬到被点的那张卡正下方,
+             不会跑到第三张卡后面去(手机走的是各自的 slot,不受影响) */
+          if (!inline() && slots[i]) slots[i].parentNode.insertBefore(reader, slots[i].nextSibling);
           const mount = hostFor(i);
           [reader].concat(slots).forEach(clear);
           box = document.createElement("div");
