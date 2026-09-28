@@ -1624,11 +1624,12 @@
   }
   #dpage .sky-core .sky-card .art{
     position:absolute;left:0;top:0;bottom:0;right:auto;width:44%;height:100%;
-    object-fit:cover;object-position:50% 60%;opacity:1;z-index:0;
+    object-fit:cover;object-position:50% 38%;opacity:1;z-index:0;
     -webkit-mask-image:linear-gradient(90deg,#000 72%,transparent);mask-image:linear-gradient(90deg,#000 72%,transparent)
   }
   #dpage .sky-core .sky-card > :not(.art){grid-column:2}
   #dpage .sky-core .sky-card .hd{margin-bottom:10px}
+  #dpage .sky-core .sky-card .hd .lb{white-space:nowrap;letter-spacing:.12em}
   #dpage .sky-core .sky-card .sign{font-size:clamp(20px,2vw,25px)}
   #dpage .sky-core .sky-card .lat{display:none}
   #dpage .sky-core .sky-card .hs{margin-top:4px}
@@ -14319,19 +14320,19 @@ window.Guide = (function () {
       const lat = function (idx) { return EN ? "" : (C.SIGNS[idx] ? C.SIGNS[idx].en : ""); };
       if (sun) {
         const i = C.lonToSign(res.planets.find(function (p) { return p.key === "Sun"; }).lon).idx;
-        core.push({ art: "assets/houses/h09.webp", gl: GL.symbolSVG ? GL.symbolSVG(sun.glyph, 15, "currentColor") : "", tx: "",
+        core.push({ art: "assets/houses/core-sun.webp", gl: GL.symbolSVG ? GL.symbolSVG(sun.glyph, 15, "currentColor") : "", tx: "",
           lb: dpT("太阳 SUN", "SUN"), sign: sun.sign, lat: lat(i), idx: i,
           house: sun.house, ttl: dpT("核心自我", "Core Self"), sb: dpT("你如何发光", "How you shine") });
       }
       if (moon) {
         const i = C.lonToSign(res.planets.find(function (p) { return p.key === "Moon"; }).lon).idx;
-        core.push({ art: "assets/houses/h12.webp", gl: GL.symbolSVG ? GL.symbolSVG(moon.glyph, 15, "currentColor") : "", tx: "",
+        core.push({ art: "assets/houses/core-moon.webp", gl: GL.symbolSVG ? GL.symbolSVG(moon.glyph, 15, "currentColor") : "", tx: "",
           lb: dpT("月亮 MOON", "MOON"), sign: moon.sign, lat: lat(i), idx: i,
           house: moon.house, ttl: dpT("情绪世界", "Inner Weather"), sb: dpT("你如何感受", "How you feel") });
       }
-      core.push({ art: "assets/houses/h01.webp", gl: "", tx: "AC", lb: dpT("上升 ASC", "RISING"), sign: ascS.name, lat: lat(ascS.idx), idx: ascS.idx, house: 1,
+      core.push({ art: "assets/houses/core-asc.webp", gl: "", tx: "AC", lb: dpT("上升 ASC", "RISING"), sign: ascS.name, lat: lat(ascS.idx), idx: ascS.idx, house: 1,
         ttl: dpT("外在形象", "Outer Self"), sb: dpT("你如何与世界相遇", "How you meet the world") });
-      core.push({ art: "assets/houses/h10.webp", gl: "", tx: "MC", lb: dpT("天顶 MC", "MIDHEAVEN"), sign: mcS.name, lat: lat(mcS.idx), idx: mcS.idx, house: 10,
+      core.push({ art: "assets/houses/core-mc.webp", gl: "", tx: "MC", lb: dpT("天顶 MC", "MIDHEAVEN"), sign: mcS.name, lat: lat(mcS.idx), idx: mcS.idx, house: 10,
         ttl: dpT("人生方向", "Direction"), sb: dpT("你渴望成为的样子", "Who you're becoming") });
 
       body += '<div class="sky-air air-core"><span class="l" aria-hidden="true"></span>' +
