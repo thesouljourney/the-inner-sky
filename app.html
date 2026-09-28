@@ -880,8 +880,8 @@
      不再是「深蓝标题条 + 底下另外一块盘面」。 */
   #dpage.sky-page .dp-hero{
     background:
-      linear-gradient(180deg,rgba(250,245,240,0) 60%,rgba(248,242,237,.7) 84%,var(--dp-cream) 100%),
-      url(assets/atmos/sky-top.webp) center top / 100% auto no-repeat,
+      linear-gradient(180deg,rgba(250,245,240,0) 66%,rgba(248,242,237,.7) 88%,var(--dp-cream) 100%),
+      url(assets/atmos/sky-hero-arch.webp) right top / cover no-repeat,
       var(--dp-cream);
     color:var(--dp-ink);
     padding-bottom:clamp(30px,4vw,56px)
@@ -935,13 +935,21 @@
        改成按宽度放大一点、贴齐顶端,并在最上方多一层很淡的象牙纱 */
     #dpage.sky-page .dp-hero{
       background:
-        linear-gradient(180deg,rgba(250,245,240,.3) 0,rgba(250,245,240,.06) 24%,rgba(248,242,237,.72) 64%,var(--dp-cream) 90%),
-        url(assets/atmos/sky-top.webp) center top / 175% auto no-repeat,
+        linear-gradient(180deg,rgba(250,245,240,0) 0,rgba(250,245,240,0) 30%,rgba(248,242,237,.72) 64%,var(--dp-cream) 90%),
+        url(assets/atmos/sky-hero-arch.webp) left top / auto 640px no-repeat,
         var(--dp-cream)
     }
     #dpage.sky-page .sky-script{position:static;transform:none;text-align:center;margin-top:14px;opacity:.8}
   }
 
+  /* 新 hero 图的右上方是深蓝夜空:桌机上导航改成浅色字,才读得到 */
+  @media(min-width:1101px){
+    #dpage.sky-page .dp-navlink{color:rgba(255,251,243,.86);text-shadow:0 1px 8px rgba(20,24,60,.45)}
+    #dpage.sky-page .dp-navlink:hover,#dpage.sky-page .dp-navlink.on{color:#fffaf0}
+    #dpage.sky-page .dp-acct-btn{color:rgba(255,251,243,.9);border-color:rgba(255,251,243,.4);text-shadow:0 1px 8px rgba(20,24,60,.4)}
+    #dpage.sky-page .dp-acct-btn:hover{color:#fffaf0;border-color:rgba(232,211,162,.8)}
+    #dpage.sky-page .dp-acct-btn .caret{color:rgba(255,251,243,.6)}
+  }
   /* —— 收尾:另一片天空,一路接进深蓝页脚 —— */
   #dpage .sky-zone{position:relative;isolation:isolate}
   #dpage .sky-atmos{
