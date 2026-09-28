@@ -2098,17 +2098,17 @@
   /* 用户给的新底图:电脑一张横式、手机一张直式。两张都是「中间留白的纸、
      四周一圈星空水彩」的画框构图,所以固定在视窗、铺满不重复 —— 卷动时画框
      留在原地,只有内容在动(position:fixed,不用 background-attachment:fixed,
-     后者在 iOS Safari 上会跳)。上面再盖一层 50% 象牙白罩(用户要求,
-     跟九大主题 / 我的星空同一个浓度)。 */
+     后者在 iOS Safari 上会跳)。上面盖一层很浅的 8% 黑罩(用户要求试试看;
+     之前是 50% 象牙白罩)。 */
   #dpage.thread-page .dp-body::before{
     content:"";position:fixed;inset:0;
     z-index:0;pointer-events:none;
-    background:linear-gradient(rgba(251,245,236,.5),rgba(251,245,236,.5)),
+    background:linear-gradient(rgba(0,0,0,.08),rgba(0,0,0,.08)),
       url(assets/life/thread-bg-d.webp) center / cover no-repeat,#fbf3e8
   }
   @media(max-width:767px){
     #dpage.thread-page .dp-body::before{
-      background:linear-gradient(rgba(251,245,236,.5),rgba(251,245,236,.5)),
+      background:linear-gradient(rgba(0,0,0,.08),rgba(0,0,0,.08)),
         url(assets/life/thread-bg-m.webp) center / cover no-repeat,#fbf3e8
     }
   }
