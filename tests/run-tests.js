@@ -2265,9 +2265,11 @@ function testTopicLayout() {
   checkEq("[tp] 进主题页时才套底纹", /dpTopicBg\(tid\);/.test(topicPage), true);
   checkEq("[tp] CSS 里没有为九个主题各写一条底纹规则",
     TIDS.filter(function (t) { return css.indexOf("bg/" + t) >= 0; }).join(","), "");
-  /* 淡到什么程度:预设值要真的很淡,不然正文的对比度会被吃掉 */
-  const alpha = (css.match(/--tp-bg-a,([.\d]+)/) || [, "1"])[1];
-  checkEq("[tp] 底纹预设够淡(≤ .2),现在是 " + alpha, parseFloat(alpha) <= 0.2, true);
+  /* 白罩要有、但要轻:图要看得清楚(≥ .4),又不能完全拿掉(< 1)。
+     可读性由下面那条卡片底色守着 */
+  const alpha = (css.match(/--tp-bg-a,([.\d]+)/) || [, "0"])[1];
+  checkEq("[tp] 底纹有一层轻白罩(.4 ≤ a < 1),现在是 " + alpha,
+    parseFloat(alpha) >= 0.4 && parseFloat(alpha) < 1, true);
   /* ⚠ background-attachment:fixed 在 iOS Safari 上会跳、会破图 —— 改用 position:fixed */
   checkEq("[tp] 不用 background-attachment:fixed", /background-attachment:\s*fixed/.test(css), false);
   checkEq("[tp] 底纹是一层 position:fixed 的底,压在内容下面",

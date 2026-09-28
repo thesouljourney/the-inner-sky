@@ -3162,7 +3162,10 @@
     content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
     background-image:url("assets/reading/bg.webp");
     background-size:cover;background-position:center top;background-repeat:no-repeat;
-    opacity:.28
+    /* 白罩留着但减轻:原本 .28(米色底盖掉七成,整张图很白),
+       用户先要求拿掉、看过之后要回白罩但轻一点 —— 调到 .55,
+       图看得清楚,仍保有一层柔和的米白 */
+    opacity:.55
   }
   #dpage.reading-page > *{position:relative;z-index:1}
   /* ⚠ 账号选单开着的时候,要盖住它底下所有内容 —— 但 dp-hero 与
@@ -3503,14 +3506,15 @@
      它压在最底下(z-index:0),hero 与页脚本来就是不透明的深蓝,
      所以那两段看不到它,只有正文这一段会透出来。
 
-     ⚠ 淡到什么程度:--tp-bg-a 预设 .14。正文是深墨色写在白卡上,
-       卡片自己还有 .82 的底,所以对比度几乎不受影响。
+     ⚠ 白罩的浓淡:--tp-bg-a 原本预设 .14(图几乎被洗白)。用户先要求拿掉、
+       看过之后要回白罩但轻一点 —— 调到 .5,图看得清楚,仍保有一层柔和的米白。
+       正文写在卡片自己的半透明白底上,对比度不受影响。
      ------------------------------------------------------------ */
   #dpage.topic-page::before{
     content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
     background-image:var(--tp-bg,none);
     background-size:cover;background-position:center top;
-    opacity:calc(var(--tp-bg-on,0) * var(--tp-bg-a,.14))
+    opacity:calc(var(--tp-bg-on,0) * var(--tp-bg-a,.5))
   }
   #dpage.topic-page > *{position:relative;z-index:1}
   /* ⚠ 账号选单开着的时候,要盖住它底下所有内容 —— 但 dp-hero 与
