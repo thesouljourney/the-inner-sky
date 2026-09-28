@@ -873,7 +873,9 @@
   #dpage.sky-page .dp-body::before{
     content:"";position:absolute;top:0;bottom:0;left:calc(50% - 50vw);width:100vw;
     z-index:-1;pointer-events:none;
-    background:url(assets/atmos/sky-page-bg.webp) center top / 100% auto repeat-y,#fbf5ec
+    /* 白罩跟九大主题一致:底图 50% + 象牙底 50%(等同主题页 --tp-bg-a:.5) */
+    background:linear-gradient(rgba(251,245,236,.5),rgba(251,245,236,.5)),
+      url(assets/atmos/sky-page-bg.webp) center top / 100% auto repeat-y,#fbf5ec
   }
 
   /* ==========================================================
@@ -1626,7 +1628,7 @@
     font-size:clamp(22px,3vw,40px);letter-spacing:.02em;color:rgba(190,160,110,.45);vertical-align:-4px
   }
   /* 你的出生星盘:标题两侧金线 + ✦,下面一条两端缺角的象牙横幅 */
-  #dpage .sky-overview .ov-birth{text-align:center;margin:0 auto clamp(6px,1vw,14px);max-width:640px}
+  #dpage .sky-overview .ov-birth{text-align:center;margin:0 auto clamp(6px,1vw,14px);max-width:560px}
   #dpage .sky-overview .ov-bt{
     display:flex;align-items:center;justify-content:center;gap:14px;margin:0;
     font-family:var(--dp-serif);font-weight:700;font-size:clamp(20px,2.2vw,26px);letter-spacing:.16em;color:#23264f
@@ -1642,7 +1644,7 @@
   #dpage .sky-overview .ov-bs{display:block;margin:4px 0 8px;font-size:15px;line-height:1;color:#c49848}
   #dpage .sky-overview .ov-band{
     position:relative;display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:6px 16px;
-    padding:10px 36px;font-family:var(--dp-serif);font-size:12.5px;color:#2c2d48;
+    padding:8px 32px;font-family:var(--dp-serif);font-size:11.5px;color:#2c2d48;
     background:linear-gradient(180deg,rgba(255,253,249,.95),rgba(250,246,240,.92));
     border:1px solid rgba(201,178,140,.45);box-shadow:0 8px 24px rgba(80,60,40,.07);
     clip-path:polygon(14px 0,calc(100% - 14px) 0,100% 50%,calc(100% - 14px) 100%,14px 100%,0 50%)
@@ -1652,7 +1654,8 @@
   }
   #dpage .sky-overview .ov-band::before{left:18px}
   #dpage .sky-overview .ov-band::after{right:18px}
-  #dpage .sky-overview .ov-band .nm{font-size:clamp(15px,1.4vw,17px);font-weight:600;letter-spacing:.02em;color:#23264f}
+  /* 出生资料整条缩小一点(用户要求):字 12.5→11.5、名字 15–17→14–15、横幅 640→560 */
+  #dpage .sky-overview .ov-band .nm{font-size:clamp(14px,1.2vw,15px);font-weight:600;letter-spacing:.02em;color:#23264f}
   #dpage .sky-overview .ov-band .v{font-variant-numeric:tabular-nums;letter-spacing:.03em}
   #dpage .sky-overview .ov-band b{font-weight:400;font-size:9px;color:#c49848}
   @media(max-width:767px){
