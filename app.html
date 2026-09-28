@@ -2447,7 +2447,7 @@
   #dpage.thread-page .thread-trail > .thread-ch .ch-open,
   #dpage.thread-page .thread-trail > .thread-ch .ch-shut{
     margin-top:18px;min-height:40px;padding:0 22px;border-radius:999px;
-    border:1px solid rgba(196,152,72,.55);background:rgba(255,253,249,.55);
+    border:1px solid rgba(196,152,72,.55);background:rgba(255,253,249,.82);
     font-family:var(--dp-serif);font-size:13.5px;letter-spacing:.12em;color:#3b3f78;
     transition:background .3s ease,border-color .3s ease
   }
@@ -2462,13 +2462,50 @@
     width:auto;max-width:none;min-height:100%;margin:0;transform:none;z-index:0
   }
   #dpage.thread-page .thread-trail > .thread-ch > .ch-art::before{content:none}
-  /* 设计稿的插画都是去背素材:整张放进来、不裁切,略微溢出卡片边缘由圆角裁掉 */
+  /* ── 插画处理:同一本 celestial journal 的章节插画,不是四张贴上去的图 ──
+     · 统一调色:降饱和(约 -30%)、提亮、压对比、带一点象牙暖调 —— 往 ivory /
+       mist lavender / soft blue-grey 靠,royal blue 与金光一起收
+     · 主体 opacity .8;四张同一组 filter / mask / 雾,softness 一致
+     · 单数章贴右下、双数章贴左下,往卡片外推出一截(约 10–20% 被圆角裁掉),
+       不再是一张完整的小图
+     · 边缘一律椭圆羽化,看不到图的边界 */
+  #dpage.thread-page .thread-trail > .thread-ch{
+    --art-x:10%;--art-y:12%;--art-s:1;--art-at:68% 66%
+  }
+  #dpage.thread-page .thread-trail > .thread-ch:nth-of-type(even){--art-x:-10%;--art-at:32% 66%}
   #dpage.thread-page .thread-trail > .thread-ch > .ch-art img{
     position:absolute;inset:0;width:100%;height:100%;max-height:none;
-    object-fit:contain;object-position:center;opacity:1;
-    padding:clamp(6px,1vw,12px);box-sizing:border-box;transform:scale(1.08);
-    -webkit-mask-image:none;mask-image:none
+    object-fit:contain;object-position:right bottom;padding:0;box-sizing:border-box;
+    opacity:.8;
+    filter:saturate(.68) brightness(1.07) contrast(.9) sepia(.08);
+    transform:translate(var(--art-x),var(--art-y)) scale(var(--art-s));
+    transform-origin:right bottom;
+    -webkit-mask-image:radial-gradient(ellipse 72% 70% at var(--art-at),#000 38%,rgba(0,0,0,.55) 64%,transparent 92%);
+            mask-image:radial-gradient(ellipse 72% 70% at var(--art-at),#000 38%,rgba(0,0,0,.55) 64%,transparent 92%)
   }
+  #dpage.thread-page .thread-trail > .thread-ch:nth-of-type(even) > .ch-art img{
+    object-position:left bottom;transform-origin:left bottom
+  }
+  /* 云雾往文字那边渗一点:到了文字区只剩 10–15% 左右,读的时候看不到 */
+  #dpage.thread-page .thread-trail > .thread-ch > .ch-art::after{
+    content:"";position:absolute;z-index:-1;pointer-events:none;
+    top:18%;bottom:-6%;right:-6%;left:-70%;
+    background:
+      radial-gradient(ellipse 60% 58% at 78% 72%,rgba(206,202,232,.42),rgba(206,202,232,0) 70%),
+      radial-gradient(ellipse 46% 40% at 48% 86%,rgba(246,236,222,.5),rgba(246,236,222,0) 72%)
+  }
+  #dpage.thread-page .thread-trail > .thread-ch:nth-of-type(even) > .ch-art::after{
+    left:-6%;right:-70%;
+    background:
+      radial-gradient(ellipse 60% 58% at 22% 72%,rgba(206,202,232,.42),rgba(206,202,232,0) 70%),
+      radial-gradient(ellipse 46% 40% at 52% 86%,rgba(246,236,222,.5),rgba(246,236,222,0) 72%)
+  }
+  /* 各章细节:01 拱门缩小一点;02 土星缩 ~18%、更轻;03 山景靠右、羽化多一点;04 阶梯多裁一点 */
+  #dpage.thread-page .thread-trail > .thread-ch > .ch-art.a1{--art-s:.9}
+  #dpage.thread-page .thread-trail > .thread-ch > .ch-art.a2{--art-s:.82;--art-x:-4%}
+  #dpage.thread-page .thread-trail > .thread-ch > .ch-art.a2 img{opacity:.74}
+  #dpage.thread-page .thread-trail > .thread-ch > .ch-art.a3{--art-y:8%;--art-s:1.02}
+  #dpage.thread-page .thread-trail > .thread-ch > .ch-art.a4{--art-y:16%;--art-s:1.06}
   /* 展开读原文时卡片会变高:插画停在上半部,不跟着拉长 */
   #dpage.thread-page .thread-trail > .thread-ch.open > .ch-art img{height:min(100%,340px)}
   /* 手机:同样左右交错,插画那一侧收窄;字小一号 */
@@ -2507,8 +2544,15 @@
     #dpage.thread-page .thread-trail > .thread-ch.open:nth-of-type(even) > .ch-mark{padding:4px 0 0 18px}
     #dpage.thread-page .thread-trail > .thread-ch.open > .ch-body,
     #dpage.thread-page .thread-trail > .thread-ch.open:nth-of-type(even) > .ch-body{padding:6px 18px 20px}
-    /* 去背素材在窄栏里会显得太小:内距拿掉,再放大一点(溢出由卡片圆角裁掉) */
-    #dpage.thread-page .thread-trail > .thread-ch > .ch-art img{padding:0;transform:scale(1.3)}
+    /* 窄栏里插画会缩成角落的小图:让它比插画栏宽(约 1.7 倍),贴着下角往文字那一侧
+       伸过去 —— 伸进文字区的部分被椭圆羽化吃掉,只剩一层很淡的雾 */
+    #dpage.thread-page .thread-trail > .thread-ch > .ch-art img{
+      inset:auto 0 0 auto;width:175%;height:auto;max-height:78%;
+      object-fit:contain;object-position:right bottom
+    }
+    #dpage.thread-page .thread-trail > .thread-ch:nth-of-type(even) > .ch-art img{
+      inset:auto auto 0 0;object-position:left bottom
+    }
     #dpage.thread-page .thread-trail > .thread-ch.open > .ch-art img{transform:none}
   }
   @media(max-width:359px){
