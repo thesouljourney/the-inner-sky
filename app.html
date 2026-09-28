@@ -4058,7 +4058,7 @@
   /* —— F. 我的星空记录:最新三则后面那一格「查看更多」(往 #/records) —— */
   #dpage.compass-page .cp-sky-more{
     position:relative;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:6px;
-    min-height:120px;padding:20px 22px;border-radius:16px;text-decoration:none;overflow:hidden;
+    min-height:0;padding:14px 16px;border-radius:14px;text-decoration:none;overflow:hidden;
     background:
       radial-gradient(90% 80% at 100% 0%,rgba(186,176,232,.28),rgba(186,176,232,0) 70%),
       linear-gradient(160deg,rgba(255,252,246,.92),rgba(248,243,236,.86));
@@ -4067,20 +4067,20 @@
     transition:transform .35s cubic-bezier(.22,1,.36,1),box-shadow .35s
   }
   #dpage.compass-page .cp-sky-more::before{
-    content:"";position:absolute;inset:5px;border-radius:12px;pointer-events:none;border:1px solid rgba(201,168,105,.2)
+    content:"";position:absolute;inset:4px;border-radius:10px;pointer-events:none;border:1px solid rgba(201,168,105,.2)
   }
-  #dpage.compass-page .cp-sky-more .st{font-size:13px;color:#c49848;line-height:1}
-  #dpage.compass-page .cp-sky-more b{font-family:var(--dp-serif);font-weight:600;font-size:16px;letter-spacing:.12em;color:#23264f}
-  #dpage.compass-page .cp-sky-more .sb{font-size:11.5px;letter-spacing:.08em;color:rgba(111,106,138,.9)}
-  #dpage.compass-page .cp-sky-more .ar{position:absolute;right:20px;bottom:16px;font-size:16px;color:#c49848}
+  #dpage.compass-page .cp-sky-more .st{font-size:10px;color:#c49848;line-height:1}
+  #dpage.compass-page .cp-sky-more b{font-family:var(--dp-serif);font-weight:600;font-size:13.5px;letter-spacing:.14em;color:#23264f}
+  #dpage.compass-page .cp-sky-more .sb{font-size:10.5px;letter-spacing:.02em;white-space:nowrap;color:rgba(111,106,138,.9)}
+  #dpage.compass-page .cp-sky-more .ar{position:absolute;right:14px;bottom:12px;font-size:13px;color:#c49848}
   @media(hover:hover){#dpage.compass-page .cp-sky-more:hover{transform:translateY(-2px);box-shadow:0 0 0 4px rgba(255,251,243,.35),0 14px 32px rgba(96,86,150,.12)}}
   /* 桌机:三则 + 右边一格「查看更多」排成一列 */
   @media(min-width:768px){
-    #dpage.compass-page .cp-sky-grid:has(> .cp-sky-more){grid-template-columns:repeat(3,minmax(0,1fr)) minmax(170px,.62fr)}
-    #dpage.compass-page .cp-sky-more{align-self:stretch}
+    #dpage.compass-page .cp-sky-grid:has(> .cp-sky-more){grid-template-columns:repeat(3,minmax(0,1fr)) 146px}
+    #dpage.compass-page .cp-sky-more{align-self:end;height:112px;box-sizing:border-box}
   }
   @media(max-width:767px){
-    #dpage.compass-page .cp-sky-more{justify-self:end;width:min(62%,240px);min-height:0;padding:14px 18px}
+    #dpage.compass-page .cp-sky-more{justify-self:end;width:auto;min-width:150px;padding:12px 40px 12px 16px}
     #dpage.compass-page .cp-sky-more .ar{bottom:12px;right:16px}
   }
 
@@ -5721,6 +5721,16 @@
   }
   #dpage.records-page .rc-when{display:flex;gap:8px;align-items:center;margin:18px 0 0;font-size:12px;color:#6f6a7e}
   #dpage.records-page .rc-when i{font-style:normal}
+  #dpage.records-page .rc-moods{display:flex;flex-wrap:wrap;gap:8px}
+  #dpage.records-page .rc-mc{
+    display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:0 13px;border-radius:999px;cursor:pointer;
+    background:rgba(255,252,247,.85);border:1px solid rgba(201,178,140,.4);font-size:13px;color:#4d4b62
+  }
+  #dpage.records-page .rc-mc .mi{width:16px;height:16px;fill:none;stroke-width:1.2;stroke-linecap:round;stroke-linejoin:round}
+  #dpage.records-page .rc-mc .mi.b{stroke:#8a8fb0}
+  #dpage.records-page .rc-mc .mi.g{stroke:#b89a64}
+  #dpage.records-page .rc-mc.on{background:#23264f;border-color:#23264f;color:#fff}
+  #dpage.records-page .rc-mc.on .mi{stroke:#f3e3c0}
   #dpage.records-page .rc-ta{
     display:block;width:100%;box-sizing:border-box;padding:12px 14px;border-radius:12px;resize:vertical;
     background:#fff;border:1px solid rgba(201,178,140,.35);font-family:inherit;font-size:14px;line-height:1.8;color:#23264f
@@ -7806,7 +7816,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       writeAll(all);
       return Promise.resolve();
     },
-    /* 编辑:只改文字与当天的问题,时间 / 心情 / 种类不动 */
+    /* 编辑:改文字、心情与当天的问题,时间 / 种类不动 */
     update: function (owner, id, patch) {
       const all = readAll(), k = owner || "anon";
       let out = null;
@@ -7895,12 +7905,13 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
         if (!r.ok) throw new Error("DB " + r.status);
       });
     },
-    /* 编辑:RLS 已有 "compass update own",只送文字与问题两栏 */
+    /* 编辑:RLS 已有 "compass update own",只送文字 / 心情 / 问题 */
     update: function (owner, id, patch) {
       const p = patch || {};
       const text = String(p.text == null ? "" : p.text).trim().slice(0, MAX_TEXT);
       const body = { body: text };
       if (p.question != null) body.question = String(p.question).trim().slice(0, MAX_MOOD * 4) || null;
+      if (p.mood != null) body.mood = String(p.mood).trim().slice(0, MAX_MOOD) || null;
       if (!text && !p.mood) return Promise.reject(new Error("empty entry"));
       return nf(restUrl("?id=eq." + encodeURIComponent(id)), {
         method: "PATCH",
@@ -11065,6 +11076,7 @@ window.Guide = (function () {
   let recMenu = "";              // 开着「⋯」选单的那一则 id
   let recModal = null;           // { type: "view" | "edit" | "del", id }
   let recBound = false;          // 点空白处关选单的监听只挂一次
+  let recEditMood = "";          // 编辑浮窗里重新选的心情
   let compassAll = false;        // 「查看全部」是否展开
   let compassOpen = "";          // 目前展开的那一则记录 id
   let compassDelAsk = "";        // 正在等确认删除的那一则 id
@@ -11179,6 +11191,7 @@ window.Guide = (function () {
       [dpT("属于我的生命脉络", "The Pattern"), "#/map", "map", "both"],
       /* 只进下拉选单("menu"):Desktop 横向导航列维持原本四项,一个字都没动 */
       [dpT("我的内在指南", "Inner Compass"), "#/compass", "compass", "menu"],
+      [dpT("我的星空记录", "My Sky Record"), "#/records", "records", "menu"],
       [dpT("我的收藏", "Saved"), "#/favorites", "favorites", "both"]
     ];
   }
@@ -14324,7 +14337,16 @@ window.Guide = (function () {
         (r.text ? '<h4>' + esc0(isQ ? dpT("我的回答", "My answer") : dpT("我写下的", "What I wrote")) + '</h4><div class="rc-box">' + recBr(r.text) + '</div>' : "") +
         '<p class="rc-when"><i aria-hidden="true">◷</i>' + esc0(dpT("创建于 ", "Created ") + recStamp(r.ts)) + '</p>';
     } else if (recModal.type === "edit") {
-      inner = head(dpT("编辑记录", "Edit record")) +
+      /* 「此刻的我」可以重新选今天的天空:同一组心情与图示,单选,再点一次取消 */
+      const moodPick = isQ ? "" : '<h4>' + esc0(dpT("今天的天空怎么样？", "How is your sky today?")) + '</h4>' +
+        '<div class="rc-moods" role="group">' + window.Compass.MOODS.map(function (m, i) {
+          const label = dpT(m[0], m[1]), on = recEditMood === label, ic = CP_MOOD_ICON[i];
+          return '<button type="button" class="rc-mc' + (on ? " on" : "") + '" data-mood="' + esc0(label) +
+            '" aria-pressed="' + (on ? "true" : "false") + '">' +
+            (ic ? '<svg class="mi ' + ic[0] + '" viewBox="0 0 20 20" aria-hidden="true" focusable="false">' + ic[1] + "</svg>" : "") +
+            '<span>' + esc0(label) + '</span></button>';
+        }).join("") + '</div>';
+      inner = head(dpT("编辑记录", "Edit record")) + moodPick +
         (isQ && r.question ? '<h4>' + esc0(dpT("问题内容", "The question")) + '</h4>' +
           '<textarea class="rc-ta" id="rcQ" maxlength="160" rows="3">' + esc0(r.question) + '</textarea>' +
           '<span class="rc-cnt" data-for="rcQ">' + r.question.length + '/160</span>' : "") +
@@ -14414,6 +14436,8 @@ window.Guide = (function () {
       b.addEventListener("click", function (e) {
         e.stopPropagation();
         recModal = { type: b.getAttribute("data-act"), id: b.getAttribute("data-id") };
+        const r0 = recFind(recModal.id);
+        recEditMood = r0 ? (r0.mood || "") : "";
         recMenu = "";
         again();
       });
@@ -14428,18 +14452,28 @@ window.Guide = (function () {
       const cnt = host.querySelector('.rc-cnt[data-for="' + ta.id + '"]');
       ta.addEventListener("input", function () { if (cnt) cnt.textContent = ta.value.length + "/" + ta.getAttribute("maxlength"); });
     });
+    host.querySelectorAll(".rc-mc").forEach(function (b) {
+      b.addEventListener("click", function () {
+        const v = b.getAttribute("data-mood");
+        recEditMood = recEditMood === v ? "" : v;
+        host.querySelectorAll(".rc-mc").forEach(function (x) {
+          const on = x.getAttribute("data-mood") === recEditMood;
+          x.classList.toggle("on", on); x.setAttribute("aria-pressed", on ? "true" : "false");
+        });
+      });
+    });
     const err = function (t) { const e = document.getElementById("rcErr"); if (e) e.textContent = t; };
     const save = document.getElementById("rcSave");
     if (save) save.addEventListener("click", function () {
       const r = recFind(recModal && recModal.id);
       if (!r) return;
       const t = document.getElementById("rcT"), q = document.getElementById("rcQ");
-      const patch = { text: t ? t.value : r.text, mood: r.mood, kind: r.kind };
+      const patch = { text: t ? t.value : r.text, mood: r.kind === "answer" ? r.mood : recEditMood, kind: r.kind };
       if (q) patch.question = q.value;
-      if (!String(patch.text).trim() && !r.mood) { err(dpT("写一点再保存。", "Write a little before saving.")); return; }
+      if (!String(patch.text).trim() && !patch.mood) { err(dpT("写一点，或选一个今天的天空。", "Add a few words, or pick today’s weather.")); return; }
       save.disabled = true;
       window.Compass.store.update(compassOwner(), r.id, patch).then(function (row) {
-        const next = row || Object.assign({}, r, { text: String(patch.text).trim(), question: q ? String(patch.question).trim() : r.question });
+        const next = row || Object.assign({}, r, { text: String(patch.text).trim(), mood: patch.mood || "", question: q ? String(patch.question).trim() : r.question });
         compassEntries = (compassEntries || []).map(function (x) { return x.id === r.id ? next : x; });
         recModal = null; again();
       }).catch(function () { save.disabled = false; err(dpT("这次没有存成功，再试一次。", "That didn’t save — try once more.")); });
