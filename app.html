@@ -3196,10 +3196,11 @@
     aspect-ratio:1;background-image:url(assets/life/thread/bridge-moon2.webp)
   }
   /* 小洞察卡:放宽、半透明米白,标题两侧细线,正文靠左;左下 / 右下角各一枝花叶 */
-  #dpage.thread-page .thread-bridge .br-card{position:relative;max-width:1000px;margin:clamp(22px,3vw,36px) auto 0}
+  /* 卡片宽度收窄(原 1000px 太长):880px,两句正文一句一行,左右留给两枝花 */
+  #dpage.thread-page .thread-bridge .br-card{position:relative;max-width:880px;margin:clamp(22px,3vw,36px) auto 0}
   #dpage.thread-page .thread-bridge .insight{
     position:relative;overflow:hidden;max-width:none;margin:0;text-align:center;
-    padding:clamp(24px,3vw,34px) clamp(28px,6vw,110px) clamp(34px,4.4vw,52px) clamp(28px,6vw,110px);
+    padding:clamp(24px,3vw,34px) clamp(28px,9.4vw,124px) clamp(34px,4.4vw,52px) clamp(28px,9.4vw,124px);
     border-radius:22px;background:rgba(253,248,240,.38);border:1px solid rgba(201,168,105,.35);
     box-shadow:0 10px 34px rgba(96,86,150,.07)
   }
