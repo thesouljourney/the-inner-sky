@@ -1250,6 +1250,12 @@
   }
   #dpage .sky-house.has{background:#fffdf9}
   #dpage .sky-house .in{position:relative;z-index:2}
+  /* 素材上加一层很淡的白罩(用户:颜色太突出)。压在插画(z0)之上、文字(z2)之下;
+     卡片底本来就是米白,这层只会让插画柔下来,不影响文字 */
+  #dpage .sky-house::after{
+    content:"";position:absolute;inset:0;z-index:1;pointer-events:none;
+    background:rgba(255,253,249,.22)
+  }
   /* 素材:主体放大,左右出血由 overflow:hidden 裁掉;
      上缘长渐隐 —— 雾气自然延伸到卡片中部,文字区不受遮挡 */
   #dpage .sky-house .art{
