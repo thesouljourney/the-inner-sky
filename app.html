@@ -3486,6 +3486,15 @@
   #dpage.reading-page .dp-detail .dp-chnav .off{opacity:1}
   #dpage.reading-page .dp-detail .dp-chnav .off .lb,
   #dpage.reading-page .dp-detail .dp-chnav .off .tt{color:rgba(34,35,58,.38)}
+  /* 电脑上一行太长、又整片贴左:章名、分隔线、摘要、正文收进一条
+     置中的阅读栏(最宽 720px),标签列与下面两张卡维持整宽 */
+  @media(min-width:900px){
+    #dpage.reading-page .dp-detail .dp-h-row,
+    #dpage.reading-page .dp-detail .dp-h-row + .dp-div,
+    #dpage.reading-page .dp-detail .rd-sum,
+    #dpage.reading-page .dp-detail .dp-prose{max-width:720px;margin-left:auto;margin-right:auto}
+    #dpage.reading-page .dp-detail .dp-h-row{margin-bottom:14px}
+  }
   @media(max-width:767px){
     #dpage.reading-page .dp-detail{border-radius:22px}
     #dpage.reading-page .dp-detail::before{left:4px;top:52%;font-size:12px}
