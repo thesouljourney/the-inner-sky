@@ -1668,13 +1668,18 @@
     #dpage .sky-overview .ov-band b:last-of-type{display:none}
     #dpage .sky-overview .ov-band .v:last-child{flex-basis:100%}
     #dpage .sky-overview{margin-top:18px}
+    /* 盘面放大:突破页面左右留白,占约 96vw,置中、不裁切 */
+    #dpage.sky-page .sky-overview .isky2{
+      width:96vw;max-width:96vw;padding:0;
+      margin-left:calc(50% - 48vw);margin-right:calc(50% - 48vw)
+    }
   }
   /* 星盘一览 */
   #dpage .sky-overview{
-    position:relative;display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);
+    position:relative;display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,.9fr);
     gap:clamp(20px,3vw,48px);align-items:center;margin-top:clamp(24px,3vw,44px)
   }
-  #dpage .sky-overview .isky2{max-width:min(620px,100%);margin:0 auto}
+  #dpage .sky-overview .isky2{max-width:min(680px,100%);margin:0 auto;padding:4px}
   #dpage .sky-overview .ov-panel{position:relative}
   #dpage .sky-overview .ov-moon{
     position:absolute;right:0;top:-40px;width:clamp(90px,10vw,140px);aspect-ratio:1;pointer-events:none;
