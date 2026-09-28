@@ -441,7 +441,7 @@ function testInnerCompass() {
   const order = (nav.match(/dpT\("([^"]+)"/g) || []).map(function (x) { return x.slice(5, -1); });
   checkEq("[compass] 选单顺序正确",
     order.join(" / "),
-    "首页 / 探索主题 / 我的生命蓝图 / 我的星空 / 属于我的生命脉络 / 我的内在指南 / 我的收藏");
+    "首页 / 探索主题 / 我的生命蓝图 / 我的星空 / 属于我的生命脉络 / 我的内在指南 / 我的星空记录 / 我的收藏");
   // 既有五项的 href 与出现位置一个字都不能变
   [["我的生命蓝图", "#/reading", "both"], ["我的星空", "#/my-sky", "both"],
    ["属于我的生命脉络", "#/map", "both"], ["我的收藏", "#/favorites", "both"]].forEach(function (row) {
@@ -548,7 +548,7 @@ function testInnerCompass() {
   const lApp = (lmenu.match(/data-app-hash="(#\/[a-z-]+)"/g) || [])
     .map(function (x) { return x.slice(15, -1); });
   checkEq("[compass] 落地页选单的内页项目与顺序",
-    lApp.join(" "), "#/reading #/my-sky #/map #/compass #/favorites #/settings");
+    lApp.join(" "), "#/reading #/my-sky #/map #/compass #/records #/favorites #/settings");
   checkEq("[compass] 落地页也有我的内在指南这一项",
     /data-app-hash="#\/compass"[^>]*>我的内在指南</.test(lmenu), true);
   // 顶部横向导航列不准被动到
