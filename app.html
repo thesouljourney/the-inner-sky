@@ -2391,17 +2391,17 @@
   #dpage.thread-page .thread-trail > .thread-ch{
     position:relative;isolation:isolate;overflow:hidden;
     display:grid;align-items:start;gap:0;
-    grid-template-columns:minmax(0,1.08fr) minmax(0,.92fr);
+    grid-template-columns:minmax(0,55fr) minmax(0,45fr);
     grid-template-areas:"mk art" "bd art";
     grid-template-rows:auto 1fr;
     max-width:980px;margin:0 auto clamp(16px,2vw,24px);
-    min-height:clamp(250px,26vw,320px);
+    min-height:clamp(300px,30vw,380px);
     background:linear-gradient(180deg,rgba(255,253,250,.8),rgba(252,249,245,.68));
     border:1px solid rgba(201,178,140,.24);border-radius:22px;
     box-shadow:0 12px 34px rgba(60,50,90,.045)
   }
   #dpage.thread-page .thread-trail > .thread-ch:nth-of-type(even){
-    grid-template-columns:minmax(0,.92fr) minmax(0,1.08fr);
+    grid-template-columns:minmax(0,46fr) minmax(0,54fr);
     grid-template-areas:"art mk" "art bd"
   }
   #dpage.thread-page .thread-trail > .thread-ch:last-of-type{margin-bottom:clamp(40px,6vw,72px)}
@@ -2462,59 +2462,43 @@
     width:auto;max-width:none;min-height:100%;margin:0;transform:none;z-index:0
   }
   #dpage.thread-page .thread-trail > .thread-ch > .ch-art::before{content:none}
-  /* ── 插画处理:同一本 celestial journal 的章节插画,不是四张贴上去的图 ──
-     · 统一调色:降饱和(约 -30%)、提亮、压对比、带一点象牙暖调 —— 往 ivory /
-       mist lavender / soft blue-grey 靠,royal blue 与金光一起收
-     · 主体 opacity .8;四张同一组 filter / mask / 雾,softness 一致
-     · 单数章贴右下、双数章贴左下,往卡片外推出一截(约 10–20% 被圆角裁掉),
-       不再是一张完整的小图
-     · 边缘一律椭圆羽化,看不到图的边界 */
-  #dpage.thread-page .thread-trail > .thread-ch{
-    --art-x:10%;--art-y:12%;--art-s:1;--art-at:68% 66%
-  }
-  #dpage.thread-page .thread-trail > .thread-ch:nth-of-type(even){--art-x:-10%;--art-at:32% 66%}
+  /* ── 插画处理(依用户的 Sample):大插画 + editorial 文字,两者都是卡片的主角 ──
+     · 插画占卡片宽度约 45%,高度占满卡片;原色、不降透明度、不加滤镜
+     · 贴着卡片外缘(与下缘)出血,不是放在中间的一个孤立物件
+     · 只有靠文字那一侧做柔边 + 一层云雾:清楚的插画 → 云雾 → 卡片底 → 文字 */
   #dpage.thread-page .thread-trail > .thread-ch > .ch-art img{
-    position:absolute;inset:0;width:100%;height:100%;max-height:none;
-    object-fit:contain;object-position:right bottom;padding:0;box-sizing:border-box;
-    opacity:.8;
-    filter:saturate(.68) brightness(1.07) contrast(.9) sepia(.08);
-    transform:translate(var(--art-x),var(--art-y)) scale(var(--art-s));
-    transform-origin:right bottom;
-    -webkit-mask-image:radial-gradient(ellipse 72% 70% at var(--art-at),#000 38%,rgba(0,0,0,.55) 64%,transparent 92%);
-            mask-image:radial-gradient(ellipse 72% 70% at var(--art-at),#000 38%,rgba(0,0,0,.55) 64%,transparent 92%)
+    position:absolute;top:0;bottom:0;right:-6%;left:auto;width:112%;height:100%;max-height:none;
+    object-fit:contain;object-position:right center;padding:0;box-sizing:border-box;
+    opacity:1;filter:none;transform:none;
+    -webkit-mask-image:linear-gradient(90deg,transparent 0,rgba(0,0,0,.55) 9%,#000 24%);
+            mask-image:linear-gradient(90deg,transparent 0,rgba(0,0,0,.55) 9%,#000 24%)
   }
   #dpage.thread-page .thread-trail > .thread-ch:nth-of-type(even) > .ch-art img{
-    object-position:left bottom;transform-origin:left bottom
+    right:auto;left:-6%;object-position:left center;
+    -webkit-mask-image:linear-gradient(270deg,transparent 0,rgba(0,0,0,.55) 9%,#000 24%);
+            mask-image:linear-gradient(270deg,transparent 0,rgba(0,0,0,.55) 9%,#000 24%)
   }
-  /* 云雾往文字那边渗一点:到了文字区只剩 10–15% 左右,读的时候看不到 */
+  /* 01 拱门:靠右、往右下延伸;04 门与阶梯:靠左、贴底 */
+  #dpage.thread-page .thread-trail > .thread-ch > .ch-art.a1 img{object-position:right bottom;top:4%;bottom:-4%}
+  #dpage.thread-page .thread-trail > .thread-ch > .ch-art.a4 img{object-position:left bottom;top:4%;bottom:-4%}
+  /* 图文交界的一层云雾:只在接缝上,往文字那边很快散掉 */
   #dpage.thread-page .thread-trail > .thread-ch > .ch-art::after{
-    content:"";position:absolute;z-index:-1;pointer-events:none;
-    top:18%;bottom:-6%;right:-6%;left:-70%;
+    content:"";position:absolute;z-index:1;pointer-events:none;
+    top:0;bottom:0;left:-18%;width:36%;
     background:
-      radial-gradient(ellipse 60% 58% at 78% 72%,rgba(206,202,232,.42),rgba(206,202,232,0) 70%),
-      radial-gradient(ellipse 46% 40% at 48% 86%,rgba(246,236,222,.5),rgba(246,236,222,0) 72%)
+      radial-gradient(ellipse 60% 34% at 50% 78%,rgba(236,232,248,.55),rgba(236,232,248,0) 72%),
+      radial-gradient(ellipse 55% 30% at 46% 34%,rgba(248,243,236,.45),rgba(248,243,236,0) 72%)
   }
-  #dpage.thread-page .thread-trail > .thread-ch:nth-of-type(even) > .ch-art::after{
-    left:-6%;right:-70%;
-    background:
-      radial-gradient(ellipse 60% 58% at 22% 72%,rgba(206,202,232,.42),rgba(206,202,232,0) 70%),
-      radial-gradient(ellipse 46% 40% at 52% 86%,rgba(246,236,222,.5),rgba(246,236,222,0) 72%)
-  }
-  /* 各章细节:01 拱门缩小一点;02 土星缩 ~18%、更轻;03 山景靠右、羽化多一点;04 阶梯多裁一点 */
-  #dpage.thread-page .thread-trail > .thread-ch > .ch-art.a1{--art-s:.9}
-  #dpage.thread-page .thread-trail > .thread-ch > .ch-art.a2{--art-s:.82;--art-x:-4%}
-  #dpage.thread-page .thread-trail > .thread-ch > .ch-art.a2 img{opacity:.74}
-  #dpage.thread-page .thread-trail > .thread-ch > .ch-art.a3{--art-y:8%;--art-s:1.02}
-  #dpage.thread-page .thread-trail > .thread-ch > .ch-art.a4{--art-y:16%;--art-s:1.06}
+  #dpage.thread-page .thread-trail > .thread-ch:nth-of-type(even) > .ch-art::after{left:auto;right:-18%}
   /* 展开读原文时卡片会变高:插画停在上半部,不跟着拉长 */
   #dpage.thread-page .thread-trail > .thread-ch.open > .ch-art img{height:min(100%,340px)}
   /* 手机:同样左右交错,插画那一侧收窄;字小一号 */
   @media(max-width:767px){
     #dpage.thread-page .thread-trail > .thread-ch{
-      grid-template-columns:minmax(0,1fr) 40%;min-height:236px;border-radius:18px;
+      grid-template-columns:minmax(0,55fr) minmax(0,45fr);min-height:300px;border-radius:18px;
       margin-bottom:14px
     }
-    #dpage.thread-page .thread-trail > .thread-ch:nth-of-type(even){grid-template-columns:40% minmax(0,1fr)}
+    #dpage.thread-page .thread-trail > .thread-ch:nth-of-type(even){grid-template-columns:minmax(0,46fr) minmax(0,54fr)}
     #dpage.thread-page .thread-trail > .thread-ch > .ch-mark{padding:22px 0 0 18px;gap:10px}
     #dpage.thread-page .thread-trail > .thread-ch:nth-of-type(even) > .ch-mark{padding-left:6px}
     #dpage.thread-page .thread-trail > .thread-ch > .ch-body{padding:6px 10px 20px 18px}
@@ -2544,15 +2528,19 @@
     #dpage.thread-page .thread-trail > .thread-ch.open:nth-of-type(even) > .ch-mark{padding:4px 0 0 18px}
     #dpage.thread-page .thread-trail > .thread-ch.open > .ch-body,
     #dpage.thread-page .thread-trail > .thread-ch.open:nth-of-type(even) > .ch-body{padding:6px 18px 20px}
-    /* 窄栏里插画会缩成角落的小图:让它比插画栏宽(约 1.7 倍),贴着下角往文字那一侧
-       伸过去 —— 伸进文字区的部分被椭圆羽化吃掉,只剩一层很淡的雾 */
+    /* 手机一样是 55/45 的左右构图,插画不缩成角落装饰;
+       去背插画在窄栏里再往外出血多一点,主体才撑得满 */
+    /* 宽幅插画放进直的窄栏:整张塞进去会缩得很小,所以改成铺满这一栏
+       (高度约 88%、贴底),裁切两侧,留下置中的主体 —— 拱门 / 土星 / 月亮山谷 / 门与阶梯 */
     #dpage.thread-page .thread-trail > .thread-ch > .ch-art img{
-      inset:auto 0 0 auto;width:175%;height:auto;max-height:78%;
-      object-fit:contain;object-position:right bottom
+      top:auto;bottom:0;height:88%;width:108%;right:-4%;
+      object-fit:cover;object-position:50% 100%
     }
-    #dpage.thread-page .thread-trail > .thread-ch:nth-of-type(even) > .ch-art img{
-      inset:auto auto 0 0;object-position:left bottom
-    }
+    #dpage.thread-page .thread-trail > .thread-ch:nth-of-type(even) > .ch-art img{right:auto;left:-4%}
+    #dpage.thread-page .thread-trail > .thread-ch > .ch-art.a2 img{object-position:42% 50%;height:80%;bottom:6%}
+    #dpage.thread-page .thread-trail > .thread-ch > .ch-art.a3 img{object-position:56% 50%;height:80%;bottom:6%}
+    #dpage.thread-page .thread-trail > .thread-ch > .ch-art.a1 img,
+    #dpage.thread-page .thread-trail > .thread-ch > .ch-art.a4 img{top:auto;bottom:0;object-position:50% 100%}
     #dpage.thread-page .thread-trail > .thread-ch.open > .ch-art img{transform:none}
   }
   @media(max-width:359px){
