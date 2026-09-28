@@ -1822,7 +1822,8 @@
   }
   #dpage .sky-asp-sec .sky-asp{
     grid-template-columns:minmax(0,1fr) minmax(0,1.15fr) minmax(0,1fr) 56px;
-    padding:clamp(14px,1.6vw,18px) 0;border-bottom:0
+    /* 上下间距收窄(用户要求):14–18 → 9–11 */
+    padding:clamp(9px,1vw,11px) 0;border-bottom:0
   }
   #dpage .sky-asp-sec .sky-asp .pn{font-family:var(--dp-sans);font-size:14px;gap:14px}
   #dpage .sky-asp-sec .sky-asp .pn svg{color:#23264f}
@@ -1839,7 +1840,7 @@
   @media(max-width:900px){
     /* 手机:每条相位维持一列(行星 → 相位 — 行星  容许度),不拆成三行 */
     #dpage .sky-asp-sec .sky-asp{
-      grid-template-columns:minmax(0,1fr) auto minmax(0,1fr) auto;column-gap:8px;row-gap:0;padding:14px 0
+      grid-template-columns:minmax(0,1fr) auto minmax(0,1fr) auto;column-gap:8px;row-gap:0;padding:9px 0
     }
     #dpage .sky-asp-sec .sky-asp .pn{grid-column:auto;grid-row:auto;font-size:13px;gap:8px}
     #dpage .sky-asp-sec .sky-asp .pn.b{grid-column:auto;justify-content:flex-start}
@@ -15403,6 +15404,18 @@ window.Guide = (function () {
 
 
   // 收起 / 展开的按钮:同一个区段里长出来,不开 modal、不换页
+  /* 「星盘之间的对话」左边的标题块,在电脑上跟【还没展开】时的相位卡片垂直置中。
+     量的是收起状态的卡片高度;展开之后标题不跟着移动,只在收起时 / 视窗改变时重算。 */
+  function skyAspAlign() {
+    const sec = document.querySelector("#dpage .sky-asp-sec");
+    const hd = sec && sec.querySelector(".asp-l .sky-hd"), card = sec && sec.querySelector(".sky-asps");
+    if (!hd || !card) return;
+    const more = card.querySelector(".sky-more");
+    if (more && more.classList.contains("on")) return;
+    if (window.innerWidth <= 900) { hd.style.marginTop = ""; return; }
+    hd.style.marginTop = "0px";
+    hd.style.marginTop = Math.max(0, Math.round((card.offsetHeight - hd.offsetHeight) / 2)) + "px";
+  }
   function skyExpandBtn(boxId, openTx, closeTx) {
     return '<button type="button" class="sky-expand" aria-expanded="false" aria-controls="' + boxId + '"' +
       ' data-more="' + boxId + '" data-open="' + esc0(openTx) + '" data-less="' + esc0(closeTx) + '">' +
@@ -15747,6 +15760,12 @@ window.Guide = (function () {
       if (pv) pv.addEventListener("click", function (e) { e.stopPropagation(); show(cur - 1); });
       if (nx) nx.addEventListener("click", function (e) { e.stopPropagation(); show(cur + 1); });
     })();
+    skyAspAlign();
+    if (!window.__skyAspAlignOn) {
+      window.__skyAspAlignOn = true;
+      window.addEventListener("resize", skyAspAlign);
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(skyAspAlign);
+    }
     // 展开 / 收起:每次重画后重新绑定(dpScaffold 会换掉整块 innerHTML)
     document.querySelectorAll("#dpage .sky-expand").forEach(function (btn) {
       const box = document.getElementById(btn.getAttribute("data-more"));
@@ -15765,7 +15784,7 @@ window.Guide = (function () {
         if (tx) tx.textContent = btn.getAttribute(on ? "data-less" : "data-open");
         // 收起时要先回到当前实际高度再归零,否则从 none 直接跳 0 不会有过渡
         box.style.maxHeight = box.scrollHeight + "px";
-        if (!on) { box.getBoundingClientRect(); box.style.maxHeight = "0px"; }
+        if (!on) { box.getBoundingClientRect(); box.style.maxHeight = "0px"; setTimeout(skyAspAlign, 650); }
       });
     });
     /* 十二宫卡片:点一下,一个半透明的小格子浮在那张卡旁边,一次只开一张。
