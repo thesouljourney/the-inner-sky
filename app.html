@@ -3090,6 +3090,23 @@
     font-size:clamp(16px,1.9vw,20px);line-height:2;letter-spacing:.04em;color:#23264f
   }
   #dpage.thread-page .star-quote p + p{margin-top:clamp(12px,1.6vw,18px);font-weight:400;color:#3d4066}
+  /* 依用户的设计图重排:拿掉卡片(底色 / 边框 / 内框 / 光晕),改成开放式的一段引文 ——
+     左边一条细金线,线的左侧一颗金色星芒引导视线,文字靠左 */
+  #dpage.thread-page .star-quote{
+    max-width:860px;text-align:left;border:0;border-radius:0;background:none;box-shadow:none;
+    padding:clamp(22px,3vw,34px) 0 clamp(22px,3vw,34px) clamp(34px,4.4vw,60px);
+    margin-left:auto;margin-right:auto
+  }
+  #dpage.thread-page .star-quote::before{
+    inset:0 auto 0 clamp(14px,1.8vw,24px);width:1px;border:0;border-radius:0;
+    background:linear-gradient(180deg,rgba(196,152,72,0),rgba(196,152,72,.7) 18%,rgba(196,152,72,.7) 82%,rgba(196,152,72,0))
+  }
+  #dpage.thread-page .star-quote .st{
+    position:absolute;left:clamp(-10px,-1vw,-4px);top:30%;margin:0;
+    font-size:clamp(18px,2vw,24px);color:#c49848
+  }
+  #dpage.thread-page .star-quote p{font-weight:400;font-size:clamp(17px,2vw,22px);line-height:2;letter-spacing:.05em}
+  #dpage.thread-page .star-quote p + p{margin-top:0;color:#23264f}
 
   /* 过场:上方一枚星环、右侧一轮花月 */
   #dpage.thread-page .thread-bridge .cp{
