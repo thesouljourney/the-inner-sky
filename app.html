@@ -5609,10 +5609,28 @@
   /* ============================================================
      我的星空记录(#/records)—— 时间线,整页一张天空底图
      ============================================================ */
-  #dpage.records-page{
-    background:url(assets/atmos/records-bg.webp) center top / 100% auto no-repeat,#fbefe6
+  /* 底色 = Hero 图下缘的奶油色;Hero 与正文区两张图都往这个颜色淡出,中间没有接缝 */
+  #dpage.records-page{background:#f8eee8}
+  /* Hero 自己一张星空云海图(records-hero.webp);下缘化进底下的天空底图,正文区底图不变 */
+  #dpage.records-page .dp-hero{
+    color:var(--dp-ink);text-align:center;
+    position:relative;z-index:1;isolation:isolate;background:none;
+    padding-top:0;padding-bottom:clamp(40px,6vw,80px)
   }
-  #dpage.records-page .dp-hero{background:none;color:var(--dp-ink);text-align:center;padding-bottom:10px}
+  #dpage.records-page .dp-hero::before{
+    content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
+    background:url(assets/atmos/records-hero.webp) center 18% / cover no-repeat;
+    -webkit-mask-image:linear-gradient(180deg,#000 0,#000 62%,rgba(0,0,0,.5) 82%,transparent 100%);
+            mask-image:linear-gradient(180deg,#000 0,#000 62%,rgba(0,0,0,.5) 82%,transparent 100%)
+  }
+  /* 顶端是深蓝星空:导航改浅色字 */
+  #dpage.records-page .dp-hero .dp-brand{color:#fffaf0;text-shadow:0 1px 8px rgba(20,24,60,.45)}
+  #dpage.records-page .dp-hero .dp-navlink{color:rgba(255,251,243,.86);text-shadow:0 1px 8px rgba(20,24,60,.45)}
+  #dpage.records-page .dp-hero .dp-navlink:hover,#dpage.records-page .dp-hero .dp-navlink.on{color:#fffaf0}
+  #dpage.records-page .dp-hero .dp-back{color:#fffaf0;text-shadow:0 1px 8px rgba(20,24,60,.45)}
+  #dpage.records-page .dp-hero .dp-acct-btn{color:rgba(255,251,243,.92);border-color:rgba(255,251,243,.45);text-shadow:0 1px 8px rgba(20,24,60,.4)}
+  #dpage.records-page .dp-hero .dp-acct-btn .caret{color:rgba(255,251,243,.7)}
+  #dpage.records-page .dp-hero .dp-hero-grid{padding-top:clamp(110px,14vw,190px)}
   #dpage.records-page .dp-hero .dp-stars{display:none}
   #dpage.records-page .dp-brand{color:var(--dp-ink)}
   #dpage.records-page .dp-brand .s{color:#b8a678}
@@ -5634,7 +5652,15 @@
       linear-gradient(90deg,rgba(196,152,72,0),rgba(196,152,72,.6)) left center / calc(50% - 14px) 1px no-repeat,
       linear-gradient(90deg,rgba(196,152,72,.6),rgba(196,152,72,0)) right center / calc(50% - 14px) 1px no-repeat
   }
-  #dpage.records-page .dp-body{background:none;padding-top:8px}
+  #dpage.records-page .dp-body{background:none;padding-top:8px;position:relative;isolation:isolate}
+  /* 正文区的天空底图从 Hero 下缘底下开始,上缘同样淡进底色 —— 两张图交叠、没有一条线 */
+  #dpage.records-page .dp-body::before{
+    content:"";position:absolute;z-index:-1;pointer-events:none;
+    top:-200px;bottom:0;left:calc(50% - 50vw);width:100vw;
+    background:url(assets/atmos/records-bg.webp) center top / 100% auto no-repeat;
+    -webkit-mask-image:linear-gradient(180deg,transparent 0,rgba(0,0,0,.6) 180px,#000 340px);
+            mask-image:linear-gradient(180deg,transparent 0,rgba(0,0,0,.6) 180px,#000 340px)
+  }
   #dpage.records-page .rc-wrap{max-width:720px;margin:0 auto;padding-bottom:clamp(40px,6vw,80px)}
   #dpage.records-page .rc-chips{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin:6px 0 clamp(24px,3vw,36px)}
   #dpage.records-page .rc-chip{
@@ -5750,7 +5776,11 @@
   #dpage.records-page .rc-del h3{margin:0;font-family:var(--dp-serif);font-size:18px;color:#23264f}
   #dpage.records-page .rc-del p{margin:8px 0 0;font-size:13px;color:#6f6a7e}
   @media(max-width:767px){
-    #dpage.records-page{background-size:auto 1300px}
+    #dpage.records-page .dp-body::before{background-size:auto 1300px;top:-140px}
+  }
+  /* 桌机:正文底图往上错开一截,它自己那颗月亮不会紧贴在 Hero 的月亮下面 */
+  @media(min-width:768px){
+    #dpage.records-page .dp-body::before{background-position:center -340px}
     #dpage.records-page .rc-item{grid-template-columns:52px minmax(0,1fr);padding-left:14px}
     #dpage.records-page .rc-dt{font-size:12.5px}
     #dpage.records-page .rc-card{padding:14px 44px 14px 14px}
