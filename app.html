@@ -3241,11 +3241,16 @@
     #dpage.thread-page .thread-bridge .moon-art{width:92px;top:-6px;right:-6px;opacity:.9}
     #dpage.thread-page .thread-bridge .pattern .tx,
     #dpage.thread-page .thread-bridge .pattern .lk{font-size:15px}
-    #dpage.thread-page .thread-bridge .insight{padding:22px 20px 70px}
+    /* 手机:花枝缩小、贴紧两个下角,不再往上伸到文字旁边;
+       底部留白跟着收,卡片不会下面空一大块 */
+    #dpage.thread-page .thread-bridge .insight{padding:20px 18px 52px}
     #dpage.thread-page .thread-bridge .insight .sp-l,
-    #dpage.thread-page .thread-bridge .insight .sp-r{height:92px}
+    #dpage.thread-page .thread-bridge .insight .sp-r{height:64px;bottom:2px;-webkit-mask-image:none;mask-image:none}
+    #dpage.thread-page .thread-bridge .insight .sp-l{left:6px}
+    #dpage.thread-page .thread-bridge .insight .sp-r{right:6px}
+    #dpage.thread-page .thread-bridge .insight .lb{margin-bottom:12px}
     #dpage.thread-page .thread-bridge .insight .lb > i{flex-basis:40px}
-    #dpage.thread-page .thread-bridge .insight p{font-size:15px}
+    #dpage.thread-page .thread-bridge .insight p{font-size:14.5px;line-height:1.95}
   }
 
   /* 从这里开始:星环 + 置中大标题 + 一行引导 */
