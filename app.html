@@ -2601,6 +2601,44 @@
   }
   #dpage.thread-page .thread-bridge .said .ln{font-weight:600;color:#23264f}
 
+  /* 过场改成「引子 → 一个发现 → 一个问题 → 一个解释」:
+     安静的小字开场 → 小标题 → 两个问句放大、其余一般正文 → 小洞察卡 */
+  #dpage.thread-page .thread-bridge .lead{
+    font-size:clamp(14px,1.6vw,16px);line-height:2.05;color:rgba(58,56,82,.72)
+  }
+  #dpage.thread-page .thread-bridge .pat-hd{
+    margin:clamp(34px,4.4vw,52px) auto 0;font-family:var(--dp-serif);
+    font-size:clamp(13px,1.4vw,14.5px);letter-spacing:.14em;color:#8a7351
+  }
+  #dpage.thread-page .thread-bridge .pat-hd span{color:rgba(196,152,72,.95)}
+  #dpage.thread-page .thread-bridge .pattern{max-width:min(100%,30em);margin:clamp(18px,2.4vw,26px) auto 0}
+  #dpage.thread-page .thread-bridge .pattern p{margin:0;font-family:var(--dp-serif);font-weight:400}
+  #dpage.thread-page .thread-bridge .pattern .lk{
+    font-size:clamp(14.5px,1.6vw,16.5px);line-height:2;color:#4a4a66;margin-top:14px
+  }
+  #dpage.thread-page .thread-bridge .pattern .lk:first-child{margin-top:0}
+  #dpage.thread-page .thread-bridge .pattern .q{
+    margin-top:6px;font-weight:600;font-size:clamp(19px,2.3vw,25px);line-height:1.7;
+    letter-spacing:.03em;color:#23264f
+  }
+  #dpage.thread-page .thread-bridge .pattern .tx{
+    margin-top:clamp(20px,2.6vw,28px);font-size:clamp(14px,1.55vw,16px);line-height:2.05;color:#4a4a66
+  }
+  #dpage.thread-page .thread-bridge .insight{
+    max-width:min(100%,460px);margin:clamp(34px,4.4vw,48px) auto 0;
+    padding:clamp(22px,2.8vw,30px) clamp(22px,3.4vw,36px);border-radius:18px;text-align:center;
+    background:rgba(255,251,243,.85);border:1px solid rgba(201,168,105,.4);
+    box-shadow:0 0 34px rgba(186,176,232,.26),0 10px 26px rgba(96,86,150,.06)
+  }
+  #dpage.thread-page .thread-bridge .insight .lb{
+    display:block;margin-bottom:12px;font-family:var(--dp-serif);font-size:12.5px;letter-spacing:.2em;color:#8a7351
+  }
+  #dpage.thread-page .thread-bridge .insight .lb span{color:rgba(196,152,72,.95)}
+  #dpage.thread-page .thread-bridge .insight p{
+    margin:0;font-family:var(--dp-serif);font-size:clamp(14.5px,1.6vw,16px);line-height:2;color:#2c2d48
+  }
+  #dpage.thread-page .thread-bridge .insight p + p{margin-top:8px}
+
   /* 从这里开始:星环 + 置中大标题 + 一行引导 */
   #dpage.thread-page .thread-chapters .dp-start-hd{
     flex-direction:column;justify-content:center;gap:0;margin-bottom:8px
@@ -10975,17 +11013,37 @@ window.Guide = (function () {
       '<span class="cp" aria-hidden="true"></span>' +
       '<span class="moon-art" aria-hidden="true"></span>' +
       '<p class="lead">' +
-      dpT("有些事情已经过去了，但它们没有完全离开。",
-          "Some of it is over. Not all of it has left.") + "</p>" +
+      dpT("有些事情已经过去了，<br>但它们留下的方式，可能比你想象中更深。",
+          "Some of it is over,<br>but the way it stayed may run deeper than you think.") + "</p>" +
       (lines.length
-        ? '<div class="said">' + lines.map(function (q) {
-            return '<p class="ln">' + esc0(q) + "</p>";
-          }).join("") + "</div>"
+        ? '<p class="pat-hd"><span aria-hidden="true">✦</span> ' +
+            dpT("我们看见了一个重复出现的模式", "A pattern that keeps returning") + "</p>" +
+          dpThreadPattern(lines[0]) +
+          (lines[1] ? dpThreadInsight(lines[1]) : "")
         : "") +
-      '<p class="lead lo">' +
-      dpT("而当这些片段放在一起，有几件事开始慢慢浮现。",
-          "Put side by side, a few things begin to surface.") + "</p>" +
-      '<span class="st" aria-hidden="true">✦</span></div>';
+      "</div>";
+  }
+  /* 第一句 aha 的排版:句子里用「」括起来的问句单独成行、放大,
+     其余的字维持一般正文(不加粗)。原文一个字都不改,只是切开来排;
+     没有「」的句子就原样当一段正文。 */
+  function dpThreadPattern(text) {
+    const parts = String(text).split(/(「[^」]+」)/).filter(function (x) { return x !== ""; });
+    if (parts.length < 2) return '<div class="pattern"><p class="tx">' + esc0(text) + "</p></div>";
+    let seenQ = false;
+    return '<div class="pattern">' + parts.map(function (x) {
+      if (x.charAt(0) === "「") { seenQ = true; return '<p class="q">' + esc0(x) + "</p>"; }
+      const t = x.replace(/^[，,、——\s]+/, "").replace(/[，,、\s]+$/, "");
+      if (!t) return "";
+      // 问句之后的那一段是解释 → 一般正文;问句之前 / 之间的是引导短句
+      return '<p class="' + (seenQ && /[。！？]$/.test(t) ? "tx" : "lk") + '">' + esc0(t) + "</p>";
+    }).join("") + "</div>";
+  }
+  /* 第二句 aha 放进小洞察卡:逐句一行 */
+  function dpThreadInsight(text) {
+    const ss = String(text).split(/(?<=[。！？])/).map(function (x) { return x.trim(); }).filter(Boolean);
+    return '<div class="insight"><span class="lb"><span aria-hidden="true">✦</span> ' +
+      dpT("一个小小的洞察", "A small insight") + "</span>" +
+      ss.map(function (x) { return "<p>" + esc0(x) + "</p>"; }).join("") + "</div>";
   }
   /* —— 手机版的「这一次会经过几段」——————————————————————
      只是一个很小的编辑式记号:不吸顶、不可点、不随卷动变化,也不是进度条。
@@ -11006,8 +11064,8 @@ window.Guide = (function () {
       '<span class="tx">' + dpT("从这里开始", "Where To Start") + '</span>' +
       '<span class="ln"></span><span class="en" aria-hidden="true">✦</span></div>' +
       '<p class="dp-start-lead">' +
-      dpT("不必全部做完。挑一件现在做得到的，从那里开始就好。",
-          "None of this needs doing at once. Pick the one you can start with today.") + "</p>" +
+      dpT("不必全部改变。<br>先挑一件现在做得到的，就够了。",
+          "You don’t have to change it all.<br>One thing you can do now is enough.") + "</p>" +
       '<div class="ch-cards">' +
       steps.map(function (st, i) {
         const d = dpLead(st, pv && pv["a" + i]);
