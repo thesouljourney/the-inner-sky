@@ -779,6 +779,54 @@ const SELF_NOTES_VERSIONS: Record<string,string> = {
   "selfnotes-v1": SELF_NOTES_SYSTEM
 };
 
+/* ── 今天想问自己的一个问题(题库)· 写作指令(权威副本)──────────
+   这一份必须与 assets/compass-questions.js 的 SYSTEM 【逐字相同】,测试盯着。
+   输入是四个方向:他读过的文案 + 从星盘推导的内在运作方式(题目的根据)+ 之前被问过的问题(avoid);
+   输出是 { "questions": [...] }(约 30 题)。同一支端点、同一套核对。 */
+const QUESTIONS_SYSTEM = `你在为 The Inner Sky 的「我的内在指南」写「今天想问自己的一个问题」的题库。
+
+你会收到这个人的内在指南里四个方向的内容:
+grounds(什么让我安定)、moves(什么让我前进)、drains(什么正在消耗我)、calls(我正在被什么吸引)。
+每个方向可能有两层:
+· 他已经读过的文案(openingLine / shortInsight / coreInsight / explanation / reflectionPrompt)
+· 从他的星盘推导出来的内在运作方式(mechanism / lived / alsoTrue)——这是题目真正的根据
+有些方向可能没有内容,那就只看有的。
+你也可能收到一份 avoid 清单:那是他之前已经被问过的问题。
+
+你的工作:写 30 个问题。之后每天会拿出其中一个,让他问问自己、写几句回答。
+
+【依据】
+· 每一题都要从这个人自己的内在运作方式长出来,让他感觉「这是在问我」,而不是泛泛的自我成长题。
+· 内在运作方式只拿来理解他;题目里不提来源,不写成分析或解读。
+· 不新增任何没有依据的判断,不引入新的性格描述。
+· 四个方向都要照顾到,轮流出现,不要连续好几题都在问同一件事。
+
+【不重复】
+· 不可以跟 avoid 清单里的任何一题相同,也不可以只是换几个字的同一个问题。
+· 这 30 题彼此之间也不可以重复或太像。
+· 不要直接照抄内容里原本的反思问题(reflectionPrompt)。
+
+【每一题的样子】
+· 一题只问一件事,读完就知道可以从哪里开始想。
+· 贴近日常:可以落在最近、今天、某个时刻、某段关系、某个选择上。
+· 可以温柔地深入,但不逼问、不审判、不预设答案。
+· 以问号结尾。每题约 15–45 个中文字。
+
+【语气】
+温柔、自然、安静,像他自己在心里问自己。
+不鸡汤、不说教、不像占星报告、不像心理测验。
+
+【避免】
+「你是一个……的人」「你的星盘显示……」「你应该……」「你必须……」「一定要……」
+任何占星词(星座、宫位、行星、相位、太阳、月亮等)、玄学词(宇宙、命运、灵魂、能量)、心理诊断词。
+
+【输出】
+只输出 JSON,不要任何说明文字、不要 markdown 代码围栏。格式:
+{ "questions": [ "第一题？", "第二题？" ] }`;
+const QUESTIONS_VERSIONS: Record<string,string> = {
+  "questions-v1": QUESTIONS_SYSTEM
+};
+
 const SYSTEMS: Record<string,string> = {
   "compass-v1": COMPASS_SYSTEM,
   "compass-v1.1": COMPASS_SYSTEM_V11,
@@ -834,7 +882,7 @@ Deno.serve(async (req: Request) => {
   const apiKey = Deno.env.get("ANTHROPIC_API_KEY") ?? "";
   if (req.method === "GET")
     return json({ ok: true, function: "compass-generate (" + Object.keys(SYSTEMS)
-        .concat(Object.keys(SELF_NOTES_VERSIONS)).join(" | ") + ")",
+        .concat(Object.keys(SELF_NOTES_VERSIONS)).concat(Object.keys(QUESTIONS_VERSIONS)).join(" | ") + ")",
       anthropic_key_set: apiKey.length > 0, model: MODEL,
       note: "dev prototype · 不写资料库 · 只接受 human-mechanism contract" }, 200, cors);
 
@@ -860,9 +908,13 @@ Deno.serve(async (req: Request) => {
        呼叫端因此没有任何管道把内容偷渡进 prompt。 */
     const askedVersion = String(body.promptVersion || "");
     const isSelfNotes = askedVersion in SELF_NOTES_VERSIONS;
-    const wantVersion = isSelfNotes ? askedVersion
+    const isQuestions = askedVersion in QUESTIONS_VERSIONS;
+    /* selfNotes 与题库都是「读已经写好的文案」那一类,不是生成指南本身 */
+    const isAux = isSelfNotes || isQuestions;
+    const wantVersion = isAux ? askedVersion
       : (askedVersion in SYSTEMS ? askedVersion : DEFAULT_PROMPT_VERSION);
-    const expectedSystem = isSelfNotes ? SELF_NOTES_VERSIONS[wantVersion] : SYSTEMS[wantVersion];
+    const expectedSystem = isSelfNotes ? SELF_NOTES_VERSIONS[wantVersion]
+      : isQuestions ? QUESTIONS_VERSIONS[wantVersion] : SYSTEMS[wantVersion];
     if (system !== expectedSystem)
       return json({ error: "prompt_mismatch",
                     detail: "system 与服务端的 " + wantVersion + " 不一致" }, 400, cors);
@@ -880,9 +932,9 @@ Deno.serve(async (req: Request) => {
     if (leaks.length)
       return json({ error: "blocked_by_scrub", leaks: leaks.slice(0, 10) }, 400, cors);
 
-    /* selfNotes 的输入是已经写好的文案,没有 status —— 有内容的方向就算数 */
+    /* selfNotes / 题库的输入是已经写好的文案,没有 status —— 有内容的方向就算数 */
     const ready = Object.keys(input.directions)
-      .filter((k) => input.directions[k] && (isSelfNotes
+      .filter((k) => input.directions[k] && (isAux
         ? Object.keys(input.directions[k]).length > 0
         : input.directions[k].status === "ready"));
     if (!ready.length)
@@ -893,7 +945,7 @@ Deno.serve(async (req: Request) => {
       headers: { "Content-Type": "application/json", "x-api-key": apiKey, "anthropic-version": "2023-06-01" },
       body: JSON.stringify({
         model: MODEL,
-        max_tokens: isSelfNotes ? 800 : MAX_TOKENS,
+        max_tokens: isSelfNotes ? 800 : isQuestions ? 3000 : MAX_TOKENS,
         // system 是常数 → 用 cache_control,重复呼叫只计 10% 输入价
         system: [{ type: "text", text: system, cache_control: { type: "ephemeral" } }],
         messages: [{ role: "user", content: user }]

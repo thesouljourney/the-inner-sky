@@ -1883,7 +1883,7 @@ function testCompassVoiceV11() {
   checkEq("[v11] 服务端的 v1.1 与前端逐字相同",
     m2 ? firstDiff(m2[1], G.SYSTEM_V11) : "缺 COMPASS_SYSTEM_V11", "");
   checkEq("[v11] 服务端依 promptVersion 选版本核对",
-    /expectedSystem = isSelfNotes \? SELF_NOTES_VERSIONS\[wantVersion\] : SYSTEMS\[wantVersion\]/.test(edge) &&
+    /expectedSystem = isSelfNotes \? SELF_NOTES_VERSIONS\[wantVersion\]\s*: isQuestions \? QUESTIONS_VERSIONS\[wantVersion\] : SYSTEMS\[wantVersion\]/.test(edge) &&
     /system !== expectedSystem/.test(edge), true);
 
   // 4 · 命令句是硬性拒收,但否定形不算命令
@@ -4662,11 +4662,14 @@ function testCanonicalStorage() {
     /method: "DELETE"/.test(canBlk), false);
   /* R6:版本升级允许【恰好一次】条件更新(PATCH),不是随时可覆盖的通用写入——
      必须用 revision=eq. 当乐观并发的 WHERE 过滤,对不上就是 0 列而不是覆盖。 */
-  /* 文案本身只有一条 PATCH(版本升级,revision 条件);另一条是 selfNotes 专用,
-     body 只准带那三个栏位 —— 碰不到任何一句文案。 */
-  checkEq("[r1] canonical 只有两条 PATCH:文案升级 + selfNotes",
-    (canBlk.match(/method: "PATCH"/g) || []).length === 2 &&
+  /* 文案本身只有一条 PATCH(版本升级,revision 条件);另外两条是 selfNotes 与题库专用,
+     body 只准带各自的栏位 —— 碰不到任何一句文案。 */
+  checkEq("[r1] canonical 只有三条 PATCH:文案升级 + selfNotes + 题库",
+    (canBlk.match(/method: "PATCH"/g) || []).length === 3 &&
     /revision=eq\./.test(canBlk), true);
+  const qPatch = canBlk.slice(canBlk.indexOf("saveQuestions:"), canBlk.indexOf("replace:"));
+  checkEq("[r1] 题库的 PATCH 只送 daily_questions 四个栏位",
+    /body: JSON\.stringify\(\{ daily_questions: bank\.qs, daily_questions_start: bank\.start,\s*daily_questions_used: bank\.used \|\| \[\], daily_questions_version: bank\.v \|\| "" \}\)/.test(qPatch), true);
   const snPatch = canBlk.slice(canBlk.indexOf("saveSelfNotes:"), canBlk.indexOf("replace:"));
   checkEq("[r1] selfNotes 的 PATCH 只送 self_notes 三个栏位",
     /body: JSON\.stringify\(\{ self_notes: rec\.notes, self_notes_for: rec\.for,\s*self_notes_version: rec\.v \}\)/.test(snPatch) &&
@@ -4761,6 +4764,71 @@ function testCompassVersionUpgrade() {
   checkEq("[r6] 解析流程收尾时会检查版本(不用额外按钮)",
     /compassCanonBusy = false;\s*\n\s*if \(curRoute && curRoute\.k === "compass"\) compassRepaint\(\);\s*\n\s*compassEnsureLatestVersion\(owner\);/.test(html),
     true);
+}
+
+
+/* ---------- 今天想问自己的一个问题:题库(做法 C) ---------- */
+function testDailyQuestions() {
+  const fs = require("fs");
+  const Q = require(path.join(__dirname, "..", "assets", "compass-questions.js"));
+  const edge = fs.readFileSync(path.join(__dirname, "..", "docs", "edge", "compass-generate.ts"), "utf8");
+  const html = fs.readFileSync(path.join(__dirname, "..", "app.html"), "utf8");
+  const sql = fs.readFileSync(path.join(__dirname, "..", "docs", "sql", "compass_results_add_questions.sql"), "utf8");
+
+  const m = edge.match(/const QUESTIONS_SYSTEM = `([\s\S]*?)`;/);
+  checkEq("[dq] 服务端与前端的题库写作指令逐字相同", m ? firstDiff(m[1], Q.SYSTEM) : "缺 QUESTIONS_SYSTEM", "");
+  checkEq("[dq] 服务端认得 questions-v1", /"questions-v1": QUESTIONS_SYSTEM/.test(edge), true);
+  checkEq("[dq] 指令要求以星盘推导的内在运作方式为根据", /从他的星盘推导出来的内在运作方式/.test(Q.SYSTEM), true);
+  checkEq("[dq] 指令要求避开 avoid 里的旧题", /不可以跟 avoid 清单里的任何一题相同/.test(Q.SYSTEM), true);
+
+  /* 输入:文案 + 星盘推导的机制(只有机制文字,没有盘面)+ 旧题 */
+  const gi = { grounds: { status: "ready", selectedPattern: { key: "k", mechanism: "要先安静下来才分得清", domain: "d" },
+                          livedMechanism: "", support: [{ mechanism: "对节奏很敏感", domain: "d2" }],
+                          differentiationContext: { strengthTier: "high" } },
+               moves: { status: "insufficient_evidence" } };
+  const input = Q.buildInput({ grounds: { coreInsight: "安静之后才分辨得出", mechanism: "不该出现" } },
+                             ["我最近在等什么？", "月亮星座的问题？"], gi);
+  checkEq("[dq] 送出星盘推导的机制", input.directions.grounds.mechanism, "要先安静下来才分得清");
+  checkEq("[dq] 不送 key / domain / 分数这些内部栏位",
+    /"key"|"domain"|strengthTier|selectedPattern/.test(JSON.stringify(input)), false);
+  checkEq("[dq] 证据不足的方向不送", !!input.directions.moves, false);
+  checkEq("[dq] avoid 里带占星词的旧题先拿掉(服务端扫描会挡)", input.avoid.join("|"), "我最近在等什么？");
+  checkEq("[dq] user 讯息内嵌同一份 input", Q.buildPrompt(input).user.indexOf(JSON.stringify(input, null, 1)) >= 0, true);
+
+  /* 检查:不重复 */
+  const r = Q.check(["最近有没有一段关系让你一直在等？", "最近有没有一段关系，让你一直在等？",
+                     "今天有哪一刻让你特别想慢下来？", "今天有哪一刻让你特别想慢下来？",
+                     "你应该先让自己好好休息一下吗？", "这一题写得很长但不是问句。", "太短？"],
+                    ["最近有没有一段关系让你一直在等？"]);
+  checkEq("[dq] 与旧题相同被挡", r.rejected.some(x => x.why === "repeat_old"), true);
+  checkEq("[dq] 同一批里重复被挡", r.rejected.some(x => x.why === "repeat_batch"), true);
+  checkEq("[dq] 说教句被挡", r.rejected.some(x => x.why === "banned_phrase"), true);
+  checkEq("[dq] 不是问句被挡", r.rejected.some(x => x.why === "not_question"), true);
+  checkEq("[dq] 好的题留下", r.clean.indexOf("今天有哪一刻让你特别想慢下来？") >= 0, true);
+
+  /* 每天依序一题、同一天同一题、快用完就补 */
+  const bank = { qs: ["一？", "二？", "三？", "四？", "五？"], start: "2026-09-01", used: [] };
+  checkEq("[dq] 第一天是第一题", Q.todayOf(bank, "2026-09-01"), "一？");
+  checkEq("[dq] 第三天是第三题", Q.todayOf(bank, "2026-09-03"), "三？");
+  checkEq("[dq] 用完就没有题(不会绕回去重复)", Q.todayOf(bank, "2026-09-06"), null);
+  checkEq("[dq] 剩三题以上不补", Q.needsMore(bank, "2026-09-01"), false);
+  checkEq("[dq] 剩三题就在背景补下一批", Q.needsMore(bank, "2026-09-03"), true);
+  const next = Q.merge(bank, ["六？", "三？", "七？"], "2026-09-03");
+  checkEq("[dq] 接上新的一批:今天那题变成第一题", next.qs.join(""), "三？四？五？六？七？");
+  checkEq("[dq] 接上时已经出现过的题不会再加进来", next.qs.filter(x => x === "三？").length, 1);
+  checkEq("[dq] 今天以前的题移进 used", next.used.join(""), "一？二？");
+  checkEq("[dq] 同一天接上前后读到同一题", Q.todayOf(next, "2026-09-03"), Q.todayOf(bank, "2026-09-03"));
+
+  /* 页面:读的顺序与退回 */
+  checkEq("[dq] 页面一载入就有题库模组", /<script src="assets\/compass-questions.js"><\/script>/.test(html), true);
+  checkEq("[dq] 生成时带入星盘推导的机制", /chartDirs = G\.buildInput\(vm\)\.directions/.test(html), true);
+  checkEq("[dq] 避开题库、答过的题、原本那 4 题",
+    /Q\.allKnown\(bank\)[\s\S]{0,200}r\.question[\s\S]{0,200}reflectionPrompt/.test(html), true);
+  checkEq("[dq] 失败隔一天才再试", /CP_Q_RETRY_MS = 24 \* 3600 \* 1000/.test(html), true);
+  checkEq("[dq] 云端只在 CANONICAL 时写", /compassQCloudOff \|\| compassCanonState !== "CANONICAL"/.test(html), true);
+  checkEq("[dq] SQL 加了四个栏位",
+    /daily_questions\s+text\[\]/.test(sql) && /daily_questions_start\s+date/.test(sql) &&
+    /daily_questions_used\s+text\[\]/.test(sql) && /daily_questions_version\s+text/.test(sql), true);
 }
 
 /* ---------- selfNotes:想留给自己的几句话改成 AI 一次生成、存起来 ---------- */
@@ -4916,6 +4984,7 @@ function main() {
   testTopicPreviews();
   testCompassZhOnlyLabels();
   testSelfNotes();
+  testDailyQuestions();
   return Promise.all([genJobs, liveJobs, voiceJobs, v12Jobs, v13Jobs, v14Jobs]).then(function () { return testPlaces(); }).then(function () {
     console.log("\n对照来源:" + REF.reference);
     console.log("设置:" + JSON.stringify(REF.settings));

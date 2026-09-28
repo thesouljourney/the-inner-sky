@@ -6433,6 +6433,8 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
 <script src="assets/astro/tz-lookup.js"></script>
 <script src="assets/astro/astro-core.js"></script>
 <script src="assets/astro/places.js"></script>
+<!-- 今天想问自己的一个问题:题库的纯函式(日期换算、检查、合并)。页面一载入就要能读题,所以不走懒载入 -->
+<script src="assets/compass-questions.js"></script>
 <script>
 /* ============================================================
    云端存储层(Supabase)
@@ -8185,7 +8187,9 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
                        candidate: prev.candidate || null,
                        /* 想留给自己的几句话:跟着同一桶走。它自己记得是替哪一份
                           文案写的(for),文案换了就不会被拿来用 —— 这里原样保留。 */
-                       selfNotes: prev.selfNotes || null };
+                       selfNotes: prev.selfNotes || null,
+                       /* 今天想问自己的一个问题:题库跟着同一桶走,文案换了也保留(题目不重复) */
+                       questions: prev.questions || null };
           return writeV2(all) ? all[key] : null;
         },
         /* 另一份有效、但这一次不呈现的文案。留着,不覆盖、不合并、不呈现。 */
@@ -8313,6 +8317,54 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
             .then(function (r) {
               if (r.status === 400) return { status: "unsupported" };
               if (!r.ok) { note("selfnotes_save_failed", { httpStatus: r.status }); return { status: "error" }; }
+              return { status: "saved" };
+            }, function () { return { status: "error" }; });
+        },
+
+        /* ── 今天想问自己的一个问题:题库的储存 ─────────────────────
+           本机:同一桶的 .questions;云端:同一列的四个 daily_questions_* 栏位。
+           只存题目本身、开始日期、用过的题与版本 —— 不存 prompt、不存模型原始输出。 */
+        readQuestions: function (owner) {
+          var e = readV2()[owner || "anon"];
+          return (e && e.questions && Array.isArray(e.questions.qs)) ? e.questions : null;
+        },
+        writeQuestions: function (owner, bank) {
+          var all = readV2(), key = owner || "anon";
+          var prev = all[key] || {};
+          prev.questions = bank;
+          all[key] = prev;
+          return writeV2(all);
+        },
+        /* 云端读。栏位要跑过 docs/sql/compass_results_add_questions.sql 才会有;
+           还没跑的话 PostgREST 回 400,这里回 unsupported,呼叫端只用本机。 */
+        fetchQuestions: function (owner) {
+          if (!cfg().url || !owner) return Promise.resolve({ status: "error" });
+          return nf(urlR("?select=daily_questions,daily_questions_start,daily_questions_used,daily_questions_version" +
+                         "&user_id=eq." + encodeURIComponent(owner) + "&limit=1"), { headers: authHeaders() }, 8000)
+            .then(function (r) {
+              if (r.status === 400) return { status: "unsupported" };
+              if (!r.ok) return { status: "error", httpStatus: r.status };
+              return r.json().then(function (rows) {
+                var row = Array.isArray(rows) && rows[0];
+                if (!row || !Array.isArray(row.daily_questions) || !row.daily_questions.length) return { status: "absent" };
+                return { status: "valid", bank: { qs: row.daily_questions.slice(),
+                  start: String(row.daily_questions_start || "").slice(0, 10),
+                  used: Array.isArray(row.daily_questions_used) ? row.daily_questions_used.slice() : [],
+                  v: String(row.daily_questions_version || "") } };
+              }, function () { return { status: "error" }; });
+            }, function () { return { status: "error" }; });
+        },
+        /* 云端写。只写这四个栏位;不动 revision。 */
+        saveQuestions: function (owner, bank) {
+          if (!cfg().url || !owner) return Promise.resolve({ status: "error" });
+          return nf(urlR("?user_id=eq." + encodeURIComponent(owner)),
+              { method: "PATCH",
+                headers: Object.assign({}, authHeaders(), { "Prefer": "return=minimal" }),
+                body: JSON.stringify({ daily_questions: bank.qs, daily_questions_start: bank.start,
+                                       daily_questions_used: bank.used || [], daily_questions_version: bank.v || "" }) }, 10000)
+            .then(function (r) {
+              if (r.status === 400) return { status: "unsupported" };
+              if (!r.ok) { note("questions_save_failed", { httpStatus: r.status }); return { status: "error" }; }
               return { status: "saved" };
             }, function () { return { status: "error" }; });
         },
@@ -13336,7 +13388,130 @@ window.Guide = (function () {
      一次只有一个。优先用【已经生成、已经通过验证】的那四句 reflectionPrompt,
      依「使用者 + 日期」轮换 —— 同一天回来是同一题,换一天换一题,
      而且【重整页面不会产生任何请求】。 */
+  /* ── 题库(做法 C)────────────────────────────────────────
+     一次请 AI 根据【这个人的星盘推导出来的内在运作方式】+ 他读过的文案写约 30 题,
+     每天依序用一题;剩 3 题时在背景写下一批,避开所有用过的题。
+     读的顺序:本机 → 云端(另一台装置写过)→ AI。失败隔一天才再试,
+     这段期间退回原本那 4 题 reflectionPrompt 轮换。 */
+  var compassQBusy = false;
+  var compassQCloudOff = false;     // 云端还没跑题库迁移:这一轮只用本机
+  var compassQTried = {};           // owner|today:这一次页面生命周期已经试过
+  var compassQSynced = {};
+  var CP_Q_RETRY_MS = 24 * 3600 * 1000;
+
+  function compassQuestionBank() {
+    var Q = window.CompassQuestions, saved = compassSavedResult();
+    if (!Q || !saved || !saved.directions) return { state: "none" };
+    var owner = compassOwner(), today = Q.ymd(new Date());
+    var can = window.Compass.canonical;
+    var bank = can.readQuestions(owner);
+    if (Q.needsMore(bank, today)) compassEnsureQuestions(owner, saved);
+    var q = Q.todayOf(bank, today);
+    if (q) {
+      if (bank && !bank.synced) compassSyncQuestions(owner, bank);
+      return { state: "ready", q: q };
+    }
+    return compassQBusy ? { state: "pending" } : { state: "none" };
+  }
+  function compassSyncQuestions(owner, bank) {
+    var authed = !!(window.Cloud && window.Cloud.hasSession && window.Cloud.hasSession()) && owner && owner !== "anon";
+    if (!authed || compassQCloudOff || compassCanonState !== "CANONICAL") return;
+    var k = owner + "|" + bank.start + "|" + bank.qs.length;
+    if (compassQSynced[k]) return;
+    compassQSynced[k] = true;
+    var can = window.Compass.canonical;
+    can.saveQuestions(owner, bank).then(function (r) {
+      if (r.status === "unsupported") { compassQCloudOff = true; return; }
+      if (r.status === "saved") {
+        var cur = can.readQuestions(owner);
+        if (cur && cur.start === bank.start && cur.qs.length === bank.qs.length) { cur.synced = true; can.writeQuestions(owner, cur); }
+      }
+    });
+  }
+  function compassEnsureQuestions(owner, saved) {
+    var Q = window.CompassQuestions;
+    var today = Q.ymd(new Date()), key = owner + "|" + today;
+    if (compassQBusy || compassQTried[key]) return;
+    compassQTried[key] = true;
+    compassQBusy = true;
+    var can = window.Compass.canonical;
+    var authed = !!(window.Cloud && window.Cloud.hasSession && window.Cloud.hasSession()) && owner && owner !== "anon";
+    function done() {
+      compassQBusy = false;
+      if (curRoute && curRoute.k === "compass" && compassOwner() === owner) compassRepaint();
+    }
+    var cloudStep = (authed && !compassQCloudOff) ? can.fetchQuestions(owner) : Promise.resolve({ status: "skip" });
+    cloudStep.then(function (c) {
+      if (c.status === "unsupported") compassQCloudOff = true;
+      var bank = can.readQuestions(owner);
+      /* 另一台装置写过、而且比本机新(今天还有题)→ 用云端那一份 */
+      if (c.status === "valid" && Q.todayOf(c.bank, today) && (!Q.todayOf(bank, today) || c.bank.qs.length > bank.qs.length)) {
+        c.bank.synced = true;
+        can.writeQuestions(owner, c.bank);
+        bank = c.bank;
+      }
+      if (!Q.needsMore(bank, today)) return done();
+      if (!cpLiveSession()) return done();
+      if (bank && bank.failAt && Date.now() - (Date.parse(bank.failAt) || 0) < CP_Q_RETRY_MS) return done();
+      /* 要避开的:题库里出现过的每一题、答过的题、指南里原本那 4 题 */
+      var avoid = Q.allKnown(bank)
+        .concat((compassEntries || []).map(function (r) { return r.question; }))
+        .concat(["grounds", "moves", "drains", "calls"].map(function (k) {
+          return saved.directions[k] && saved.directions[k].reflectionPrompt; }))
+        .filter(Boolean);
+      return compassGenerateQuestions(saved, avoid).then(function (fresh) {
+        if (fresh && fresh.length) {
+          var next = Q.merge(bank, fresh, today);
+          can.writeQuestions(owner, next);
+          compassSyncQuestions(owner, next);
+        } else {
+          var keep = bank ? Object.assign({}, bank) : { qs: [], start: today, used: [], v: Q.VERSION };
+          keep.failAt = new Date().toISOString();
+          can.writeQuestions(owner, keep);
+        }
+        done();
+      });
+    }).catch(function () { done(); });
+  }
+  /* 呼叫 AI 写一批题。根据:从星盘推导的内在运作方式(compass-generation 的
+     buildInput,原始盘面已经拿掉)+ 他读过的文案。最多两次,失败回 null。 */
+  function compassGenerateQuestions(saved, avoid) {
+    var Q = window.CompassQuestions;
+    return cpProdLoad().then(function () {
+      var chartDirs = null;
+      try {
+        var G = window.CompassGeneration, PV = window.CompassPreview;
+        if (G && PV && curResult) {
+          window.Compass.setNatal(curResult);
+          var vm = PV.buildCurrent(curResult);
+          if (vm) chartDirs = G.buildInput(vm).directions;
+        }
+      } catch (e) { chartDirs = null; }
+      var input = Q.buildInput(saved.directions, avoid, chartDirs);
+      if (!Q.hasContent(input)) return null;
+      var p = Q.buildPrompt(input);
+      p._input = input;
+      var live = cpLiveTransport();
+      function attempt() {
+        return live(p).then(function (text) {
+          var qs = Q.parse(text);
+          return qs ? Q.check(qs, input.avoid).clean : [];
+        }, function () { return []; });
+      }
+      return attempt().then(function (first) {
+        if (first.length >= 20) return first;
+        return attempt().then(function (second) {
+          var best = second.length > first.length ? second : first;
+          return best.length >= 10 ? best : null;
+        });
+      });
+    }).catch(function () { return null; });
+  }
+
   function compassTodayQuestion() {
+    const bk = compassQuestionBank();
+    if (bk.state === "ready") return { source: "generated", text: bk.q };
+    if (bk.state === "pending") return { source: "pending", text: null };
     const saved = compassSavedResult();
     const order = ["grounds", "moves", "drains", "calls"];
     const pool = saved
@@ -13351,6 +13526,13 @@ window.Guide = (function () {
 
   function compassQuestionHtml(chart) {
     const q = compassTodayQuestion();
+    if (q.source === "pending" && !compassToday("answer")) {
+      return '<section class="cp-sec cp-ask">' +
+        compassSecHead("", dpT("今天想问自己的一个问题", "One Question"), "ONE QUESTION") +
+        '<div class="cp-ask-card"><div class="cp-done"><span class="st" aria-hidden="true">✦</span>' +
+        '<p class="b">' + esc0(dpT("今天的问题，正在为你慢慢准备…", "Today’s question is being prepared for you…")) +
+        '</p></div></div></section>';
+    }
     if (compassToday("answer")) {
       return '<section class="cp-sec cp-ask">' +
         compassSecHead("", dpT("今天想问自己的一个问题", "One Question"), "ONE QUESTION") +
