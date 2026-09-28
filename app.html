@@ -867,6 +867,14 @@
     --sky-pad:clamp(16px,3vw,40px);
     padding:clamp(20px,2.6vw,36px) var(--sky-pad) 80px
   }
+  /* 整页底图:用户给的星月云朵纸(原图 + 上下翻转接成一张,往下重复不会断)。
+     铺成一层满版的底,不受正文区宽度限制 */
+  #dpage.sky-page .dp-body{position:relative;isolation:isolate}
+  #dpage.sky-page .dp-body::before{
+    content:"";position:absolute;top:0;bottom:0;left:calc(50% - 50vw);width:100vw;
+    z-index:-1;pointer-events:none;
+    background:url(assets/atmos/sky-page-bg.webp) center top / 100% auto repeat-y,#fbf5ec
+  }
 
   /* ==========================================================
      云天:整页只有上下两端有天空,中段是干净的象牙底。
