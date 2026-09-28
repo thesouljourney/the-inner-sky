@@ -2245,8 +2245,9 @@
     #dpage.thread-page .dp-cta .mob-only{display:inline}
 
     /* —— 1. 旅程记号:一条极细的线 + 几个小点,告诉他这一次会经过几段 —— */
+    /* 整页设计稿没有「这一次会经过几段」这个记号 —— 先收起来(节点与文案都还在) */
     #dpage.thread-page .thread-map{
-      text-align:center;margin:0 0 clamp(38px,9vw,54px)
+      display:none;text-align:center;margin:0 0 clamp(38px,9vw,54px)
     }
     #dpage.thread-page .thread-map .tx{
       display:block;font-family:var(--dp-sans);font-weight:300;
@@ -2416,7 +2417,14 @@
   #dpage.thread-page .thread-trail > .thread-ch .ch-mark .nd{
     width:auto;height:auto;border:0;background:none;color:rgba(196,152,72,.9)
   }
-  #dpage.thread-page .thread-trail > .thread-ch .ch-mark .nd svg{width:14px;height:14px}
+  /* 章节号旁的记号换成设计稿的素材:单数章圆圈星芒、双数章紫色弯月 */
+  #dpage.thread-page .thread-trail > .thread-ch .ch-mark .nd{
+    width:22px;height:22px;background:url(assets/life/thread/mark-star.webp) center / contain no-repeat
+  }
+  #dpage.thread-page .thread-trail > .thread-ch:nth-of-type(even) .ch-mark .nd{
+    background-image:url(assets/life/thread/mark-moon.webp);width:18px
+  }
+  #dpage.thread-page .thread-trail > .thread-ch .ch-mark .nd svg{display:none}
   #dpage.thread-page .thread-trail > .thread-ch > .ch-body{
     grid-area:bd;position:relative;z-index:1;
     padding:clamp(8px,1vw,12px) clamp(14px,2vw,24px) clamp(24px,3vw,34px) clamp(22px,3.4vw,44px)
@@ -2454,21 +2462,11 @@
     width:auto;max-width:none;min-height:100%;margin:0;transform:none;z-index:0
   }
   #dpage.thread-page .thread-trail > .thread-ch > .ch-art::before{content:none}
+  /* 设计稿的插画都是去背素材:整张放进来、不裁切,略微溢出卡片边缘由圆角裁掉 */
   #dpage.thread-page .thread-trail > .thread-ch > .ch-art img{
     position:absolute;inset:0;width:100%;height:100%;max-height:none;
-    object-fit:cover;object-position:center;opacity:1;
-    -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 30%);
-            mask-image:linear-gradient(90deg,transparent 0,#000 30%)
-  }
-  #dpage.thread-page .thread-trail > .thread-ch:nth-of-type(even) > .ch-art img{
-    -webkit-mask-image:linear-gradient(270deg,transparent 0,#000 30%);
-            mask-image:linear-gradient(270deg,transparent 0,#000 30%)
-  }
-  /* 去背的两张(拱门、星球)不裁切,整张放进来 */
-  #dpage.thread-page .thread-trail > .thread-ch > .ch-art.a1 img,
-  #dpage.thread-page .thread-trail > .thread-ch > .ch-art.a2 img,
-  #dpage.thread-page .thread-trail > .thread-ch > .ch-art.a5 img{
-    object-fit:contain;padding:clamp(10px,1.6vw,20px);box-sizing:border-box;
+    object-fit:contain;object-position:center;opacity:1;
+    padding:clamp(6px,1vw,12px);box-sizing:border-box;transform:scale(1.08);
     -webkit-mask-image:none;mask-image:none
   }
   /* 展开读原文时卡片会变高:插画停在上半部,不跟着拉长 */
@@ -2509,14 +2507,124 @@
     #dpage.thread-page .thread-trail > .thread-ch.open:nth-of-type(even) > .ch-mark{padding:4px 0 0 18px}
     #dpage.thread-page .thread-trail > .thread-ch.open > .ch-body,
     #dpage.thread-page .thread-trail > .thread-ch.open:nth-of-type(even) > .ch-body{padding:6px 18px 20px}
-    /* 去背素材在窄栏里会显得太小:内距拿掉,星球再放大一点(溢出由卡片圆角裁掉) */
-    #dpage.thread-page .thread-trail > .thread-ch > .ch-art.a1 img,
-    #dpage.thread-page .thread-trail > .thread-ch > .ch-art.a2 img,
-    #dpage.thread-page .thread-trail > .thread-ch > .ch-art.a5 img{padding:4px}
-    #dpage.thread-page .thread-trail > .thread-ch > .ch-art.a2 img{transform:scale(1.35)}
+    /* 去背素材在窄栏里会显得太小:内距拿掉,再放大一点(溢出由卡片圆角裁掉) */
+    #dpage.thread-page .thread-trail > .thread-ch > .ch-art img{padding:0;transform:scale(1.3)}
+    #dpage.thread-page .thread-trail > .thread-ch.open > .ch-art img{transform:none}
   }
   @media(max-width:359px){
     #dpage.thread-page .thread-trail > .thread-ch > .ch-art{display:block}
+  }
+
+  /* ============================================================
+     整页设计稿(第二轮):开场文案 / 过场的星环与大月亮 /
+     「从这里开始」置中标题 + 一张一列的横式卡片
+     ============================================================ */
+  #dpage.thread-page .thread-intro{
+    text-align:center;margin:clamp(4px,1vw,12px) auto clamp(26px,3.4vw,40px);max-width:34em
+  }
+  #dpage.thread-page .thread-intro .a{
+    margin:0;font-family:var(--dp-serif);font-weight:600;
+    font-size:clamp(16px,1.9vw,20px);line-height:1.95;letter-spacing:.04em;color:#23264f
+  }
+  #dpage.thread-page .thread-intro .st{
+    display:block;margin:clamp(14px,1.8vw,20px) auto;font-size:13px;line-height:1;color:rgba(196,152,72,.9)
+  }
+  #dpage.thread-page .thread-intro .b{
+    margin:0;font-family:var(--dp-serif);font-size:clamp(12.5px,1.4vw,14.5px);
+    line-height:2;letter-spacing:.03em;color:#5a5a78
+  }
+  /* 开场之后的个人那一句:比开场文案小一级,仍然置中 */
+  #dpage.thread-page .thread-open{margin-bottom:clamp(30px,4vw,52px)}
+  #dpage.thread-page .thread-open .dp-quote{font-size:clamp(16px,1.9vw,21px)}
+
+  /* 过场:上方一枚星环、右侧一轮花月 */
+  #dpage.thread-page .thread-bridge .cp{
+    width:min(78%,420px);height:clamp(64px,9vw,120px);opacity:1;
+    background:url(assets/life/thread/ornament.webp) center / contain no-repeat
+  }
+  #dpage.thread-page .thread-bridge .moon-art{
+    position:absolute;z-index:-1;pointer-events:none;
+    right:0;top:clamp(40px,6vw,90px);
+    width:clamp(120px,24vw,300px);aspect-ratio:700/519;opacity:.9;
+    background:url(assets/life/thread/bridge-moon.webp) center / contain no-repeat
+  }
+  #dpage.thread-page .thread-bridge .said .ln{font-weight:600;color:#23264f}
+
+  /* 从这里开始:星环 + 置中大标题 + 一行引导 */
+  #dpage.thread-page .thread-chapters .dp-start-hd{
+    flex-direction:column;justify-content:center;gap:0;margin-bottom:8px
+  }
+  #dpage.thread-page .thread-chapters .dp-start-hd::before{
+    content:"";display:block;width:min(64%,300px);height:clamp(46px,6vw,80px);margin:0 auto 6px;
+    background:url(assets/life/thread/ornament.webp) center / contain no-repeat
+  }
+  #dpage.thread-page .thread-chapters .dp-start-hd .ic,
+  #dpage.thread-page .thread-chapters .dp-start-hd .ln,
+  #dpage.thread-page .thread-chapters .dp-start-hd .en{display:none}
+  #dpage.thread-page .thread-chapters .dp-start-hd .tx{
+    font-family:var(--dp-serif);font-weight:600;font-size:clamp(22px,2.6vw,30px);
+    letter-spacing:.12em;color:#23264f
+  }
+  #dpage.thread-page .thread-chapters .dp-start-lead{
+    text-align:center;margin:0 auto clamp(20px,2.6vw,30px)
+  }
+  /* 三件事:一张一列的横式卡,插画在右 */
+  #dpage.thread-page .thread-chapters .ch-cards{
+    grid-template-columns:minmax(0,1fr);max-width:980px;margin:0 auto;gap:clamp(12px,1.6vw,18px)
+  }
+  #dpage.thread-page .thread-chapters .ch-card{
+    position:relative;overflow:hidden;isolation:isolate;
+    padding:clamp(22px,2.8vw,32px) 44% clamp(22px,2.8vw,30px) clamp(22px,3.4vw,44px);
+    min-height:clamp(200px,22vw,260px);
+    background:linear-gradient(180deg,rgba(255,253,250,.8),rgba(252,249,245,.68));
+    border:1px solid rgba(201,178,140,.24);border-radius:22px
+  }
+  #dpage.thread-page .thread-chapters .ch-card > *{position:relative;z-index:1}
+  #dpage.thread-page .thread-chapters .ch-card .art{
+    position:absolute;z-index:0;top:0;bottom:0;right:0;width:46%;pointer-events:none;
+    background:url(assets/life/thread/step-1-desk.webp) center / contain no-repeat;
+    -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 26%);
+            mask-image:linear-gradient(90deg,transparent 0,#000 26%)
+  }
+  #dpage.thread-page .thread-chapters .ch-card .art.s2{
+    background-image:url(assets/life/thread/step-2-window.webp);background-size:cover
+  }
+  /* 第三张的素材还没到:先用书桌那张左右翻过来,之后换掉 */
+  #dpage.thread-page .thread-chapters .ch-card .art.s3{transform:scaleX(-1);
+    -webkit-mask-image:linear-gradient(270deg,transparent 0,#000 26%);
+            mask-image:linear-gradient(270deg,transparent 0,#000 26%)
+  }
+  #dpage.thread-page .thread-chapters .ch-card .no{
+    font-family:var(--dp-serif);color:#3b3f78;font-size:clamp(18px,2vw,22px)
+  }
+  #dpage.thread-page .thread-chapters .ch-card .gl{
+    display:block;width:20px;height:20px;margin:8px 0 4px;
+    background:url(assets/life/thread/mark-star.webp) center / contain no-repeat
+  }
+  #dpage.thread-page .thread-chapters .ch-card[data-ch="1"] .gl{background-image:url(assets/life/thread/mark-moon.webp)}
+  #dpage.thread-page .thread-chapters .ch-card .gl svg{display:none}
+  #dpage.thread-page .thread-chapters .ch-card .t{
+    font-family:var(--dp-serif);font-weight:600;font-size:clamp(17px,1.9vw,21px);line-height:1.5;color:#23264f
+  }
+  #dpage.thread-page .thread-chapters .ch-card .pv{font-family:var(--dp-serif);color:#4a4a66}
+  #dpage.thread-page .thread-chapters .ch-card .ch-keys{border-top:0;padding-top:0;margin-top:10px}
+  #dpage.thread-page .thread-chapters .ch-card .ch-keys li i{
+    width:6px;height:6px;border-radius:0;transform:translateY(-2px) rotate(45deg);background:rgba(196,152,72,.85)
+  }
+  #dpage.thread-page .thread-chapters .ch-card .go{
+    display:inline-flex;align-items:center;margin-top:16px;min-height:36px;padding:0 18px;
+    border:1px solid rgba(196,152,72,.55);border-radius:999px;background:rgba(255,253,249,.6);
+    font-family:var(--dp-serif);font-size:13px;letter-spacing:.1em;color:#3b3f78
+  }
+  @media(max-width:767px){
+    #dpage.thread-page .thread-intro .a{font-size:15.5px}
+    #dpage.thread-page .thread-bridge .moon-art{width:110px;right:0;top:70px;opacity:.75}
+    #dpage.thread-page .thread-chapters .ch-card{padding:20px 40% 20px 18px;min-height:210px;border-radius:18px}
+    #dpage.thread-page .thread-chapters .ch-card .art{width:48%}
+    #dpage.thread-page .thread-chapters .ch-card .t{font-size:16px}
+    #dpage.thread-page .thread-chapters .ch-card .pv{font-size:12.5px;line-height:1.8}
+    #dpage.thread-page .thread-chapters .ch-card .ch-keys li{font-size:12px;line-height:1.7}
+    #dpage.thread-page .thread-chapters .ch-card .go{font-size:12px;padding:0 14px;min-height:34px}
   }
 
   /* —— 进场:只有 12px 的位移与淡入。JS 只在允许动态时才挂 .rise —— */
@@ -10163,12 +10271,12 @@ window.Guide = (function () {
   /* 每一章右侧那张插画:大小、位置、浓度刻意不一样,页面才有节奏。
      插画一律是装饰(aria-hidden + 空 alt),不承载任何内容。 */
   const THREAD_ART = [
-    /* 顺序对应章节卡片的参考图:01 拱门、02 星球、03 山路、04 星空云海 */
-    { src: "assets/life/ch-gate.webp",    cls: "a1" },
-    { src: "assets/life/ch-planets.webp", cls: "a2" },
-    { src: "assets/life/ch-road.webp",    cls: "a4" },
-    { src: "assets/life/ch-sky.webp",     cls: "a3" },
-    { src: "assets/life/ch-clouds.webp",  cls: "a5" }
+    /* 顺序对应章节卡片的设计稿:01 拱门、02 星球、03 山谷、04 阶梯;第五章以后轮回云朵星球 */
+    { src: "assets/life/thread/ch-1-gate.webp",    cls: "a1" },
+    { src: "assets/life/thread/ch-2-planets.webp", cls: "a2" },
+    { src: "assets/life/thread/ch-3-valley.webp",  cls: "a3" },
+    { src: "assets/life/thread/ch-4-stairs.webp",  cls: "a4" },
+    { src: "assets/life/ch-clouds.webp",           cls: "a5" }
   ];
 
   /* 生命线上的记号:星芒 / 弦月 / 罗盘轮流出现。手写 inline SVG,不进图档。 */
@@ -10819,6 +10927,7 @@ window.Guide = (function () {
     const lines = (aha || []).filter(Boolean);
     return '<div class="thread-bridge"><span class="mist" aria-hidden="true"></span>' +
       '<span class="cp" aria-hidden="true"></span>' +
+      '<span class="moon-art" aria-hidden="true"></span>' +
       '<p class="lead">' +
       dpT("有些事情已经过去了，但它们没有完全离开。",
           "Some of it is over. Not all of it has left.") + "</p>" +
@@ -10869,6 +10978,7 @@ window.Guide = (function () {
           dpKeysHtml(d.keys.slice(0, 2)) +
           '<span class="go">' + dpT("沿着这条线索继续 →", "Follow this one →") + "</span>" +
           '<span class="ch-src" hidden>' + dpParaRich(st.body) + "</span>" +
+          '<span class="art s' + (i % 3 + 1) + '" aria-hidden="true"></span>' +
           "</button>" +
           '<div class="ch-slot" id="chSlot' + i + '" aria-live="polite"></div>';
       }).join("") + "</div>" +
@@ -10880,6 +10990,14 @@ window.Guide = (function () {
     let h = '<div class="thread-flow">';
     /* 开场:把 tagline 放到版心中间,底下一个很小的星记号 —— 像走进故事的第一句。
        生命线从这里之后才开始,所以它移进 .thread-trail 里(原本罩着整页)。 */
+    /* 开场两段是版面文案(所有人都一样),不是针对谁的解读;tagline 才是他自己的那一句 */
+    h += '<div class="thread-intro"><p class="a">' +
+      dpT("你一生发生的每一件事，<br>都不是单独的章节，而是织进人生的线，<br>慢慢连成现在的你。",
+          "Nothing that happened to you was a chapter on its own.<br>Each one is a thread woven through your life,<br>slowly becoming who you are now.") +
+      '</p><span class="st" aria-hidden="true">✦</span><p class="b">' +
+      dpT("在这一页里，我们不再只看过去，<br>而是看见它如何塑造了现在的你，也指向未来的可能。",
+          "On this page we don’t only look back —<br>we see how it shaped you, and where it points next.") +
+      "</p></div>";
     if (data.tagline)
       h += '<div class="thread-open"><div class="dp-quote"><span class="q">“</span>' +
         esc0(data.tagline) + "</div>" +
@@ -14387,6 +14505,9 @@ window.Guide = (function () {
           const card = cards[i];
           const src = card.querySelector(".ch-src");
           const pv = card.querySelector(".pv");
+          /* 桌机的卡片现在也是一张一列:共用阅读区搬到被点的那张卡正下方,
+             不会跑到第三张卡后面去(手机走的是各自的 slot,不受影响) */
+          if (!inline() && slots[i]) slots[i].parentNode.insertBefore(reader, slots[i].nextSibling);
           const mount = hostFor(i);
           [reader].concat(slots).forEach(clear);
           box = document.createElement("div");
