@@ -1966,6 +1966,15 @@
     #dpage .sky-group .sky-group-hd .nos{flex:1 1 100%;order:0;font-size:12.5px}
     #dpage .sky-group .sky-houses{display:flex}
     #dpage .sky-houses .sky-house{flex:0 0 76%;min-height:300px}
+    /* 滑动后卡片停在正中间(用户要求):snap 对齐改成 center,
+       左右内距改由第一 / 最后一张卡的外距提供 = (100% − 卡宽) / 2,
+       这样第一张、最后一张也能停在正中,不会贴边 */
+    #dpage .sky-core,#dpage .sky-group .sky-houses{padding-left:0;padding-right:0;scroll-padding:0}
+    #dpage .sky-core .sky-card,#dpage .sky-houses .sky-house{scroll-snap-align:center}
+    #dpage .sky-core .sky-card:first-child{margin-left:8%}
+    #dpage .sky-core .sky-card:last-child{margin-right:8%}
+    #dpage .sky-houses .sky-house:first-child{margin-left:12%}
+    #dpage .sky-houses .sky-house:last-child{margin-right:12%}
   }
   /* ============================================================
      属于我的生命脉络(#/map)—— 编辑式的「一条线」版面
