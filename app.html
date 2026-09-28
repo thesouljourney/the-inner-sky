@@ -1634,6 +1634,11 @@
      ============================================================ */
   #dpage.sky-page .dp-hero{padding-bottom:clamp(60px,9vw,150px)}
   @media(min-width:1101px){#dpage.sky-page .dp-hero-grid{grid-template-columns:minmax(0,1fr) minmax(0,1.2fr)}}
+  /* 左边 hero 文字上下置中(用户:偏上):把底部留白挪一部分到文字上方,hero 总高不变 */
+  @media(min-width:1101px){
+    #dpage.sky-page .dp-hero-grid{padding-top:clamp(0px,3vw,50px)}
+    #dpage.sky-page .dp-hero{padding-bottom:calc(clamp(60px,9vw,150px) - clamp(0px,3vw,50px))}
+  }
   #dpage.sky-page .sky-meta{
     display:inline-block;max-width:none;border:1px solid rgba(201,178,140,.5);border-top-color:rgba(201,178,140,.5);
     border-radius:999px;padding:8px 20px;background:rgba(255,252,246,.7)
@@ -1892,7 +1897,9 @@
     #dpage .sky-overview{margin-top:0}
   }
   @media(max-width:767px){
-    #dpage.sky-page .dp-hero{padding-bottom:40px}
+    /* 文字落在拱门场景(约 100vw 高)与 hero 底(160vw)之间的正中;
+       文字块约 186px,所以底部留白 = 30vw - 93px,最少 20px */
+    #dpage.sky-page .dp-hero{padding-bottom:max(20px,calc(30vw - 93px))}
     #dpage .sky-hd h2 .scr{display:block;margin:2px 0 0;font-size:22px}
     #dpage .sky-overview .ov-table{grid-template-columns:minmax(0,1fr)}
     #dpage .sky-core .sky-card{flex:0 0 84%;min-height:190px}
