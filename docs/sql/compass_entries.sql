@@ -20,7 +20,8 @@ create table if not exists public.compass_entries (
   -- 那天的问题:只有「回答了今天的问题」那一种记录才有,其余是 null。
   -- 这里【只】收问题本身,不收任何机制 / 分数 / prompt。
   question    text,
-  constraint compass_kind_chk check (kind in ('note','answer')),
+  -- note = 此刻的我 / answer = 问问自己 / diary = 小小日记
+  constraint compass_kind_chk check (kind in ('note','answer','diary')),
   constraint compass_body_len_chk check (char_length(coalesce(body,'')) <= 4000),
   constraint compass_mood_len_chk check (char_length(coalesce(mood,'')) <= 40),
   constraint compass_question_len_chk check (char_length(coalesce(question,'')) <= 160),
@@ -30,6 +31,8 @@ create table if not exists public.compass_entries (
   )
 );
 
+-- ⚠ 这张表如果【已经建过】,上面的 create table if not exists 不会补上 question 这一栏,
+--    也不会放宽 kind 的检查。已建过的表请跑 docs/sql/compass_entries_add_diary.sql。
 -- ⚠ 这张表如果【已经建过】,上面的 create table if not exists 不会补上 question 这一栏。
 --    请改跑 docs/sql/compass_entries_add_question.sql —— 那是一段只加栏位的安全迁移。
 

@@ -4036,7 +4036,7 @@ function testCompassCentredLayout() {
   const fs = require("fs");
   const html = fs.readFileSync(path.join(__dirname, "..", "app.html"), "utf8");
   checkEq("[layout] 页面按 01–05 组装",
-    /compassDirectionsHtml\(c\)\) \+\n\s*compassAnchorsHtml\(\) \+\n\s*compassNowHtml\(\) \+\n\s*compassQuestionHtml\(c\) \+\n\s*compassSkyHtml\(\)/.test(html), true);
+    /compassDirectionsHtml\(c\)\) \+\n\s*compassAnchorsHtml\(\) \+\n\s*compassNowHtml\(\) \+\n\s*compassQuestionHtml\(c\) \+\n\s*compassDiaryHtml\(\) \+\n\s*compassSkyHtml\(\)/.test(html), true);
   /* 只有 01 与 02 有编号:02 不是每个人都有,后面的段落不可以跟着改号,
      那等于把「你少了一段」写在画面上。03–05 不编号。 */
   ["01", "02"].forEach(function (n) {

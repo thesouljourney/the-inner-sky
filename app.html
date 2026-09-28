@@ -4055,6 +4055,27 @@
     content:"☾";display:block;margin-top:22px;font-size:15px;line-height:1;color:rgba(129,118,173,.44)
   }
 
+  /* —— 今天已经写下的那一页(此刻的我 / 问问自己 / 小小日记共用) —— */
+  #dpage.compass-page .cp-done{text-align:center;padding:6px 4px 2px}
+  #dpage.compass-page .cp-now .cp-done{
+    max-width:560px;margin:18px auto 0;padding:24px 20px 22px;border-radius:22px;
+    background:rgba(255,251,243,.72);border:1px solid rgba(201,168,105,.35)
+  }
+  #dpage.compass-page .cp-done .st{display:block;font-size:12px;line-height:1;color:#c49848}
+  #dpage.compass-page .cp-done .a{margin:10px 0 0;font-family:var(--dp-serif);font-weight:600;font-size:16px;letter-spacing:.08em;color:#23264f}
+  #dpage.compass-page .cp-done .b{margin:6px 0 0;font-size:13px;letter-spacing:.04em;color:#6f6a7e}
+  #dpage.compass-page .cp-done .pk{
+    margin:14px auto 0;max-width:26em;font-family:var(--dp-serif);font-size:13.5px;line-height:1.8;color:#4d4b62;
+    padding:10px 14px;border-radius:12px;background:rgba(240,234,226,.55)
+  }
+  #dpage.compass-page .cp-cont{
+    margin-top:16px;min-height:40px;padding:0 26px;border-radius:999px;cursor:pointer;
+    font-family:var(--dp-serif);font-size:14px;letter-spacing:.1em;color:#23264f;
+    background:rgba(255,253,249,.9);border:1px solid rgba(196,152,72,.55)
+  }
+  #dpage.compass-page .cp-cont:hover{border-color:rgba(196,152,72,.85)}
+  #dpage.compass-page .cp-diary .cp-ta{min-height:170px}
+
   /* —— F. 我的星空记录:最新三则后面那一格「查看更多」(往 #/records) —— */
   #dpage.compass-page .cp-sky-more{
     position:relative;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:6px;
@@ -5678,21 +5699,31 @@
   #dpage.records-page .rc-list::before{
     content:"";position:absolute;left:12px;top:-6px;bottom:6px;width:1.5px;background:linear-gradient(#3b3f78,rgba(59,63,120,.5))
   }
-  #dpage.records-page .rc-item{position:relative;display:grid;grid-template-columns:62px minmax(0,1fr);gap:4px;padding:0 0 14px 18px}
+  /* 一天 = 一个节点:线上一颗圆点 + 「09.28 · 星期一」,下面一张卡收着当天的 1–3 则 */
+  #dpage.records-page .rc-item{position:relative;padding:0 0 22px 26px}
   #dpage.records-page .rc-dot{
-    position:absolute;left:-6px;top:22px;width:11px;height:11px;border-radius:50%;background:#fbf4ec;border:1.5px solid #3b3f78
+    position:absolute;left:-6px;top:6px;width:11px;height:11px;border-radius:50%;background:#fbf4ec;border:1.5px solid #3b3f78
   }
-  #dpage.records-page .rc-dt{padding-top:18px;font-family:var(--dp-serif);font-size:14px;letter-spacing:.1em;color:#4d4b62}
+  #dpage.records-page .rc-dh{display:block;margin:0 0 10px;font-family:var(--dp-serif);color:#23264f;line-height:1.3}
+  #dpage.records-page .rc-dh b{font-weight:600;font-size:15.5px;letter-spacing:.1em}
+  #dpage.records-page .rc-dh span{font-size:13px;letter-spacing:.08em;color:#6f6a7e}
   #dpage.records-page .rc-card{
-    position:relative;padding:16px 50px 16px 18px;border-radius:16px;
-    background:rgba(255,252,247,.78);border:1px solid rgba(201,178,140,.18);
+    position:relative;padding:4px 18px;border-radius:18px;
+    background:rgba(255,252,247,.8);border:1px solid rgba(201,178,140,.2);
     box-shadow:0 8px 22px rgba(80,60,40,.05)
+  }
+  /* 卡片里的每一则:之间一条很淡的细线,不再是各自一张卡 */
+  #dpage.records-page .rc-blk{position:relative;padding:14px 44px 14px 0}
+  #dpage.records-page .rc-blk + .rc-blk{border-top:1px dashed rgba(201,178,140,.35)}
+  #dpage.records-page .rc-blk.d .rc-main{
+    font-size:13.5px;color:#3d3f5c;display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden
   }
   #dpage.records-page .rc-tag{
     display:inline-block;padding:3px 12px;border-radius:999px;font-size:12px;letter-spacing:.06em
   }
   #dpage.records-page .rc-tag.q{background:rgba(236,196,150,.28);color:#9a6a34}
   #dpage.records-page .rc-tag.n{background:rgba(186,176,232,.28);color:#5b5486}
+  #dpage.records-page .rc-tag.d{background:rgba(170,206,196,.3);color:#4f7a70}
   #dpage.records-page .rc-main{margin:10px 0 0;font-family:var(--dp-serif);font-size:14.5px;line-height:1.85;color:#23264f}
   #dpage.records-page .rc-sub{margin:6px 0 0;font-size:13px;line-height:1.8;color:#6f6a7e}
   #dpage.records-page .rc-mood{
@@ -5700,11 +5731,11 @@
     background:rgba(234,228,240,.7)
   }
   #dpage.records-page .rc-more{
-    position:absolute;right:12px;top:12px;width:34px;height:34px;border-radius:50%;cursor:pointer;
+    position:absolute;right:0;top:10px;width:32px;height:32px;border-radius:50%;cursor:pointer;
     background:rgba(255,255,255,.7);border:1px solid rgba(201,178,140,.25);font-size:16px;line-height:1;color:#23264f
   }
   #dpage.records-page .rc-menu{
-    position:absolute;right:10px;top:50px;z-index:8;min-width:170px;padding:6px;border-radius:14px;
+    position:absolute;right:0;top:46px;z-index:8;min-width:170px;padding:6px;border-radius:14px;
     background:#fffdf9;border:1px solid rgba(201,178,140,.3);box-shadow:0 14px 36px rgba(40,34,90,.16)
   }
   #dpage.records-page .rc-menu button{
@@ -5718,6 +5749,15 @@
   #dpage.records-page .rc-end span{font-size:18px;color:#3b3f78;letter-spacing:.2em}
   #dpage.records-page .rc-end p{margin:0;font-size:12.5px;line-height:1.8;letter-spacing:.06em;color:#6f6a7e}
   #dpage.records-page .rc-empty{text-align:center;margin:30px 0;font-size:14px;color:#6f6a7e}
+  #dpage.records-page .rc-today{
+    max-width:420px;margin:18px auto 0;padding:22px 20px 20px;text-align:center;border-radius:20px;
+    background:rgba(255,251,243,.85);border:1px solid rgba(201,168,105,.4);
+    box-shadow:0 0 34px rgba(186,176,232,.24),0 10px 26px rgba(96,86,150,.06)
+  }
+  #dpage.records-page .rc-today .st{display:block;font-size:12px;color:#c49848}
+  #dpage.records-page .rc-today .a{margin:8px 0 0;font-family:var(--dp-serif);font-weight:600;font-size:16px;letter-spacing:.08em;color:#23264f}
+  #dpage.records-page .rc-today .b{margin:6px 0 0;font-size:13px;color:#6f6a7e}
+  #dpage.records-page .rc-today .rc-new{margin-top:16px;width:min(100%,220px);min-height:42px;font-size:14px}
   #dpage.records-page .rc-new{
     display:flex;align-items:center;justify-content:center;width:min(100%,300px);min-height:48px;margin:18px auto 0;
     border-radius:999px;background:#23264f;color:#fff;text-decoration:none;font-family:var(--dp-serif);font-size:15px;
@@ -5781,11 +5821,11 @@
   /* 桌机:正文底图往上错开一截,它自己那颗月亮不会紧贴在 Hero 的月亮下面 */
   @media(min-width:768px){
     #dpage.records-page .dp-body::before{background-position:center -340px}
-    #dpage.records-page .rc-item{grid-template-columns:52px minmax(0,1fr);padding-left:14px}
-    #dpage.records-page .rc-dt{font-size:12.5px}
-    #dpage.records-page .rc-card{padding:14px 44px 14px 14px}
+    #dpage.records-page .rc-item{padding-left:20px}
+    #dpage.records-page .rc-card{padding:2px 14px}
     #dpage.records-page .rc-main{font-size:13.5px}
-    #dpage.records-page .rc-chip{padding:0 16px;font-size:13px}
+    #dpage.records-page .rc-chips{gap:6px;flex-wrap:nowrap}
+    #dpage.records-page .rc-chip{min-height:36px;padding:0 12px;font-size:12.5px;letter-spacing:.02em;white-space:nowrap}
   }
 </style>
 </head>
@@ -7816,7 +7856,8 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
          段落之间的换行照原样留着。 */
       mood: String(e.mood == null ? "" : e.mood).trim().slice(0, MAX_MOOD),
       text: String(e.text == null ? "" : e.text).trim().slice(0, MAX_TEXT),
-      kind: e.kind === "answer" ? "answer" : "note",
+      /* 三种记录:note = 此刻的我 / answer = 问问自己 / diary = 小小日记 */
+      kind: (e.kind === "answer" || e.kind === "diary") ? e.kind : "note",
       /* 回答的时候把当天那个问题一起留着 —— 之后回来看才知道自己在答什么。
          这里【只】收问题本身,不收任何机制 / 分数 / prompt。 */
       question: String(e.question == null ? "" : e.question).trim().slice(0, MAX_MOOD * 4)
@@ -7888,7 +7929,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       ts: r.created_at || r.ts || new Date().toISOString(),
       mood: r.mood || "",
       text: r.body || "",
-      kind: r.kind === "answer" ? "answer" : "note",
+      kind: (r.kind === "answer" || r.kind === "diary") ? r.kind : "note",
       /* 那天的问题。旧的列没有这一栏(null),读回来就是空字串 ——
          画面上的 `open && r.question` 会自己安静地跳过,不编一个问题出来。 */
       question: r.question || ""
@@ -11100,6 +11141,9 @@ window.Guide = (function () {
   /* 我的内在指南:页面的 UI 状态。跟其他模块级宣告一样必须写在首次渲染之前,
      否则冷启动直接带 #/compass 进来会踩进 TDZ。 */
   let compassMood = "";          // 此刻选中的心情
+  /* 每种记录一天一则:今天已经写过的那一种,预设显示「今天的这一页已经写下了」,
+     按「继续编辑」才展开表单(内容已经填好),存的时候是更新同一则,不新增第二则 */
+  let compassEditing = { note: false, answer: false, diary: false };
   let compassEntries = null;     // 已载入的记录;null = 还没载到
   /* 我的星空记录(#/records)页面的 UI 状态 */
   let recFilter = "all";         // all / note / answer
@@ -13237,7 +13281,31 @@ window.Guide = (function () {
     ["g", '<path d="M10 2.6c.6 4 2.3 5.8 6.4 7.4-4.1 1.6-5.8 3.4-6.4 7.4-.6-4-2.3-5.8-6.4-7.4 4.1-1.6 5.8-3.4 6.4-7.4z"/>']
   ];
 
+  /* 以使用者本地的日期为准(不是 UTC) */
+  function compassDayKey(iso) {
+    const d = new Date(iso);
+    return isNaN(d) ? "" : d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate();
+  }
+  function compassToday(kind) {
+    const k = compassDayKey(new Date().toISOString());
+    return (compassEntries || []).find(function (r) { return r.kind === kind && compassDayKey(r.ts) === k; }) || null;
+  }
+  /* 今天已经写过:一页纸的感觉,不是「已达上限」 */
+  function compassDoneHtml(kind, row) {
+    const peek = String(row.text || row.mood || "").replace(/\s+/g, " ").trim();
+    return '<div class="cp-done"><span class="st" aria-hidden="true">✦</span>' +
+      '<p class="a">' + esc0(dpT("今天的这一页已经写下了", "Today’s page is already written")) + '</p>' +
+      '<p class="b">' + esc0(dpT("想回来看看，或再补充一点吗？", "Want to look again, or add a little more?")) + '</p>' +
+      (peek ? '<p class="pk">' + esc0(peek.length > 40 ? peek.slice(0, 40) + "…" : peek) + '</p>' : "") +
+      '<button type="button" class="cp-cont" data-edit="' + kind + '">' + esc0(dpT("继续编辑", "Keep editing")) + '</button></div>';
+  }
+
   function compassNowHtml() {
+    const today = compassToday("note");
+    if (today && !compassEditing.note) {
+      return '<section class="cp-sec cp-now">' +
+        compassSecHead("", dpT("此刻的我", "Right Now"), "RIGHT NOW") + compassDoneHtml("note", today) + "</section>";
+    }
     return '<section class="cp-sec cp-now">' +
       compassSecHead("", dpT("此刻的我", "Right Now"), "RIGHT NOW") +
       '<p class="cp-q">' + esc0(dpT("今天的天空怎么样？", "How is your sky today?")) + "</p>" +
@@ -13260,9 +13328,9 @@ window.Guide = (function () {
                "What has been staying with you today?")) + "</p>" +
       '<textarea id="cpNote" class="cp-ta" rows="4" placeholder="' +
       esc0(dpT("写一点也可以，不需要把它整理得很好。",
-               "A few words is enough. It doesn’t need to be tidy.")) + '"></textarea>' +
+               "A few words is enough. It doesn’t need to be tidy.")) + '">' + (today ? esc0(today.text || "") : "") + '</textarea>' +
       '<div class="cp-act"><button type="button" class="dp-cta" id="cpSave">' +
-      esc0(dpT("写下此刻的想法", "Keep this moment")) + "</button>" +
+      esc0(today ? dpT("保存修改", "Save") : dpT("写下此刻的想法", "Keep this moment")) + "</button>" +
       '<span class="cp-hint" id="cpHint" aria-live="polite"></span></div>' +
       "</section>";
   }
@@ -13286,6 +13354,12 @@ window.Guide = (function () {
 
   function compassQuestionHtml(chart) {
     const q = compassTodayQuestion();
+    const today = compassToday("answer");
+    if (today && !compassEditing.answer) {
+      return '<section class="cp-sec cp-ask">' +
+        compassSecHead("", dpT("问问自己", "One Question"), "ONE QUESTION") +
+        '<div class="cp-ask-card">' + compassDoneHtml("answer", today) + "</div></section>";
+    }
     if (q.source !== "generated") {
       return '<section class="cp-sec cp-ask">' +
         compassSecHead("", dpT("今天想问自己的一个问题", "One Question"), "ONE QUESTION") +
@@ -13297,13 +13371,33 @@ window.Guide = (function () {
     return '<section class="cp-sec cp-ask">' +
       compassSecHead("", dpT("今天想问自己的一个问题", "One Question"), "ONE QUESTION") +
       '<div class="cp-ask-card">' +
-      '<p class="qt">' + esc0(q.text).replace(/\n/g, "<br>") + "</p>" +
+      /* 今天已经答过又按「继续编辑」:打开的是【当时那一题】,不是换一题 */
+      '<p class="qt">' + esc0(today && today.question ? today.question : q.text).replace(/\n/g, "<br>") + "</p>" +
       '<textarea id="cpAnswer" class="cp-ta" rows="3" placeholder="' +
-      esc0(dpT("写下此刻想到的……", "Write what comes to mind…")) + '"></textarea>' +
+      esc0(dpT("写下此刻想到的……", "Write what comes to mind…")) + '">' + (today ? esc0(today.text || "") : "") + '</textarea>' +
       '<div class="cp-act"><button type="button" class="dp-cta" id="cpSaveAnswer">' +
-      esc0(dpT("留下这个回答", "Keep this answer")) + "</button>" +
+      esc0(today ? dpT("保存修改", "Save") : dpT("留下这个回答", "Keep this answer")) + "</button>" +
       '<button type="button" class="cp-skip" id="cpSkip">' +
       esc0(dpT("今天先不回答 →", "Not today →")) + "</button></div></div></section>";
+  }
+
+  /* 小小日记:今天发生了什么 / 我想留下什么。一天一篇,可以比较长,随时回来补写 */
+  function compassDiaryHtml() {
+    const today = compassToday("diary");
+    const head = compassSecHead("", dpT("小小日记", "Little Diary"), "LITTLE DIARY");
+    if (today && !compassEditing.diary) {
+      return '<section class="cp-sec cp-ask cp-diary">' + head +
+        '<div class="cp-ask-card">' + compassDoneHtml("diary", today) + "</div></section>";
+    }
+    return '<section class="cp-sec cp-ask cp-diary">' + head +
+      '<div class="cp-ask-card">' +
+      '<p class="qt">' + esc0(dpT("今天发生了什么？或只是一点想留下来的东西。", "What happened today — or something you’d like to keep.")) + "</p>" +
+      '<textarea id="cpDiary" class="cp-ta" rows="6" maxlength="4000" placeholder="' +
+      esc0(dpT("不用写得很完整，像写给自己的一页纸就好。", "It doesn’t need to be complete — just a page for yourself.")) + '">' +
+      (today ? esc0(today.text || "") : "") + '</textarea>' +
+      '<div class="cp-act"><button type="button" class="dp-cta" id="cpSaveDiary">' +
+      esc0(today ? dpT("保存修改", "Save") : dpT("留下今天的日记", "Keep today’s page")) + "</button>" +
+      '<span class="cp-hint" id="cpDiaryHint" aria-live="polite"></span></div></div></section>';
   }
 
   /* 这些记录到底存在哪里 —— 如实说,不让人误会。
@@ -13344,7 +13438,9 @@ window.Guide = (function () {
           (t ? '<p class="bd">' + esc0(open ? t : preview) + "</p>" : "") +
           (r.kind === "answer"
             ? '<span class="kd">' + esc0(dpT("回答了今天的问题", "Answered today’s question")) + "</span>"
-            : "") +
+            : r.kind === "diary"
+              ? '<span class="kd">' + esc0(dpT("小小日记", "Little diary")) + "</span>"
+              : "") +
           (open && r.question
             ? '<p class="qz">' + esc0(dpT("那天的问题：", "That day’s question: ")) +
               esc0(r.question) + "</p>"
@@ -14137,6 +14233,7 @@ window.Guide = (function () {
         compassAnchorsHtml() +
         compassNowHtml() +
         compassQuestionHtml(c) +
+        compassDiaryHtml() +
         compassSkyHtml() +
         "</div>";
     }
@@ -14206,40 +14303,57 @@ window.Guide = (function () {
       });
     });
 
-    function keep(kind, taId, btnId) {
+    /* 每种记录一天一则:今天已经有这一种 → 更新同一则;没有 → 新增 */
+    function keep(kind, taId, btnId, hintId) {
       const btn = document.getElementById(btnId), ta = document.getElementById(taId);
       if (!btn || !ta) return;
+      const hint = function (t) { const h = document.getElementById(hintId || "cpHint"); if (h) h.textContent = t; };
       btn.addEventListener("click", function () {
         const text = ta.value.trim();
         const mood = kind === "note" ? compassMood : "";
         if (!text && !mood) {
-          const h = document.getElementById("cpHint");
-          if (h) h.textContent = dpT("写一点，或先选一个今天的天空。",
-                                     "Add a few words, or pick today’s weather.");
+          hint(kind === "note" ? dpT("写一点，或先选一个今天的天空。", "Add a few words, or pick today’s weather.")
+                               : dpT("写一点再留下。", "Write a little first."));
           return;
         }
         btn.disabled = true;
+        const today = compassToday(kind);
         const q = kind === "answer" ? compassTodayQuestion() : null;
-        window.Compass.store.add(compassOwner(), {
-          mood: mood, text: text, kind: kind,
-          /* 记录里保留当天的问题,之后回来看才知道自己在回答什么。
-             【不存】机制、support、分数、prompt、模型推理 —— 这是日记,不是 AI log。 */
-          question: (q && q.source === "generated") ? q.text : ""
-        })
-          .then(function (row) {
-            compassEntries = [row].concat(compassEntries || []);
-            compassMood = "";
+        const job = today
+          ? window.Compass.store.update(compassOwner(), today.id, {
+              mood: mood, text: text, kind: kind, question: today.question || "" })
+              .then(function (row) { return row || Object.assign({}, today, { mood: mood, text: text }); })
+          : window.Compass.store.add(compassOwner(), {
+              mood: mood, text: text, kind: kind,
+              /* 记录里保留当天的问题,之后回来看才知道自己在回答什么。
+                 【不存】机制、support、分数、prompt、模型推理 —— 这是日记,不是 AI log。 */
+              question: (q && q.source === "generated") ? q.text : ""
+            });
+        job.then(function (row) {
+            compassEntries = today
+              ? (compassEntries || []).map(function (x) { return x.id === today.id ? row : x; })
+              : [row].concat(compassEntries || []);
+            if (kind === "note") compassMood = "";
+            compassEditing[kind] = false;
             if (curRoute && curRoute.k === "compass") routeRefresh();
           })
           .catch(function () {
             btn.disabled = false;
-            const h = document.getElementById("cpHint");
-            if (h) h.textContent = dpT("这次没有存成功，再试一次。", "That didn’t save — try once more.");
+            hint(dpT("这次没有存成功，再试一次。", "That didn’t save — try once more."));
           });
       });
     }
     keep("note", "cpNote", "cpSave");
     keep("answer", "cpAnswer", "cpSaveAnswer");
+    keep("diary", "cpDiary", "cpSaveDiary", "cpDiaryHint");
+    host.querySelectorAll(".cp-cont").forEach(function (b) {
+      b.addEventListener("click", function () {
+        const k = b.getAttribute("data-edit");
+        compassEditing[k] = true;
+        if (k === "note") { const t = compassToday("note"); compassMood = t ? (t.mood || "") : ""; }
+        compassRepaint();
+      });
+    });
 
     const genBtn = document.getElementById("cpGenBtn");
     if (genBtn) genBtn.addEventListener("click", cpProdGenerate);
@@ -14324,8 +14438,15 @@ window.Guide = (function () {
      这里只是换一个完整的看法:按月份分组、由新到旧,
      每一则可以「查看完整记录 / 编辑记录 / 删除记录」,都是浮窗,不换页。
      ============================================================ */
+  /* 三种记录:此刻的我 = 状态 / 问问自己 = 思考 / 小小日记 = 生活 */
   function recKindLabel(r) {
-    return r.kind === "answer" ? dpT("想问自己的问题", "A question for myself") : dpT("此刻的我", "Right now");
+    return r.kind === "answer" ? dpT("问问自己", "Ask myself")
+      : r.kind === "diary" ? dpT("小小日记", "Little diary") : dpT("此刻的我", "Right now");
+  }
+  function recKindCls(r) { return r.kind === "answer" ? "q" : r.kind === "diary" ? "d" : "n"; }
+  function recWeek(d) {
+    return [["星期日", "Sun"], ["星期一", "Mon"], ["星期二", "Tue"], ["星期三", "Wed"],
+            ["星期四", "Thu"], ["星期五", "Fri"], ["星期六", "Sat"]][d.getDay()][window.I18N.isEN() ? 1 : 0];
   }
   function recStamp(iso) {
     const d = new Date(iso);
@@ -14334,17 +14455,14 @@ window.Guide = (function () {
   }
   function recBr(t) { return esc0(String(t || "")).replace(/\n/g, "<br>"); }
   function recFind(id) { return (compassEntries || []).find(function (r) { return r.id === id; }) || null; }
-  function recItemHtml(r) {
-    const d = new Date(r.ts);
-    const md = isNaN(d) ? "" : ("0" + (d.getMonth() + 1)).slice(-2) + "." + ("0" + d.getDate()).slice(-2);
+  /* 一则记录 = 同一天节点里的一个小块 */
+  function recBlockHtml(r) {
     const isQ = r.kind === "answer" && r.question;
     const main = isQ ? r.question : (r.text || "");
     const sub = isQ ? r.text : "";
     const menu = recMenu === r.id;
-    return '<li class="rc-item"><span class="rc-dot" aria-hidden="true"></span>' +
-      '<time class="rc-dt" datetime="' + esc0(r.ts) + '">' + esc0(md) + '</time>' +
-      '<article class="rc-card">' +
-      '<span class="rc-tag ' + (r.kind === "answer" ? "q" : "n") + '">' + esc0(recKindLabel(r)) + '</span>' +
+    return '<div class="rc-blk ' + recKindCls(r) + '">' +
+      '<span class="rc-tag ' + recKindCls(r) + '">' + esc0(recKindLabel(r)) + '</span>' +
       (main ? '<p class="rc-main">' + recBr(main) + '</p>' : "") +
       (sub ? '<p class="rc-sub">' + recBr(sub) + '</p>' : "") +
       (r.mood ? '<span class="rc-mood">' + esc0(r.mood) + '</span>' : "") +
@@ -14357,30 +14475,44 @@ window.Guide = (function () {
           esc0(dpT("编辑记录", "Edit")) + '</button>' +
         '<button type="button" role="menuitem" class="del" data-act="del" data-id="' + esc0(r.id) + '"><i aria-hidden="true">⌫</i>' +
           esc0(dpT("删除记录", "Delete")) + '</button></div>' : "") +
-      '</article></li>';
+      '</div>';
+  }
+  /* 一天 = 一个时间节点。当天的记录收在同一张卡里,顺序固定:状态 → 思考 → 生活 */
+  function recDayHtml(day) {
+    const d = new Date(day.items[0].ts);
+    const md = isNaN(d) ? "" : ("0" + (d.getMonth() + 1)).slice(-2) + "." + ("0" + d.getDate()).slice(-2);
+    const wk = isNaN(d) ? "" : recWeek(d);
+    const ord = { note: 0, answer: 1, diary: 2 };
+    const items = day.items.slice().sort(function (x, y) {
+      return (ord[x.kind] - ord[y.kind]) || String(y.ts).localeCompare(String(x.ts));
+    });
+    return '<li class="rc-item"><span class="rc-dot" aria-hidden="true"></span>' +
+      '<time class="rc-dh" datetime="' + esc0(day.items[0].ts) + '"><b>' + esc0(md) + '</b>' +
+      (wk ? '<span> · ' + esc0(wk) + '</span>' : "") + '</time>' +
+      '<article class="rc-card">' + items.map(recBlockHtml).join("") + '</article></li>';
   }
   function recModalHtml() {
     if (!recModal) return "";
     const r = recFind(recModal.id);
     if (!r) return "";
-    const isQ = r.kind === "answer";
+    const isQ = r.kind === "answer", isD = r.kind === "diary";
     const head = function (t) {
       return '<div class="rc-mh"><h3>' + esc0(t) + '</h3>' +
         '<button type="button" class="rc-x" data-close="1" aria-label="' + esc0(dpT("关闭", "Close")) + '">×</button></div>' +
         '<span class="rc-ms" aria-hidden="true">✦</span>' +
         '<div class="rc-mmeta"><span>' + esc0(compassDate(r.ts)) + '</span>' +
-        '<span class="rc-tag ' + (isQ ? "q" : "n") + '">' + esc0(recKindLabel(r)) + '</span></div>';
+        '<span class="rc-tag ' + recKindCls(r) + '">' + esc0(recKindLabel(r)) + '</span></div>';
     };
     let inner = "";
     if (recModal.type === "view") {
       inner = head(dpT("查看完整记录", "Full record")) +
         (isQ && r.question ? '<h4>' + esc0(dpT("问题内容", "The question")) + '</h4><div class="rc-box">' + recBr(r.question) + '</div>' : "") +
         (r.mood ? '<h4>' + esc0(dpT("那天的天空", "That day’s weather")) + '</h4><div class="rc-box">' + esc0(r.mood) + '</div>' : "") +
-        (r.text ? '<h4>' + esc0(isQ ? dpT("我的回答", "My answer") : dpT("我写下的", "What I wrote")) + '</h4><div class="rc-box">' + recBr(r.text) + '</div>' : "") +
+        (r.text ? '<h4>' + esc0(isQ ? dpT("我的回答", "My answer") : isD ? dpT("今天的日记", "Today’s page") : dpT("我写下的", "What I wrote")) + '</h4><div class="rc-box">' + recBr(r.text) + '</div>' : "") +
         '<p class="rc-when"><i aria-hidden="true">◷</i>' + esc0(dpT("创建于 ", "Created ") + recStamp(r.ts)) + '</p>';
     } else if (recModal.type === "edit") {
       /* 「此刻的我」可以重新选今天的天空:同一组心情与图示,单选,再点一次取消 */
-      const moodPick = isQ ? "" : '<h4>' + esc0(dpT("今天的天空怎么样？", "How is your sky today?")) + '</h4>' +
+      const moodPick = (isQ || isD) ? "" : '<h4>' + esc0(dpT("今天的天空怎么样？", "How is your sky today?")) + '</h4>' +
         '<div class="rc-moods" role="group">' + window.Compass.MOODS.map(function (m, i) {
           const label = dpT(m[0], m[1]), on = recEditMood === label, ic = CP_MOOD_ICON[i];
           return '<button type="button" class="rc-mc' + (on ? " on" : "") + '" data-mood="' + esc0(label) +
@@ -14392,8 +14524,8 @@ window.Guide = (function () {
         (isQ && r.question ? '<h4>' + esc0(dpT("问题内容", "The question")) + '</h4>' +
           '<textarea class="rc-ta" id="rcQ" maxlength="160" rows="3">' + esc0(r.question) + '</textarea>' +
           '<span class="rc-cnt" data-for="rcQ">' + r.question.length + '/160</span>' : "") +
-        '<h4>' + esc0(isQ ? dpT("我的回答", "My answer") : dpT("我写下的", "What I wrote")) + '</h4>' +
-        '<textarea class="rc-ta" id="rcT" maxlength="4000" rows="4">' + esc0(r.text || "") + '</textarea>' +
+        '<h4>' + esc0(isQ ? dpT("我的回答", "My answer") : isD ? dpT("今天的日记", "Today’s page") : dpT("我写下的", "What I wrote")) + '</h4>' +
+        '<textarea class="rc-ta" id="rcT" maxlength="4000" rows="' + (isD ? 8 : 4) + '">' + esc0(r.text || "") + '</textarea>' +
         '<span class="rc-cnt" data-for="rcT">' + String(r.text || "").length + '/4000</span>' +
         '<p class="rc-err" id="rcErr" aria-live="polite"></p>' +
         '<div class="rc-btns"><button type="button" class="rc-b" data-close="1">' + esc0(dpT("取消", "Cancel")) + '</button>' +
@@ -14418,30 +14550,42 @@ window.Guide = (function () {
       body = '<div class="rc-wrap"><p class="rc-empty">' + esc0(dpT("正在读取…", "Loading…")) + '</p></div>';
     } else {
       const list = rows.filter(function (r) { return recFilter === "all" || r.kind === recFilter; });
+      /* 月份 → 日期(一天一个节点)→ 当天的 1–3 则记录 */
       const groups = [];
       list.forEach(function (r) {
         const d = new Date(r.ts);
         const key = isNaN(d) ? "—" : d.getFullYear() + "  ·  " + ("0" + (d.getMonth() + 1)).slice(-2);
-        const g = groups[groups.length - 1];
-        if (g && g.key === key) g.items.push(r); else groups.push({ key: key, items: [r] });
+        let g = groups[groups.length - 1];
+        if (!g || g.key !== key) { g = { key: key, days: [] }; groups.push(g); }
+        const dk = compassDayKey(r.ts);
+        let day = g.days[g.days.length - 1];
+        if (!day || day.key !== dk) { day = { key: dk, items: [] }; g.days.push(day); }
+        day.items.push(r);
       });
+      const wroteToday = ["note", "answer", "diary"].some(function (k) { return !!compassToday(k); });
       const chip = function (k, t) {
         return '<button type="button" class="rc-chip' + (recFilter === k ? " on" : "") + '" data-f="' + k + '" aria-pressed="' +
           (recFilter === k ? "true" : "false") + '">' + esc0(t) + '</button>';
       };
       body = '<div class="rc-wrap">' +
         '<div class="rc-chips" role="group">' + chip("all", dpT("全部", "All")) + chip("note", dpT("此刻的我", "Right now")) +
-        chip("answer", dpT("想问自己的问题", "Questions")) + '</div>' +
+        chip("answer", dpT("问问自己", "Ask myself")) + chip("diary", dpT("小小日记", "Diary")) + '</div>' +
         (groups.length
           ? groups.map(function (g) {
               return '<section class="rc-month"><h2 class="rc-mt"><span class="mk" aria-hidden="true">✦</span>' + esc0(g.key) + '</h2>' +
-                '<ol class="rc-list">' + g.items.map(recItemHtml).join("") + '</ol></section>';
+                '<ol class="rc-list">' + g.days.map(recDayHtml).join("") + '</ol></section>';
             }).join("") +
             '<div class="rc-end"><span aria-hidden="true">⋯</span><p>' + esc0(dpT("已经看到最早的记录了", "That’s the earliest one")) +
               '<br>' + esc0(dpT("继续写下新的吧 ✦", "Keep writing new ones ✦")) + '</p></div>'
           : '<p class="rc-empty">' + esc0(rows.length ? dpT("这个分类还没有记录。", "Nothing here yet.")
                                                    : dpT("这里会慢慢留下属于你的天空。", "Your own sky will gather here, slowly.")) + '</p>') +
-        '<a class="rc-new" id="rcNew" href="#/compass">＋ ' + esc0(dpT("写下新的记录", "Write a new one")) + '</a>' +
+        (wroteToday
+          /* 今天已经写过:一页纸的感觉,不是「已达上限」 */
+          ? '<div class="rc-today"><span class="st" aria-hidden="true">✦</span>' +
+            '<p class="a">' + esc0(dpT("今天的这一页已经写下了", "Today’s page is already written")) + '</p>' +
+            '<p class="b">' + esc0(dpT("想回来看看，或再补充一点吗？", "Want to look again, or add a little more?")) + '</p>' +
+            '<a class="rc-new" id="rcNew" href="#/compass">' + esc0(dpT("继续编辑", "Keep editing")) + '</a></div>'
+          : '<a class="rc-new" id="rcNew" href="#/compass">＋ ' + esc0(dpT("写下新的记录", "Write a new one")) + '</a>') +
         '</div>' + recModalHtml();
     }
     dpScaffold({
