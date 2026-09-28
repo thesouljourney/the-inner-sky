@@ -1979,6 +1979,8 @@
        方形的淡底(像一张大卡片)。投影收小到容器留白装得下 */
     #dpage .sky-core .sky-card{box-shadow:0 3px 8px rgba(9,18,46,.05)}
     #dpage .sky-houses .sky-house{box-shadow:0 3px 8px rgba(80,60,40,.05)}
+    /* 分页签与卡片之间收窄(用户要求):分组大卡片已经透明,不需要它的上下内距 */
+    #dpage .sky-gwrap > .sky-group{padding-top:2px;padding-bottom:10px}
   }
   /* 十二个生命领域:卡片后面那张分组大卡片完全透明(用户要求不透明度降到最低),
      只留卡片本身;底色、边框、投影、轨道装饰一起拿掉 */
@@ -15812,6 +15814,33 @@ window.Guide = (function () {
       const pv = document.querySelector("#dpage .sky-garr.prev"), nx = document.querySelector("#dpage .sky-garr.next");
       if (pv) pv.addEventListener("click", function (e) { e.stopPropagation(); show(cur - 1); });
       if (nx) nx.addEventListener("click", function (e) { e.stopPropagation(); show(cur + 1); });
+      /* 手机:滑到这一组最后一张之后再往左滑,直接进下一个领域(从第一张);
+         在第一张再往右滑,回到上一个领域的最后一张。只在卡片列能横向滑动时生效 */
+      groups.forEach(function (g, k) {
+        const row = g.querySelector(".sky-houses");
+        if (!row) return;
+        let x0 = null, y0 = 0, atEnd = false, atStart = false;
+        row.addEventListener("touchstart", function (e) {
+          if (row.scrollWidth <= row.clientWidth + 2) { x0 = null; return; }
+          const t = e.touches[0];
+          x0 = t.clientX; y0 = t.clientY;
+          atEnd = row.scrollLeft + row.clientWidth >= row.scrollWidth - 4;
+          atStart = row.scrollLeft <= 4;
+        }, { passive: true });
+        row.addEventListener("touchend", function (e) {
+          if (x0 === null) return;
+          const t = e.changedTouches[0], dx = t.clientX - x0, dy = t.clientY - y0;
+          x0 = null;
+          if (Math.abs(dx) < 40 || Math.abs(dx) < Math.abs(dy) * 1.2) return;
+          const go = function (to, toEnd) {
+            show(to);
+            const r2 = groups[to].querySelector(".sky-houses");
+            if (r2) r2.scrollLeft = toEnd ? r2.scrollWidth : 0;
+          };
+          if (dx < 0 && atEnd && k < groups.length - 1) go(k + 1, false);
+          else if (dx > 0 && atStart && k > 0) go(k - 1, true);
+        }, { passive: true });
+      });
     })();
     skyAspAlign();
     if (!window.__skyAspAlignOn) {
