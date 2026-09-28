@@ -2034,7 +2034,12 @@ function testTopicLayout() {
   // 再更新一次:每一章正文默认收起,只露标题跟摘要,要点「继续探索」
   // 才展开(复用既有的渐进展开机制 dpMakeFoldable),是这一页自己
   // 刻意的改动。
-  checkEq("[tp] 生命蓝图这一页没有被改", lock("renderReadingPage"), "ed2046eb17f13540");
+  // 再更新一次:照 example 图重做五章那张卡——摘要加上 rd-sum 这个 class
+  // 让 CSS 抓得到;手机上五个标签改成一行可横滑,切章时把目前的标签
+  // 卷进可视范围。是这一页自己刻意的改动。
+  // 再更新一次:「专属建议」大卡拿掉标题、延伸线与英文小标,只留四张卡。
+  // 是这一页自己刻意的改动。
+  checkEq("[tp] 生命蓝图这一页没有被改", lock("renderReadingPage"), "dc2e85b100a67ad5");
   checkEq("[tp] 三十道探索题这一页没有被改", lock("renderQPage"), "893d3c71d47ab628");
 
   /* —— ② 文字没有被动过 —— */

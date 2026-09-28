@@ -873,7 +873,9 @@
   #dpage.sky-page .dp-body::before{
     content:"";position:absolute;top:0;bottom:0;left:calc(50% - 50vw);width:100vw;
     z-index:-1;pointer-events:none;
-    background:url(assets/atmos/sky-page-bg.webp) center top / 100% auto repeat-y,#fbf5ec
+    /* 白罩跟九大主题一致:底图 50% + 象牙底 50%(等同主题页 --tp-bg-a:.5) */
+    background:linear-gradient(rgba(251,245,236,.5),rgba(251,245,236,.5)),
+      url(assets/atmos/sky-page-bg.webp) center top / 100% auto repeat-y,#fbf5ec
   }
 
   /* ==========================================================
@@ -1248,11 +1250,17 @@
   }
   #dpage .sky-house.has{background:#fffdf9}
   #dpage .sky-house .in{position:relative;z-index:2}
+  /* 素材上加一层很淡的白罩(用户:颜色太突出)。压在插画(z0)之上、文字(z2)之下;
+     卡片底本来就是米白,这层只会让插画柔下来,不影响文字 */
+  #dpage .sky-house::after{
+    content:"";position:absolute;inset:0;z-index:1;pointer-events:none;
+    background:rgba(255,253,249,.22)
+  }
   /* 素材:主体放大,左右出血由 overflow:hidden 裁掉;
      上缘长渐隐 —— 雾气自然延伸到卡片中部,文字区不受遮挡 */
   #dpage .sky-house .art{
     position:absolute;left:50%;bottom:0;z-index:0;display:block;
-    transform:translateX(-50%);width:100%;height:150px;opacity:.8;
+    transform:translateX(-50%);width:100%;height:150px;opacity:.85;
     object-fit:contain;object-position:bottom center;
     filter:saturate(.82) contrast(.93);
     pointer-events:none;user-select:none;
@@ -1261,18 +1269,18 @@
   }
   /* 逐宫补偿:框高 = 视觉重量,浓度 = 素材本身的色重,
      宽度 >100% 的四张(05/06/09/12)刻意左右出血被裁 */
-  #dpage .sky-house[data-field="1"]  .art{height:168px;bottom:14px;opacity:.74}
-  #dpage .sky-house[data-field="2"]  .art{height:153px;bottom:6px;opacity:.66}
-  #dpage .sky-house[data-field="3"]  .art{height:171px;bottom:8px;opacity:.69}
-  #dpage .sky-house[data-field="4"]  .art{height:170px;bottom:14px;opacity:.75}
-  #dpage .sky-house[data-field="5"]  .art{height:159px;bottom:8px;opacity:.77;width:112%}
-  #dpage .sky-house[data-field="6"]  .art{height:159px;bottom:8px;opacity:.72;width:110%}
-  #dpage .sky-house[data-field="7"]  .art{height:159px;bottom:10px;opacity:.69;object-fit:cover;object-position:50% 68%}
-  #dpage .sky-house[data-field="8"]  .art{height:180px;bottom:6px;opacity:.64}
-  #dpage .sky-house[data-field="9"]  .art{height:203px;bottom:-10px;opacity:.74;width:150%;object-fit:cover;object-position:50% 38%}
-  #dpage .sky-house[data-field="10"] .art{height:174px;bottom:12px;opacity:.75}
-  #dpage .sky-house[data-field="11"] .art{height:162px;bottom:0;opacity:.74;object-fit:cover;object-position:50% 66%}
-  #dpage .sky-house[data-field="12"] .art{height:201px;bottom:-6px;opacity:.75;width:160%;object-fit:cover;object-position:56% 44%}
+  #dpage .sky-house[data-field="1"]  .art{height:168px;bottom:14px;opacity:.85}
+  #dpage .sky-house[data-field="2"]  .art{height:153px;bottom:6px;opacity:.85}
+  #dpage .sky-house[data-field="3"]  .art{height:171px;bottom:8px;opacity:.85}
+  #dpage .sky-house[data-field="4"]  .art{height:170px;bottom:14px;opacity:.85}
+  #dpage .sky-house[data-field="5"]  .art{height:159px;bottom:8px;opacity:.85;width:112%}
+  #dpage .sky-house[data-field="6"]  .art{height:159px;bottom:8px;opacity:.85;width:110%}
+  #dpage .sky-house[data-field="7"]  .art{height:159px;bottom:10px;opacity:.85;object-fit:cover;object-position:50% 68%}
+  #dpage .sky-house[data-field="8"]  .art{height:180px;bottom:6px;opacity:.85}
+  #dpage .sky-house[data-field="9"]  .art{height:203px;bottom:-10px;opacity:.85;width:150%;object-fit:cover;object-position:50% 38%}
+  #dpage .sky-house[data-field="10"] .art{height:174px;bottom:12px;opacity:.85}
+  #dpage .sky-house[data-field="11"] .art{height:162px;bottom:0;opacity:.85;object-fit:cover;object-position:50% 66%}
+  #dpage .sky-house[data-field="12"] .art{height:201px;bottom:-6px;opacity:.85;width:160%;object-fit:cover;object-position:56% 44%}
   #dpage .sky-house .veil{
     position:absolute;left:0;right:0;bottom:0;height:60%;z-index:1;pointer-events:none;
     background:radial-gradient(78% 60% at 50% 106%,rgba(255,255,255,.14),rgba(255,255,255,0) 74%)
@@ -1575,9 +1583,13 @@
   #dpage.sky-page .sky-zone-c .sky-atmos{display:none}
   #dpage.sky-page .sky-close{
     overflow:hidden;isolation:isolate;border-radius:24px;
-    max-width:1080px;margin:clamp(52px,6vw,88px) auto clamp(-50px,-3.4vw,-26px);
+    max-width:1080px;margin:clamp(52px,6vw,88px) auto 0;
     padding:clamp(26px,3vw,38px) clamp(20px,4vw,48px) clamp(64px,7vw,96px);
-    background:url(assets/atmos/sky-close-lake.webp) center 84% / cover no-repeat,#3d3a66;
+    /* 湖景图 80%:叠一层 20% 的页面象牙色,等于图本身降到 80% 不透明;
+       最上面再加一层跟四个核心 / 十二宫素材一样的 22% 米白白罩 */
+    background:linear-gradient(rgba(255,253,249,.22),rgba(255,253,249,.22)),
+      linear-gradient(rgba(251,245,236,.2),rgba(251,245,236,.2)),
+      url(assets/atmos/sky-close-lake.webp) center 84% / cover no-repeat,#3d3a66;
     border:1px solid rgba(232,211,162,.45);
     box-shadow:0 14px 40px rgba(30,30,70,.14)
   }
@@ -1598,9 +1610,15 @@
   #dpage.sky-page .sky-close .sub{margin-top:6px;font-size:12.5px;letter-spacing:.06em;color:#4a4a66}
   #dpage.sky-page .sky-close .dp-cta{
     margin-top:clamp(16px,2vw,20px);padding:10px 28px;font-size:13px;letter-spacing:.08em;
-    background:linear-gradient(135deg,#5b5486,#8a78a8);box-shadow:0 10px 26px rgba(40,34,90,.3)
+    /* 淡紫色(用户要求):原本 #5b5486→#8a78a8 偏深,改成浅一阶的薰衣草紫,投影也放轻 */
+    background:linear-gradient(135deg,#8e84c7,#ac9dd9);box-shadow:0 8px 22px rgba(90,80,150,.22)
   }
-  #dpage.sky-page .sky-close .back{margin-top:10px;font-size:12px;color:#3b3f68;border-bottom-color:rgba(59,63,104,.35)}
+  /* 卡片下面的返回连结:原本卡片的负下边距(往页尾靠)改由这个连结承担 */
+  #dpage.sky-page .sky-back{
+    display:block;width:fit-content;position:relative;
+    margin:clamp(16px,1.8vw,22px) auto clamp(-50px,-3.4vw,-26px);
+    font-size:12.5px;color:#3b3f68;border-bottom-color:rgba(59,63,104,.35)
+  }
   @media(max-width:767px){
     #dpage.sky-page .sky-close{border-radius:20px;padding:26px 16px 80px;background-position:50% 86%;background-size:auto 150%}
     #dpage.sky-page .sky-close::after{inset:5px;border-radius:16px}
@@ -1626,7 +1644,7 @@
     font-size:clamp(22px,3vw,40px);letter-spacing:.02em;color:rgba(190,160,110,.45);vertical-align:-4px
   }
   /* 你的出生星盘:标题两侧金线 + ✦,下面一条两端缺角的象牙横幅 */
-  #dpage .sky-overview .ov-birth{text-align:center;margin:0 auto clamp(6px,1vw,14px);max-width:640px}
+  #dpage .sky-overview .ov-birth{text-align:center;margin:0 auto clamp(6px,1vw,14px);max-width:560px}
   #dpage .sky-overview .ov-bt{
     display:flex;align-items:center;justify-content:center;gap:14px;margin:0;
     font-family:var(--dp-serif);font-weight:700;font-size:clamp(20px,2.2vw,26px);letter-spacing:.16em;color:#23264f
@@ -1642,7 +1660,7 @@
   #dpage .sky-overview .ov-bs{display:block;margin:4px 0 8px;font-size:15px;line-height:1;color:#c49848}
   #dpage .sky-overview .ov-band{
     position:relative;display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:6px 16px;
-    padding:10px 36px;font-family:var(--dp-serif);font-size:12.5px;color:#2c2d48;
+    padding:8px 32px;font-family:var(--dp-serif);font-size:11.5px;color:#2c2d48;
     background:linear-gradient(180deg,rgba(255,253,249,.95),rgba(250,246,240,.92));
     border:1px solid rgba(201,178,140,.45);box-shadow:0 8px 24px rgba(80,60,40,.07);
     clip-path:polygon(14px 0,calc(100% - 14px) 0,100% 50%,calc(100% - 14px) 100%,14px 100%,0 50%)
@@ -1652,7 +1670,8 @@
   }
   #dpage .sky-overview .ov-band::before{left:18px}
   #dpage .sky-overview .ov-band::after{right:18px}
-  #dpage .sky-overview .ov-band .nm{font-size:clamp(15px,1.4vw,17px);font-weight:600;letter-spacing:.02em;color:#23264f}
+  /* 出生资料整条缩小一点(用户要求):字 12.5→11.5、名字 15–17→14–15、横幅 640→560 */
+  #dpage .sky-overview .ov-band .nm{font-size:clamp(14px,1.2vw,15px);font-weight:600;letter-spacing:.02em;color:#23264f}
   #dpage .sky-overview .ov-band .v{font-variant-numeric:tabular-nums;letter-spacing:.03em}
   #dpage .sky-overview .ov-band b{font-weight:400;font-size:9px;color:#c49848}
   @media(max-width:767px){
@@ -1680,16 +1699,45 @@
     gap:clamp(20px,3vw,48px);align-items:center;margin-top:clamp(24px,3vw,44px)
   }
   #dpage .sky-overview .isky2{max-width:min(680px,100%);margin:0 auto;padding:4px}
-  #dpage .sky-overview .ov-panel{position:relative}
-  #dpage .sky-overview .ov-moon{
-    position:absolute;right:0;top:-40px;width:clamp(90px,10vw,140px);aspect-ratio:1;pointer-events:none;
-    background:url(assets/life/thread/mark-moon.webp) center / 46% no-repeat;opacity:.9
+  /* 出生资料横跨两栏,在整个区块的正中间 */
+  #dpage .sky-overview .ov-birth{grid-column:1 / -1;width:100%}
+  /* 单栏(平板 / 手机)时抵掉 grid 的列间距,横幅跟盘面的距离维持原样 */
+  @media(max-width:900px){
+    #dpage .sky-overview .ov-birth{margin-bottom:calc(clamp(6px,1vw,14px) - clamp(20px,3vw,48px))}
   }
+  /* 电脑版盘面缩小一点(用户反馈太大);手机那边另有 96vw 的规则,不受影响 */
+  @media(min-width:901px){
+    #dpage .sky-overview .isky2{max-width:min(590px,90%)}
+  }
+  #dpage .sky-overview .ov-panel{position:relative}
   #dpage .sky-overview h2{
     font-family:var(--dp-serif);font-weight:600;font-size:clamp(20px,2.2vw,26px);color:var(--dp-ink);margin:0
   }
   #dpage .sky-overview .note{font-size:13.5px;line-height:1.9;color:var(--dp-mut);margin:8px 0 0;max-width:22em}
   #dpage .sky-overview .isky2-tools{justify-content:flex-start;margin:16px 0 0}
+  /* 标题 + 相位线开关同一行 */
+  #dpage .sky-overview .ov-hd{display:flex;align-items:center;flex-wrap:wrap;gap:10px clamp(20px,3vw,40px)}
+  #dpage .sky-overview .ov-sw{
+    display:inline-flex;align-items:center;gap:8px;padding:6px 0;min-height:36px;
+    background:none;border:0;cursor:pointer;font-family:var(--dp-sans);-webkit-tap-highlight-color:transparent
+  }
+  /* 用户要求整体缩小、不要太突出:字 14→12.5、轨道 44×24→34×18、颜色放淡 */
+  #dpage .sky-overview .ov-sw .lb{font-size:12.5px;font-weight:400;letter-spacing:.04em;color:#6f6a96}
+  #dpage .sky-overview .ov-sw .st{font-size:12px;color:var(--dp-mut);min-width:2.2em;text-align:left}
+  #dpage .sky-overview .ov-sw .tr{
+    position:relative;flex:none;width:34px;height:18px;border-radius:999px;
+    background:linear-gradient(90deg,#a39bd6,#b8b0e6);
+    box-shadow:inset 0 1px 3px rgba(60,50,120,.25);transition:background .25s ease
+  }
+  #dpage .sky-overview .ov-sw .tr i{
+    position:absolute;top:2px;left:18px;width:14px;height:14px;border-radius:50%;
+    background:#fff;box-shadow:0 1px 4px rgba(40,30,90,.3);transition:left .25s ease
+  }
+  #dpage .sky-overview .ov-sw[aria-checked="false"] .tr{background:rgba(160,154,190,.35)}
+  #dpage .sky-overview .ov-sw[aria-checked="false"] .tr i{left:2px}
+  #dpage .sky-overview .ov-sw:focus-visible{outline:none}
+  #dpage .sky-overview .ov-sw:focus-visible .tr{outline:2px solid rgba(129,118,173,.6);outline-offset:3px}
+  @media (prefers-reduced-motion:reduce){#dpage .sky-overview .ov-sw .tr,#dpage .sky-overview .ov-sw .tr i{transition:none}}
   #dpage .sky-overview .ov-table{
     margin-top:18px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:clamp(16px,2vw,28px);
     padding:clamp(16px,2vw,22px) clamp(18px,2.2vw,26px);border-radius:18px;
@@ -1717,6 +1765,13 @@
     -webkit-mask-image:linear-gradient(90deg,#000 72%,transparent);mask-image:linear-gradient(90deg,#000 72%,transparent)
   }
   #dpage .sky-core .sky-card > :not(.art){grid-column:2}
+  /* 跟十二个生命领域同一层淡白罩(22%):只盖在左边插画那一块,
+     跟插画同样的渐隐遮罩,文字那一栏不受影响 */
+  #dpage .sky-core .sky-card::after{
+    content:"";position:absolute;left:0;top:0;bottom:0;width:44%;z-index:0;pointer-events:none;
+    background:rgba(255,253,249,.22);
+    -webkit-mask-image:linear-gradient(90deg,#000 72%,transparent);mask-image:linear-gradient(90deg,#000 72%,transparent)
+  }
   #dpage .sky-core .sky-card .hd{margin-bottom:10px}
   #dpage .sky-core .sky-card .hd .lb{white-space:nowrap;letter-spacing:.12em}
   #dpage .sky-core .sky-card .sign{font-size:clamp(20px,2vw,25px)}
@@ -1772,21 +1827,32 @@
   #dpage .sky-asp-sec .sky-hd h2 .orn b{font-weight:400;font-size:15px;color:#c49848}
   #dpage .sky-asp-sec .sky-hd h2 .orn i{flex:1;height:1px;background:linear-gradient(90deg,rgba(196,152,72,.6),rgba(196,152,72,0))}
   #dpage .sky-asp-sec .sky-hd .note{font-size:14.5px;line-height:1.9;color:#4d4b62;max-width:24em;margin-top:12px}
-  #dpage .sky-asp-sec .sky-expand{
-    margin:clamp(18px,2.4vw,28px) 0 0 clamp(60px,14vw,220px);padding:12px 30px;border-radius:999px;
-    background:rgba(255,253,249,.92);border:1px solid rgba(201,178,140,.3);
-    box-shadow:0 8px 22px rgba(80,60,40,.06);color:#23264f;font-size:14px;letter-spacing:.06em
+  /* 卡片底部的「查看全部 N 条相位 ⌄」:整行、上面一条细线、文字置中,不是胶囊按钮 */
+  #dpage .sky-asp-sec .sky-asps .sky-expand{
+    display:flex;justify-content:center;width:100%;margin:6px 0 0;padding:14px 0 6px;min-height:44px;
+    background:none;border:0;border-top:1px solid rgba(201,178,140,.28);border-radius:0;box-shadow:none;
+    font-family:var(--dp-serif);font-size:12.5px;letter-spacing:.06em;color:#6f6a96;gap:8px
   }
+  #dpage .sky-asp-sec .sky-asps .sky-expand:hover{background:none;color:#4d4880}
+  #dpage .sky-asp-sec .sky-asps .sky-expand .cv{
+    width:6px;height:6px;font-size:0;border-right:1.3px solid currentColor;border-bottom:1.3px solid currentColor;
+    transform:translateY(-2px) rotate(45deg);color:inherit
+  }
+  #dpage .sky-asp-sec .sky-asps .sky-expand[aria-expanded="true"] .cv{transform:translateY(2px) rotate(225deg)}
   #dpage .sky-asp-sec .sky-asps{
+    /* gap 归零:原本前三行之间多 2px,展开的那几行没有,行距看起来不齐 */
+    gap:0;
     background:rgba(255,253,249,.9);border-color:rgba(201,178,140,.22);border-radius:20px;
     padding:clamp(10px,1.2vw,16px) clamp(20px,2.4vw,32px)
   }
   #dpage .sky-asp-sec .sky-asp{
     grid-template-columns:minmax(0,1fr) minmax(0,1.15fr) minmax(0,1fr) 56px;
-    padding:clamp(14px,1.6vw,18px) 0;border-bottom:0
+    /* 上下间距收窄(用户要求):14–18 → 9–11 */
+    padding:clamp(9px,1vw,11px) 0;border-bottom:0
   }
-  #dpage .sky-asp-sec .sky-asp .pn{font-family:var(--dp-sans);font-size:14px;gap:14px}
-  #dpage .sky-asp-sec .sky-asp .pn svg{color:#23264f}
+  /* 相位列整体字级再小一点(用户要求):行星 14→13、符号 19→16、相位名 / 容许度 13→12 */
+  #dpage .sky-asp-sec .sky-asp .pn{font-family:var(--dp-sans);font-size:13px;gap:12px}
+  #dpage .sky-asp-sec .sky-asp .pn svg{color:#23264f;width:16px;height:16px}
   #dpage .sky-asp-sec .sky-asp .pn.b{justify-content:flex-start;text-align:left}
   #dpage .sky-asp-sec .sky-asp .lk .ln:first-child{flex:none;width:22px;background:rgba(184,166,120,.55);position:relative}
   #dpage .sky-asp-sec .sky-asp .lk .ln:first-child::after{
@@ -1794,24 +1860,25 @@
   }
   #dpage .sky-asp-sec .sky-asp .lk .ln+.rel+.ln{flex:none;width:26px;background:rgba(184,166,120,.4)}
   #dpage .sky-asp-sec .sky-asp .lk{justify-content:center;gap:8px}
-  #dpage .sky-asp-sec .sky-asp .rel{font-size:13px;color:#8a8398}
+  #dpage .sky-asp-sec .sky-asp .rel{font-size:12px;color:#8a8398}
   #dpage .sky-asp-sec .sky-asp .rel .g{display:none}
-  #dpage .sky-asp-sec .sky-asp .orb{font-size:13px;color:#6f6a7e}
+  #dpage .sky-asp-sec .sky-asp .orb{font-size:12px;color:#6f6a7e}
   @media(max-width:900px){
     /* 手机:每条相位维持一列(行星 → 相位 — 行星  容许度),不拆成三行 */
     #dpage .sky-asp-sec .sky-asp{
-      grid-template-columns:minmax(0,1fr) auto minmax(0,1fr) auto;column-gap:8px;row-gap:0;padding:14px 0
+      grid-template-columns:minmax(0,1fr) auto minmax(0,1fr) auto;column-gap:8px;row-gap:0;padding:9px 0
     }
-    #dpage .sky-asp-sec .sky-asp .pn{grid-column:auto;grid-row:auto;font-size:13px;gap:8px}
+    #dpage .sky-asp-sec .sky-asp .pn{grid-column:auto;grid-row:auto;font-size:12px;gap:7px}
+    #dpage .sky-asp-sec .sky-asp .pn svg{width:14px;height:14px}
     #dpage .sky-asp-sec .sky-asp .pn.b{grid-column:auto;justify-content:flex-start}
     #dpage .sky-asp-sec .sky-asp .lk{grid-column:auto;grid-row:auto;gap:5px}
     #dpage .sky-asp-sec .sky-asp .lk .ln:first-child{width:12px}
     #dpage .sky-asp-sec .sky-asp .lk .ln+.rel+.ln{display:none}
-    #dpage .sky-asp-sec .sky-asp .rel{font-size:12px}
-    #dpage .sky-asp-sec .sky-asp .orb{grid-column:auto;grid-row:auto;font-size:12px;text-align:right}
+    #dpage .sky-asp-sec .sky-asp .rel{font-size:11.5px}
+    #dpage .sky-asp-sec .sky-asp .orb{grid-column:auto;grid-row:auto;font-size:11.5px;text-align:right}
     #dpage .sky-asp-sec .sky-asps{padding:6px 16px}
     #dpage .sky-asp-sec .asp-l{min-height:0}
-    #dpage .sky-asp-sec .sky-expand{margin-left:0;padding:10px 24px;font-size:13px}
+    #dpage .sky-asp-sec .sky-asps .sky-expand{font-size:12px;padding:12px 0 4px}
     #dpage .sky-asp-sec .asp-l::before{width:240px;left:auto;right:-30px;bottom:-40px;opacity:.4}
   }
   /* 相位:左边标题与按钮,右边一张卡 */
@@ -1823,7 +1890,6 @@
   @media(max-width:900px){
     #dpage .sky-overview,#dpage .sky-asp-sec{grid-template-columns:minmax(0,1fr)}
     #dpage .sky-overview{margin-top:0}
-    #dpage .sky-overview .ov-moon{display:none}
   }
   @media(max-width:767px){
     #dpage.sky-page .dp-hero{padding-bottom:40px}
@@ -3411,6 +3477,112 @@
   }
 
   /* ============================================================
+     生命蓝图 · 五章那张卡(.dp-detail)—— 照用户给的 example 图重做
+     ------------------------------------------------------------
+     · 卡片:几乎不透明的暖米白 + 一圈淡蜜桃色边,四角几颗金色星芒
+     · 五个标签排成一行、平均分开(手机上改成可横向滑动的一行)
+     · 章名:宋体加粗、深墨色;分隔线延伸到底
+     · 摘要:宋体、字大一点、行距放宽
+     · 章末建议卡 / 上下章导航:实心米白卡、蜜桃色细边、宋体粗体标题
+     只作用在 .dp-detail 里,上方「专属建议」2×2 卡不受影响。
+     ============================================================ */
+  #dpage.reading-page .dp-detail,
+  #dpage.reading-page .dp-forcard{
+    background:rgba(250,246,242,.8);   /* 用户指定:两张大卡片 80% */
+    border:1px solid rgba(232,190,160,.55);border-radius:28px;
+    box-shadow:0 24px 60px -28px rgba(34,35,58,.38),inset 0 0 0 1px rgba(255,255,255,.6)
+  }
+  #dpage.reading-page .dp-detail::before,
+  #dpage.reading-page .dp-detail::after{
+    content:"✦";position:absolute;pointer-events:none;
+    color:#e4b98c;line-height:1;text-shadow:0 0 10px rgba(228,185,140,.55)
+  }
+  /* 星芒都落在卡片的内距里,不压到任何字 */
+  #dpage.reading-page .dp-detail::before{left:9px;top:46%;font-size:17px}
+  #dpage.reading-page .dp-detail::after{right:9px;top:25%;font-size:16px}
+  #dpage.reading-page .dp-detail .dp-read{max-width:900px}
+  #dpage.reading-page .dp-detail .dp-read::after{
+    content:"✦";position:absolute;right:12px;bottom:17%;pointer-events:none;
+    color:#e4b98c;font-size:17px;line-height:1;text-shadow:0 0 10px rgba(228,185,140,.55)
+  }
+  #dpage.reading-page .dp-detail .dp-tabs{
+    display:flex;flex-wrap:nowrap;justify-content:space-between;align-items:center;
+    gap:6px;margin:0 0 30px
+  }
+  #dpage.reading-page .dp-detail .dp-tabs button{
+    flex:none;white-space:nowrap;padding:11px 16px;
+    font-size:14px;letter-spacing:.04em;color:#6f6c82
+  }
+  #dpage.reading-page .dp-detail .dp-tabs button:hover{color:var(--dp-ink)}
+  #dpage.reading-page .dp-detail .dp-tabs button.on{
+    padding:11px 22px;color:#fff;
+    box-shadow:0 10px 22px -10px rgba(129,118,173,.65)
+  }
+  #dpage.reading-page .dp-detail h3.dp-h{
+    font-weight:700;font-size:clamp(20px,2.1vw,24px);letter-spacing:.04em;color:#1f2036
+  }
+  #dpage.reading-page .dp-detail .dp-h-row{margin-bottom:14px}
+  #dpage.reading-page .dp-detail .fav-btn{font-size:20px}
+  #dpage.reading-page .dp-detail .dp-div .st{font-size:12px}
+  #dpage.reading-page .dp-detail .dp-div .ln{
+    background:linear-gradient(90deg,rgba(129,118,173,.38),rgba(129,118,173,.16))
+  }
+  #dpage.reading-page .dp-detail .rd-sum{
+    font-family:var(--dp-serif);font-size:16px!important;line-height:2.3;margin:0;max-width:none;
+    letter-spacing:.03em;color:#26273d;padding:12px 0 18px!important
+  }
+  #dpage.reading-page .dp-detail .fold-btn{font-size:14px;font-weight:500;gap:10px}
+  #dpage.reading-page .dp-detail .fold-btn .cv{font-size:14px}
+  #dpage.reading-page .dp-detail .c4{
+    background:#fcf7f2;border:1px solid rgba(232,190,160,.6);border-radius:22px;
+    padding:24px 28px;gap:18px;align-items:center;
+    box-shadow:0 10px 30px -22px rgba(34,35,58,.3)
+  }
+  #dpage.reading-page .dp-detail .c4 b{font-weight:700;font-size:16px;margin-bottom:8px}
+  #dpage.reading-page .dp-detail .c4 .bd > div{font-size:13.5px;color:rgba(34,35,58,.72)}
+  #dpage.reading-page .dp-detail .dp-chnav{
+    background:#fcf7f2;border-color:rgba(232,190,160,.6);border-radius:22px;
+    box-shadow:0 10px 30px -22px rgba(34,35,58,.3)
+  }
+  /* 用户反馈太高:内距与字级都收小,卡片变窄 */
+  #dpage.reading-page .dp-detail .dp-chnav > *{padding:13px 24px}
+  #dpage.reading-page .dp-detail .dp-chnav > .nx::before{background:rgba(232,190,160,.7);top:12px;bottom:12px}
+  #dpage.reading-page .dp-detail .dp-chnav .lb{font-size:11px;letter-spacing:.14em;margin-bottom:2px}
+  #dpage.reading-page .dp-detail .dp-chnav .tt{font-size:13.5px;color:#1f2036}
+  /* 首章 / 末章那一侧:example 里是灰色的宋体,还读得到,不是几乎透明 */
+  #dpage.reading-page .dp-detail .dp-chnav .off{opacity:1}
+  #dpage.reading-page .dp-detail .dp-chnav .off .lb,
+  #dpage.reading-page .dp-detail .dp-chnav .off .tt{color:rgba(34,35,58,.38)}
+  /* 电脑上一行太长、又整片贴左:只有摘要与正文(详细解读)收进一条
+     置中的阅读栏(最宽 720px)。章名与分隔线维持整宽,跟下面那条
+     分隔线同长;标签列与下面两张卡也维持整宽 */
+  @media(min-width:900px){
+    #dpage.reading-page .dp-detail .rd-sum,
+    #dpage.reading-page .dp-detail .dp-prose{max-width:720px;margin-left:auto;margin-right:auto}
+  }
+  @media(max-width:767px){
+    #dpage.reading-page .dp-detail{border-radius:22px}
+    #dpage.reading-page .dp-detail::before{left:4px;top:52%;font-size:12px}
+    #dpage.reading-page .dp-detail::after{right:4px;top:24%;font-size:12px}
+    #dpage.reading-page .dp-detail .dp-read::after{display:none}
+    /* 手机:五个标签一行排不下,改成可以左右滑的一行,不折成四排 */
+    #dpage.reading-page .dp-detail .dp-tabs{
+      justify-content:flex-start;overflow-x:auto;scrollbar-width:none;
+      margin:0 -20px 24px;padding:4px 20px 10px;
+      scroll-padding:0 20px;-webkit-overflow-scrolling:touch
+    }
+    #dpage.reading-page .dp-detail .dp-tabs::-webkit-scrollbar{display:none}
+    #dpage.reading-page .dp-detail .dp-tabs button{padding:10px 12px;font-size:13.5px}
+    #dpage.reading-page .dp-detail .dp-tabs button.on{padding:10px 18px}
+    #dpage.reading-page .dp-detail h3.dp-h{font-size:20px}
+    #dpage.reading-page .dp-detail .rd-sum{font-size:15.5px!important;line-height:2.15}
+    #dpage.reading-page .dp-detail .c4{padding:20px 18px;gap:14px;border-radius:18px}
+    #dpage.reading-page .dp-detail .dp-chnav{border-radius:18px}
+    #dpage.reading-page .dp-detail .dp-chnav > *{padding:12px 16px}
+    #dpage.reading-page .dp-detail .dp-chnav .tt{font-size:13px}
+  }
+
+  /* ============================================================
      我的收藏(#/favorites)—— 专属 hero 实景
      ------------------------------------------------------------
      跟生命蓝图那页同一个做法:hero 换成用户给的实景图,上面叠一层
@@ -3575,9 +3747,10 @@
   /* 正文整体退到一张圆角白卡里(第二张参考图的做法):
      卡片本身就是「这一章有边界」的讯号,不再是一条没有尽头的长条。 */
   #dpage.topic-page .tp-wrap{
-    /* 半透明:底纹从卡片底下透出来——82% 时底纹几乎看不见,调到
-       56%,主题底纹明显透出来,文字仍然写在够亮的底上。 */
-    background:rgba(252,249,246,.56);border:1px solid rgba(240,232,227,.9);
+    /* 半透明:底纹从卡片底下透出来。82% → 56% 之后,背景白罩又减轻、
+       底图变得很清楚,卡片显得太透 —— 用户要求调高,先改 86%,
+       再跟生命蓝图的两张大卡片统一成 80%。 */
+    background:rgba(252,249,246,.8);border:1px solid rgba(240,232,227,.9);
     border-radius:clamp(20px,2.4vw,34px);
     padding:clamp(26px,4vw,54px) clamp(20px,3.6vw,52px);
     box-shadow:0 18px 60px -46px rgba(34,35,58,.5)
@@ -3792,7 +3965,7 @@
     background-size:cover;background-position:center
   }
   #dpage.topic-page .tp-reflect .hd .tt{
-    margin:0;font-family:var(--dp-serif);font-weight:600;font-size:16px;color:var(--dp-ink)
+    margin:0;font-family:var(--dp-serif);font-weight:600;font-size:15px;color:var(--dp-ink)
   }
   #dpage.topic-page .tp-reflect .no{
     position:absolute;top:clamp(20px,2.4vw,28px);right:clamp(20px,2.4vw,28px);z-index:1;
@@ -3800,7 +3973,8 @@
     color:var(--theme-accent);opacity:.6
   }
   #dpage.topic-page .tp-reflect .bd{position:relative;z-index:1;margin-top:14px}
-  #dpage.topic-page .tp-reflect .bd p{font-size:14.5px;line-height:2}
+  /* 用户要求字体小一点点:正文 14.5 → 13.5,标题 16 → 15 */
+  #dpage.topic-page .tp-reflect .bd p{font-size:13.5px;line-height:2}
   #dpage.topic-page .tp-reflect .cap{
     position:relative;z-index:1;margin-top:14px;
     font-family:var(--dp-sans);font-size:9.5px;letter-spacing:.2em;color:var(--dp-mut)
@@ -10751,7 +10925,11 @@ window.Guide = (function () {
         state.aspectsOn = !state.aspectsOn;
         const g = svg.querySelector("#dpIsky2Aspects");
         if (g) g.setAttribute("opacity", state.aspectsOn ? "1" : "0");
-        toggle.textContent = state.aspectsOn ? dpT("隐藏相位线", "Hide aspects") : dpT("显示相位线", "Show aspects");
+        const st = toggle.querySelector(".st");
+        if (st) {   /* 「我的星空」的开关样式:只换状态字与 aria-checked */
+          st.textContent = state.aspectsOn ? dpT("开启", "On") : dpT("关闭", "Off");
+          toggle.setAttribute("aria-checked", state.aspectsOn ? "true" : "false");
+        } else toggle.textContent = state.aspectsOn ? dpT("隐藏相位线", "Hide aspects") : dpT("显示相位线", "Show aspects");
       });
     }
   }
@@ -12392,10 +12570,8 @@ window.Guide = (function () {
          Mobile 上 --dp-text 本来就是 100%,这一区的行为与改动前一致。
          只动这一层容器,不动卡片设计、字级、间距与内容。 */
       if (topCards.length)
-        body += '<div class="dp-card dp-forcard"><div class="dp-sec-label-line">' +
-          '<span class="zh">' + dpT("专属建议", "FOR YOU") + '</span><span class="ln"></span>' +
-          (window.I18N.isEN() ? "" : '<span class="en">INSIGHTS FOR YOU</span>') + '</div>' +
-          cardsGridHtml(topCards) + "</div>";
+        /* 用户要求:拿掉「专属建议」标题、延伸线与英文小标,只留四张卡 */
+        body += '<div class="dp-card dp-forcard">' + cardsGridHtml(topCards) + "</div>";
 
       const k = favKey(favSrc, chName(ch, readingTab), ch.body || "");
       const favB = '<button class="fav-btn' + (isFaved(k) ? " on" : "") + '" data-fav="' + esc0(k) +
@@ -12428,7 +12604,7 @@ window.Guide = (function () {
         }).join("") + "</div>" +
         '<div class="dp-h-row"><h3 class="dp-h">' + esc0(chName(ch, readingTab)) + "</h3>" + favB + "</div>" +
         '<div class="dp-div"><span class="st">✦</span><span class="ln"></span></div>' +
-        (ch.summary ? '<div class="dp-quote" style="text-align:left;padding:8px 0 16px;font-size:15.5px"' +
+        (ch.summary ? '<div class="dp-quote rd-sum" style="text-align:left;padding:8px 0 16px;font-size:15.5px"' +
           ' data-saveable data-source="' + esc0(favSrc) + '" data-source-type="life_blueprint"' +
           ' data-section="' + esc0(chName(ch, readingTab)) + '">' + esc0(ch.summary) + "</div>" : "") +
         '<div class="dp-prose" data-saveable data-source="' + esc0(favSrc) +
@@ -12464,6 +12640,13 @@ window.Guide = (function () {
     $("dpage").querySelectorAll("[data-rtab]").forEach(function (b) {
       b.addEventListener("click", function () { location.hash = "#/reading/" + b.getAttribute("data-rtab"); });
     });
+    /* 手机上五个标签是一行可以左右滑的列:把目前这一章的标签带进可视范围,
+       只卷这一列,不动整页 */
+    (function () {
+      const row = document.querySelector("#dpDetail .dp-tabs"), on = row && row.querySelector("button.on");
+      if (on && row.scrollWidth > row.clientWidth + 1)
+        row.scrollLeft = Math.max(0, on.offsetLeft - (row.clientWidth - on.offsetWidth) / 2);
+    })();
     /* 每一章的正文默认收起,只露标题跟摘要,要点「继续探索」才展开——
        用户要求的呈现方式。用既有的渐进展开机制(dpMakeFoldable),
        keep:0 表示一段都不先露,跟"属于我的生命脉络"那边只是文案不同,
@@ -15248,6 +15431,18 @@ window.Guide = (function () {
 
 
   // 收起 / 展开的按钮:同一个区段里长出来,不开 modal、不换页
+  /* 「星盘之间的对话」左边的标题块,在电脑上跟【还没展开】时的相位卡片垂直置中。
+     量的是收起状态的卡片高度;展开之后标题不跟着移动,只在收起时 / 视窗改变时重算。 */
+  function skyAspAlign() {
+    const sec = document.querySelector("#dpage .sky-asp-sec");
+    const hd = sec && sec.querySelector(".asp-l .sky-hd"), card = sec && sec.querySelector(".sky-asps");
+    if (!hd || !card) return;
+    const more = card.querySelector(".sky-more");
+    if (more && more.classList.contains("on")) return;
+    if (window.innerWidth <= 900) { hd.style.marginTop = ""; return; }
+    hd.style.marginTop = "0px";
+    hd.style.marginTop = Math.max(0, Math.round((card.offsetHeight - hd.offsetHeight) / 2)) + "px";
+  }
   function skyExpandBtn(boxId, openTx, closeTx) {
     return '<button type="button" class="sky-expand" aria-expanded="false" aria-controls="' + boxId + '"' +
       ' data-more="' + boxId + '" data-open="' + esc0(openTx) + '" data-less="' + esc0(closeTx) + '">' +
@@ -15285,8 +15480,9 @@ window.Guide = (function () {
           (pl.retro ? ' <i class="rx">R</i>' : "") + '</span></div>';
       }).join("");
       body += '<section class="sky-overview">' +
-        '<div class="ov-wheel">' +
-        /* 出生资料从 hero 搬到这里(依设计稿):标题 + 一条两端缺角的横幅 */
+        /* 出生资料从 hero 搬到这里(依设计稿):标题 + 一条两端缺角的横幅。
+           放在盘面栏外面、横跨整个区块,电脑上才会在页面正中间,
+           不是只在左边盘面的上方(手机本来就是单栏,顺序不变) */
         '<div class="ov-birth"><h2 class="ov-bt"><i aria-hidden="true"></i>' +
         esc0(dpT("你的出生星盘", "Your birth chart")) + '<i aria-hidden="true"></i></h2>' +
         '<span class="ov-bs" aria-hidden="true">✦</span>' +
@@ -15295,14 +15491,18 @@ window.Guide = (function () {
           .filter(Boolean).map(function (x, i) {
             return '<span class="' + (i ? "v" : "nm") + '">' + esc0(x) + '</span>';
           }).join('<b aria-hidden="true">✦</b>') + '</div></div>' +
+        '<div class="ov-wheel">' +
         '<div class="isky2" id="dpFullWheel" role="img" aria-label="' +
         esc0(dpT("完整星盘", "Full natal chart")) + '"></div></div>' +
-        '<div class="ov-panel"><span class="ov-moon" aria-hidden="true"></span>' +
-        '<h2>' + esc0(dpT("星盘一览", "Your chart at a glance")) + '</h2>' +
+        /* 紫色月亮拿掉;「隐藏相位线」按钮换成标题旁边的开关(相位线 ◯ 开启) */
+        '<div class="ov-panel">' +
+        '<div class="ov-hd"><h2>' + esc0(dpT("星盘一览", "Your chart at a glance")) + '</h2>' +
+        '<button type="button" id="dpAspToggle" class="ov-sw" role="switch" aria-checked="true">' +
+        '<span class="lb">' + esc0(dpT("相位线", "Aspects")) + '</span>' +
+        '<span class="tr" aria-hidden="true"><i></i></span>' +
+        '<span class="st">' + esc0(dpT("开启", "On")) + '</span></button></div>' +
         '<p class="note">' + esc0(dpT("行星落在星座与宫位的位置，构成了你独特的能量图谱。",
           "Where each planet falls, by sign and house — the shape of your own sky.")) + '</p>' +
-        '<div class="isky2-tools"><button type="button" id="dpAspToggle">' +
-        dpT("隐藏相位线", "Hide aspects") + '</button></div>' +
         '<div class="ov-table">' + ovRows + '</div></div></section>';
       heroLead =
         '<div class="sky-latin">A map of the sky,<br>for the one and only you.</div>';
@@ -15528,11 +15728,13 @@ window.Guide = (function () {
           '<span class="orn" aria-hidden="true"><b>✦</b><i></i></span></h2>' +
           '<div class="note">' + esc0(dpT("行星之间的角度关系，揭示这些能量如何互动、流动，也展现你内在的矛盾与天赋。",
             "Aspects are the angles between planets — how these energies meet and move, and where your tensions and gifts live.")) + '</div></div>' +
-          (asps.length > 3 ? skyExpandBtn("skyMoreAsp",
-            dpT("查看全部相位 · " + asps.length + " 条", "See all " + asps.length + " aspects"),
-            dpT("收起", "Collapse")) : "") + '</div>' +
+          '</div>' +
+          /* 「查看全部」按钮搬进卡片底部(依设计图):一条细分隔线 + 置中的文字与 ⌄ */
           '<div class="sky-asps">' + asps.slice(0, 3).map(aspRow).join("") +
-          '<div class="sky-more" id="skyMoreAsp" aria-hidden="true">' + asps.slice(3).map(aspRow).join("") + '</div></div>' +
+          '<div class="sky-more" id="skyMoreAsp" aria-hidden="true">' + asps.slice(3).map(aspRow).join("") + '</div>' +
+          (asps.length > 3 ? skyExpandBtn("skyMoreAsp",
+            dpT("查看全部 " + asps.length + " 条相位", "See all " + asps.length + " aspects"),
+            dpT("收起", "Collapse")) : "") + '</div>' +
           '</section>';
       }
 
@@ -15547,8 +15749,10 @@ window.Guide = (function () {
           "It doesn't define you. It helps you know yourself a little better.")) + '</div>' +
         '<a class="dp-cta" href="' + LANDING_TOPICS + '">' +
         esc0(dpT("开始探索你的主题解读", "Start exploring your themes")) + ' →</a>' +
-        '<a class="dp-link back" href="#/reading">← ' + esc0(dpT("回到生命蓝图", "Back to your blueprint")) + '</a>' +
-        '</section></div>';
+        '</section>' +
+        /* 「回到生命蓝图」搬到湖景卡片下面(用户要求),不压在图上 */
+        '<a class="dp-link back sky-back" href="#/reading">← ' + esc0(dpT("回到生命蓝图", "Back to your blueprint")) + '</a>' +
+        '</div>';
     }
 
     dpScaffold({
@@ -15585,6 +15789,12 @@ window.Guide = (function () {
       if (pv) pv.addEventListener("click", function (e) { e.stopPropagation(); show(cur - 1); });
       if (nx) nx.addEventListener("click", function (e) { e.stopPropagation(); show(cur + 1); });
     })();
+    skyAspAlign();
+    if (!window.__skyAspAlignOn) {
+      window.__skyAspAlignOn = true;
+      window.addEventListener("resize", skyAspAlign);
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(skyAspAlign);
+    }
     // 展开 / 收起:每次重画后重新绑定(dpScaffold 会换掉整块 innerHTML)
     document.querySelectorAll("#dpage .sky-expand").forEach(function (btn) {
       const box = document.getElementById(btn.getAttribute("data-more"));
@@ -15603,7 +15813,7 @@ window.Guide = (function () {
         if (tx) tx.textContent = btn.getAttribute(on ? "data-less" : "data-open");
         // 收起时要先回到当前实际高度再归零,否则从 none 直接跳 0 不会有过渡
         box.style.maxHeight = box.scrollHeight + "px";
-        if (!on) { box.getBoundingClientRect(); box.style.maxHeight = "0px"; }
+        if (!on) { box.getBoundingClientRect(); box.style.maxHeight = "0px"; setTimeout(skyAspAlign, 650); }
       });
     });
     /* 十二宫卡片:点一下,一个半透明的小格子浮在那张卡旁边,一次只开一张。
