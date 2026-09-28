@@ -1585,8 +1585,10 @@
     overflow:hidden;isolation:isolate;border-radius:24px;
     max-width:1080px;margin:clamp(52px,6vw,88px) auto 0;
     padding:clamp(26px,3vw,38px) clamp(20px,4vw,48px) clamp(64px,7vw,96px);
-    /* 湖景图 80%:上面叠一层 20% 的页面象牙色,等于图本身降到 80% 不透明 */
-    background:linear-gradient(rgba(251,245,236,.2),rgba(251,245,236,.2)),
+    /* 湖景图 80%:叠一层 20% 的页面象牙色,等于图本身降到 80% 不透明;
+       最上面再加一层跟四个核心 / 十二宫素材一样的 22% 米白白罩 */
+    background:linear-gradient(rgba(255,253,249,.22),rgba(255,253,249,.22)),
+      linear-gradient(rgba(251,245,236,.2),rgba(251,245,236,.2)),
       url(assets/atmos/sky-close-lake.webp) center 84% / cover no-repeat,#3d3a66;
     border:1px solid rgba(232,211,162,.45);
     box-shadow:0 14px 40px rgba(30,30,70,.14)
