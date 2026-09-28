@@ -943,13 +943,21 @@
        改成按宽度放大一点、贴齐顶端,并在最上方多一层很淡的象牙纱 */
     #dpage.sky-page .dp-hero{
       background:
-        linear-gradient(180deg,rgba(250,245,240,0) 0,rgba(250,245,240,0) 30%,rgba(248,242,237,.72) 64%,var(--dp-cream) 90%),
-        url(assets/atmos/sky-hero-arch.webp) left top / auto 640px no-repeat,
+        linear-gradient(180deg,rgba(250,245,240,0) 0,rgba(250,245,240,0) 300px,rgba(248,242,237,.8) 390px,var(--dp-cream) 440px),
+        url(assets/atmos/sky-hero-arch.webp) 70% top / auto 440px no-repeat,
         var(--dp-cream)
     }
     #dpage.sky-page .sky-script{position:static;transform:none;text-align:center;margin-top:14px;opacity:.8}
   }
 
+  /* 窄萤幕:拱门那一段放在最上面当一张横幅,标题落在它下面的云上;
+     横幅顶端是深蓝夜空,导航与账号改成浅色字 */
+  @media(max-width:1100px){
+    #dpage.sky-page .dp-hero-grid{padding-top:clamp(230px,56vw,300px)}
+    #dpage.sky-page .dp-brand{color:#fffaf0;text-shadow:0 1px 8px rgba(20,24,60,.45)}
+    #dpage.sky-page .dp-acct-btn,#dpage.sky-page .dp-back{color:#fffaf0;border-color:rgba(255,251,243,.5);text-shadow:0 1px 8px rgba(20,24,60,.4)}
+    #dpage.sky-page .dp-acct-btn .caret{color:rgba(255,251,243,.7)}
+  }
   /* 新 hero 图的右上方是深蓝夜空:桌机上导航改成浅色字,才读得到 */
   @media(min-width:1101px){
     #dpage.sky-page .dp-navlink{color:rgba(255,251,243,.86);text-shadow:0 1px 8px rgba(20,24,60,.45)}
