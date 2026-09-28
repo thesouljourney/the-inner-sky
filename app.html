@@ -963,21 +963,40 @@
      标题与文字都在 hero 里,落在左下的云上。只作用在 ≤767px,桌机不动。 */
   @media(max-width:767px){
     #dpage.sky-page .dp-hero{
-      position:relative;overflow:hidden;min-height:max(650px,164vw);box-sizing:border-box;
+      position:relative;overflow:hidden;min-height:max(625px,160vw);box-sizing:border-box;
       display:flex;flex-direction:column;
       /* 手机专用的直式版本(sky-hero-arch-m.webp):上半拱门场景、下半是同一张图自己的云层,
          已在素材里融成一张。上面再叠一层很柔的奶油色渐变,只托住文字区 */
       background:
-        linear-gradient(to bottom,transparent 44%,rgba(248,244,238,.4) 54%,rgba(248,244,238,.72) 70%,rgba(248,244,238,.8) 88%,rgba(248,244,238,.3) 100%),
+        linear-gradient(to bottom,transparent 46%,rgba(250,246,240,.25) 58%,rgba(250,246,240,.45) 72%,rgba(250,246,240,.5) 100%),
         url(assets/atmos/sky-hero-arch-m.webp) center top / 100% auto no-repeat,
         #f8f4ee;
       padding-bottom:20px
     }
     #dpage.sky-page .dp-hero-grid{padding:0 calc(7% - 23px);margin:auto 0 0;width:auto;max-width:none;align-self:stretch}
-    #dpage.sky-page h1.dp-title{margin-bottom:10px}
-    #dpage.sky-page .dp-hero .dp-sub{font-size:14px;line-height:1.85}
-    #dpage.sky-page .sky-latin{margin-top:10px;font-size:14px;line-height:1.6}
-    #dpage.sky-page .sky-meta{margin-top:14px;padding:6px 16px}
+    /* 文字区置中(依设计稿):大标题 → ✦ 细线 → 描述 → 英文句 → 出生资料胶囊 */
+    #dpage.sky-page .dp-hero-grid{text-align:center}
+    #dpage.sky-page h1.dp-title{
+      margin:0;font-family:var(--dp-serif);font-weight:700;font-size:28px;letter-spacing:.12em;line-height:1.3
+    }
+    #dpage.sky-page .dp-hero .dp-sub{
+      max-width:none;margin:0 auto;font-size:13px;line-height:1.8;letter-spacing:.05em;color:#2c2d48
+    }
+    #dpage.sky-page .dp-hero .dp-sub::before{
+      content:"✦";display:block;width:160px;margin:8px auto 10px;font-size:11px;line-height:1;color:#c49848;
+      background:
+        linear-gradient(90deg,rgba(196,152,72,0),rgba(196,152,72,.6)) left center / calc(50% - 14px) 1px no-repeat,
+        linear-gradient(90deg,rgba(196,152,72,.6),rgba(196,152,72,0)) right center / calc(50% - 14px) 1px no-repeat
+    }
+    #dpage.sky-page .sky-latin{margin-top:10px;font-size:13px;line-height:1.55;color:#8a86a0}
+    #dpage.sky-page .sky-meta{
+      display:flex;align-items:center;justify-content:center;gap:14px;width:fit-content;
+      margin:14px auto 0;padding:6px 18px;font-size:11.5px;letter-spacing:.05em;color:#23264f;
+      background:rgba(255,252,246,.88);border:1px solid rgba(201,178,140,.5);
+      box-shadow:0 8px 22px rgba(80,60,40,.08)
+    }
+    #dpage.sky-page .sky-meta::before{content:"✦";margin-right:8px;font-size:10px;color:#c49848}
+    #dpage.sky-page .dp-hero .sky-meta{display:block}
   }
   /* 新 hero 图的右上方是深蓝夜空:桌机上导航改成浅色字,才读得到 */
   @media(min-width:1101px){
@@ -1606,12 +1625,61 @@
     margin-left:clamp(12px,2vw,28px);font-family:var(--dp-display);font-style:italic;font-weight:400;
     font-size:clamp(22px,3vw,40px);letter-spacing:.02em;color:rgba(190,160,110,.45);vertical-align:-4px
   }
+  /* 你的出生星盘:标题两侧金线 + ✦,下面一条两端缺角的象牙横幅 */
+  #dpage .sky-overview .ov-birth{text-align:center;margin:0 auto clamp(6px,1vw,14px);max-width:640px}
+  #dpage .sky-overview .ov-bt{
+    display:flex;align-items:center;justify-content:center;gap:14px;margin:0;
+    font-family:var(--dp-serif);font-weight:700;font-size:clamp(20px,2.2vw,26px);letter-spacing:.16em;color:#23264f
+  }
+  #dpage .sky-overview .ov-bt i{
+    flex:0 1 110px;height:1px;position:relative;background:linear-gradient(90deg,rgba(196,152,72,0),rgba(196,152,72,.7))
+  }
+  #dpage .sky-overview .ov-bt i:last-child{background:linear-gradient(90deg,rgba(196,152,72,.7),rgba(196,152,72,0))}
+  #dpage .sky-overview .ov-bt i::after{
+    content:"✦";position:absolute;top:50%;transform:translateY(-50%);right:-4px;font-size:9px;font-style:normal;color:#c49848
+  }
+  #dpage .sky-overview .ov-bt i:last-child::after{right:auto;left:-4px}
+  #dpage .sky-overview .ov-bs{display:block;margin:4px 0 8px;font-size:15px;line-height:1;color:#c49848}
+  #dpage .sky-overview .ov-band{
+    position:relative;display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:6px 16px;
+    padding:10px 36px;font-family:var(--dp-serif);font-size:12.5px;color:#2c2d48;
+    background:linear-gradient(180deg,rgba(255,253,249,.95),rgba(250,246,240,.92));
+    border:1px solid rgba(201,178,140,.45);box-shadow:0 8px 24px rgba(80,60,40,.07);
+    clip-path:polygon(14px 0,calc(100% - 14px) 0,100% 50%,calc(100% - 14px) 100%,14px 100%,0 50%)
+  }
+  #dpage .sky-overview .ov-band::before,#dpage .sky-overview .ov-band::after{
+    content:"✦";position:absolute;top:50%;transform:translateY(-50%);font-size:10px;color:#c49848
+  }
+  #dpage .sky-overview .ov-band::before{left:18px}
+  #dpage .sky-overview .ov-band::after{right:18px}
+  #dpage .sky-overview .ov-band .nm{font-size:clamp(15px,1.4vw,17px);font-weight:600;letter-spacing:.02em;color:#23264f}
+  #dpage .sky-overview .ov-band .v{font-variant-numeric:tabular-nums;letter-spacing:.03em}
+  #dpage .sky-overview .ov-band b{font-weight:400;font-size:9px;color:#c49848}
+  @media(max-width:767px){
+    #dpage .sky-overview .ov-bt{font-size:19px;gap:10px}
+    #dpage .sky-overview .ov-bt i{flex-basis:60px}
+    #dpage .sky-overview .ov-band{padding:8px 28px;gap:2px 8px;font-size:11px}
+    #dpage .sky-overview .ov-band .nm{font-size:13.5px}
+    #dpage .sky-overview .ov-band b{font-size:8px}
+    #dpage .sky-overview .ov-band::before,#dpage .sky-overview .ov-band::after{font-size:8px}
+    #dpage .sky-overview .ov-band::before{left:12px}
+    #dpage .sky-overview .ov-band::after{right:12px}
+    /* 窄萤幕:姓名、日期、时间一行,出生地自己一行,不留一颗落单的 ✦ */
+    #dpage .sky-overview .ov-band b:last-of-type{display:none}
+    #dpage .sky-overview .ov-band .v:last-child{flex-basis:100%}
+    #dpage .sky-overview{margin-top:18px}
+    /* 盘面放大:突破页面左右留白,占约 96vw,置中、不裁切 */
+    #dpage.sky-page .sky-overview .isky2{
+      width:96vw;max-width:96vw;padding:0;
+      margin-left:calc(50% - 48vw);margin-right:calc(50% - 48vw)
+    }
+  }
   /* 星盘一览 */
   #dpage .sky-overview{
-    position:relative;display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);
-    gap:clamp(20px,3vw,48px);align-items:center;margin-top:clamp(-120px,-8vw,-40px)
+    position:relative;display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,.9fr);
+    gap:clamp(20px,3vw,48px);align-items:center;margin-top:clamp(24px,3vw,44px)
   }
-  #dpage .sky-overview .isky2{max-width:min(620px,100%);margin:0 auto}
+  #dpage .sky-overview .isky2{max-width:min(680px,100%);margin:0 auto;padding:4px}
   #dpage .sky-overview .ov-panel{position:relative}
   #dpage .sky-overview .ov-moon{
     position:absolute;right:0;top:-40px;width:clamp(90px,10vw,140px);aspect-ratio:1;pointer-events:none;
@@ -14376,7 +14444,17 @@ window.Guide = (function () {
           (pl.retro ? ' <i class="rx">R</i>' : "") + '</span></div>';
       }).join("");
       body += '<section class="sky-overview">' +
-        '<div class="ov-wheel"><div class="isky2" id="dpFullWheel" role="img" aria-label="' +
+        '<div class="ov-wheel">' +
+        /* 出生资料从 hero 搬到这里(依设计稿):标题 + 一条两端缺角的横幅 */
+        '<div class="ov-birth"><h2 class="ov-bt"><i aria-hidden="true"></i>' +
+        esc0(dpT("你的出生星盘", "Your birth chart")) + '<i aria-hidden="true"></i></h2>' +
+        '<span class="ov-bs" aria-hidden="true">✦</span>' +
+        '<div class="ov-band">' + [c.nick || "", (c.date || "").replace(/-/g, " · "),
+          c.unknownTime ? "" : (c.time || ""), c.placeLabel || c.city || ""]
+          .filter(Boolean).map(function (x, i) {
+            return '<span class="' + (i ? "v" : "nm") + '">' + esc0(x) + '</span>';
+          }).join('<b aria-hidden="true">✦</b>') + '</div></div>' +
+        '<div class="isky2" id="dpFullWheel" role="img" aria-label="' +
         esc0(dpT("完整星盘", "Full natal chart")) + '"></div></div>' +
         '<div class="ov-panel"><span class="ov-moon" aria-hidden="true"></span>' +
         '<h2>' + esc0(dpT("星盘一览", "Your chart at a glance")) + '</h2>' +
@@ -14386,8 +14464,7 @@ window.Guide = (function () {
         dpT("隐藏相位线", "Hide aspects") + '</button></div>' +
         '<div class="ov-table">' + ovRows + '</div></div></section>';
       heroLead =
-        '<div class="sky-latin">A map of the sky,<br>for the one and only you.</div>' +
-        (sub ? '<div class="sky-meta">' + sub + '</div>' : "");
+        '<div class="sky-latin">A map of the sky,<br>for the one and only you.</div>';
 
       /* —— 2. 四个核心 ——
          太阳 / 月亮 取自 dpPlacement,上升 / 天顶 取自 res.ang,
