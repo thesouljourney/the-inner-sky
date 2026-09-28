@@ -2095,21 +2095,20 @@
   }
   /* 那几片辉光原本画在正文区自己的底上 —— 正文区比视窗窄,所以左右会留下一道
      看得见的直边。改成一层满版的底,光就化在纸上,而不是化在一个方框里。 */
-  /* 用户给的新底图:电脑一张横式、手机一张直式。两张都是「中间留白的纸、
-     四周一圈星空水彩」的画框构图,所以固定在视窗、铺满不重复 —— 卷动时画框
-     留在原地,只有内容在动(position:fixed,不用 background-attachment:fixed,
-     后者在 iOS Safari 上会跳)。上面盖一层很浅的 8% 黑罩(用户要求试试看;
-     之前是 50% 象牙白罩)。 */
+  /* 用户给的新底图:电脑一张横式、手机一张直式(「中间留白的纸、四周一圈星空水彩」)。
+     用户要求底图跟着卡片一起卷动:不再 position:fixed,改成铺在正文区后面、
+     满版宽、往下重复。素材是「原图 + 上下翻转」接成的一张(-d2 / -m2),
+     重复时接缝对得上。上面一层 8% 的浅黑罩。 */
   #dpage.thread-page .dp-body::before{
-    content:"";position:fixed;inset:0;
+    content:"";position:absolute;top:0;bottom:0;left:calc(50% - 50vw);width:100vw;
     z-index:0;pointer-events:none;
     background:linear-gradient(rgba(0,0,0,.08),rgba(0,0,0,.08)),
-      url(assets/life/thread-bg-d.webp) center / cover no-repeat,#fbf3e8
+      url(assets/life/thread-bg-d2.webp) center top / 100% auto repeat-y,#fbf3e8
   }
   @media(max-width:767px){
     #dpage.thread-page .dp-body::before{
       background:linear-gradient(rgba(0,0,0,.08),rgba(0,0,0,.08)),
-        url(assets/life/thread-bg-m.webp) center / cover no-repeat,#fbf3e8
+        url(assets/life/thread-bg-m2.webp) center top / 100% auto repeat-y,#fbf3e8
     }
   }
   /* 固定底图会盖过 hero(两者在同一层叠顺序里),hero 往上提一层 */
