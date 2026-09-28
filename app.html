@@ -1508,6 +1508,65 @@
   /* v3 的 600 段把章节容器的内距收成 18px —— 横向滑动的负 margin 要跟着收 */
   @media(max-width:600px){#dpage .sky-group{--sky-gx:18px}}
   /* ============================================================
+     十二个生命领域 · 插画卡片版(依用户的设计稿)
+     ------------------------------------------------------------
+     · 每一组:标题列在上(符号 + 组名 + 宫位号 + 英文 + 一行说明),四张卡在下
+     · 每张卡:编号 → 领域名 → 一小行星盘资料(宫头星座 · 行星),下半张是一幅大插画
+     · 分组、文字、点开的浮层都没动,只换版面与插画
+     选择器都多带一层 .sky-houses / .sky-group-hd,盖过上面旧版的逐宫规则。
+     ============================================================ */
+  #dpage .sky-group > .art{display:none}
+  #dpage .sky-group .sky-intro{flex:1 1 100%;min-width:0;display:block}
+  #dpage .sky-group .sky-group-hd{
+    max-width:none;display:flex;flex-wrap:wrap;align-items:baseline;column-gap:18px;row-gap:6px
+  }
+  #dpage .sky-group .sky-group-hd .mo,
+  #dpage .sky-group .sky-group-hd .rule{display:none}
+  #dpage .sky-group .sky-group-hd .ttl{order:1;margin:0;align-items:center}
+  #dpage .sky-group .sky-group-hd .ic svg{width:18px;height:18px}
+  #dpage .sky-group .sky-group-hd .nm{font-size:clamp(22px,2.3vw,28px)}
+  #dpage .sky-group .sky-group-hd .nos{order:2;margin:0;font-size:14px;letter-spacing:.2em}
+  #dpage .sky-group .sky-group-hd .en{order:3;margin:0;font-size:11px}
+  #dpage .sky-group .sky-group-hd .ds{
+    order:4;flex:1 1 100%;max-width:none;margin:2px 0 0;line-height:1.9;font-size:13px
+  }
+  #dpage .sky-group .sky-row{gap:clamp(18px,2vw,26px)}
+  #dpage .sky-group .sky-houses{
+    flex:1 1 100%;min-width:0;grid-template-columns:repeat(4,minmax(0,1fr));gap:clamp(12px,1.4vw,18px)
+  }
+  #dpage .sky-houses .sky-house{
+    min-height:clamp(300px,25vw,340px);padding:clamp(18px,1.8vw,24px);border-radius:20px;
+    background:linear-gradient(180deg,#fffdf9 0%,#fbf7f1 100%);
+    border:1px solid rgba(201,178,140,.26);
+    box-shadow:0 1px 2px rgba(80,60,40,.02),0 10px 26px rgba(80,60,40,.04)
+  }
+  #dpage .sky-houses .sky-house .bg{font-family:var(--dp-serif);font-size:15px;letter-spacing:.16em;color:#b08a55}
+  #dpage .sky-houses .sky-house .top i.dash{width:22px;margin-top:9px}
+  #dpage .sky-houses .sky-house .top{justify-content:flex-start}
+  #dpage .sky-houses .sky-house .top .mk{margin-left:auto}
+  #dpage .sky-houses .sky-house .fld{font-size:clamp(17px,1.5vw,19px);max-width:none;margin-top:12px;color:#23264f}
+  #dpage .sky-houses .sky-house .sg{margin-top:8px;font-size:11.5px;letter-spacing:.1em;color:#6f6a7e}
+  #dpage .sky-houses .sky-house .pl b{color:#4d4b62}
+  /* 插画:占卡片下半,往右下出血;上缘用长渐隐化进卡片,文字区保持干净 */
+  #dpage .sky-houses .sky-house[data-field] .art{
+    left:auto;right:-6%;bottom:-4%;transform:none;
+    width:118%;height:70%;opacity:1;filter:none;
+    object-fit:contain;object-position:right bottom;
+    -webkit-mask-image:linear-gradient(to top,#000 62%,rgba(0,0,0,.5) 84%,transparent 100%);
+            mask-image:linear-gradient(to top,#000 62%,rgba(0,0,0,.5) 84%,transparent 100%)
+  }
+  #dpage .sky-houses .sky-house .veil{display:none}
+  @media(max-width:1100px) and (min-width:768px){
+    #dpage .sky-group .sky-houses{grid-template-columns:repeat(2,minmax(0,1fr))}
+    #dpage .sky-houses .sky-house{min-height:320px}
+  }
+  @media(max-width:767px){
+    #dpage .sky-group .sky-group-hd{column-gap:12px}
+    #dpage .sky-group .sky-group-hd .nos{flex:1 1 100%;order:0;font-size:12.5px}
+    #dpage .sky-group .sky-houses{display:flex}
+    #dpage .sky-houses .sky-house{flex:0 0 76%;min-height:300px}
+  }
+  /* ============================================================
      属于我的生命脉络(#/map)—— 编辑式的「一条线」版面
      ------------------------------------------------------------
      主题页与这一页共用同一份 component(dpAnswerHtml / dpTailBlocks),
@@ -14130,7 +14189,7 @@ window.Guide = (function () {
         return '<div class="sky-house' + (pls.length ? " has" : "") + '"' +
           ' role="button" tabindex="0" aria-expanded="false"' +
           ' data-field="' + (i + 1) + '" aria-controls="skyField' + (i + 1) + '">' +
-          '<img class="art" src="assets/atmos/h' + no + '-r.webp" alt="" aria-hidden="true" loading="lazy" decoding="async">' +
+          '<img class="art" src="assets/houses/h' + no + '.webp" alt="" aria-hidden="true" loading="lazy" decoding="async">' +
           '<span class="veil" aria-hidden="true"></span>' +
           '<div class="in">' +
           '<div class="top"><span class="bg" aria-hidden="true">' + no + '</span>' +
