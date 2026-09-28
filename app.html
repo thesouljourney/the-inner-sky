@@ -2099,7 +2099,9 @@
     z-index:0;pointer-events:none;
     /* 用户给的星月云朵底图。原图是直式一张,这里用的是「原图 + 上下翻转」
        接成的一张(thread-bg.webp),往下重复时接缝对得上,长页面也不会断。 */
-    background:url(assets/life/thread-bg.webp) center top / 100% auto repeat-y,#fcf6ef
+    /* 底图不够清晰(用户反馈):加一层跟「我的星空」/ 九大主题一样的 50% 象牙白罩 */
+    background:linear-gradient(rgba(251,245,236,.5),rgba(251,245,236,.5)),
+      url(assets/life/thread-bg.webp) center top / 100% auto repeat-y,#fcf6ef
   }
   #dpage.thread-page .dp-body > *{position:relative;z-index:1}
   /* 这一页不要一格一格的白卡片:等待 / 进度 / 错误那几种状态卡保持原样,
