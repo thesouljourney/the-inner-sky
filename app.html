@@ -4063,18 +4063,7 @@
   }
   #dpage.compass-page .cp-done .st{display:block;font-size:12px;line-height:1;color:#c49848}
   #dpage.compass-page .cp-done .a{margin:10px 0 0;font-family:var(--dp-serif);font-weight:600;font-size:16px;letter-spacing:.08em;color:#23264f}
-  #dpage.compass-page .cp-done .b{margin:6px 0 0;font-size:13px;letter-spacing:.04em;color:#6f6a7e}
-  #dpage.compass-page .cp-done .pk{
-    margin:14px auto 0;max-width:26em;font-family:var(--dp-serif);font-size:13.5px;line-height:1.8;color:#4d4b62;
-    padding:10px 14px;border-radius:12px;background:rgba(240,234,226,.55)
-  }
-  #dpage.compass-page .cp-cont{
-    margin-top:16px;min-height:40px;padding:0 26px;border-radius:999px;cursor:pointer;
-    font-family:var(--dp-serif);font-size:14px;letter-spacing:.1em;color:#23264f;
-    background:rgba(255,253,249,.9);border:1px solid rgba(196,152,72,.55)
-  }
-  #dpage.compass-page .cp-cont:hover{border-color:rgba(196,152,72,.85)}
-  #dpage.compass-page .cp-diary .cp-ta{min-height:170px}
+  #dpage.compass-page .cp-done .b{margin:10px 0 0;font-family:var(--dp-serif);font-size:13.5px;line-height:1.9;letter-spacing:.05em;color:#6f6a7e}
 
   /* —— F. 我的星空记录:最新三则后面那一格「查看更多」(往 #/records) —— */
   #dpage.compass-page .cp-sky-more{
@@ -5749,15 +5738,19 @@
   #dpage.records-page .rc-end span{font-size:18px;color:#3b3f78;letter-spacing:.2em}
   #dpage.records-page .rc-end p{margin:0;font-size:12.5px;line-height:1.8;letter-spacing:.06em;color:#6f6a7e}
   #dpage.records-page .rc-empty{text-align:center;margin:30px 0;font-size:14px;color:#6f6a7e}
-  #dpage.records-page .rc-today{
-    max-width:420px;margin:18px auto 0;padding:22px 20px 20px;text-align:center;border-radius:20px;
-    background:rgba(255,251,243,.85);border:1px solid rgba(201,168,105,.4);
-    box-shadow:0 0 34px rgba(186,176,232,.24),0 10px 26px rgba(96,86,150,.06)
+  #dpage.records-page .rc-compose{
+    max-width:560px;margin:0 auto clamp(26px,3.4vw,38px);padding:18px 20px;text-align:center;border-radius:20px;
+    background:rgba(255,251,243,.82);border:1px solid rgba(201,168,105,.38);
+    box-shadow:0 0 30px rgba(170,206,196,.18),0 10px 26px rgba(96,86,150,.05)
   }
-  #dpage.records-page .rc-today .st{display:block;font-size:12px;color:#c49848}
-  #dpage.records-page .rc-today .a{margin:8px 0 0;font-family:var(--dp-serif);font-weight:600;font-size:16px;letter-spacing:.08em;color:#23264f}
-  #dpage.records-page .rc-today .b{margin:6px 0 0;font-size:13px;color:#6f6a7e}
-  #dpage.records-page .rc-today .rc-new{margin-top:16px;width:min(100%,220px);min-height:42px;font-size:14px}
+  #dpage.records-page .rc-compose .st{display:block;font-size:11px;line-height:1;color:#c49848}
+  #dpage.records-page .rc-compose .a{margin:8px 0 0;font-family:var(--dp-serif);font-weight:600;font-size:15.5px;letter-spacing:.1em;color:#23264f}
+  #dpage.records-page .rc-compose .b{margin:6px 0 0;font-size:13px;line-height:1.8;color:#6f6a7e}
+  #dpage.records-page .rc-cw{
+    margin-top:12px;min-height:38px;padding:0 22px;border-radius:999px;cursor:pointer;
+    font-family:var(--dp-serif);font-size:13.5px;letter-spacing:.08em;color:#23264f;
+    background:rgba(255,253,249,.95);border:1px solid rgba(196,152,72,.55)
+  }
   #dpage.records-page .rc-new{
     display:flex;align-items:center;justify-content:center;width:min(100%,300px);min-height:48px;margin:18px auto 0;
     border-radius:999px;background:#23264f;color:#fff;text-decoration:none;font-family:var(--dp-serif);font-size:15px;
@@ -5817,16 +5810,18 @@
   #dpage.records-page .rc-del p{margin:8px 0 0;font-size:13px;color:#6f6a7e}
   @media(max-width:767px){
     #dpage.records-page .dp-body::before{background-size:auto 1300px;top:-140px}
-  }
-  /* 桌机:正文底图往上错开一截,它自己那颗月亮不会紧贴在 Hero 的月亮下面 */
-  @media(min-width:768px){
-    #dpage.records-page .dp-body::before{background-position:center -340px}
     #dpage.records-page .rc-item{padding-left:20px}
     #dpage.records-page .rc-card{padding:2px 14px}
     #dpage.records-page .rc-main{font-size:13.5px}
     #dpage.records-page .rc-chips{gap:6px;flex-wrap:nowrap}
     #dpage.records-page .rc-chip{min-height:36px;padding:0 12px;font-size:12.5px;letter-spacing:.02em;white-space:nowrap}
   }
+  /* 桌机:正文底图往上错开一截,它自己那颗月亮不会紧贴在 Hero 的月亮下面 */
+  @media(min-width:768px){
+    #dpage.records-page .dp-body::before{background-position:center -340px}
+  }
+  /* 浮窗开着的时候,正文区整层要在 Hero 之上,标题才不会透过浮窗 */
+  #dpage.records-page .dp-body:has(.rc-overlay){z-index:3}
 </style>
 </head>
 <!-- legacy-off 直接写在标签上,不等 JS。
@@ -11141,9 +11136,7 @@ window.Guide = (function () {
   /* 我的内在指南:页面的 UI 状态。跟其他模块级宣告一样必须写在首次渲染之前,
      否则冷启动直接带 #/compass 进来会踩进 TDZ。 */
   let compassMood = "";          // 此刻选中的心情
-  /* 每种记录一天一则:今天已经写过的那一种,预设显示「今天的这一页已经写下了」,
-     按「继续编辑」才展开表单(内容已经填好),存的时候是更新同一则,不新增第二则 */
-  let compassEditing = { note: false, answer: false, diary: false };
+
   let compassEntries = null;     // 已载入的记录;null = 还没载到
   /* 我的星空记录(#/records)页面的 UI 状态 */
   let recFilter = "all";         // all / note / answer
@@ -13290,21 +13283,25 @@ window.Guide = (function () {
     const k = compassDayKey(new Date().toISOString());
     return (compassEntries || []).find(function (r) { return r.kind === kind && compassDayKey(r.ts) === k; }) || null;
   }
-  /* 今天已经写过:一页纸的感觉,不是「已达上限」 */
-  function compassDoneHtml(kind, row) {
-    const peek = String(row.text || row.mood || "").replace(/\s+/g, " ").trim();
+  /* 今天已经写过:一页纸的感觉,不是「已达上限」。内在指南这里不开放编辑,
+     要回头看或修改,去「我的星空记录」。 */
+  function compassDoneHtml(kind) {
+    const t = kind === "note"
+      ? [dpT("今天的这一页，已经写好了", "Today’s page is written"),
+         dpT("此刻的你，就先留在这里。", "Let this moment of you rest here."),
+         dpT("明天，再回来看看自己吧。", "Come back and see yourself tomorrow.")]
+      : [dpT("今天的问题，已经回答过了", "Today’s question is answered"),
+         dpT("不急着找到更多答案。", "No need to find more answers yet."),
+         dpT("明天，再听听自己会怎么说。", "Tomorrow, listen to what you’ll say.")];
     return '<div class="cp-done"><span class="st" aria-hidden="true">✦</span>' +
-      '<p class="a">' + esc0(dpT("今天的这一页已经写下了", "Today’s page is already written")) + '</p>' +
-      '<p class="b">' + esc0(dpT("想回来看看，或再补充一点吗？", "Want to look again, or add a little more?")) + '</p>' +
-      (peek ? '<p class="pk">' + esc0(peek.length > 40 ? peek.slice(0, 40) + "…" : peek) + '</p>' : "") +
-      '<button type="button" class="cp-cont" data-edit="' + kind + '">' + esc0(dpT("继续编辑", "Keep editing")) + '</button></div>';
+      '<p class="a">' + esc0(t[0]) + '</p>' +
+      '<p class="b">' + esc0(t[1]) + '<br>' + esc0(t[2]) + '</p></div>';
   }
 
   function compassNowHtml() {
-    const today = compassToday("note");
-    if (today && !compassEditing.note) {
+    if (compassToday("note")) {
       return '<section class="cp-sec cp-now">' +
-        compassSecHead("", dpT("此刻的我", "Right Now"), "RIGHT NOW") + compassDoneHtml("note", today) + "</section>";
+        compassSecHead("", dpT("此刻的我", "Right Now"), "RIGHT NOW") + compassDoneHtml("note") + "</section>";
     }
     return '<section class="cp-sec cp-now">' +
       compassSecHead("", dpT("此刻的我", "Right Now"), "RIGHT NOW") +
@@ -13328,9 +13325,9 @@ window.Guide = (function () {
                "What has been staying with you today?")) + "</p>" +
       '<textarea id="cpNote" class="cp-ta" rows="4" placeholder="' +
       esc0(dpT("写一点也可以，不需要把它整理得很好。",
-               "A few words is enough. It doesn’t need to be tidy.")) + '">' + (today ? esc0(today.text || "") : "") + '</textarea>' +
+               "A few words is enough. It doesn’t need to be tidy.")) + '"></textarea>' +
       '<div class="cp-act"><button type="button" class="dp-cta" id="cpSave">' +
-      esc0(today ? dpT("保存修改", "Save") : dpT("写下此刻的想法", "Keep this moment")) + "</button>" +
+      esc0(dpT("写下此刻的想法", "Keep this moment")) + "</button>" +
       '<span class="cp-hint" id="cpHint" aria-live="polite"></span></div>' +
       "</section>";
   }
@@ -13354,11 +13351,10 @@ window.Guide = (function () {
 
   function compassQuestionHtml(chart) {
     const q = compassTodayQuestion();
-    const today = compassToday("answer");
-    if (today && !compassEditing.answer) {
+    if (compassToday("answer")) {
       return '<section class="cp-sec cp-ask">' +
-        compassSecHead("", dpT("问问自己", "One Question"), "ONE QUESTION") +
-        '<div class="cp-ask-card">' + compassDoneHtml("answer", today) + "</div></section>";
+        compassSecHead("", dpT("今天想问自己的一个问题", "One Question"), "ONE QUESTION") +
+        '<div class="cp-ask-card">' + compassDoneHtml("answer") + "</div></section>";
     }
     if (q.source !== "generated") {
       return '<section class="cp-sec cp-ask">' +
@@ -13371,33 +13367,13 @@ window.Guide = (function () {
     return '<section class="cp-sec cp-ask">' +
       compassSecHead("", dpT("今天想问自己的一个问题", "One Question"), "ONE QUESTION") +
       '<div class="cp-ask-card">' +
-      /* 今天已经答过又按「继续编辑」:打开的是【当时那一题】,不是换一题 */
-      '<p class="qt">' + esc0(today && today.question ? today.question : q.text).replace(/\n/g, "<br>") + "</p>" +
+      '<p class="qt">' + esc0(q.text).replace(/\n/g, "<br>") + "</p>" +
       '<textarea id="cpAnswer" class="cp-ta" rows="3" placeholder="' +
-      esc0(dpT("写下此刻想到的……", "Write what comes to mind…")) + '">' + (today ? esc0(today.text || "") : "") + '</textarea>' +
+      esc0(dpT("写下此刻想到的……", "Write what comes to mind…")) + '"></textarea>' +
       '<div class="cp-act"><button type="button" class="dp-cta" id="cpSaveAnswer">' +
-      esc0(today ? dpT("保存修改", "Save") : dpT("留下这个回答", "Keep this answer")) + "</button>" +
+      esc0(dpT("留下这个回答", "Keep this answer")) + "</button>" +
       '<button type="button" class="cp-skip" id="cpSkip">' +
       esc0(dpT("今天先不回答 →", "Not today →")) + "</button></div></div></section>";
-  }
-
-  /* 小小日记:今天发生了什么 / 我想留下什么。一天一篇,可以比较长,随时回来补写 */
-  function compassDiaryHtml() {
-    const today = compassToday("diary");
-    const head = compassSecHead("", dpT("小小日记", "Little Diary"), "LITTLE DIARY");
-    if (today && !compassEditing.diary) {
-      return '<section class="cp-sec cp-ask cp-diary">' + head +
-        '<div class="cp-ask-card">' + compassDoneHtml("diary", today) + "</div></section>";
-    }
-    return '<section class="cp-sec cp-ask cp-diary">' + head +
-      '<div class="cp-ask-card">' +
-      '<p class="qt">' + esc0(dpT("今天发生了什么？或只是一点想留下来的东西。", "What happened today — or something you’d like to keep.")) + "</p>" +
-      '<textarea id="cpDiary" class="cp-ta" rows="6" maxlength="4000" placeholder="' +
-      esc0(dpT("不用写得很完整，像写给自己的一页纸就好。", "It doesn’t need to be complete — just a page for yourself.")) + '">' +
-      (today ? esc0(today.text || "") : "") + '</textarea>' +
-      '<div class="cp-act"><button type="button" class="dp-cta" id="cpSaveDiary">' +
-      esc0(today ? dpT("保存修改", "Save") : dpT("留下今天的日记", "Keep today’s page")) + "</button>" +
-      '<span class="cp-hint" id="cpDiaryHint" aria-live="polite"></span></div></div></section>';
   }
 
   /* 这些记录到底存在哪里 —— 如实说,不让人误会。
@@ -13411,7 +13387,8 @@ window.Guide = (function () {
       "</p>";
   }
   function compassSkyHtml() {   /* section 会挂 cp-sky */
-    const rows = compassEntries;
+    /* 小小日记只在「我的星空记录」里出现,内在指南这里不显示 */
+    const rows = compassEntries && compassEntries.filter(function (r) { return r.kind !== "diary"; });
     let inner;
     if (rows === null) {
       inner = '<div class="cp-empty"><span class="st" aria-hidden="true">✦</span><p>' +
@@ -13438,9 +13415,7 @@ window.Guide = (function () {
           (t ? '<p class="bd">' + esc0(open ? t : preview) + "</p>" : "") +
           (r.kind === "answer"
             ? '<span class="kd">' + esc0(dpT("回答了今天的问题", "Answered today’s question")) + "</span>"
-            : r.kind === "diary"
-              ? '<span class="kd">' + esc0(dpT("小小日记", "Little diary")) + "</span>"
-              : "") +
+            : "") +
           (open && r.question
             ? '<p class="qz">' + esc0(dpT("那天的问题：", "That day’s question: ")) +
               esc0(r.question) + "</p>"
@@ -14233,7 +14208,6 @@ window.Guide = (function () {
         compassAnchorsHtml() +
         compassNowHtml() +
         compassQuestionHtml(c) +
-        compassDiaryHtml() +
         compassSkyHtml() +
         "</div>";
     }
@@ -14303,7 +14277,8 @@ window.Guide = (function () {
       });
     });
 
-    /* 每种记录一天一则:今天已经有这一种 → 更新同一则;没有 → 新增 */
+    /* 每种记录一天一则:画面上今天写过就不会再出现表单;万一另一个分页已经写过,
+       这里也是更新同一则,不会新增第二则 */
     function keep(kind, taId, btnId, hintId) {
       const btn = document.getElementById(btnId), ta = document.getElementById(taId);
       if (!btn || !ta) return;
@@ -14334,7 +14309,6 @@ window.Guide = (function () {
               ? (compassEntries || []).map(function (x) { return x.id === today.id ? row : x; })
               : [row].concat(compassEntries || []);
             if (kind === "note") compassMood = "";
-            compassEditing[kind] = false;
             if (curRoute && curRoute.k === "compass") routeRefresh();
           })
           .catch(function () {
@@ -14345,15 +14319,7 @@ window.Guide = (function () {
     }
     keep("note", "cpNote", "cpSave");
     keep("answer", "cpAnswer", "cpSaveAnswer");
-    keep("diary", "cpDiary", "cpSaveDiary", "cpDiaryHint");
-    host.querySelectorAll(".cp-cont").forEach(function (b) {
-      b.addEventListener("click", function () {
-        const k = b.getAttribute("data-edit");
-        compassEditing[k] = true;
-        if (k === "note") { const t = compassToday("note"); compassMood = t ? (t.mood || "") : ""; }
-        compassRepaint();
-      });
-    });
+
 
     const genBtn = document.getElementById("cpGenBtn");
     if (genBtn) genBtn.addEventListener("click", cpProdGenerate);
@@ -14493,6 +14459,23 @@ window.Guide = (function () {
   }
   function recModalHtml() {
     if (!recModal) return "";
+    /* 新写一篇小小日记(只在这一页写得到) */
+    if (recModal.type === "new") {
+      return '<div class="rc-overlay" data-close="1"><div class="rc-modal" role="dialog" aria-modal="true">' +
+        '<div class="rc-mh"><h3>' + esc0(dpT("小小日记", "Little diary")) + '</h3>' +
+        '<button type="button" class="rc-x" data-close="1" aria-label="' + esc0(dpT("关闭", "Close")) + '">×</button></div>' +
+        '<span class="rc-ms" aria-hidden="true">✦</span>' +
+        '<div class="rc-mmeta"><span>' + esc0(compassDate(new Date().toISOString())) + '</span>' +
+        '<span class="rc-tag d">' + esc0(dpT("小小日记", "Little diary")) + '</span></div>' +
+        '<h4>' + esc0(dpT("今天发生了什么？或只是一点想留下来的东西。", "What happened today — or something you’d like to keep.")) + '</h4>' +
+        '<textarea class="rc-ta" id="rcT" maxlength="4000" rows="8" placeholder="' +
+        esc0(dpT("不用写得很完整，像写给自己的一页纸就好。", "It doesn’t need to be complete — just a page for yourself.")) + '"></textarea>' +
+        '<span class="rc-cnt" data-for="rcT">0/4000</span>' +
+        '<p class="rc-err" id="rcErr" aria-live="polite"></p>' +
+        '<div class="rc-btns"><button type="button" class="rc-b" data-close="1">' + esc0(dpT("取消", "Cancel")) + '</button>' +
+        '<button type="button" class="rc-b pri" id="rcAdd">' + esc0(dpT("留下今天的日记", "Keep today’s page")) + '</button></div>' +
+        '</div></div>';
+    }
     const r = recFind(recModal.id);
     if (!r) return "";
     const isQ = r.kind === "answer", isD = r.kind === "diary";
@@ -14562,7 +14545,19 @@ window.Guide = (function () {
         if (!day || day.key !== dk) { day = { key: dk, items: [] }; g.days.push(day); }
         day.items.push(r);
       });
-      const wroteToday = ["note", "answer", "diary"].some(function (k) { return !!compassToday(k); });
+      /* 小小日记只在这里写:今天还没写 → 一格邀请;写过 → 随时回来补写 */
+      const diaryToday = compassToday("diary");
+      const compose = '<div class="rc-compose"><span class="st" aria-hidden="true">✦</span>' +
+        (diaryToday
+          ? '<p class="a">' + esc0(dpT("今天的小小日记已经写下了", "Today’s little diary is written")) + '</p>' +
+            '<p class="b">' + esc0(dpT("想起什么，随时回来补上几句。", "Come back and add a line whenever something comes to mind.")) + '</p>' +
+            '<button type="button" class="rc-cw" data-act="edit" data-id="' + esc0(diaryToday.id) + '">' + esc0(dpT("继续补写", "Add a little more")) + '</button>'
+          : '<p class="a">' + esc0(dpT("小小日记", "Little diary")) + '</p>' +
+            '<p class="b">' + esc0(dpT("今天发生了什么？或只是一点想留下来的东西。", "What happened today — or something you’d like to keep.")) + '</p>' +
+            '<button type="button" class="rc-cw" data-act="new">' + esc0(dpT("写下今天的小小日记", "Write today’s page")) + '</button>') +
+        '</div>';
+      /* 此刻的我与问问自己在内在指南里写;两样今天都写过,就不再放「写下新的记录」 */
+      const bothDone = !!compassToday("note") && !!compassToday("answer");
       const chip = function (k, t) {
         return '<button type="button" class="rc-chip' + (recFilter === k ? " on" : "") + '" data-f="' + k + '" aria-pressed="' +
           (recFilter === k ? "true" : "false") + '">' + esc0(t) + '</button>';
@@ -14570,6 +14565,7 @@ window.Guide = (function () {
       body = '<div class="rc-wrap">' +
         '<div class="rc-chips" role="group">' + chip("all", dpT("全部", "All")) + chip("note", dpT("此刻的我", "Right now")) +
         chip("answer", dpT("问问自己", "Ask myself")) + chip("diary", dpT("小小日记", "Diary")) + '</div>' +
+        compose +
         (groups.length
           ? groups.map(function (g) {
               return '<section class="rc-month"><h2 class="rc-mt"><span class="mk" aria-hidden="true">✦</span>' + esc0(g.key) + '</h2>' +
@@ -14579,13 +14575,7 @@ window.Guide = (function () {
               '<br>' + esc0(dpT("继续写下新的吧 ✦", "Keep writing new ones ✦")) + '</p></div>'
           : '<p class="rc-empty">' + esc0(rows.length ? dpT("这个分类还没有记录。", "Nothing here yet.")
                                                    : dpT("这里会慢慢留下属于你的天空。", "Your own sky will gather here, slowly.")) + '</p>') +
-        (wroteToday
-          /* 今天已经写过:一页纸的感觉,不是「已达上限」 */
-          ? '<div class="rc-today"><span class="st" aria-hidden="true">✦</span>' +
-            '<p class="a">' + esc0(dpT("今天的这一页已经写下了", "Today’s page is already written")) + '</p>' +
-            '<p class="b">' + esc0(dpT("想回来看看，或再补充一点吗？", "Want to look again, or add a little more?")) + '</p>' +
-            '<a class="rc-new" id="rcNew" href="#/compass">' + esc0(dpT("继续编辑", "Keep editing")) + '</a></div>'
-          : '<a class="rc-new" id="rcNew" href="#/compass">＋ ' + esc0(dpT("写下新的记录", "Write a new one")) + '</a>') +
+        (bothDone ? "" : '<a class="rc-new" id="rcNew" href="#/compass">＋ ' + esc0(dpT("写下新的记录", "Write a new one")) + '</a>') +
         '</div>' + recModalHtml();
     }
     dpScaffold({
@@ -14617,6 +14607,14 @@ window.Guide = (function () {
         e.stopPropagation();
         const id = b.getAttribute("data-menu");
         recMenu = recMenu === id ? "" : id;
+        again();
+      });
+    });
+    host.querySelectorAll(".rc-cw").forEach(function (b) {
+      b.addEventListener("click", function (e) {
+        e.stopPropagation();
+        recModal = { type: b.getAttribute("data-act"), id: b.getAttribute("data-id") || "" };
+        recEditMood = ""; recMenu = "";
         again();
       });
     });
@@ -14665,6 +14663,24 @@ window.Guide = (function () {
         compassEntries = (compassEntries || []).map(function (x) { return x.id === r.id ? next : x; });
         recModal = null; again();
       }).catch(function () { save.disabled = false; err(dpT("这次没有存成功，再试一次。", "That didn’t save — try once more.")); });
+    });
+    const add = document.getElementById("rcAdd");
+    if (add) add.addEventListener("click", function () {
+      const t = document.getElementById("rcT");
+      const text = t ? t.value.trim() : "";
+      if (!text) { err(dpT("写一点再留下。", "Write a little first.")); return; }
+      add.disabled = true;
+      const today = compassToday("diary");      // 另一个分页已经写过 → 补进同一篇
+      const job = today
+        ? window.Compass.store.update(compassOwner(), today.id, { text: today.text + "\n\n" + text, kind: "diary" })
+            .then(function (row) { return row || Object.assign({}, today, { text: today.text + "\n\n" + text }); })
+        : window.Compass.store.add(compassOwner(), { kind: "diary", text: text, mood: "", question: "" });
+      job.then(function (row) {
+        compassEntries = today
+          ? (compassEntries || []).map(function (x) { return x.id === today.id ? row : x; })
+          : [row].concat(compassEntries || []);
+        recModal = null; again();
+      }).catch(function () { add.disabled = false; err(dpT("这次没有存成功，再试一次。", "That didn’t save — try once more.")); });
     });
     const del = document.getElementById("rcDel");
     if (del) del.addEventListener("click", function () {
