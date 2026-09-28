@@ -2014,7 +2014,9 @@
   }
   #dpage.thread-page .dp-hero .dp-stars i{opacity:calc(var(--o,.5) * .55)}
   /* 底缘化进正文的象牙色 —— hero 不设 overflow:hidden(账号选单会被切掉) */
+  /* 用户要求:拿掉 hero 最下面那一段化进象牙色的白色渐层,云天直接到底(display:none) */
   #dpage.thread-page .dp-hero::after{
+    display:none;
     content:"";position:absolute;left:0;right:0;bottom:0;z-index:1;pointer-events:none;
     height:clamp(104px,15vw,208px);
     /* 多给几个停点,而且中段刻意走得慢 —— 天空是「化」进纸里的,不是被一条边切断 */
