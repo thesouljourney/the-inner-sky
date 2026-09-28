@@ -11077,6 +11077,7 @@ window.Guide = (function () {
   let recModal = null;           // { type: "view" | "edit" | "del", id }
   let recBound = false;          // 点空白处关选单的监听只挂一次
   let recEditMood = "";          // 编辑浮窗里重新选的心情
+  let compassJumpNow = false;    // 从星空记录「写下新的记录」过来:进内在指南后卷到「此刻的我」
   let compassAll = false;        // 「查看全部」是否展开
   let compassOpen = "";          // 目前展开的那一则记录 id
   let compassDelAsk = "";        // 正在等确认删除的那一则 id
@@ -14151,6 +14152,17 @@ window.Guide = (function () {
     }
 
     const host = $("dpage");
+    /* 从星空记录「写下新的记录」过来:直接落在「此刻的我」(不自动弹出手机键盘) */
+    if (compassJumpNow) {
+      const now = host.querySelector(".cp-now");
+      if (now) {
+        compassJumpNow = false;
+        requestAnimationFrame(function () {
+          now.scrollIntoView({ block: "start" });
+          window.scrollBy(0, -24);
+        });
+      }
+    }
     // 心情:单选,再点一次取消
     host.querySelectorAll(".cp-mood").forEach(function (b) {
       b.addEventListener("click", function () {
@@ -14399,7 +14411,7 @@ window.Guide = (function () {
               '<br>' + esc0(dpT("继续写下新的吧 ✦", "Keep writing new ones ✦")) + '</p></div>'
           : '<p class="rc-empty">' + esc0(rows.length ? dpT("这个分类还没有记录。", "Nothing here yet.")
                                                    : dpT("这里会慢慢留下属于你的天空。", "Your own sky will gather here, slowly.")) + '</p>') +
-        '<a class="rc-new" href="#/compass">＋ ' + esc0(dpT("写下新的记录", "Write a new one")) + '</a>' +
+        '<a class="rc-new" id="rcNew" href="#/compass">＋ ' + esc0(dpT("写下新的记录", "Write a new one")) + '</a>' +
         '</div>' + recModalHtml();
     }
     dpScaffold({
@@ -14421,6 +14433,8 @@ window.Guide = (function () {
     }
     const host = $("dpage");
     const again = function () { if (curRoute && curRoute.k === "records") routeRefresh(); };
+    const nw = document.getElementById("rcNew");
+    if (nw) nw.addEventListener("click", function () { compassJumpNow = true; });
     host.querySelectorAll(".rc-chip").forEach(function (b) {
       b.addEventListener("click", function () { recFilter = b.getAttribute("data-f"); recMenu = ""; again(); });
     });
