@@ -1531,6 +1531,35 @@
   }
   /* v3 的 600 段把章节容器的内距收成 18px —— 横向滑动的负 margin 要跟着收 */
   @media(max-width:600px){#dpage .sky-group{--sky-gx:18px}}
+  /* 结尾:一张圆角的湖景横幅,文字与按钮置中压在天空上 */
+  #dpage.sky-page .sky-zone-c .sky-atmos{display:none}
+  #dpage.sky-page .sky-close{
+    overflow:hidden;isolation:isolate;border-radius:28px;
+    margin-top:clamp(52px,6vw,88px);margin-bottom:clamp(-60px,-4vw,-30px);
+    padding:clamp(40px,5vw,64px) clamp(20px,4vw,48px) clamp(120px,14vw,190px);
+    background:url(assets/atmos/sky-close-lake.webp) center 88% / cover no-repeat,#3d3a66;
+    box-shadow:0 18px 50px rgba(30,30,70,.18)
+  }
+  /* 标题与说明压在天空上:一层很淡的柔光托住字 */
+  #dpage.sky-page .sky-close::before{
+    content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
+    background:radial-gradient(58% 56% at 50% 32%,rgba(255,248,240,.72),rgba(255,248,240,.35) 55%,rgba(255,248,240,0) 80%)
+  }
+  #dpage.sky-page .sky-close .tp{display:none}
+  #dpage.sky-page .sky-close .say{
+    white-space:normal;font-weight:600;font-size:clamp(20px,2.4vw,28px);line-height:1.6;color:#23264f
+  }
+  #dpage.sky-page .sky-close .sub{margin-top:10px;font-size:13.5px;color:#4a4a66}
+  #dpage.sky-page .sky-close .dp-cta{
+    margin-top:clamp(20px,2.6vw,28px);padding:14px 34px;
+    background:linear-gradient(135deg,#5b5486,#8a78a8);box-shadow:0 10px 26px rgba(40,34,90,.3)
+  }
+  #dpage.sky-page .sky-close .back{color:#3b3f68;border-bottom-color:rgba(59,63,104,.35)}
+  @media(max-width:767px){
+    #dpage.sky-page .sky-close{border-radius:22px;padding:34px 18px 150px;background-position:50% 88%;background-size:auto 130%}
+    #dpage.sky-page .sky-close .say{font-size:19px}
+  }
+
   /* ============================================================
      我的星空 · 整页排版(依用户的整页设计稿)
      hero 只放标题 → 星盘一览(左盘面 / 右行星表)→ 四个核心横式卡 →
