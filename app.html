@@ -12089,18 +12089,19 @@ window.Guide = (function () {
        生命线从这里之后才开始,所以它移进 .thread-trail 里(原本罩着整页)。 */
     /* 开场两段是版面文案(所有人都一样),不是针对谁的解读;tagline 才是他自己的那一句 */
     h += '<div class="thread-intro"><p class="a">' +
-      dpT("你的经历，从来不是彼此独立的。", "Nothing you have lived through stands on its own.") +
+      dpT("你的经历，从来不是彼此独立的", "Nothing you have lived through stands on its own") +
       '</p><p class="b">' +
-      dpT("有些事情发生在很久以前，<br>却仍然影响着你今天看待自己、关系和世界的方式。",
-          "Some of it happened long ago,<br>yet it still shapes how you see yourself, your relationships and the world.") +
+      dpT("有些事情发生在很久以前，<br>却仍然影响着你今天看待自己、关系和世界的方式",
+          "Some of it happened long ago,<br>yet it still shapes how you see yourself, your relationships and the world") +
       "</p></div>";
     /* 星语 Quote Card:这个人自己的那一句(tagline),单独放进一张半透明的星空卡。
-       原文一字不改,只在句号后分段,让它读起来像一段留给自己的话。 */
+       原文一字不改,只在句号后分段,让它读起来像一段留给自己的话。
+       用户要求:这一区块不显示句号 —— 只拿掉每一段结尾的「。」,内文其他标点不动 */
     if (data.tagline)
       h += '<div class="thread-open"><figure class="star-quote">' +
         '<span class="st" aria-hidden="true">✦</span>' +
         String(data.tagline).split(/(?<=。)/).filter(function (x) { return x.trim(); })
-          .map(function (x) { return "<p>" + esc0(x.trim()) + "</p>"; }).join("") +
+          .map(function (x) { return "<p>" + esc0(x.trim().replace(/[。.]+$/, "")) + "</p>"; }).join("") +
         "</figure></div>";
     h += dpThreadMap((data.sections || []).length);
     h += '<div class="thread-trail">' + dpThreadLine();
