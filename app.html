@@ -3640,16 +3640,11 @@
      · 段与段之间一条香槟金细线 + ✦,间距 64–80px
      · 过场:置中、大留白、不放卡片也不放按钮
      ============================================================ */
-  /* 满版的一片柔和象牙 / 薰衣草底:上下两端淡出、左右铺到页缘,没有边,不是一个框 */
+  /* 四段直接写在页面底图上(用户要求拿掉后面那片白色柔光) */
   #dpage.reading-page .dp-forcard{
     position:relative;
     background:none;border:0;border-radius:0;box-shadow:none;overflow:visible;
     padding:clamp(28px,4vw,48px) clamp(24px,5vw,56px) 0;margin-bottom:0
-  }
-  #dpage.reading-page .dp-forcard::before{
-    content:"";position:absolute;z-index:0;pointer-events:none;
-    top:-40px;bottom:-60px;left:calc(50% - 50vw);width:100vw;
-    background:linear-gradient(180deg,rgba(250,245,240,0) 0,rgba(250,245,240,.86) 90px,rgba(247,242,246,.86) calc(100% - 110px),rgba(247,242,246,0) 100%)
   }
   /* 插画往页缘出血时,在页面边缘被裁掉,不会把整页撑出横向卷轴
      (overflow-x:clip 不会产生卷动容器,底下的 sticky / 卷动都不受影响) */
@@ -3698,26 +3693,32 @@
   #dpage.reading-page .dp-forcard .gc > div{grid-area:d;line-height:1.85}
   #dpage.reading-page .dp-forcard .gc .gc-art{
     grid-area:art;position:static;inset:auto;transform:none;display:block;
-    width:clamp(88px,28vw,200px);max-width:none;height:auto;aspect-ratio:auto;
+    /* 素材已裁到物体本身(去掉四周透明留白);四个物体「看起来一样大」:
+       以同样的面积为准,宽度 = 基准 × √(宽高比) */
+    width:calc(var(--gs,184px) * var(--gm,1));max-width:none;height:auto;aspect-ratio:auto;
     object-fit:contain;background:transparent;opacity:.92;
     -webkit-mask-image:none;mask-image:none
   }
+  #dpage.reading-page .dp-forcard .gc .gc-art.gc-crystal{--gm:1}
+  #dpage.reading-page .dp-forcard .gc .gc-art.gc-window{--gm:.88}
+  #dpage.reading-page .dp-forcard .gc .gc-art.gc-book{--gm:1.21}
+  #dpage.reading-page .dp-forcard .gc .gc-art.gc-path{--gm:1.06}
   /* 01:编号、标题、正文靠左(文字约 66%),图在右上,对齐标题 / 第一段,略往右缘靠 */
   #dpage.reading-page .dp-forcard .gc:nth-child(4n+1){
-    grid-template-columns:minmax(0,1fr) clamp(88px,28%,200px);
+    grid-template-columns:minmax(0,1fr) auto;
     grid-template-areas:"no art" "t art" "d art"
   }
   #dpage.reading-page .dp-forcard .gc:nth-child(4n+1) .gc-art{align-self:start;margin:18px -8px 0 0;justify-self:end}
   /* 02:图在左、略高于正文第一行;编号与标题在图的右边;正文从标题下方开始、用满宽 */
   #dpage.reading-page .dp-forcard .gc:nth-child(4n+2),
   #dpage.reading-page .dp-forcard .gc:nth-child(4n+4){
-    grid-template-columns:clamp(88px,28%,200px) minmax(0,1fr);
+    grid-template-columns:auto minmax(0,1fr);
     grid-template-areas:"art no" "art t" "art d";grid-template-rows:auto auto 1fr
   }
   #dpage.reading-page .dp-forcard .gc:nth-child(4n+2) .gc-art{align-self:start}
   /* 03:编号、标题、正文靠左;图在正文块的右下,轻一点、四周留白 */
   #dpage.reading-page .dp-forcard .gc:nth-child(4n+3){
-    grid-template-columns:minmax(0,1fr) clamp(88px,28%,200px);
+    grid-template-columns:minmax(0,1fr) auto;
     grid-template-areas:"no art" "t art" "d art";grid-template-rows:auto auto 1fr
   }
   /* 书往上收到正文最后几行的右下旁(电脑上正文很短,右边有空位);手机上正文会写到右边,就放在正文下方 */
@@ -3761,14 +3762,13 @@
     #dpage.reading-page .dp-forcard .gc > div{font-size:14px}
     /* 手机:插画约内容宽的 26–30%(最多 120px);标题下 22px;行高 1.85;
        文字跟插画至少隔 20px */
-    #dpage.reading-page .dp-forcard .gc{column-gap:20px}
-    #dpage.reading-page .dp-forcard .gc .gc-art{width:100%;max-width:120px}
-    /* 四段同一套:编号 → 标题 → 解读一栏,插画在整栏旁边(不在插画下方) */
-    #dpage.reading-page .dp-forcard .gc:nth-child(4n+1){grid-template-columns:minmax(0,1fr) 24%}
-    /* 03 的书是扁的、句子较长:插画栏收窄一点,句尾不会单独掉一个字 */
-    #dpage.reading-page .dp-forcard .gc:nth-child(4n+3){grid-template-columns:minmax(0,1fr) 19%;column-gap:14px}
-    #dpage.reading-page .dp-forcard .gc:nth-child(4n+2),
-    #dpage.reading-page .dp-forcard .gc:nth-child(4n+4){grid-template-columns:24% minmax(0,1fr)}
+    /* 四段同一套:编号 → 标题 → 解读一栏,插画在整栏旁边(不在插画下方)。
+       插画放大到基准 100px;文字栏变窄时,换行用 balance 平均分两行,不会句尾单掉一个字 */
+    #dpage.reading-page .dp-forcard .gc{column-gap:16px}
+    #dpage.reading-page .dp-forcard .gc .gc-art{--gs:100px}
+    /* 03:书放在正文下方的右边(正文用满整行,长句不会被挤断) */
+    #dpage.reading-page .dp-forcard .gc:nth-child(4n+3){grid-template-columns:minmax(0,1fr);grid-template-areas:"no" "t" "d" "art"}
+    #dpage.reading-page .dp-forcard .gc:nth-child(4n+3) .gc-art{margin-top:6px}
   }
 
   /* 页尾「返回主题列表」按钮换成用户给的金色星徽箭头图——图本身自带
@@ -12890,7 +12890,7 @@ window.Guide = (function () {
             /* 不能用 loading="lazy"——这张图本身是 position:absolute,部分浏览器算不出
                它离视口多近,懒加载的判定可能永远不触发。这四段在页面最上面,
                本来就在首屏附近,立即加载更保险。 */
-            (icon ? '<img class="gc-art" src="assets/reading/gc-' + icon + '.webp" alt="" aria-hidden="true" decoding="async">' : "") +
+            (icon ? '<img class="gc-art gc-' + icon + '" src="assets/reading/gc-' + icon + '.webp" alt="" aria-hidden="true" decoding="async">' : "") +
             '<span class="no" aria-hidden="true">' + ("0" + (i + 1)).slice(-2) + "</span>" +
             '<b>' + esc0(cd.title) + "</b>" +
             '<div data-saveable data-source="' + esc0(favSrc) + '" data-source-type="life_blueprint"' +

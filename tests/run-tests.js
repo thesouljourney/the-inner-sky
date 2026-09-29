@@ -2041,7 +2041,8 @@ function testTopicLayout() {
   // 是这一页自己刻意的改动。
   // 再更新一次:四段摘要改成编辑式(加编号、正文在逗号后断行),后面新增
   // 「现在，往深一点看」过场。是这一页自己刻意的改动。
-  checkEq("[tp] 生命蓝图这一页没有被改", lock("renderReadingPage"), "435f12230d85c2f4");
+  // 再更新一次:四段摘要的插画加上 gc-<名称> class,让四个物体按面积调成一样大。
+  checkEq("[tp] 生命蓝图这一页没有被改", lock("renderReadingPage"), "3e8825db2e28b9af");
   checkEq("[tp] 三十道探索题这一页没有被改", lock("renderQPage"), "893d3c71d47ab628");
 
   /* —— ② 文字没有被动过 —— */
