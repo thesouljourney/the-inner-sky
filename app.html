@@ -6569,6 +6569,61 @@
   @media(min-width:768px){
     #dpage.records-page .dp-body::before{background-position:center -340px}
   }
+  /* 小小日记浮窗(依用户参考图):水彩纸卡、四角花枝与金色星轨 */
+  #dpage.records-page .rc-modal.diary{
+    width:min(100%,460px);padding:34px 30px 26px;border:0;border-radius:26px;overflow:hidden;
+    background:url("assets/records/diary-paper.webp") center / 100% 100% no-repeat,#fbf6ee;
+    box-shadow:0 28px 70px rgba(30,30,70,.3)
+  }
+  #dpage.records-page .rc-modal.diary > *{position:relative;z-index:1}
+  #dpage.records-page .rc-modal.diary .dz{position:absolute;z-index:0;pointer-events:none;background:center / contain no-repeat}
+  #dpage.records-page .rc-modal.diary .orbit{left:-18px;top:-22px;width:150px;height:140px;background-image:url("assets/records/diary-orbit.webp");transform:scaleX(-1);opacity:.85}
+  #dpage.records-page .rc-modal.diary .orbit2{right:-10px;bottom:74px;width:74px;height:70px;background-image:url("assets/records/diary-orbit.webp");opacity:.7}
+  #dpage.records-page .rc-modal.diary .fl-b{right:-26px;top:70px;width:128px;height:150px;background-image:url("assets/records/diary-flower-b.webp");opacity:.9}
+  #dpage.records-page .rc-modal.diary .fl-a{left:-30px;bottom:48px;width:150px;height:142px;background-image:url("assets/records/diary-flower-a.webp");transform:rotate(-12deg);opacity:.9}
+  #dpage.records-page .rc-modal.diary .petal{left:112px;bottom:100px;width:34px;height:32px;background-image:url("assets/records/diary-petal.webp");opacity:.85}
+  #dpage.records-page .rc-modal.diary .rc-x{position:absolute;right:16px;top:16px;z-index:2;width:34px;height:34px;background:none;border:0;font-size:28px;font-weight:300;color:#23264f}
+  #dpage.records-page .rc-modal.diary .dh{text-align:center}
+  #dpage.records-page .rc-modal.diary .dstar{display:block;width:22px;height:24px;margin:0 auto 6px;background:url("assets/records/diary-star.webp") center / contain no-repeat}
+  #dpage.records-page .rc-modal.diary h3{margin:0;font-family:var(--dp-serif);font-weight:700;font-size:25px;letter-spacing:.2em;color:#23264f}
+  #dpage.records-page .rc-modal.diary .dd{display:flex;align-items:center;justify-content:center;gap:10px;margin:8px 0 0;font-family:var(--dp-serif);font-size:14px;letter-spacing:.06em;color:#5b5872}
+  #dpage.records-page .rc-modal.diary .dd i{width:22px;height:1px;background:rgba(91,88,114,.45)}
+  #dpage.records-page .rc-modal.diary .dw{margin:4px 0 0;font-family:var(--dp-serif);font-size:10.5px;letter-spacing:.42em;color:#8a869c}
+  #dpage.records-page .rc-modal.diary h4{margin:24px 0 4px;font-family:var(--dp-serif);font-weight:700;font-size:16px;letter-spacing:.06em;color:#23264f}
+  #dpage.records-page .rc-modal.diary .dq{margin:0 0 14px;font-family:var(--dp-serif);font-size:12.5px;line-height:1.7;color:#5b5872}
+  #dpage.records-page .rc-modal.diary .dta{position:relative}
+  #dpage.records-page .rc-modal.diary .rc-ta{
+    min-height:190px;padding:14px 16px 30px;border-radius:14px;resize:none;
+    background:rgba(255,253,249,.55);border:1px solid rgba(201,178,140,.38);font-family:var(--dp-serif);font-size:14px
+  }
+  #dpage.records-page .rc-modal.diary .rc-ta::placeholder{color:#a8a3b3}
+  #dpage.records-page .rc-modal.diary .rc-cnt{position:absolute;right:14px;bottom:10px;margin:0;font-size:11px;color:#a8a3b3}
+  #dpage.records-page .rc-modal.diary .rc-btns{align-items:center;gap:18px;margin-top:10px}
+  #dpage.records-page .rc-modal.diary .dcancel{
+    flex:0 0 auto;min-height:auto;padding:6px 4px 5px;margin:0 22px;border:0;border-bottom:1px solid rgba(35,38,79,.35);border-radius:0;
+    background:none;font-size:15px;letter-spacing:.14em;color:#23264f
+  }
+  #dpage.records-page .rc-modal.diary .dkeep{
+    flex:1;display:inline-flex;align-items:center;justify-content:center;gap:14px;min-height:54px;border-radius:999px;
+    background:url("assets/records/diary-btn.webp") center / 100% 100% no-repeat,linear-gradient(90deg,#8e84d8,#c7b0e6);
+    box-shadow:0 10px 24px rgba(129,110,200,.35);font-size:15.5px;letter-spacing:.2em;color:#fff;text-shadow:0 1px 4px rgba(80,60,150,.35)
+  }
+  #dpage.records-page .rc-modal.diary .dkeep .sp{width:15px;height:16px;background:url("assets/records/diary-star.webp") center / contain no-repeat;filter:brightness(1.6) saturate(.4)}
+  #dpage.records-page .rc-modal.diary .dkeep .ar{font-size:18px;letter-spacing:0}
+  #dpage.records-page .rc-modal.diary .dkeep:disabled{opacity:.6}
+  @media(max-width:767px){
+    #dpage.records-page .rc-modal.diary{padding:30px 22px 22px;border-radius:22px}
+    #dpage.records-page .rc-modal.diary h3{font-size:22px}
+    #dpage.records-page .rc-modal.diary h4{font-size:15px;margin-top:20px}
+    #dpage.records-page .rc-modal.diary .dq{font-size:11.5px}
+    #dpage.records-page .rc-modal.diary .rc-ta{min-height:170px;font-size:13px}
+    #dpage.records-page .rc-modal.diary .orbit{width:120px;height:112px}
+    #dpage.records-page .rc-modal.diary .fl-b{width:104px;height:122px;right:-30px;top:56px}
+    #dpage.records-page .rc-modal.diary .fl-a{width:120px;height:114px;left:-34px}
+    #dpage.records-page .rc-modal.diary .petal{left:84px}
+    #dpage.records-page .rc-modal.diary .dcancel{margin:0 14px}
+    #dpage.records-page .rc-modal.diary .dkeep{min-height:50px;font-size:14.5px;gap:10px}
+  }
   /* 浮窗开着的时候,正文区整层要在 Hero 之上,标题才不会透过浮窗 */
   #dpage.records-page .dp-body:has(.rc-overlay){z-index:3}
 </style>
@@ -15470,19 +15525,27 @@ window.Guide = (function () {
     if (!recModal) return "";
     /* 新写一篇小小日记(只在这一页写得到) */
     if (recModal.type === "new") {
-      return '<div class="rc-overlay" data-close="1"><div class="rc-modal" role="dialog" aria-modal="true">' +
-        '<div class="rc-mh"><h3>' + esc0(dpT("小小日记", "Little diary")) + '</h3>' +
-        '<button type="button" class="rc-x" data-close="1" aria-label="' + esc0(dpT("关闭", "Close")) + '">×</button></div>' +
-        '<span class="rc-ms" aria-hidden="true">✦</span>' +
-        '<div class="rc-mmeta"><span>' + esc0(compassDate(new Date().toISOString())) + '</span>' +
-        '<span class="rc-tag d">' + esc0(dpT("小小日记", "Little diary")) + '</span></div>' +
-        '<h4>' + esc0(dpT("今天发生了什么？或只是一点想留下来的东西。", "What happened today — or something you’d like to keep.")) + '</h4>' +
-        '<textarea class="rc-ta" id="rcT" maxlength="4000" rows="8" placeholder="' +
+      /* 依用户参考图:水彩纸卡 + 四角花枝与金色星轨,✦ 标题、日期两侧细线、英文星期 */
+      const now = new Date();
+      const wkEn = ["SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"][now.getDay()];
+      return '<div class="rc-overlay" data-close="1"><div class="rc-modal diary" role="dialog" aria-modal="true" aria-labelledby="rcDiaryT">' +
+        '<span class="dz orbit" aria-hidden="true"></span><span class="dz fl-a" aria-hidden="true"></span>' +
+        '<span class="dz fl-b" aria-hidden="true"></span><span class="dz petal" aria-hidden="true"></span>' +
+        '<span class="dz orbit2" aria-hidden="true"></span>' +
+        '<button type="button" class="rc-x" data-close="1" aria-label="' + esc0(dpT("关闭", "Close")) + '">×</button>' +
+        '<div class="dh"><span class="dstar" aria-hidden="true"></span>' +
+        '<h3 id="rcDiaryT">' + esc0(dpT("小小日记", "Little diary")) + '</h3>' +
+        '<p class="dd"><i aria-hidden="true"></i>' + esc0(compassDate(now.toISOString())) + '<i aria-hidden="true"></i></p>' +
+        '<p class="dw">' + wkEn + '</p></div>' +
+        '<h4>' + esc0(dpT("今天，有什么想替自己留下？", "Today, what would you like to keep for yourself?")) + '</h4>' +
+        '<p class="dq">' + esc0(dpT("一件发生过的事、一个念头，或此刻的心情都可以。", "Something that happened, a passing thought, or how you feel right now.")) + '</p>' +
+        '<div class="dta"><textarea class="rc-ta" id="rcT" maxlength="4000" rows="8" placeholder="' +
         esc0(dpT("不用写得很完整，像写给自己的一页纸就好。", "It doesn’t need to be complete — just a page for yourself.")) + '"></textarea>' +
-        '<span class="rc-cnt" data-for="rcT">0/4000</span>' +
+        '<span class="rc-cnt" data-for="rcT">0/4000</span></div>' +
         '<p class="rc-err" id="rcErr" aria-live="polite"></p>' +
-        '<div class="rc-btns"><button type="button" class="rc-b" data-close="1">' + esc0(dpT("取消", "Cancel")) + '</button>' +
-        '<button type="button" class="rc-b pri" id="rcAdd">' + esc0(dpT("留下今天的日记", "Keep today’s page")) + '</button></div>' +
+        '<div class="rc-btns"><button type="button" class="rc-b dcancel" data-close="1">' + esc0(dpT("取消", "Cancel")) + '</button>' +
+        '<button type="button" class="rc-b pri dkeep" id="rcAdd"><span class="sp" aria-hidden="true"></span>' +
+        '<span class="lb">' + esc0(dpT("留下这一页", "Keep this page")) + '</span><span class="ar" aria-hidden="true">→</span></button></div>' +
         '</div></div>';
     }
     const r = recFind(recModal.id);
