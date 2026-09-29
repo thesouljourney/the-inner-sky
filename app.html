@@ -3659,10 +3659,10 @@
     position:relative;overflow:visible;background:none;border:0;border-radius:0;box-shadow:none;
     padding:0;min-height:clamp(150px,20vw,210px)
   }
-  #dpage.reading-page .dp-forcard .gc + .gc{margin-top:clamp(112px,13vw,140px)}
+  #dpage.reading-page .dp-forcard .gc + .gc{margin-top:112px}
   /* 段落之间的分隔:──── ✦ ────(香槟金,两端淡出) */
   #dpage.reading-page .dp-forcard .gc + .gc::before{
-    content:"✦";position:absolute;left:0;right:0;top:calc(-1 * clamp(56px,6.5vw,70px));
+    content:"✦";position:absolute;left:0;right:0;top:-56px;
     transform:translateY(-50%);text-align:center;font-size:11px;line-height:1;color:rgba(196,152,72,.8);
     background:
       linear-gradient(90deg,rgba(196,152,72,0),rgba(196,152,72,.45)) left center / calc(50% - 16px) 1px no-repeat,
@@ -3685,26 +3685,46 @@
     -webkit-mask-image:radial-gradient(closest-side,#000 64%,transparent 100%);
             mask-image:radial-gradient(closest-side,#000 64%,transparent 100%)
   }
-  /* 版面整理(用户反馈太乱):四段改成同一套两栏格线 ——
-     文字一栏 + 插画一栏,插画一样大、垂直置中、不出血、不当水印;
-     只在左右交替(01 右 / 02 左 / 03 右 / 04 左),文字一律靠左 */
+  /* 四段摘要的版面(依用户的逐段规格):插画是浮在旁边的装饰,不是方块 ——
+     宽度按比例、高度 auto、object-fit:contain、透明底,不裁切、不遮罩、不加框。
+     01 图在右上 / 02 图在左、编号标题在右、正文在下方全宽 /
+     03 正文靠左、图在右下 / 04 图在左下、编号标题在右、正文在下方全宽 */
   #dpage.reading-page .dp-forcard .gc{
-    display:grid;align-items:center;column-gap:clamp(20px,4vw,48px);
-    grid-template-columns:minmax(0,1fr) clamp(118px,30%,220px);
-    grid-template-areas:"no art" "t art" "d art";grid-template-rows:auto auto 1fr;
-    text-align:left
+    display:grid;column-gap:clamp(20px,4vw,48px);align-items:start;text-align:left;
+    grid-template-columns:minmax(0,1fr) auto
   }
-  #dpage.reading-page .dp-forcard .gc:nth-child(even){
-    grid-template-columns:clamp(118px,30%,220px) minmax(0,1fr);
-    grid-template-areas:"art no" "art t" "art d"
-  }
-  #dpage.reading-page .dp-forcard .gc .no{grid-area:no;align-self:end}
-  #dpage.reading-page .dp-forcard .gc b{grid-area:t}
-  #dpage.reading-page .dp-forcard .gc > div{grid-area:d;align-self:start}
+  #dpage.reading-page .dp-forcard .gc .no{grid-area:no}
+  #dpage.reading-page .dp-forcard .gc b{grid-area:t;margin:10px 0 22px}
+  #dpage.reading-page .dp-forcard .gc > div{grid-area:d;line-height:1.85}
   #dpage.reading-page .dp-forcard .gc .gc-art{
-    grid-area:art;position:static;inset:auto;transform:none;
-    width:100%;height:auto;aspect-ratio:1;align-self:center;opacity:.9
+    grid-area:art;position:static;inset:auto;transform:none;display:block;
+    width:clamp(88px,28vw,200px);max-width:none;height:auto;aspect-ratio:auto;
+    object-fit:contain;background:transparent;opacity:.92;
+    -webkit-mask-image:none;mask-image:none
   }
+  /* 01:编号、标题、正文靠左(文字约 66%),图在右上,对齐标题 / 第一段,略往右缘靠 */
+  #dpage.reading-page .dp-forcard .gc:nth-child(4n+1){
+    grid-template-columns:minmax(0,1fr) clamp(88px,28%,200px);
+    grid-template-areas:"no art" "t art" "d art"
+  }
+  #dpage.reading-page .dp-forcard .gc:nth-child(4n+1) .gc-art{align-self:start;margin:18px -8px 0 0;justify-self:end}
+  /* 02:图在左、略高于正文第一行;编号与标题在图的右边;正文从标题下方开始、用满宽 */
+  #dpage.reading-page .dp-forcard .gc:nth-child(4n+2),
+  #dpage.reading-page .dp-forcard .gc:nth-child(4n+4){
+    grid-template-columns:clamp(88px,28%,200px) minmax(0,1fr);
+    grid-template-areas:"art no" "art t" "d d"
+  }
+  #dpage.reading-page .dp-forcard .gc:nth-child(4n+2) .gc-art{align-self:start}
+  #dpage.reading-page .dp-forcard .gc:nth-child(4n+2) .no,
+  #dpage.reading-page .dp-forcard .gc:nth-child(4n+4) .no{align-self:end}
+  /* 03:编号、标题、正文靠左;图在正文块的右下,轻一点、四周留白 */
+  #dpage.reading-page .dp-forcard .gc:nth-child(4n+3){
+    grid-template-columns:minmax(0,1fr);grid-template-areas:"no" "t" "d" "art"
+  }
+  /* 书往上收到正文最后几行的右下旁(电脑上正文很短,右边有空位);手机上正文会写到右边,就放在正文下方 */
+  #dpage.reading-page .dp-forcard .gc:nth-child(4n+3) .gc-art{justify-self:end;margin-top:-72px;opacity:.8}
+  /* 04:图在左下(贴齐标题底部),编号标题在右,正文回到全宽,整段安静平衡 */
+  #dpage.reading-page .dp-forcard .gc:nth-child(4n+4) .gc-art{align-self:end}
   /* 过场(Section 3):置中、大留白,让读者慢下来再进详细解读 */
   #dpage.reading-page .rd-transit{
     text-align:center;padding:clamp(100px,12vw,130px) 24px clamp(88px,10vw,116px)
@@ -3740,16 +3760,14 @@
     #dpage.reading-page .dp-forcard .gc{min-height:0}
     #dpage.reading-page .dp-forcard .gc b{font-size:20px}
     #dpage.reading-page .dp-forcard .gc > div{font-size:14px}
-    /* 手机:插画只跟「编号 + 标题」并排,正文用满整行 —— 窄栏会让句尾掉出一两个字 */
-    #dpage.reading-page .dp-forcard .gc{
-      column-gap:14px;grid-template-columns:minmax(0,1fr) 96px;
-      grid-template-areas:"no art" "t art" "d d";grid-template-rows:auto auto auto
-    }
-    #dpage.reading-page .dp-forcard .gc:nth-child(even){
-      grid-template-columns:96px minmax(0,1fr);grid-template-areas:"art no" "art t" "d d"
-    }
-    #dpage.reading-page .dp-forcard .gc b{margin-bottom:0;align-self:start}
-    #dpage.reading-page .dp-forcard .gc > div{margin-top:14px}
+    /* 手机:插画约内容宽的 26–30%(最多 120px);标题下 22px;行高 1.85;
+       文字跟插画至少隔 20px */
+    #dpage.reading-page .dp-forcard .gc{column-gap:20px}
+    #dpage.reading-page .dp-forcard .gc .gc-art{width:100%;max-width:120px}
+    #dpage.reading-page .dp-forcard .gc:nth-child(4n+1){grid-template-columns:minmax(0,1fr) 28%}
+    #dpage.reading-page .dp-forcard .gc:nth-child(4n+2),
+    #dpage.reading-page .dp-forcard .gc:nth-child(4n+4){grid-template-columns:28% minmax(0,1fr)}
+    #dpage.reading-page .dp-forcard .gc:nth-child(4n+3) .gc-art{width:30%;margin-top:4px}
   }
 
   /* 页尾「返回主题列表」按钮换成用户给的金色星徽箭头图——图本身自带
