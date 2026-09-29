@@ -3413,7 +3413,9 @@
     /* 白罩留着但减轻:原本 .28(米色底盖掉七成,整张图很白),
        用户先要求拿掉、看过之后要回白罩但轻一点 —— 调到 .55,
        图看得清楚,仍保有一层柔和的米白 */
-    opacity:.55
+    opacity:.55;
+    /* 底图对比、饱和度压低一点,亮点不那么刺眼,上面的字更清楚 */
+    filter:brightness(1.05) saturate(.85) contrast(.88)
   }
   #dpage.reading-page > *{position:relative;z-index:1}
   /* ⚠ 账号选单开着的时候,要盖住它底下所有内容 —— 但 dp-hero 与
@@ -3640,7 +3642,22 @@
      · 段与段之间一条香槟金细线 + ✦,间距 64–80px
      · 过场:置中、大留白、不放卡片也不放按钮
      ============================================================ */
-  /* 四段直接写在页面底图上(用户要求拿掉后面那片白色柔光) */
+  /* 四段后面:不是白卡,是整区一层很浅的雾白(32%)把底图压下去,上下两端淡出、左右满版 */
+  #dpage.reading-page .dp-forcard::before{
+    content:"";position:absolute;z-index:0;pointer-events:none;
+    top:-48px;bottom:-72px;left:calc(50% - 50vw);width:100vw;
+    background:linear-gradient(180deg,rgba(255,255,255,0) 0,rgba(255,255,255,.32) 80px,rgba(255,255,255,.32) calc(100% - 100px),rgba(255,255,255,0) 100%)
+  }
+  /* 每段文字那一侧再一层柔和渐变(从文字往插画方向淡掉),仍然看得到背景 */
+  #dpage.reading-page .dp-forcard .gc::after{
+    content:"";position:absolute;z-index:0;pointer-events:none;
+    /* 没有边的柔光:椭圆往四周淡掉,看不出方框 */
+    top:-40px;bottom:-40px;left:-48px;right:-48px;
+    background:radial-gradient(ellipse 42% 50% at 42% 50%,rgba(255,255,255,.42),rgba(255,255,255,.15) 55%,rgba(255,255,255,0) 100%)
+  }
+  #dpage.reading-page .dp-forcard .gc:nth-child(even)::after{
+    background:radial-gradient(ellipse 42% 50% at 58% 50%,rgba(255,255,255,.42),rgba(255,255,255,.15) 55%,rgba(255,255,255,0) 100%)
+  }
   #dpage.reading-page .dp-forcard{
     position:relative;
     background:none;border:0;border-radius:0;box-shadow:none;overflow:visible;
@@ -3669,10 +3686,10 @@
   }
   #dpage.reading-page .dp-forcard .gc b{
     margin:10px 0 14px;font-family:var(--dp-serif);font-weight:600;
-    font-size:clamp(20px,2.2vw,24px);line-height:1.45;letter-spacing:.06em;color:#23264f
+    font-size:clamp(20px,2.2vw,24px);line-height:1.45;letter-spacing:.06em;color:#1A2342
   }
   #dpage.reading-page .dp-forcard .gc > div{
-    font-family:var(--dp-serif);font-size:clamp(14.5px,1.5vw,16px);line-height:2;letter-spacing:.03em;color:#3b3a55
+    font-family:var(--dp-serif);font-weight:500;font-size:clamp(14.5px,1.5vw,16px);line-height:2;letter-spacing:.03em;color:#2F3142
   }
   /* 插画:不像贴上去的贴纸 —— 边缘用径向遮罩化进纸里,透明度 ~80% */
   #dpage.reading-page .dp-forcard .gc .gc-art{
