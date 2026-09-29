@@ -6640,8 +6640,10 @@
   #dpage.records-page .rc-modal.rec .moon{left:6px;top:4px;width:120px;height:125px;background-image:url("assets/records/rec-moon.webp")}
   #dpage.records-page .rc-modal.rec .pt1{right:48px;top:96px;width:30px;height:25px;background-image:url("assets/records/rec-petal.webp");transform:rotate(-20deg)}
   #dpage.records-page .rc-modal.rec .pt2{display:none;left:16px;top:140px;width:22px;height:19px;background-image:url("assets/records/rec-petal.webp");transform:rotate(60deg);opacity:.8}
-  #dpage.records-page .rc-modal.rec .rc-x{position:absolute;z-index:2;background:rgba(255,253,249,.9);border-color:rgba(201,178,140,.35)}
-  #dpage.records-page .rc-modal.rec .rc-mh h3{font-size:21px;letter-spacing:.16em}
+  #dpage.records-page .rc-modal.rec .rc-x{position:absolute;z-index:2;right:12px;top:12px;width:28px;height:28px;font-size:17px;background:rgba(255,253,249,.9);border-color:rgba(201,178,140,.35)}
+  /* 标题列不当定位基准,X 才会贴在整张卡的右上角 */
+  #dpage.records-page .rc-modal.rec > .rc-mh{position:static}
+  #dpage.records-page .rc-modal.rec .rc-mh h3{position:relative;z-index:1;font-size:21px;letter-spacing:.16em}
   #dpage.records-page .rc-modal.rec .rc-ms{width:14px;height:15px;margin:10px auto 10px;font-size:0;background:url("assets/records/rec-star.webp") center / contain no-repeat}
   #dpage.records-page .rc-modal.rec .rc-mmeta .rc-tag{padding:4px 16px;background:url("assets/records/rec-pill.webp") center / 100% 100% no-repeat;color:#9a6a2f}
   #dpage.records-page .rc-modal.rec h4{display:flex;align-items:center;gap:8px;margin:20px 0 10px;font-family:var(--dp-serif);font-size:14.5px;letter-spacing:.06em}
