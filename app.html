@@ -3671,10 +3671,10 @@
     position:relative;overflow:visible;background:none;border:0;border-radius:0;box-shadow:none;
     padding:0;min-height:clamp(150px,20vw,210px)
   }
-  #dpage.reading-page .dp-forcard .gc + .gc{margin-top:112px}
+  #dpage.reading-page .dp-forcard .gc + .gc{margin-top:88px}
   /* 段落之间的分隔:──── ✦ ────(香槟金,两端淡出) */
   #dpage.reading-page .dp-forcard .gc + .gc::before{
-    content:"✦";position:absolute;left:0;right:0;top:-56px;
+    content:"✦";position:absolute;left:0;right:0;top:-44px;
     transform:translateY(-50%);text-align:center;font-size:11px;line-height:1;color:rgba(196,152,72,.8);
     background:
       linear-gradient(90deg,rgba(196,152,72,0),rgba(196,152,72,.45)) left center / calc(50% - 16px) 1px no-repeat,
@@ -3777,17 +3777,21 @@
     #dpage.reading-page .dp-forcard .gc{min-height:0}
     #dpage.reading-page .dp-forcard .gc b{font-size:20px}
     #dpage.reading-page .dp-forcard .gc > div{font-size:14px}
-    /* 手机:插画约内容宽的 26–30%(最多 120px);标题下 22px;行高 1.85;
-       文字跟插画至少隔 20px */
-    /* 四段同一套:编号 → 标题 → 解读一栏,插画在整栏旁边(不在插画下方)。
-       插画放大到基准 100px;文字栏变窄时,换行用 balance 平均分两行,不会句尾单掉一个字 */
-    #dpage.reading-page .dp-forcard .gc{column-gap:16px}
-    #dpage.reading-page .dp-forcard .gc .gc-art{--gs:100px}
-    /* 03:书放在右上方,跟编号 + 标题并排;正文从标题下方开始、用满整行(长句不会被挤断) */
-    #dpage.reading-page .dp-forcard .gc:nth-child(4n+3){
-      grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"no art" "t art" "d d";grid-template-rows:auto auto auto
-    }
-    #dpage.reading-page .dp-forcard .gc:nth-child(4n+3) .gc-art{align-self:end;justify-self:end;margin-bottom:6px}
+    /* 手机(依用户参考图):紧凑的杂志版 —— 插画放大到约 40% 宽、贴着文字栏,
+       四段都是「编号 → 标题 → 解读」一栏 + 插画在旁;字小一号、段距收紧 */
+    #dpage.reading-page .dp-forcard .gc{column-gap:12px;align-items:center}
+    #dpage.reading-page .dp-forcard .gc .gc-art{--gs:132px;opacity:1;align-self:center}
+    #dpage.reading-page .dp-forcard .gc:nth-child(4n+1) .gc-art{margin:0 -10px 0 0}
+    #dpage.reading-page .dp-forcard .gc:nth-child(4n+2) .gc-art,
+    #dpage.reading-page .dp-forcard .gc:nth-child(4n+4) .gc-art{margin:0 0 0 -10px}
+    /* 03 的书又扁又宽:放在编号 + 标题旁边,正文在下方用满整行,长句不被挤断 */
+    #dpage.reading-page .dp-forcard .gc:nth-child(4n+3){grid-template-areas:"no art" "t art" "d d"}
+    #dpage.reading-page .dp-forcard .gc:nth-child(4n+3) .gc-art{--gs:112px;margin:-8px -10px -18px 0;opacity:1;align-self:end}
+    #dpage.reading-page .dp-forcard .gc .no{font-size:12px}
+    #dpage.reading-page .dp-forcard .gc b{font-size:18px;margin:6px 0 10px}
+    #dpage.reading-page .dp-forcard .gc > div{font-size:13px;line-height:1.75;text-wrap:pretty}
+    #dpage.reading-page .dp-forcard .gc + .gc{margin-top:64px}
+    #dpage.reading-page .dp-forcard .gc + .gc::before{top:-32px}
   }
 
   /* 页尾「返回主题列表」按钮换成用户给的金色星徽箭头图——图本身自带
