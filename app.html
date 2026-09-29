@@ -12552,7 +12552,8 @@ window.Guide = (function () {
   /* 「属于我的生命脉络」页尾那一题的专属排法(用户给的参考图):
      整段置中;前面的叙述一句一行,最后那个问题单独拎出来,
      前面一枚金色四芒星、外面绕一圈淡金色的轨道。
-     文字全部来自同一段生成内容——只有「接下来可以带走的一个问题是：」
+     文字是按每个人的星盘生成的(map 层 question,3-4 句,形状不固定),
+     所以这里只按标点切,不假设任何固定句子;全部来自同一段生成内容——只有「接下来可以带走的一个问题是：」
      这种引出问题的半句,由那枚星芒代替,不再重复印一次。
      找不到问句时整段照常置中排出,不做任何强调。 */
   function dpThreadReflectHtml(text) {
@@ -12564,17 +12565,27 @@ window.Guide = (function () {
       while (end < src.length && /[」”"』]/.test(src.charAt(end))) end++;
       const before = src.slice(0, qi);
       const cut = Math.max(before.lastIndexOf("。"), before.lastIndexOf("！"), before.lastIndexOf("!"),
-        before.lastIndexOf("\n"), before.search(/\.\s[^.]*$/));
-      const start = cut >= 0 ? cut + 1 : 0;
+        before.lastIndexOf("？"), before.lastIndexOf("?"), before.lastIndexOf("\n"),
+        before.search(/\.\s[^.]*$/));
+      let start = cut >= 0 ? cut + 1 : 0;
+      // 连着两个问句(「你愿意吗？还是……？」)算同一个问题,一起拎出来
+      const head = src.slice(0, start).replace(/\s+$/, "");
+      const pm = head.match(/([^。！!？?\n]{1,40}[？?][」”"』]?)$/);
+      if (pm) start = head.length - pm[1].length;
       lead = src.slice(0, start);
       q = src.slice(start, end).trim();
       tail = src.slice(end).trim();
+      const latin = !/[\u4e00-\u9fff]/.test(q);
+      // 只有很短的引导语才拆(「接下来可以带走的一个问题是：」);长句里的冒号属于问题本身
       const ci = Math.max(q.indexOf("："), q.indexOf(": "));
-      if (ci > 0 && ci < q.length - 6) {
+      if (ci > 0 && ci <= (latin ? 48 : 24) && ci < q.length - 6) {
         const intro = q.slice(0, ci);
         if (!/问题|question/i.test(intro)) lead += intro + (q.charAt(ci) === "：" ? "：" : ":");
         q = q.slice(ci + 1).trim();
+        if (latin) q = q.charAt(0).toUpperCase() + q.slice(1);
       }
+      // 问句本身太长:不强调,整段照常当正文排,免得一大段粗体
+      if (q.length > (latin ? 160 : 64)) { lead = src; q = ""; tail = ""; }
     }
     const sent = function (t) {
       return String(t).split(/\n+/).reduce(function (a, ln) {
