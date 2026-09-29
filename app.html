@@ -1758,14 +1758,14 @@
   /* 四个核心:横式卡,插画在左 */
   #dpage .air-core{margin-top:clamp(50px,6vw,90px)}
   #dpage .sky-core .sky-card{
-    display:grid;grid-template-columns:40% minmax(0,1fr);grid-template-rows:auto auto auto auto 1fr auto;
-    column-gap:clamp(12px,1.4vw,18px);min-height:clamp(200px,17vw,230px);
+    /* 文字栏往右挪,离左边插画远一点(用户要求) */
+    display:grid;grid-template-columns:44% minmax(0,1fr);grid-template-rows:auto auto auto auto 1fr auto;
+    column-gap:clamp(14px,1.6vw,20px);min-height:clamp(200px,17vw,230px);
     padding:clamp(16px,1.6vw,20px) clamp(16px,1.6vw,20px) clamp(16px,1.6vw,20px) 0;border-radius:20px
   }
   #dpage .sky-core .sky-card .art{
     position:absolute;left:0;top:0;bottom:0;right:auto;width:44%;height:100%;
-    /* 插画主体往右靠一点(用户要求):取景偏左,画面里的主体就往右移 */
-    object-fit:cover;object-position:12% 38%;opacity:1;z-index:0;
+    object-fit:cover;object-position:50% 38%;opacity:1;z-index:0;
     -webkit-mask-image:linear-gradient(90deg,#000 72%,transparent);mask-image:linear-gradient(90deg,#000 72%,transparent)
   }
   #dpage .sky-core .sky-card > :not(.art){grid-column:2}
