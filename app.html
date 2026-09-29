@@ -3761,17 +3761,12 @@
     margin:16px 0 0;font-family:var(--dp-serif);font-size:clamp(13.5px,1.4vw,15px);
     line-height:2;letter-spacing:.05em;color:rgba(58,56,82,.66)
   }
-  /* ↓:短金线接一个半透明象牙小圆里的金色箭头,在深色星空上也看得清;按了卷到章节卡 */
+  /* ↓:半透明象牙小圆里的金色箭头(上方引线已拿掉),在深色星空上也看得清;按了卷到章节卡 */
   #dpage.reading-page .rd-transit .ar{
-    display:block;padding:0;cursor:pointer;-webkit-tap-highlight-color:transparent;font:inherit;width:40px;height:40px;margin:40px auto 0;position:relative;border-radius:50%;
+    display:block;padding:0;cursor:pointer;-webkit-tap-highlight-color:transparent;font:inherit;width:40px;height:40px;margin:22px auto 0;position:relative;border-radius:50%;
     background:rgba(255,251,243,.82);border:1px solid rgba(184,137,79,.55);
     box-shadow:0 0 0 6px rgba(255,251,243,.18),0 6px 18px rgba(35,38,79,.18);
     animation:rdArBob 2.4s ease-in-out infinite
-  }
-  #dpage.reading-page .rd-transit .ar::before{
-    content:"";position:absolute;left:50%;bottom:100%;width:1.5px;height:30px;margin-bottom:8px;
-    transform:translateX(-50%);
-    background:linear-gradient(180deg,rgba(214,172,98,0),rgba(214,172,98,.95))
   }
   #dpage.reading-page .rd-transit .ar::after{
     content:"";position:absolute;left:50%;top:50%;width:10px;height:10px;
