@@ -1585,13 +1585,12 @@
   #dpage.sky-page .sky-zone-c .sky-atmos{display:none}
   #dpage.sky-page .sky-close{
     overflow:hidden;isolation:isolate;border-radius:24px;
-    max-width:1080px;margin:clamp(52px,6vw,88px) auto 0;
-    padding:clamp(26px,3vw,38px) clamp(20px,4vw,48px) clamp(64px,7vw,96px);
-    /* 湖景图 80%:叠一层 20% 的页面象牙色,等于图本身降到 80% 不透明;
-       最上面再加一层跟四个核心 / 十二宫素材一样的 22% 米白白罩 */
-    background:linear-gradient(rgba(255,253,249,.22),rgba(255,253,249,.22)),
-      linear-gradient(rgba(251,245,236,.2),rgba(251,245,236,.2)),
-      url(assets/atmos/sky-close-lake.webp) center 84% / cover no-repeat,#3d3a66;
+    /* 比正文栏再往两侧伸出去一点(用户要求加长宽度) */
+    max-width:1180px;margin:clamp(52px,6vw,88px) clamp(-60px,-4vw,-30px) 0;
+    /* 湖景图原样呈现(用户要求拿掉白罩);文字与按钮在卡片里上下置中 */
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    min-height:clamp(180px,17vw,220px);padding:clamp(24px,2.6vw,34px) clamp(20px,4vw,48px);
+    background:url(assets/atmos/sky-close-lake.webp?v=2) center 62% / cover no-repeat,#d9cfe6;
     border:1px solid rgba(232,211,162,.45);
     box-shadow:0 14px 40px rgba(30,30,70,.14)
   }
@@ -1600,20 +1599,18 @@
     content:"";position:absolute;inset:6px;border-radius:19px;pointer-events:none;
     border:1px solid rgba(255,244,222,.38)
   }
-  /* 标题与说明压在天空上:一层很淡的柔光托住字 */
-  #dpage.sky-page .sky-close::before{
-    content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
-    background:radial-gradient(58% 56% at 50% 32%,rgba(255,248,240,.72),rgba(255,248,240,.35) 55%,rgba(255,248,240,0) 80%)
-  }
   #dpage.sky-page .sky-close .tp{display:none}
   #dpage.sky-page .sky-close .say{
-    white-space:normal;font-weight:600;font-size:clamp(18px,2vw,23px);line-height:1.6;letter-spacing:.06em;color:#23264f
+    white-space:normal;font-weight:600;font-size:clamp(18px,2vw,23px);line-height:1.6;letter-spacing:.06em;color:#23264f;
+    text-shadow:0 1px 10px rgba(255,248,240,.7)
   }
-  #dpage.sky-page .sky-close .sub{margin-top:6px;font-size:12.5px;letter-spacing:.06em;color:#4a4a66}
+  #dpage.sky-page .sky-close .sub{margin-top:6px;font-size:12.5px;letter-spacing:.06em;color:#3f3f5c;text-shadow:0 1px 8px rgba(255,248,240,.75)}
   #dpage.sky-page .sky-close .dp-cta{
-    margin-top:clamp(16px,2vw,20px);padding:10px 28px;font-size:13px;letter-spacing:.08em;
-    /* 淡紫色(用户要求):原本 #5b5486→#8a78a8 偏深,改成浅一阶的薰衣草紫,投影也放轻 */
-    background:linear-gradient(135deg,#8e84c7,#ac9dd9);box-shadow:0 8px 22px rgba(90,80,150,.22)
+    margin-top:clamp(16px,2vw,20px);min-height:0;padding:8px 20px;font-size:12px;letter-spacing:.06em;
+    /* 最淡的薰衣草紫带一点米色(用户要求);底色浅,字用深墨色 */
+    background:linear-gradient(135deg,rgba(230,222,245,.6) 0%,rgba(239,231,243,.6) 55%,rgba(246,238,230,.6) 100%);
+    color:#2f2f5a;font-weight:500;
+    border:1px solid #efe2cf;box-shadow:0 6px 16px rgba(120,100,180,.14)
   }
   /* 卡片下面的返回连结:原本卡片的负下边距(往页尾靠)改由这个连结承担 */
   #dpage.sky-page .sky-back{
@@ -1622,11 +1619,11 @@
     font-size:12.5px;color:#3b3f68;border-bottom-color:rgba(59,63,104,.35)
   }
   @media(max-width:767px){
-    #dpage.sky-page .sky-close{border-radius:20px;padding:26px 16px 80px;background-position:50% 86%;background-size:auto 150%}
+    #dpage.sky-page .sky-close{border-radius:20px;min-height:170px;padding:22px 16px;margin-left:-31px;margin-right:-31px;background-position:66% 62%;background-size:auto 130%}
     #dpage.sky-page .sky-close::after{inset:5px;border-radius:16px}
     #dpage.sky-page .sky-close .say{font-size:16px;letter-spacing:.01em}
     #dpage.sky-page .sky-close .sub{font-size:12px;letter-spacing:.02em}
-    #dpage.sky-page .sky-close .dp-cta{font-size:12.5px;padding:9px 22px;min-height:0}
+    #dpage.sky-page .sky-close .dp-cta{font-size:11.5px;padding:7px 16px;min-height:0}
   }
 
   /* ============================================================
@@ -1762,8 +1759,9 @@
   /* 四个核心:横式卡,插画在左 */
   #dpage .air-core{margin-top:clamp(50px,6vw,90px)}
   #dpage .sky-core .sky-card{
-    display:grid;grid-template-columns:40% minmax(0,1fr);grid-template-rows:auto auto auto auto 1fr auto;
-    column-gap:clamp(12px,1.4vw,18px);min-height:clamp(200px,17vw,230px);
+    /* 文字栏往右挪,离左边插画远一点(用户要求) */
+    display:grid;grid-template-columns:44% minmax(0,1fr);grid-template-rows:auto auto auto auto 1fr auto;
+    column-gap:clamp(14px,1.6vw,20px);min-height:clamp(200px,17vw,230px);
     padding:clamp(16px,1.6vw,20px) clamp(16px,1.6vw,20px) clamp(16px,1.6vw,20px) 0;border-radius:20px
   }
   #dpage .sky-core .sky-card .art{
@@ -2604,17 +2602,19 @@
         /* 底图铺不满手机版的 hero(1800×643,215% 宽 ≈ 300px 高),
            所以把它贴着「底」放:留白落在上缘,跟顶栏的深蓝接得上;
            下缘是云,再交给 ::after 化进象牙色 —— 中间不会出现一条硬边。 */
-        url(assets/life/hero-sky.webp) left bottom / 215% auto no-repeat,
+        /* 跟其他页一样:底图铺满整个 hero(含顶栏),不再留一段纯深蓝 */
+        url(assets/life/hero-sky.webp) 18% bottom / cover no-repeat,
         var(--dp-navy);
-      padding-bottom:clamp(40px,11vw,64px)
+      padding-bottom:22px
     }
+    /* 手机 hero 压矮,跟其他页面同一个量级(用户:比其他页宽) */
     #dpage.thread-page .dp-hero-grid{
-      min-height:0;padding:calc(clamp(18px,5vw,30px) + 12px) 0 clamp(14px,4vw,22px)
+      min-height:0;padding:14px 0 6px
     }
-    #dpage.thread-page .thread-vow{margin-top:14px}
+    #dpage.thread-page .thread-vow{margin-top:8px}
     #dpage.thread-page .thread-vow .a{font-size:12px;letter-spacing:.16em}
-    #dpage.thread-page .thread-vow .stars{width:min(310px,86vw);margin-top:16px}
-    #dpage.thread-page .thread-vow .b{margin-top:18px;column-gap:.6em;letter-spacing:.04em}
+    #dpage.thread-page .thread-vow .stars{width:min(310px,86vw);margin-top:10px}
+    #dpage.thread-page .thread-vow .b{margin-top:10px;column-gap:.6em;letter-spacing:.04em}
     /* 手机上这两行正好压在最亮的云带上,靠一点暗色投影拉开对比,而不是把字调亮 */
     #dpage.thread-page .thread-vow .b1{
       font-size:13px;text-shadow:0 1px 10px rgba(26,24,48,.5)
@@ -3061,6 +3061,10 @@
     #dpage.thread-page .thread-trail > .thread-ch > .ch-art.a1 img,
     #dpage.thread-page .thread-trail > .thread-ch > .ch-art.a4 img{top:auto;bottom:0;object-position:50% 100%}
     #dpage.thread-page .thread-trail > .thread-ch.open > .ch-art img{transform:none}
+    /* 展开时顶端横幅要贴齐卡片上缘:02 / 03 收起时那条「80% 高、离底 6%」的设定
+       会在横幅上方留出一截白底(用户反馈),展开时改回满版 */
+    #dpage.thread-page .thread-trail > .thread-ch.open > .ch-art.a2 img,
+    #dpage.thread-page .thread-trail > .thread-ch.open > .ch-art.a3 img{top:0;bottom:0;height:100%}
   }
   @media(max-width:359px){
     #dpage.thread-page .thread-trail > .thread-ch > .ch-art{display:block}
@@ -3071,7 +3075,8 @@
      「从这里开始」置中标题 + 一张一列的横式卡片
      ============================================================ */
   #dpage.thread-page .thread-intro{
-    text-align:center;margin:clamp(4px,1vw,12px) auto clamp(26px,3.4vw,40px);max-width:34em
+    /* 往下移一点(用户要求),离 Hero 远一些 */
+    text-align:center;margin:clamp(36px,4.6vw,60px) auto clamp(26px,3.4vw,40px);max-width:34em
   }
   /* 顶端很轻的章节引言:一句 + 一小段,之后留白 */
   /* 用户要求放大加粗:16–20 → 20–27px,字重 400 → 700 */
@@ -16492,9 +16497,9 @@ window.Guide = (function () {
         '<span class="sky-atmos" aria-hidden="true"></span>' +
         '<section class="sky-close">' +
         '<span class="tp" aria-hidden="true"></span>' +
-        '<div class="say">' + esc0(dpT("星盘不是终点，\n而是一个起点。",
+        '<div class="say">' + esc0(dpT("星盘不是终点，而是一个起点",
           "A chart is not a conclusion.\nIt is a place to begin.")) + '</div>' +
-        '<div class="sub">' + esc0(dpT("它不定义你，但它可以帮助你更认识自己。",
+        '<div class="sub">' + esc0(dpT("它不定义你，但它可以帮助你更认识自己",
           "It doesn't define you. It helps you know yourself a little better.")) + '</div>' +
         '<a class="dp-cta" href="' + LANDING_TOPICS + '">' +
         esc0(dpT("开始探索你的主题解读", "Start exploring your themes")) + ' →</a>' +
