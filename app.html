@@ -3404,10 +3404,12 @@
      用 position:fixed 而不是 background-attachment:fixed:后者在 iOS
      Safari 上有已知的跳动与破图问题(九大主题那边已经踩过、绕开了)。
      卷动时只有卡片在动,底纹留在原地,两页表现要一致。 */
+  /* 用户要求:底图跟内容一起卷动 —— 不再 position:fixed,改成铺满整页、
+     满版宽往下重复。bg.webp 是「原图 + 上下翻转」接成的一张,重复时接缝对得上 */
   #dpage.reading-page::before{
-    content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+    content:"";position:absolute;inset:0;z-index:0;pointer-events:none;
     background-image:url("assets/reading/bg.webp");
-    background-size:cover;background-position:center top;background-repeat:no-repeat;
+    background-size:100% auto;background-position:center top;background-repeat:repeat-y;
     /* 白罩留着但减轻:原本 .28(米色底盖掉七成,整张图很白),
        用户先要求拿掉、看过之后要回白罩但轻一点 —— 调到 .55,
        图看得清楚,仍保有一层柔和的米白 */
