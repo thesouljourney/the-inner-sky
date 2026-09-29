@@ -3999,7 +3999,7 @@
     grid-area:cv;display:flex;align-items:center;justify-content:center;width:46px;height:46px;border-radius:50%;
     background:rgba(236,226,238,.85);color:#4a4760;font-size:16px
   }
-  /* 星盘洞察卡:淡紫底、细边;小标 ✦ 星盘洞察 ——— INSIGHT;左边一枝花叶 */
+  /* 星盘洞察卡:淡紫底、细边;小标 ✦ 星盘洞察 ——— INSIGHT;不放素材 */
   #dpage.reading-page .dp-detail .rd-insight{
     margin-top:22px;padding:18px clamp(18px,3vw,28px) 22px;border-radius:18px;
     background:linear-gradient(135deg,rgba(236,230,244,.78),rgba(244,238,246,.62));
@@ -4010,12 +4010,8 @@
   #dpage.reading-page .dp-detail .rd-insight .hd .zh{font-family:var(--dp-serif);font-size:14px;letter-spacing:.3em;color:#6f6a8a}
   #dpage.reading-page .dp-detail .rd-insight .hd .ln{flex:1;height:1px;background:rgba(154,140,190,.35)}
   #dpage.reading-page .dp-detail .rd-insight .hd .en{font-family:var(--dp-display);font-size:10.5px;letter-spacing:.3em;color:#8e86a6}
-  #dpage.reading-page .dp-detail .rd-insight .it{display:grid;grid-template-columns:clamp(80px,14vw,120px) minmax(0,1fr);gap:16px;align-items:center;margin-top:12px}
+  #dpage.reading-page .dp-detail .rd-insight .it{margin-top:14px}
   #dpage.reading-page .dp-detail .rd-insight .it + .it{margin-top:18px}
-  #dpage.reading-page .dp-detail .rd-insight .art{
-    display:block;aspect-ratio:1;transform:scaleX(-1) scale(1.15);
-    background:url(assets/life/thread/bridge-sprig-br.webp) center / contain no-repeat
-  }
   #dpage.reading-page .dp-detail .rd-insight b{
     display:block;font-family:var(--dp-serif);font-weight:700;font-size:clamp(18px,1.9vw,21px);color:#1A2342;margin-bottom:6px
   }
@@ -4050,7 +4046,6 @@
     #dpage.reading-page .dp-detail .fold-btn .tx{font-size:16px}
     #dpage.reading-page .dp-detail .fold-btn{column-gap:12px}
     #dpage.reading-page .dp-detail .fold-btn .sb{font-size:11px;letter-spacing:.02em}
-    #dpage.reading-page .dp-detail .rd-insight .it{grid-template-columns:78px minmax(0,1fr);gap:12px}
     #dpage.reading-page .dp-detail .rd-insight b{font-size:18px}
     #dpage.reading-page .dp-detail .rd-insight .bd > div{font-size:14px}
     #dpage.reading-page .dp-detail .dp-chnav > *{padding:12px 8px 12px 52px}
@@ -13034,13 +13029,13 @@ window.Guide = (function () {
       });
       // 建议卡片:正文可以划词收藏(与主题阅读同一套 selection / save 逻辑)
       /* 章末的专属建议:依用户参考图做成「星盘洞察」卡 —— 小标 + 细线 + INSIGHT,
-         左边一枝花叶,右边标题与正文(内容本身一个字都不改) */
+         下面是标题与正文(用户要求不放素材;内容本身一个字都不改) */
       function cardsHtml(list) {
         return '<div class="rd-insight"><div class="hd"><i aria-hidden="true">✦</i>' +
           '<span class="zh">' + esc0(dpT("星盘洞察", "Insight")) + '</span><span class="ln" aria-hidden="true"></span>' +
           (window.I18N.isEN() ? "" : '<span class="en" aria-hidden="true">INSIGHT</span>') + "</div>" +
           list.map(function (cd) {
-            return '<div class="it"><span class="art" aria-hidden="true"></span><div class="bd"><b>' + esc0(cd.title) + "</b>" +
+            return '<div class="it"><div class="bd"><b>' + esc0(cd.title) + "</b>" +
               '<div data-saveable data-source="' + esc0(favSrc) + '" data-source-type="life_blueprint"' +
               ' data-section="' + esc0(dpT("专属建议", "For you") + " · " + String(cd.title || "")) + '">' +
               esc0(cd.line || "") + "</div></div></div>";
