@@ -3766,9 +3766,11 @@
        插画放大到基准 100px;文字栏变窄时,换行用 balance 平均分两行,不会句尾单掉一个字 */
     #dpage.reading-page .dp-forcard .gc{column-gap:16px}
     #dpage.reading-page .dp-forcard .gc .gc-art{--gs:100px}
-    /* 03:书放在正文下方的右边(正文用满整行,长句不会被挤断) */
-    #dpage.reading-page .dp-forcard .gc:nth-child(4n+3){grid-template-columns:minmax(0,1fr);grid-template-areas:"no" "t" "d" "art"}
-    #dpage.reading-page .dp-forcard .gc:nth-child(4n+3) .gc-art{margin-top:6px}
+    /* 03:书放在右上方,跟编号 + 标题并排;正文从标题下方开始、用满整行(长句不会被挤断) */
+    #dpage.reading-page .dp-forcard .gc:nth-child(4n+3){
+      grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"no art" "t art" "d d";grid-template-rows:auto auto auto
+    }
+    #dpage.reading-page .dp-forcard .gc:nth-child(4n+3) .gc-art{align-self:end;justify-self:end;margin-bottom:6px}
   }
 
   /* 页尾「返回主题列表」按钮换成用户给的金色星徽箭头图——图本身自带
