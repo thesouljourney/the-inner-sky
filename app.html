@@ -1886,6 +1886,36 @@
     #dpage .sky-asp-sec .sky-asps .sky-expand{font-size:12px;padding:12px 0 4px}
     #dpage .sky-asp-sec .asp-l::before{width:240px;left:auto;right:-30px;bottom:-40px;opacity:.4}
   }
+  /* 相位列对齐(用户:文字没对齐、有的靠左有的靠右):
+     以前每一列各自是一个 grid,auto 栏宽按那一列自己的内容算 ——
+     容许度多一位数(12°15′)、英文相位名长短不一,整列就跟着位移。
+     现在所有列(含「查看全部」展开的那几列)共用卡片的四个栏位(subgrid),
+     行星 / 相位 / 行星 / 容许度 上下一条线对齐。 */
+  @supports (grid-template-columns:subgrid){
+    #dpage .sky-asp-sec .sky-asps{
+      display:grid;row-gap:0;column-gap:clamp(10px,1.4vw,18px);
+      grid-template-columns:minmax(0,1fr) minmax(0,1.15fr) minmax(0,1fr) 56px
+    }
+    #dpage .sky-asp-sec .sky-asps > .sky-asp,
+    #dpage .sky-asp-sec .sky-asps > .sky-more,
+    #dpage .sky-asp-sec .sky-more > .sky-asp{
+      grid-column:1 / -1;display:grid;grid-template-columns:subgrid;column-gap:inherit
+    }
+    #dpage .sky-asp-sec .sky-asps > .sky-expand{grid-column:1 / -1}
+    @media(max-width:900px){
+      #dpage .sky-asp-sec .sky-asps{
+        column-gap:10px;grid-template-columns:auto auto minmax(0,1fr) auto
+      }
+      #dpage .sky-asp-sec .sky-asp .lk{justify-content:flex-start}
+    }
+  }
+  /* 不支援 subgrid 的旧浏览器:手机上改成固定栏宽,至少每一列一样宽 */
+  @supports not (grid-template-columns:subgrid){
+    @media(max-width:900px){
+      #dpage .sky-asp-sec .sky-asp{grid-template-columns:5.6em 5.2em minmax(0,1fr) 4.4em}
+      #dpage .sky-asp-sec .sky-asp .lk{justify-content:flex-start}
+    }
+  }
   /* 相位:左边标题与按钮,右边一张卡 */
   #dpage .sky-asp-sec{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:clamp(20px,3vw,48px);align-items:start}
   #dpage .sky-asp-sec .sky-asps{
