@@ -1585,7 +1585,8 @@
   #dpage.sky-page .sky-zone-c .sky-atmos{display:none}
   #dpage.sky-page .sky-close{
     overflow:hidden;isolation:isolate;border-radius:24px;
-    max-width:1080px;margin:clamp(52px,6vw,88px) auto 0;
+    /* 比正文栏再往两侧伸出去一点(用户要求加长宽度) */
+    max-width:1180px;margin:clamp(52px,6vw,88px) clamp(-60px,-4vw,-30px) 0;
     /* 湖景图原样呈现(用户要求拿掉白罩);文字与按钮在卡片里上下置中 */
     display:flex;flex-direction:column;align-items:center;justify-content:center;
     min-height:clamp(180px,17vw,220px);padding:clamp(24px,2.6vw,34px) clamp(20px,4vw,48px);
@@ -1618,7 +1619,7 @@
     font-size:12.5px;color:#3b3f68;border-bottom-color:rgba(59,63,104,.35)
   }
   @media(max-width:767px){
-    #dpage.sky-page .sky-close{border-radius:20px;min-height:170px;padding:22px 16px;background-position:66% 62%;background-size:auto 130%}
+    #dpage.sky-page .sky-close{border-radius:20px;min-height:170px;padding:22px 16px;margin-left:-31px;margin-right:-31px;background-position:66% 62%;background-size:auto 130%}
     #dpage.sky-page .sky-close::after{inset:5px;border-radius:16px}
     #dpage.sky-page .sky-close .say{font-size:16px;letter-spacing:.01em}
     #dpage.sky-page .sky-close .sub{font-size:12px;letter-spacing:.02em}
