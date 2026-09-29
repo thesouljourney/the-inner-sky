@@ -6630,7 +6630,9 @@
   /* 查看 / 编辑记录浮窗(依用户参考图):水彩纸卡 + 月亮星盘 + 花枝 */
   #dpage.records-page .rc-modal.rec{
     width:min(100%,460px);padding:34px 28px 28px;border:0;border-radius:26px;
-    background:url("assets/records/rec-paper.webp") center / 108% 106% no-repeat;background-color:transparent;
+    /* 右下角纸卡自带的叶子用一层淡米白压淡(用户要求) */
+    background:radial-gradient(ellipse 60% 45% at 100% 100%,rgba(250,244,236,.92) 0%,rgba(250,244,236,.75) 45%,rgba(250,244,236,0) 100%),
+      url("assets/records/rec-paper.webp") center / 108% 106% no-repeat;background-color:transparent;
     box-shadow:0 28px 70px rgba(30,30,70,.3)
   }
   #dpage.records-page .rc-modal.rec > *{position:relative;z-index:1}
