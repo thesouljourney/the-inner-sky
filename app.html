@@ -3761,9 +3761,9 @@
     margin:16px 0 0;font-family:var(--dp-serif);font-size:clamp(13.5px,1.4vw,15px);
     line-height:2;letter-spacing:.05em;color:rgba(58,56,82,.66)
   }
-  /* ↓:短金线接一个半透明象牙小圆里的金色箭头,在深色星空上也看得清;不是按钮 */
+  /* ↓:短金线接一个半透明象牙小圆里的金色箭头,在深色星空上也看得清;按了卷到章节卡 */
   #dpage.reading-page .rd-transit .ar{
-    display:block;width:40px;height:40px;margin:56px auto 0;position:relative;border-radius:50%;
+    display:block;padding:0;cursor:pointer;-webkit-tap-highlight-color:transparent;font:inherit;width:40px;height:40px;margin:56px auto 0;position:relative;border-radius:50%;
     background:rgba(255,251,243,.82);border:1px solid rgba(184,137,79,.55);
     box-shadow:0 0 0 6px rgba(255,251,243,.18),0 6px 18px rgba(35,38,79,.18);
     animation:rdArBob 2.4s ease-in-out infinite
@@ -3778,6 +3778,8 @@
     border-right:2px solid #b8894f;border-bottom:2px solid #b8894f;
     transform:translate(-50%,-70%) rotate(45deg)
   }
+  #dpage.reading-page .rd-transit .ar:hover{background:#fffaf0;border-color:rgba(184,137,79,.85)}
+  #dpage.reading-page .rd-transit .ar:focus-visible{outline:2px solid #b8894f;outline-offset:4px}
   @keyframes rdArBob{0%,100%{transform:translateY(0)}50%{transform:translateY(5px)}}
   @media(prefers-reduced-motion:reduce){#dpage.reading-page .rd-transit .ar{animation:none}}
   @media(max-width:640px){
@@ -13082,12 +13084,14 @@ window.Guide = (function () {
       if (topCards.length)
         /* 用户要求:拿掉「专属建议」标题、延伸线与英文小标,只留四张卡 */
         body += '<div class="dp-card dp-forcard">' + cardsGridHtml(topCards) + "</div>" +
-          /* 过场:从四段摘要走进详细解读之前,停一下。没有卡片、没有按钮 */
+          /* 过场:从四段摘要走进详细解读之前,停一下。没有卡片;
+             底下的 ↓ 按了会把画面带到下面的章节卡(用户要求) */
           '<div class="rd-transit"><span class="st" aria-hidden="true"><i></i>✦<i></i></span>' +
           '<h2 class="t">' + esc0(dpT("现在，往深一点看", "Now, a little deeper")) + "</h2>" +
           '<p class="s">' + dpT("前面是你身上的几股力量，<br>接下来，是它们如何一起推动你的人生。",
             "Those were the forces within you.<br>Next, how they move your life together.") + "</p>" +
-          '<span class="ar" aria-hidden="true"></span></div>';
+          '<button type="button" class="ar" id="rdTransitGo" aria-label="' +
+            esc0(dpT("往下看详细解读", "Go to the detailed reading")) + '"></button></div>';
 
       const k = favKey(favSrc, chName(ch, readingTab), ch.body || "");
       const favB = '<button class="fav-btn' + (isFaved(k) ? " on" : "") + '" data-fav="' + esc0(k) +
@@ -13200,6 +13204,12 @@ window.Guide = (function () {
         d.scrollIntoView({ behavior: "smooth", block: "start" });
       });
     }
+    /* 过场的 ↓:平滑卷到章节卡顶端,跟上 / 下一章的落点一样 */
+    const tg = document.getElementById("rdTransitGo");
+    if (tg) tg.addEventListener("click", function () {
+      const d = document.getElementById("dpDetail");
+      if (d) d.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
     const gb = document.getElementById("dpGenB");
     if (gb) gb.addEventListener("click", function () { renderReading(false, true); routeRefresh(); });
   }
