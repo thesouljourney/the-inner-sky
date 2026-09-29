@@ -260,7 +260,9 @@ header.site { position: relative; z-index: 5; }
 .sky-wheel .isky-tip .b { font-size: 11.5px; }
 
 .guide-card { display: grid; grid-template-columns: 1fr 1.15fr; align-items: end; gap: 6px; padding-bottom: 0;
-  background: linear-gradient(135deg, rgba(255,253,250,.92), rgba(243,235,247,.9)); }
+  /* 水彩花卉底图;文字那一侧叠一层淡象牙白,字才站得住 */
+  background: linear-gradient(90deg, rgba(255,251,246,.62) 0%, rgba(255,251,246,.35) 50%, rgba(255,251,246,.08) 100%),
+    url(assets/landing/guide-bg.webp) center / cover no-repeat, #fbf5ee; }
 .guide-copy { padding-bottom: 26px; align-self: start; }
 .guide-copy p { text-wrap: pretty; margin: 12px 0 20px; font-size: 12.5px; line-height: 1.9; color: var(--ink-2); }
 .guide-art { width: 100%; max-width: 360px; justify-self: end; margin-right: -18px; }
@@ -273,9 +275,12 @@ header.site { position: relative; z-index: 5; }
 .rec-line .dot { position: absolute; left: -22px; top: 5px; width: 13px; height: 13px; border-radius: 50%; background: #b8a8de; box-shadow: 0 0 0 3px rgba(184,168,222,.25); }
 .rec-line .dot.moon { background: radial-gradient(circle at 65% 40%, transparent 42%, #3a3478 43%); box-shadow: none; }
 .rec-line b { font-family: var(--font-serif-sc); font-weight: 600; font-size: 14px; color: var(--ink); }
-.rec-line span:not(.dot) { text-wrap: pretty; font-size: 12px; line-height: 1.75; color: var(--mut); }
+.rec-line span:not(.dot) { text-shadow: 0 0 6px #fffaf3, 0 0 2px #fffaf3; color: #5d5b75 !important; text-wrap: pretty; font-size: 12px; line-height: 1.75; color: var(--mut); }
 .rec-art { width: 100%; max-width: 280px; justify-self: end; margin: -20px -14px -26px 0; }
 
+.rec-card { background: radial-gradient(70% 80% at 22% 58%, rgba(255,251,246,.78), rgba(255,251,246,0) 75%),
+  linear-gradient(90deg, rgba(255,251,246,.55) 0%, rgba(255,251,246,.25) 55%, rgba(255,251,246,.05) 100%),
+  url(assets/landing/rec-bg.webp) center / cover no-repeat, #fbf5ee; }
 .fav-card { background: linear-gradient(rgba(255,251,246,.3), rgba(255,251,246,.3)), url(assets/landing/fav-bg.webp) center / cover no-repeat, #fbf5ee; }
 .fav-card .heart { color: #d59aa8; font-size: .8em; }
 .fav-body { position: relative; margin-top: 16px; min-height: 150px; padding: 4px 90px 0 0; }
