@@ -3350,7 +3350,8 @@
     display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:clamp(14px,1.8vw,20px)
   }
   #dpage.thread-page .thread-bridge .insight .lb > i{flex:0 1 200px;height:1px;background:rgba(196,152,72,.4)}
-  #dpage.thread-page .thread-bridge .insight p{position:relative;z-index:1;font-size:clamp(15px,1.7vw,18px);line-height:2}
+  #dpage.thread-page .thread-bridge .insight p{position:relative;z-index:1;font-size:clamp(15px,1.7vw,18px);line-height:2;
+    max-width:22em;margin-left:auto;margin-right:auto;text-wrap:balance}
   #dpage.thread-page .thread-bridge .insight p + p{margin-top:clamp(14px,1.8vw,20px)}
   #dpage.thread-page .thread-bridge .insight .sp-l,
   #dpage.thread-page .thread-bridge .insight .sp-r{position:absolute;z-index:0;bottom:0;pointer-events:none}
@@ -3376,7 +3377,8 @@
     #dpage.thread-page .thread-bridge .pattern .lk{font-size:15px}
     /* 手机:花枝缩小、贴紧两个下角,不再往上伸到文字旁边;
        底部留白跟着收,卡片不会下面空一大块 */
-    #dpage.thread-page .thread-bridge .insight{padding:26px 20px 64px}
+    /* 用户:文字左右多留一点空间,聚在中间 */
+    #dpage.thread-page .thread-bridge .insight{padding:26px 36px 64px}
     #dpage.thread-page .thread-bridge .insight .sp-l,
     #dpage.thread-page .thread-bridge .insight .sp-r{height:64px;bottom:2px;-webkit-mask-image:none;mask-image:none}
     #dpage.thread-page .thread-bridge .insight .sp-l{left:6px}
