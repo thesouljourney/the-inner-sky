@@ -2887,6 +2887,69 @@
     #dpage.thread-page .ch-art{display:none}
   }
 
+  /* ——「留给你的思考」(生命脉络页尾)依参考图重排:整段置中、金色星芒、
+        最后那个问题单独拎出来,外面绕一圈淡金轨道 —— */
+  #dpage.thread-page .thread-close .pre .l2{display:block}
+  #dpage.thread-page .thread-close .dp-reflect.rf-v2{
+    padding:clamp(26px,3.4vw,44px) clamp(8px,3vw,40px) clamp(30px,4vw,48px)
+  }
+  #dpage.thread-page .thread-close .rf-v2 .eb{justify-content:center;gap:14px;opacity:1;margin-bottom:16px}
+  #dpage.thread-page .thread-close .rf-v2 .eb .ic{font-size:12px;color:#aaa0d5}
+  #dpage.thread-page .thread-close .rf-v2 .eb .tx{letter-spacing:.34em;color:#8d86ab;margin-right:-.34em}
+  #dpage.thread-page .thread-close .rf-v2 h3.rt{
+    font-family:var(--dp-serif);font-weight:600;
+    font-size:clamp(26px,3vw,34px);letter-spacing:.06em;color:#22233a
+  }
+  #dpage.thread-page .thread-close .rf-rule{
+    display:flex;align-items:center;justify-content:center;gap:12px;
+    width:min(62%,300px);margin:clamp(16px,2.2vw,24px) auto clamp(30px,4vw,42px)
+  }
+  #dpage.thread-page .thread-close .rf-rule i{
+    flex:1;height:1px;background:linear-gradient(90deg,rgba(201,169,106,0),rgba(201,169,106,.75))
+  }
+  #dpage.thread-page .thread-close .rf-rule i:last-child{
+    background:linear-gradient(90deg,rgba(201,169,106,.75),rgba(201,169,106,0))
+  }
+  #dpage.thread-page .thread-close .rf-rule b{font-weight:400;font-size:12px;line-height:1;color:#c9a96a}
+  #dpage.thread-page .thread-close .rf-bd{
+    max-width:min(100%,30em);margin:0 auto;text-align:center;
+    font-family:var(--dp-serif);font-weight:400;
+    font-size:clamp(15px,1.6vw,17px);line-height:2.05;letter-spacing:.03em;color:#3a3852
+  }
+  #dpage.thread-page .thread-close .rf-bd p{margin:0 0 clamp(18px,2.4vw,26px);text-wrap:balance}
+  #dpage.thread-page .thread-close .rf-bd p:last-child{margin-bottom:0}
+  #dpage.thread-page .thread-close .rf-star{
+    width:34px;height:34px;margin:clamp(26px,3.4vw,38px) auto clamp(18px,2.4vw,26px)
+  }
+  #dpage.thread-page .thread-close .rf-star svg{
+    display:block;width:100%;height:100%;fill:#d4b47a;
+    filter:drop-shadow(0 0 6px rgba(232,211,162,.7))
+  }
+  #dpage.thread-page .thread-close .rf-q{
+    position:relative;max-width:min(100%,24em);margin:0 auto;
+    padding:clamp(14px,2vw,20px) clamp(14px,3vw,34px) clamp(22px,3vw,30px)
+  }
+  #dpage.thread-page .thread-close .rf-q p{
+    position:relative;margin:0;text-align:center;text-wrap:balance;
+    font-family:var(--dp-serif);font-weight:600;
+    font-size:clamp(20px,2.3vw,26px);line-height:1.75;letter-spacing:.04em;color:#2e2a5c
+  }
+  #dpage.thread-page .thread-close .rf-q .orb{
+    position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none;
+    fill:none;stroke:rgba(201,169,106,.62);stroke-width:1;vector-effect:non-scaling-stroke
+  }
+  #dpage.thread-page .thread-close .rf-q .sp{
+    position:absolute;line-height:1;color:#aaa0d5;pointer-events:none
+  }
+  #dpage.thread-page .thread-close .rf-q .s1{left:-2px;top:52%;font-size:13px}
+  #dpage.thread-page .thread-close .rf-q .s2{right:6%;top:-6px;font-size:15px;color:#9d93cf}
+  #dpage.thread-page .thread-close .rf-v2 + .post{margin-top:clamp(26px,3.4vw,40px)}
+  @media(max-width:767px){
+    #dpage.thread-page .thread-close .rf-v2 .eb .tx{letter-spacing:.28em;margin-right:-.28em}
+    #dpage.thread-page .thread-close .rf-bd{font-size:15.5px;line-height:2}
+    #dpage.thread-page .thread-close .rf-q p{font-size:20px}
+  }
+
   /* ============================================================
      章节卡片(用户给的参考图):每一章是一张圆角卡,
      左 / 右交错放一张大插画,文字那一侧是「01 ✦ → 标题 → 引子 → 探索这一章 →」。
@@ -12486,6 +12549,58 @@ window.Guide = (function () {
       '<div class="rule" aria-hidden="true"></div>' +
       '<div class="bd dp-rich">' + dpParaRich(text) + "</div></div>";
   }
+  /* 「属于我的生命脉络」页尾那一题的专属排法(用户给的参考图):
+     整段置中;前面的叙述一句一行,最后那个问题单独拎出来,
+     前面一枚金色四芒星、外面绕一圈淡金色的轨道。
+     文字全部来自同一段生成内容——只有「接下来可以带走的一个问题是：」
+     这种引出问题的半句,由那枚星芒代替,不再重复印一次。
+     找不到问句时整段照常置中排出,不做任何强调。 */
+  function dpThreadReflectHtml(text) {
+    const src = String(text || "").replace(/\r/g, "").trim();
+    let lead = src, q = "", tail = "";
+    const qi = Math.max(src.lastIndexOf("？"), src.lastIndexOf("?"));
+    if (qi >= 0) {
+      let end = qi + 1;
+      while (end < src.length && /[」”"』]/.test(src.charAt(end))) end++;
+      const before = src.slice(0, qi);
+      const cut = Math.max(before.lastIndexOf("。"), before.lastIndexOf("！"), before.lastIndexOf("!"),
+        before.lastIndexOf("\n"), before.search(/\.\s[^.]*$/));
+      const start = cut >= 0 ? cut + 1 : 0;
+      lead = src.slice(0, start);
+      q = src.slice(start, end).trim();
+      tail = src.slice(end).trim();
+      const ci = Math.max(q.indexOf("："), q.indexOf(": "));
+      if (ci > 0 && ci < q.length - 6) {
+        const intro = q.slice(0, ci);
+        if (!/问题|question/i.test(intro)) lead += intro + (q.charAt(ci) === "：" ? "：" : ":");
+        q = q.slice(ci + 1).trim();
+      }
+    }
+    const sent = function (t) {
+      return String(t).split(/\n+/).reduce(function (a, ln) {
+        return a.concat(ln.match(/[^。！!；;]+[。！!；;]*[」”』]?|[。！!；;]+/g) || []);
+      }, []).map(function (x) { return x.trim(); }).filter(Boolean);
+    };
+    const para = function (x) {
+      return "<p>" + esc0(x).replace(/——(?!$)/g, "——<br>") + "</p>";
+    };
+    const star = '<svg viewBox="0 0 40 40" aria-hidden="true"><path d="M20 0C21 13 27 19 40 20C27 21 21 27 20 40C19 27 13 21 0 20C13 19 19 13 20 0Z"/></svg>';
+    return '<div class="dp-reflect rf-v2"><span class="glow" aria-hidden="true"></span>' +
+      '<div class="eb"><span class="ic" aria-hidden="true">✦</span><span class="tx">REFLECTION · 01</span>' +
+      '<span class="ic" aria-hidden="true">✦</span></div>' +
+      '<h3 class="rt">' + dpT("留给你的思考", "A Question For You") + "</h3>" +
+      '<div class="rf-rule" aria-hidden="true"><i></i><b>✦</b><i></i></div>' +
+      '<div class="rf-bd">' + sent(lead).map(para).join("") + "</div>" +
+      (q
+        ? '<div class="rf-star" aria-hidden="true">' + star + "</div>" +
+          '<div class="rf-q"><svg class="orb" viewBox="0 0 300 100" preserveAspectRatio="none" aria-hidden="true">' +
+          '<path d="M262 14C298 26 300 58 250 78C190 101 80 100 30 84C4 75 2 62 14 52"/></svg>' +
+          '<span class="sp s1" aria-hidden="true">✦</span><span class="sp s2" aria-hidden="true">✦</span>' +
+          '<p>' + esc0(q) + "</p></div>"
+        : "") +
+      (tail ? '<div class="rf-bd">' + sent(tail).map(para).join("") + "</div>" : "") +
+      "</div>";
+  }
   function dpStartHtml(steps) {
     return '<div class="dp-start"><div class="dp-start-hd">' +
       '<span class="ic" aria-hidden="true">✦</span>' +
@@ -12748,9 +12863,9 @@ window.Guide = (function () {
        只在前后各加一句过场 —— 让它读起来像一次落地,不是又一个方框。 */
     if (data.question)
       t += '<div class="thread-close"><p class="pre">' +
-        dpT("在离开这一页以前，有一个问题，想留给现在的你。",
-            "Before you leave this page, one question, for the you of right now.") + "</p>" +
-        dpReflectHtml("q", data.question) +
+        dpT('在离开这一页以前，<span class="l2">有一个问题，想留给现在的你。</span>',
+            'Before you leave this page, <span class="l2">one question, for the you of right now.</span>') + "</p>" +
+        dpThreadReflectHtml(data.question) +
         '<p class="post">' + dpT("不需要马上回答。", "It doesn’t need an answer today.") +
         '<span class="l2">' + dpT("有些答案，会慢慢长出来。",
                                   "Some answers take their own time.") + "</span></p></div>";
