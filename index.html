@@ -44,6 +44,8 @@
   html { scroll-behavior: auto; }
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
+/* hidden 一律真的藏起来(登入后「注册 / 登入」不能再出现) */
+[hidden] { display: none !important; }
 html { scroll-behavior: smooth; }
 body { background: var(--cream); color: var(--ink); font-family: var(--font-sans-sc); -webkit-font-smoothing: antialiased; overflow-x: hidden; }
 a { color: inherit; text-decoration: none; }
@@ -205,7 +207,7 @@ header.site { position: relative; z-index: 5; }
 /* ============================================================
    你的空间:星空 / 内在指南 / 记录 / 收藏
    ============================================================ */
-.spaces { padding: 36px 0 30px; }
+.spaces { padding: 36px 0 0; }
 .row { display: grid; gap: 22px; margin-bottom: 22px; }
 .row-a { grid-template-columns: 1.15fr 1fr; }
 .row-b { grid-template-columns: 1fr 1fr; }
@@ -219,26 +221,26 @@ header.site { position: relative; z-index: 5; }
 .card-hd .more:hover { color: var(--lilac); }
 
 .sky-card {
-  display: grid; grid-template-columns: 1fr 1fr; align-items: center; gap: 12px; color: #f3ecff;
+  display: grid; grid-template-columns: .9fr 1.1fr; align-items: center; gap: 12px; color: #f3ecff;
   background: radial-gradient(90% 90% at 80% 50%, #2c2d6c 0%, #1a1c4d 55%, #131640 100%); border: 1px solid rgba(230,200,135,.28);
   box-shadow: 0 18px 40px rgba(20,22,70,.25);
 }
 .sky-card h3 { color: #f7f1ff; }
 .sky-card .btn-ghost { margin: 16px 0 18px; }
 .sky-card p { text-wrap: balance; font-size: 12.5px; line-height: 1.9; color: rgba(221,212,245,.86); }
-.sky-wheel { width: 100%; max-width: 250px; justify-self: end; }
+.sky-wheel { width: 100%; max-width: 340px; justify-self: end; margin: -10px -6px -10px 0; }
 .sky-wheel .isky-empty { display: none; }
 .sky-wheel .isky-tip { min-width: 140px; padding: 10px 12px; }
 .sky-wheel .isky-tip .t { font-size: 13px; }
 .sky-wheel .isky-tip .b { font-size: 11.5px; }
 
-.guide-card { display: grid; grid-template-columns: 1.1fr 1fr; align-items: end; gap: 6px; padding-bottom: 0;
+.guide-card { display: grid; grid-template-columns: 1fr 1.15fr; align-items: end; gap: 6px; padding-bottom: 0;
   background: linear-gradient(135deg, rgba(255,253,250,.92), rgba(243,235,247,.9)); }
 .guide-copy { padding-bottom: 26px; align-self: start; }
 .guide-copy p { text-wrap: pretty; margin: 12px 0 20px; font-size: 12.5px; line-height: 1.9; color: var(--ink-2); }
-.guide-art { width: 100%; max-width: 260px; justify-self: end; margin-right: -12px; }
+.guide-art { width: 100%; max-width: 360px; justify-self: end; margin-right: -18px; }
 
-.rec-body { display: grid; grid-template-columns: 1.25fr 1fr; align-items: end; gap: 10px; margin-top: 16px; }
+.rec-body { display: grid; grid-template-columns: 1fr 1.1fr; align-items: end; gap: 10px; margin-top: 16px; }
 .rec-line { list-style: none; position: relative; padding-left: 22px; }
 .rec-line::before { content: ""; position: absolute; left: 6px; top: 8px; bottom: 8px; width: 1px; background: rgba(143,127,192,.35); }
 .rec-line li { position: relative; display: flex; flex-direction: column; gap: 3px; padding-bottom: 16px; }
@@ -246,35 +248,31 @@ header.site { position: relative; z-index: 5; }
 .rec-line .dot { position: absolute; left: -22px; top: 5px; width: 13px; height: 13px; border-radius: 50%; background: #b8a8de; box-shadow: 0 0 0 3px rgba(184,168,222,.25); }
 .rec-line .dot.moon { background: radial-gradient(circle at 65% 40%, transparent 42%, #3a3478 43%); box-shadow: none; }
 .rec-line b { font-family: var(--font-serif-sc); font-weight: 600; font-size: 14px; color: var(--ink); }
-.rec-line span:not(.dot) { font-size: 12px; line-height: 1.75; color: var(--mut); }
-.rec-art { width: 100%; max-width: 190px; justify-self: end; margin: -6px -8px -26px 0; }
+.rec-line span:not(.dot) { text-wrap: pretty; font-size: 12px; line-height: 1.75; color: var(--mut); }
+.rec-art { width: 100%; max-width: 280px; justify-self: end; margin: -20px -14px -26px 0; }
 
-.fav-card { background: linear-gradient(160deg, rgba(255,253,250,.92), rgba(246,238,244,.92)); }
+.fav-card { background: linear-gradient(rgba(255,251,246,.3), rgba(255,251,246,.3)), url(assets/landing/fav-bg.webp) center / cover no-repeat, #fbf5ee; }
 .fav-card .heart { color: #d59aa8; font-size: .8em; }
-.fav-body { position: relative; margin-top: 16px; min-height: 120px; padding: 4px 70px 0 0; }
+.fav-body { position: relative; margin-top: 16px; min-height: 150px; padding: 4px 90px 0 0; }
 .fav-body blockquote { position: relative; padding-left: 26px; font-family: var(--font-serif-sc); font-size: 14px; line-height: 1.95; color: var(--ink);
   display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 .fav-body blockquote::before { content: "“"; position: absolute; left: 0; top: -8px; font-family: var(--font-display); font-size: 36px; color: rgba(143,127,192,.55); }
-.fav-body .count { display: inline-flex; align-items: center; gap: 6px; margin-top: 14px; font-size: 12.5px; color: var(--ink-2); }
+.fav-body .count { text-shadow: 0 0 8px #fff8f0, 0 0 3px #fff8f0; display: inline-flex; align-items: center; gap: 6px; margin-top: 14px; font-size: 12.5px; color: var(--ink-2); }
 .fav-body .count i { font-style: normal; color: #d59aa8; }
 .fav-body:has(.empty) { min-height: 90px; }
 .fav-body .empty { font-family: var(--font-serif-sc); font-size: 13.5px; line-height: 1.95; color: var(--mut); }
-/* 右下一弯月亮,纯装饰 */
-.fav-body::after {
-  content: ""; position: absolute; right: 4px; bottom: -6px; width: 58px; height: 58px; border-radius: 50%;
-  box-shadow: inset -14px -6px 0 0 #e8c979; transform: rotate(-20deg); opacity: .85; filter: drop-shadow(0 0 8px rgba(232,201,121,.5));
-}
 
 /* ============================================================
    关于我们
    ============================================================ */
-.story { position: relative; padding: 50px 0 90px; overflow: hidden; }
+.story { position: relative; padding: 24px 0 90px; overflow: hidden; }
 .story-valley { position: absolute; left: 0; right: 0; bottom: 0; height: 60%; background: url(assets/landing/valley.webp) center bottom / cover no-repeat; opacity: .28;
   -webkit-mask-image: linear-gradient(180deg, transparent, #000 60%); mask-image: linear-gradient(180deg, transparent, #000 60%); }
 .story-in { position: relative; display: grid; grid-template-columns: 1fr 1.1fr; align-items: center; gap: 56px; }
 .story-art { justify-self: center; width: 100%; max-width: 420px; }
-.story-art img { width: 100%; aspect-ratio: 4 / 3.6; object-fit: cover; object-position: 50% 30%; border-radius: 999px 999px 26px 26px;
-  -webkit-mask-image: linear-gradient(180deg, #000 78%, transparent 100%); mask-image: linear-gradient(180deg, #000 78%, transparent 100%); }
+.story-art img { width: 100%; aspect-ratio: 4 / 3.6; object-fit: cover; object-position: 50% 30%;
+  -webkit-mask-image: radial-gradient(ellipse 50% 50% at 50% 48%, #000 58%, rgba(0,0,0,.55) 78%, transparent 100%);
+  mask-image: radial-gradient(ellipse 50% 50% at 50% 48%, #000 58%, rgba(0,0,0,.55) 78%, transparent 100%); }
 .story-copy h2 { font-family: var(--font-serif-sc); font-weight: 600; font-size: 28px; letter-spacing: .1em; color: var(--ink); }
 .story-copy p { text-wrap: pretty; margin-top: 18px; font-family: var(--font-serif-sc); font-size: 14.5px; line-height: 2; letter-spacing: .04em; color: var(--ink-2); }
 .story-copy .sign { margin-top: 22px; font-family: var(--font-script); font-size: 38px; line-height: 1.1; letter-spacing: 0; color: var(--ink); }
@@ -344,27 +342,28 @@ footer.site { position: relative; overflow: hidden; background: linear-gradient(
   .here-card p { margin-top: 6px; font-size: 10.5px; line-height: 1.7; }
   .here-card p br { display: none; }
 
-  .spaces { padding: 22px 0 16px; }
+  .spaces { padding: 22px 0 0; }
   .row { gap: 14px; margin-bottom: 14px; }
   .card { padding: 20px 18px; border-radius: 18px; }
   .card h3 { font-size: 17px; }
-  .sky-card { grid-template-columns: 1.05fr 1fr; gap: 6px; }
+  .sky-card { grid-template-columns: 1fr 1.15fr; gap: 4px; }
   .sky-card .btn-ghost { margin: 12px 0 14px; font-size: 11.5px; padding: 7px 13px; }
   .sky-card p { font-size: 11px; }
   .sky-card p br { display: none; }
-  .sky-wheel { max-width: 180px; }
-  .guide-card { grid-template-columns: 1.2fr 1fr; }
+  .sky-wheel { max-width: 230px; margin: -8px -10px -8px 0; }
+  .guide-card { grid-template-columns: 1fr 1.05fr; }
   .guide-copy { padding-bottom: 20px; }
   .guide-copy p { font-size: 11.5px; margin: 10px 0 16px; }
   .guide-copy p br:nth-of-type(n+2) { display: none; }
   .btn-soft { font-size: 12px; padding: 8px 14px; }
-  .guide-art { max-width: 170px; }
-  .rec-body { grid-template-columns: 1.4fr 1fr; }
-  .rec-art { max-width: 130px; margin-bottom: -20px; }
+  .guide-art { max-width: 230px; margin-right: -14px; }
+  .rec-body { grid-template-columns: 1.1fr 1fr; }
+  .rec-art { max-width: 190px; margin: -16px -12px -20px 0; }
+  .rec-line span br { display: none; }
   .card-hd .more { font-size: 11.5px; }
   .fav-body blockquote { font-size: 13px; }
 
-  .story { padding: 34px 0 60px; }
+  .story { padding: 10px 0 60px; }
   .story-in { grid-template-columns: 1fr 1.25fr; gap: 16px; }
   .story-copy h2 { font-size: 20px; }
   .story-copy p { margin-top: 10px; font-size: 11px; line-height: 1.85; letter-spacing: 0; }
@@ -455,7 +454,7 @@ var APP_URL = "app.html";
     <div class="hero-copy">
       <!-- 问候:仅已登录时由 JS 填入,未登录时这一行不渲染 -->
       <p class="hero-kicker animate-fade-up" id="heroKicker" hidden></p>
-      <p class="brand-line animate-fade-up">心有苍穹，星映本真 <span class="st" aria-hidden="true">✦</span></p>
+      <p class="brand-line animate-fade-up">心有苍穹，星映本真 <span class="bl-emoji" aria-hidden="true">💖</span></p>
       <h1 class="hero-title animate-fade-up" style="--animation-delay:.08s">Know Yourself<br>Through the Stars</h1>
       <span class="hero-rule animate-fade-up" style="--animation-delay:.14s" aria-hidden="true"></span>
       <p class="hero-sub animate-fade-up" style="--animation-delay:.2s">不是为了寻找答案，<br>而是看见更完整的自己。</p>
