@@ -6408,9 +6408,10 @@
   #dpage.records-page .rc-chips{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin:6px 0 clamp(24px,3vw,36px)}
   #dpage.records-page .rc-chip{
     min-height:40px;padding:0 22px;border-radius:999px;cursor:pointer;font-family:var(--dp-serif);font-size:14px;
-    letter-spacing:.06em;color:#23264f;background:rgba(255,252,246,.8);border:1px solid rgba(201,178,140,.4)
+    letter-spacing:.06em;color:#23264f;background:rgba(255,255,255,.42);border:1px solid rgba(255,255,255,.75);
+    -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);box-shadow:0 4px 14px rgba(96,86,150,.06)
   }
-  #dpage.records-page .rc-chip.on{background:#23264f;color:#fff;border-color:#23264f}
+  #dpage.records-page .rc-chip.on{background:#23264f;color:#fff;border-color:#23264f;box-shadow:0 6px 16px rgba(35,38,79,.25)}
   #dpage.records-page .rc-month{position:relative}
   #dpage.records-page .rc-mt{
     display:flex;align-items:center;gap:18px;margin:0 0 14px;font-family:var(--dp-serif);font-weight:600;
@@ -6471,19 +6472,27 @@
   #dpage.records-page .rc-end span{font-size:18px;color:#3b3f78;letter-spacing:.2em}
   #dpage.records-page .rc-end p{margin:0;font-size:12.5px;line-height:1.8;letter-spacing:.06em;color:#6f6a7e}
   #dpage.records-page .rc-empty{text-align:center;margin:30px 0;font-size:14px;color:#6f6a7e}
+  /* 小小日记邀请卡(依用户参考图):磨砂玻璃卡,左文右钮 */
   #dpage.records-page .rc-compose{
-    max-width:560px;margin:0 auto clamp(26px,3.4vw,38px);padding:18px 20px;text-align:center;border-radius:20px;
-    background:rgba(255,251,243,.82);border:1px solid rgba(201,168,105,.38);
-    box-shadow:0 0 30px rgba(170,206,196,.18),0 10px 26px rgba(96,86,150,.05)
+    max-width:640px;margin:0 auto clamp(26px,3.4vw,38px);padding:22px 22px 22px 26px;border-radius:22px;
+    display:flex;align-items:center;justify-content:space-between;gap:18px;text-align:left;
+    background:rgba(255,255,255,.42);border:1px solid rgba(255,255,255,.7);
+    -webkit-backdrop-filter:blur(14px) saturate(1.1);backdrop-filter:blur(14px) saturate(1.1);
+    box-shadow:0 12px 32px rgba(96,86,150,.1),inset 0 1px 0 rgba(255,255,255,.8)
   }
-  #dpage.records-page .rc-compose .st{display:block;font-size:11px;line-height:1;color:#c49848}
-  #dpage.records-page .rc-compose .a{margin:8px 0 0;font-family:var(--dp-serif);font-weight:600;font-size:15.5px;letter-spacing:.1em;color:#23264f}
-  #dpage.records-page .rc-compose .b{margin:6px 0 0;font-size:13px;line-height:1.8;color:#6f6a7e}
+  #dpage.records-page .rc-compose .tx{min-width:0}
+  #dpage.records-page .rc-compose .a{display:flex;align-items:center;gap:12px;margin:0;font-family:var(--dp-serif);font-weight:600;font-size:19px;letter-spacing:.12em;color:#23264f}
+  #dpage.records-page .rc-compose .st{font-size:16px;line-height:1;color:#c9a25e;letter-spacing:0}
+  #dpage.records-page .rc-compose .b{margin:10px 0 0;font-size:13px;line-height:1.8;letter-spacing:.04em;color:#77738a}
   #dpage.records-page .rc-cw{
-    margin-top:12px;min-height:38px;padding:0 22px;border-radius:999px;cursor:pointer;
-    font-family:var(--dp-serif);font-size:13.5px;letter-spacing:.08em;color:#23264f;
-    background:rgba(255,253,249,.95);border:1px solid rgba(196,152,72,.55)
+    flex:none;display:inline-flex;align-items:center;gap:10px;min-height:46px;padding:0 16px 0 18px;border-radius:999px;cursor:pointer;
+    font-family:var(--dp-serif);font-size:13.5px;letter-spacing:.06em;color:#23264f;
+    background:rgba(255,252,246,.92);border:1px solid rgba(201,162,94,.5);box-shadow:0 6px 16px rgba(96,86,150,.08);
+    transition:background .2s,transform .2s
   }
+  #dpage.records-page .rc-cw:hover{background:#fff;transform:translateY(-1px)}
+  #dpage.records-page .rc-cw .qi{width:20px;height:20px;color:#c9a25e;flex:none}
+  #dpage.records-page .rc-cw .cv{font-size:20px;line-height:1;color:#23264f;margin-left:2px}
   #dpage.records-page .rc-new{
     display:flex;align-items:center;justify-content:center;width:min(100%,300px);min-height:48px;margin:18px auto 0;
     border-radius:999px;background:#23264f;color:#fff;text-decoration:none;font-family:var(--dp-serif);font-size:15px;
@@ -6548,6 +6557,13 @@
     #dpage.records-page .rc-main{font-size:13.5px}
     #dpage.records-page .rc-chips{gap:6px;flex-wrap:nowrap}
     #dpage.records-page .rc-chip{min-height:36px;padding:0 12px;font-size:12.5px;letter-spacing:.02em;white-space:nowrap}
+    #dpage.records-page .rc-compose{padding:18px 12px 18px 16px;gap:8px;border-radius:20px}
+    #dpage.records-page .rc-compose .a{font-size:16.5px;gap:8px}
+    #dpage.records-page .rc-compose .st{font-size:13px}
+    #dpage.records-page .rc-compose .b{font-size:11px;margin-top:8px;letter-spacing:0;white-space:nowrap}
+    #dpage.records-page .rc-cw{min-height:40px;padding:0 8px 0 11px;gap:5px;font-size:11.5px;letter-spacing:0}
+    #dpage.records-page .rc-cw .qi{width:16px;height:16px}
+    #dpage.records-page .rc-cw .cv{font-size:17px}
   }
   /* 桌机:正文底图往上错开一截,它自己那颗月亮不会紧贴在 Hero 的月亮下面 */
   @media(min-width:768px){
@@ -15540,14 +15556,20 @@ window.Guide = (function () {
       });
       /* 小小日记只在这里写:今天还没写 → 一格邀请;写过 → 随时回来补写 */
       const diaryToday = compassToday("diary");
-      const compose = '<div class="rc-compose"><span class="st" aria-hidden="true">✦</span>' +
+      /* 依用户参考图:左边 ✦ 标题 + 两行说明,右边一颗带金色羽毛笔的按钮;卡片是一片磨砂玻璃 */
+      const quill = '<svg class="qi" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 3.5c-6.2.4-10.6 3.9-12.9 9.6L6 17.6l1.1.5 1.6-3.9c.9.1 2.6-.1 4.4-1.4-1.2 0-2.3-.2-2.9-.5 2.8-.4 4.9-1.9 6.3-4-1.1.2-2 .2-2.7 0 2.7-1 4.6-2.8 5.7-4.8z" fill="currentColor"/><path d="M3 20.5h9" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" fill="none"/></svg>';
+      const cw = function (act, label, id) {
+        return '<button type="button" class="rc-cw" data-act="' + act + '"' + (id ? ' data-id="' + esc0(id) + '"' : "") + '>' +
+          quill + '<span class="lb">' + esc0(label) + '</span><span class="cv" aria-hidden="true">›</span></button>';
+      };
+      const compose = '<div class="rc-compose"><div class="tx">' +
         (diaryToday
-          ? '<p class="a">' + esc0(dpT("今天的小小日记已经写下了", "Today’s little diary is written")) + '</p>' +
-            '<p class="b">' + esc0(dpT("想起什么，随时回来补上几句。", "Come back and add a line whenever something comes to mind.")) + '</p>' +
-            '<button type="button" class="rc-cw" data-act="edit" data-id="' + esc0(diaryToday.id) + '">' + esc0(dpT("继续补写", "Add a little more")) + '</button>'
-          : '<p class="a">' + esc0(dpT("小小日记", "Little diary")) + '</p>' +
-            '<p class="b">' + esc0(dpT("今天发生了什么？或只是一点想留下来的东西。", "What happened today — or something you’d like to keep.")) + '</p>' +
-            '<button type="button" class="rc-cw" data-act="new">' + esc0(dpT("写下今天的小小日记", "Write today’s page")) + '</button>') +
+          ? '<p class="a"><span class="st" aria-hidden="true">✦</span>' + esc0(dpT("今天的小小日记", "Today’s little diary")) + '</p>' +
+            '<p class="b">' + esc0(dpT("已经写下了，", "It’s written —")) + "<br>" + esc0(dpT("想起什么，随时回来补上几句。", "add a line whenever you like.")) + '</p></div>' +
+            cw("edit", dpT("继续补写", "Add a little more"), diaryToday.id)
+          : '<p class="a"><span class="st" aria-hidden="true">✦</span>' + esc0(dpT("小小日记", "Little diary")) + '</p>' +
+            '<p class="b">' + esc0(dpT("今天发生了什么？", "What happened today —")) + "<br>" + esc0(dpT("或只是一点想留下来的东西。", "or something you’d like to keep.")) + '</p></div>' +
+            cw("new", dpT("写下今天的小小日记", "Write today’s page"))) +
         '</div>';
       /* 此刻的我与问问自己在内在指南里写;两样今天都写过,就不再放「写下新的记录」 */
       const bothDone = !!compassToday("note") && !!compassToday("answer");
