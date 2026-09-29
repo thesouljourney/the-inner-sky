@@ -1606,8 +1606,10 @@
   #dpage.sky-page .sky-close .sub{margin-top:6px;font-size:12.5px;letter-spacing:.06em;color:#3f3f5c;text-shadow:0 1px 8px rgba(255,248,240,.75)}
   #dpage.sky-page .sky-close .dp-cta{
     margin-top:clamp(16px,2vw,20px);min-height:0;padding:8px 20px;font-size:12px;letter-spacing:.06em;
-    /* 淡紫色(用户要求):原本 #5b5486→#8a78a8 偏深,改成浅一阶的薰衣草紫,投影也放轻 */
-    background:linear-gradient(135deg,#8e84c7,#ac9dd9);box-shadow:0 8px 22px rgba(90,80,150,.22)
+    /* 按钮底图换成用户给的日出湖景(取框内实景);图偏亮,字改深墨色 + 香槟金细边 */
+    background:url(assets/atmos/sky-close-cta.webp) center 58% / cover no-repeat,#efe4ef;
+    color:#23264f;font-weight:600;text-shadow:0 1px 6px rgba(255,250,244,.85);
+    border:1px solid rgba(214,182,122,.75);box-shadow:0 8px 20px rgba(90,80,150,.2)
   }
   /* 卡片下面的返回连结:原本卡片的负下边距(往页尾靠)改由这个连结承担 */
   #dpage.sky-page .sky-back{
