@@ -6572,7 +6572,8 @@
   /* 小小日记浮窗(依用户参考图):水彩纸卡、四角花枝与金色星轨 */
   #dpage.records-page .rc-modal.diary{
     width:min(100%,460px);padding:34px 30px 26px;border:0;border-radius:26px;overflow:hidden;
-    background:url("assets/records/diary-paper.webp") center / 100% 100% no-repeat,#fbf6ee;
+    /* 纸卡图本身有圆角与毛边:放大一点让它们落在卡片圆角外,四角就不会露出底色 */
+    background:url("assets/records/diary-paper.webp") center / 112% 108% no-repeat;background-color:transparent;
     box-shadow:0 28px 70px rgba(30,30,70,.3)
   }
   #dpage.records-page .rc-modal.diary > *{position:relative;z-index:1}
