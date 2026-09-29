@@ -3537,10 +3537,12 @@
     background-size:100% auto;background-position:center top;background-repeat:repeat-y;
     /* 白罩留着但减轻:原本 .28(米色底盖掉七成,整张图很白),
        用户先要求拿掉、看过之后要回白罩但轻一点 —— 调到 .55,
-       图看得清楚,仍保有一层柔和的米白 */
-    opacity:.55;
+       图看得清楚,仍保有一层柔和的米白。
+       用户再反馈:白罩还是太重、整页白白的 → .55 调到 .88,
+       亮度 / 饱和度 / 对比也少压一点,让底图的颜色回来 */
+    opacity:.88;
     /* 底图对比、饱和度压低一点,亮点不那么刺眼,上面的字更清楚 */
-    filter:brightness(1.05) saturate(.85) contrast(.88)
+    filter:saturate(.95) contrast(.95)
   }
   #dpage.reading-page > *{position:relative;z-index:1}
   /* ⚠ 账号选单开着的时候,要盖住它底下所有内容 —— 但 dp-hero 与
