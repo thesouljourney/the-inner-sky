@@ -2048,7 +2048,8 @@ function testTopicLayout() {
   // 再一次:过场的 ↓ 改成按钮,按了卷到下面的章节卡(用户要求)。
   // 再一次:页尾卡依用户参考图重排(小字引句 + 大字主句,补充说明拆两行)。
   // 再一次:换章时撑住页面高度、直接定位再淡入,不再平滑长卷(用户反馈会跳)。
-  checkEq("[tp] 生命蓝图这一页没有被改", lock("renderReadingPage"), "b4e8aa0499539cbc");
+  // 再一次:过场说明文字拿掉句尾句号(用户要求)。
+  checkEq("[tp] 生命蓝图这一页没有被改", lock("renderReadingPage"), "74730e13aabe24a4");
   checkEq("[tp] 三十道探索题这一页没有被改", lock("renderQPage"), "893d3c71d47ab628");
 
   /* —— ② 文字没有被动过 —— */
