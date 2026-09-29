@@ -3628,6 +3628,126 @@
     #dpage.reading-page .gc .gc-art{top:22px;transform:none}
   }
 
+  /* ============================================================
+     生命蓝图 · 四段摘要(Section 2)+ 过场(Section 3)—— 编辑式重做
+     ------------------------------------------------------------
+     · 拿掉外层大白卡与四张一样的卡片:四段直接写在页面上,
+       后面只有一层没有边的象牙柔光(不是一个框)
+     · 每段版位不同:01 图在右并往页缘出血 / 02 图在左、字偏右 /
+       03 字靠左、书在右下 / 04 置中、插画当成淡淡的水印
+     · 段与段之间一条香槟金细线 + ✦,间距 64–80px
+     · 过场:置中、大留白、不放卡片也不放按钮
+     ============================================================ */
+  /* 满版的一片柔和象牙 / 薰衣草底:上下两端淡出、左右铺到页缘,没有边,不是一个框 */
+  #dpage.reading-page .dp-forcard{
+    position:relative;
+    background:none;border:0;border-radius:0;box-shadow:none;overflow:visible;
+    padding:clamp(28px,4vw,48px) clamp(24px,5vw,56px) 0;margin-bottom:0
+  }
+  #dpage.reading-page .dp-forcard::before{
+    content:"";position:absolute;z-index:0;pointer-events:none;
+    top:-40px;bottom:-60px;left:calc(50% - 50vw);width:100vw;
+    background:linear-gradient(180deg,rgba(250,245,240,0) 0,rgba(250,245,240,.86) 90px,rgba(247,242,246,.86) calc(100% - 110px),rgba(247,242,246,0) 100%)
+  }
+  /* 插画往页缘出血时,在页面边缘被裁掉,不会把整页撑出横向卷轴
+     (overflow-x:clip 不会产生卷动容器,底下的 sticky / 卷动都不受影响) */
+  #dpage.reading-page{overflow-x:clip}
+  #dpage.reading-page .dp-forcard .dp-cards-grid{position:relative;display:block;max-width:760px;margin:0 auto}
+  #dpage.reading-page .dp-forcard .gc{
+    position:relative;overflow:visible;background:none;border:0;border-radius:0;box-shadow:none;
+    padding:0;min-height:clamp(150px,20vw,210px)
+  }
+  #dpage.reading-page .dp-forcard .gc + .gc{margin-top:clamp(128px,15vw,160px)}
+  /* 段落之间的分隔:──── ✦ ────(香槟金,两端淡出) */
+  #dpage.reading-page .dp-forcard .gc + .gc::before{
+    content:"✦";position:absolute;left:0;right:0;top:calc(-1 * clamp(64px,7.5vw,80px));
+    transform:translateY(-50%);text-align:center;font-size:11px;line-height:1;color:rgba(196,152,72,.8);
+    background:
+      linear-gradient(90deg,rgba(196,152,72,0),rgba(196,152,72,.45)) left center / calc(50% - 16px) 1px no-repeat,
+      linear-gradient(90deg,rgba(196,152,72,.45),rgba(196,152,72,0)) right center / calc(50% - 16px) 1px no-repeat
+  }
+  #dpage.reading-page .dp-forcard .gc > *{position:relative;z-index:1}
+  #dpage.reading-page .dp-forcard .gc .no{
+    display:block;font-family:var(--dp-display);font-size:15px;letter-spacing:.24em;color:#a8905f;line-height:1
+  }
+  #dpage.reading-page .dp-forcard .gc b{
+    margin:10px 0 14px;font-family:var(--dp-serif);font-weight:600;
+    font-size:clamp(20px,2.2vw,24px);line-height:1.45;letter-spacing:.06em;color:#23264f
+  }
+  #dpage.reading-page .dp-forcard .gc > div{
+    font-family:var(--dp-serif);font-size:clamp(14.5px,1.5vw,16px);line-height:2;letter-spacing:.03em;color:#3b3a55
+  }
+  /* 插画:不像贴上去的贴纸 —— 边缘用径向遮罩化进纸里,透明度 ~80% */
+  #dpage.reading-page .dp-forcard .gc .gc-art{
+    position:absolute;z-index:0;height:auto;object-fit:contain;opacity:.82;
+    -webkit-mask-image:radial-gradient(closest-side,#000 64%,transparent 100%);
+            mask-image:radial-gradient(closest-side,#000 64%,transparent 100%)
+  }
+  /* 01 核心人格:图在右、略大,往页缘出血 */
+  #dpage.reading-page .dp-forcard .gc:nth-child(4n+1){padding-right:clamp(128px,30vw,280px)}
+  #dpage.reading-page .dp-forcard .gc:nth-child(4n+1) .gc-art{
+    top:50%;right:clamp(-56px,-4vw,-24px);transform:translateY(-50%);width:clamp(170px,32vw,300px)
+  }
+  /* 02 情绪:图在左、字偏右 */
+  #dpage.reading-page .dp-forcard .gc:nth-child(4n+2){padding-left:clamp(132px,30vw,290px)}
+  #dpage.reading-page .dp-forcard .gc:nth-child(4n+2) .gc-art{
+    top:50%;left:clamp(-44px,-3vw,-20px);right:auto;transform:translateY(-50%);width:clamp(160px,30vw,280px)
+  }
+  /* 03 天赋:字靠左、留白多,书放在右下 */
+  #dpage.reading-page .dp-forcard .gc:nth-child(4n+3){padding-right:clamp(24px,18vw,200px);padding-bottom:clamp(96px,12vw,120px)}
+  #dpage.reading-page .dp-forcard .gc:nth-child(4n+3) .gc-art{
+    top:auto;bottom:clamp(-40px,-3vw,-20px);right:clamp(-28px,-2vw,-8px);transform:none;width:clamp(180px,30vw,280px)
+  }
+  /* 04 理想状态:置中、安静,插画当成浮在后面的一片淡淡水印 */
+  #dpage.reading-page .dp-forcard .gc:nth-child(4n+4){text-align:center;padding:clamp(12px,2vw,24px) 0 clamp(20px,3vw,32px)}
+  #dpage.reading-page .dp-forcard .gc:nth-child(4n+4) .gc-art{
+    top:50%;left:50%;right:auto;transform:translate(-50%,-50%);width:clamp(240px,52vw,420px);opacity:.3
+  }
+
+  /* 过场(Section 3):置中、大留白,让读者慢下来再进详细解读 */
+  #dpage.reading-page .rd-transit{
+    text-align:center;padding:clamp(100px,12vw,130px) 24px clamp(88px,10vw,116px)
+  }
+  #dpage.reading-page .rd-transit .st{
+    display:flex;align-items:center;justify-content:center;gap:14px;
+    font-size:12px;line-height:1;color:rgba(196,152,72,.85)
+  }
+  #dpage.reading-page .rd-transit .st i{width:clamp(40px,6vw,64px);height:1px}
+  #dpage.reading-page .rd-transit .st i:first-child{background:linear-gradient(90deg,rgba(196,152,72,0),rgba(196,152,72,.5))}
+  #dpage.reading-page .rd-transit .st i:last-child{background:linear-gradient(90deg,rgba(196,152,72,.5),rgba(196,152,72,0))}
+  #dpage.reading-page .rd-transit .t{
+    margin:22px 0 0;font-family:var(--dp-serif);font-weight:600;
+    font-size:clamp(23px,2.8vw,30px);letter-spacing:.14em;line-height:1.5;color:#23264f
+  }
+  #dpage.reading-page .rd-transit .s{
+    margin:16px 0 0;font-family:var(--dp-serif);font-size:clamp(13.5px,1.4vw,15px);
+    line-height:2;letter-spacing:.05em;color:rgba(58,56,82,.66)
+  }
+  /* ↓:一条细金线收在一个小箭头上,不是按钮 */
+  #dpage.reading-page .rd-transit .ar{
+    display:block;width:1px;height:44px;margin:26px auto 0;position:relative;
+    background:linear-gradient(180deg,rgba(196,152,72,0),rgba(196,152,72,.6))
+  }
+  #dpage.reading-page .rd-transit .ar::after{
+    content:"";position:absolute;left:50%;bottom:0;width:7px;height:7px;
+    border-right:1px solid rgba(196,152,72,.75);border-bottom:1px solid rgba(196,152,72,.75);
+    transform:translate(-50%,-1px) rotate(45deg)
+  }
+  @media(max-width:640px){
+    /* 页面左右留白 24px:正文区 18px − 4px + 10px */
+    #dpage.reading-page .dp-forcard{padding:24px 10px 0;margin-left:-4px;margin-right:-4px}
+    #dpage.reading-page .dp-forcard .gc{min-height:0}
+    #dpage.reading-page .dp-forcard .gc b{font-size:20px}
+    #dpage.reading-page .dp-forcard .gc > div{font-size:14px}
+    #dpage.reading-page .dp-forcard .gc:nth-child(4n+1){padding-right:100px}
+    #dpage.reading-page .dp-forcard .gc:nth-child(4n+1) .gc-art{width:170px;right:-58px}
+    #dpage.reading-page .dp-forcard .gc:nth-child(4n+2){padding-left:104px}
+    #dpage.reading-page .dp-forcard .gc:nth-child(4n+2) .gc-art{width:150px;left:-44px}
+    #dpage.reading-page .dp-forcard .gc:nth-child(4n+3){padding-right:18px;padding-bottom:104px}
+    #dpage.reading-page .dp-forcard .gc:nth-child(4n+3) .gc-art{width:196px;right:-22px;bottom:-34px}
+    #dpage.reading-page .dp-forcard .gc:nth-child(4n+4) .gc-art{width:280px}
+  }
+
   /* 页尾「返回主题列表」按钮换成用户给的金色星徽箭头图——图本身自带
      圆框与光晕,不用再另外画白底圆圈/投影。文字保留在 aria-label 里,
      画面上只剩这张图。只有这一页的 .dp-return 用得到这个 class
@@ -3666,9 +3786,8 @@
      · 章末建议卡 / 上下章导航:实心米白卡、蜜桃色细边、宋体粗体标题
      只作用在 .dp-detail 里,上方「专属建议」2×2 卡不受影响。
      ============================================================ */
-  #dpage.reading-page .dp-detail,
-  #dpage.reading-page .dp-forcard{
-    background:rgba(250,246,242,.8);   /* 用户指定:两张大卡片 80% */
+  #dpage.reading-page .dp-detail{
+    background:rgba(250,246,242,.8);   /* 用户指定:大卡片 80%(四段摘要已改成编辑式,不再套卡片) */
     border:1px solid rgba(232,190,160,.55);border-radius:28px;
     box-shadow:0 24px 60px -28px rgba(34,35,58,.38),inset 0 0 0 1px rgba(255,255,255,.6)
   }
@@ -12740,17 +12859,20 @@ window.Guide = (function () {
       function cardsGridHtml(list) {
         return '<div class="dp-cards-grid">' + list.map(function (cd, i) {
           const icon = CARD_ICON[String(cd.title || "").trim()] || ICON_ORDER[i % ICON_ORDER.length];
+          /* 编辑式的四段(不再是四张一样的卡):编号 → 标题 → 正文,正文在逗号 / 破折号
+             之后断行(字一个都不改,只是排版),插画按段落各自摆位(见 CSS 的 .gc:nth-child) */
+          const line = String(cd.line || "").split(/(?<=[，,；;])|(?=——)/)
+            .map(function (x) { return esc0(x.trim()); }).filter(Boolean).join("<br>");
           return '<div class="gc">' +
-            /* 不能用 loading="lazy"——这张图被卡片的 overflow:hidden 裁切、
-               本身又是 position:absolute,部分浏览器算不出它离视口多近,
-               懒加载的判定永远不触发,图片实际上一次都不会去请求。
-               这四张卡在「专属建议」区块最上面,本来就在首屏附近,
-               懒加载省不到什么,换成立即加载更保险。 */
+            /* 不能用 loading="lazy"——这张图本身是 position:absolute,部分浏览器算不出
+               它离视口多近,懒加载的判定可能永远不触发。这四段在页面最上面,
+               本来就在首屏附近,立即加载更保险。 */
             (icon ? '<img class="gc-art" src="assets/reading/gc-' + icon + '.webp" alt="" aria-hidden="true" decoding="async">' : "") +
+            '<span class="no" aria-hidden="true">' + ("0" + (i + 1)).slice(-2) + "</span>" +
             '<b>' + esc0(cd.title) + "</b>" +
             '<div data-saveable data-source="' + esc0(favSrc) + '" data-source-type="life_blueprint"' +
             ' data-section="' + esc0(dpT("专属建议", "For you") + " · " + String(cd.title || "")) + '">' +
-            esc0(cd.line || "") + "</div></div>";
+            line + "</div></div>";
         }).join("") + "</div>";
       }
       /* .dp-read 是主题阅读页的正文容器(max-width:var(--dp-text)=820px; margin:0 auto),
@@ -12764,7 +12886,13 @@ window.Guide = (function () {
          只动这一层容器,不动卡片设计、字级、间距与内容。 */
       if (topCards.length)
         /* 用户要求:拿掉「专属建议」标题、延伸线与英文小标,只留四张卡 */
-        body += '<div class="dp-card dp-forcard">' + cardsGridHtml(topCards) + "</div>";
+        body += '<div class="dp-card dp-forcard">' + cardsGridHtml(topCards) + "</div>" +
+          /* 过场:从四段摘要走进详细解读之前,停一下。没有卡片、没有按钮 */
+          '<div class="rd-transit"><span class="st" aria-hidden="true"><i></i>✦<i></i></span>' +
+          '<h2 class="t">' + esc0(dpT("现在，往深一点看", "Now, a little deeper")) + "</h2>" +
+          '<p class="s">' + dpT("前面是你身上的几股力量，<br>接下来，是它们如何一起推动你的人生。",
+            "Those were the forces within you.<br>Next, how they move your life together.") + "</p>" +
+          '<span class="ar" aria-hidden="true"></span></div>';
 
       const k = favKey(favSrc, chName(ch, readingTab), ch.body || "");
       const favB = '<button class="fav-btn' + (isFaved(k) ? " on" : "") + '" data-fav="' + esc0(k) +
