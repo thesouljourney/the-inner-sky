@@ -551,8 +551,8 @@ function testInnerCompass() {
     lApp.join(" "), "#/reading #/my-sky #/map #/compass #/records #/favorites #/settings");
   checkEq("[compass] 落地页也有我的内在指南这一项",
     /data-app-hash="#\/compass"[^>]*>我的内在指南</.test(lmenu), true);
-  // 顶部横向导航列不准被动到
-  ["探索", "我的星空", "收藏", "关于我们"].forEach(function (t) {
+  // 顶部横向导航列:落地页依用户 sample 重排后改成 首页 / 探索主题 / 关于我们
+  ["首页", "探索主题", "关于我们"].forEach(function (t) {
     checkEq("[compass] 落地页顶部导航列仍有:" + t,
       new RegExp('<a[^>]*>' + t + '</a>').test(landing), true);
   });
