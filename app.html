@@ -3659,10 +3659,10 @@
     position:relative;overflow:visible;background:none;border:0;border-radius:0;box-shadow:none;
     padding:0;min-height:clamp(150px,20vw,210px)
   }
-  #dpage.reading-page .dp-forcard .gc + .gc{margin-top:clamp(128px,15vw,160px)}
+  #dpage.reading-page .dp-forcard .gc + .gc{margin-top:clamp(112px,13vw,140px)}
   /* 段落之间的分隔:──── ✦ ────(香槟金,两端淡出) */
   #dpage.reading-page .dp-forcard .gc + .gc::before{
-    content:"✦";position:absolute;left:0;right:0;top:calc(-1 * clamp(64px,7.5vw,80px));
+    content:"✦";position:absolute;left:0;right:0;top:calc(-1 * clamp(56px,6.5vw,70px));
     transform:translateY(-50%);text-align:center;font-size:11px;line-height:1;color:rgba(196,152,72,.8);
     background:
       linear-gradient(90deg,rgba(196,152,72,0),rgba(196,152,72,.45)) left center / calc(50% - 16px) 1px no-repeat,
@@ -3685,27 +3685,26 @@
     -webkit-mask-image:radial-gradient(closest-side,#000 64%,transparent 100%);
             mask-image:radial-gradient(closest-side,#000 64%,transparent 100%)
   }
-  /* 01 核心人格:图在右、略大,往页缘出血 */
-  #dpage.reading-page .dp-forcard .gc:nth-child(4n+1){padding-right:clamp(128px,30vw,280px)}
-  #dpage.reading-page .dp-forcard .gc:nth-child(4n+1) .gc-art{
-    top:50%;right:clamp(-56px,-4vw,-24px);transform:translateY(-50%);width:clamp(170px,32vw,300px)
+  /* 版面整理(用户反馈太乱):四段改成同一套两栏格线 ——
+     文字一栏 + 插画一栏,插画一样大、垂直置中、不出血、不当水印;
+     只在左右交替(01 右 / 02 左 / 03 右 / 04 左),文字一律靠左 */
+  #dpage.reading-page .dp-forcard .gc{
+    display:grid;align-items:center;column-gap:clamp(20px,4vw,48px);
+    grid-template-columns:minmax(0,1fr) clamp(118px,30%,220px);
+    grid-template-areas:"no art" "t art" "d art";grid-template-rows:auto auto 1fr;
+    text-align:left
   }
-  /* 02 情绪:图在左、字偏右 */
-  #dpage.reading-page .dp-forcard .gc:nth-child(4n+2){padding-left:clamp(132px,30vw,290px)}
-  #dpage.reading-page .dp-forcard .gc:nth-child(4n+2) .gc-art{
-    top:50%;left:clamp(-44px,-3vw,-20px);right:auto;transform:translateY(-50%);width:clamp(160px,30vw,280px)
+  #dpage.reading-page .dp-forcard .gc:nth-child(even){
+    grid-template-columns:clamp(118px,30%,220px) minmax(0,1fr);
+    grid-template-areas:"art no" "art t" "art d"
   }
-  /* 03 天赋:字靠左、留白多,书放在右下 */
-  #dpage.reading-page .dp-forcard .gc:nth-child(4n+3){padding-right:clamp(24px,18vw,200px);padding-bottom:clamp(96px,12vw,120px)}
-  #dpage.reading-page .dp-forcard .gc:nth-child(4n+3) .gc-art{
-    top:auto;bottom:clamp(-40px,-3vw,-20px);right:clamp(-28px,-2vw,-8px);transform:none;width:clamp(180px,30vw,280px)
+  #dpage.reading-page .dp-forcard .gc .no{grid-area:no;align-self:end}
+  #dpage.reading-page .dp-forcard .gc b{grid-area:t}
+  #dpage.reading-page .dp-forcard .gc > div{grid-area:d;align-self:start}
+  #dpage.reading-page .dp-forcard .gc .gc-art{
+    grid-area:art;position:static;inset:auto;transform:none;
+    width:100%;height:auto;aspect-ratio:1;align-self:center;opacity:.9
   }
-  /* 04 理想状态:置中、安静,插画当成浮在后面的一片淡淡水印 */
-  #dpage.reading-page .dp-forcard .gc:nth-child(4n+4){text-align:center;padding:clamp(12px,2vw,24px) 0 clamp(20px,3vw,32px)}
-  #dpage.reading-page .dp-forcard .gc:nth-child(4n+4) .gc-art{
-    top:50%;left:50%;right:auto;transform:translate(-50%,-50%);width:clamp(240px,52vw,420px);opacity:.3
-  }
-
   /* 过场(Section 3):置中、大留白,让读者慢下来再进详细解读 */
   #dpage.reading-page .rd-transit{
     text-align:center;padding:clamp(100px,12vw,130px) 24px clamp(88px,10vw,116px)
@@ -3741,13 +3740,16 @@
     #dpage.reading-page .dp-forcard .gc{min-height:0}
     #dpage.reading-page .dp-forcard .gc b{font-size:20px}
     #dpage.reading-page .dp-forcard .gc > div{font-size:14px}
-    #dpage.reading-page .dp-forcard .gc:nth-child(4n+1){padding-right:100px}
-    #dpage.reading-page .dp-forcard .gc:nth-child(4n+1) .gc-art{width:170px;right:-58px}
-    #dpage.reading-page .dp-forcard .gc:nth-child(4n+2){padding-left:104px}
-    #dpage.reading-page .dp-forcard .gc:nth-child(4n+2) .gc-art{width:150px;left:-44px}
-    #dpage.reading-page .dp-forcard .gc:nth-child(4n+3){padding-right:18px;padding-bottom:104px}
-    #dpage.reading-page .dp-forcard .gc:nth-child(4n+3) .gc-art{width:196px;right:-22px;bottom:-34px}
-    #dpage.reading-page .dp-forcard .gc:nth-child(4n+4) .gc-art{width:280px}
+    /* 手机:插画只跟「编号 + 标题」并排,正文用满整行 —— 窄栏会让句尾掉出一两个字 */
+    #dpage.reading-page .dp-forcard .gc{
+      column-gap:14px;grid-template-columns:minmax(0,1fr) 96px;
+      grid-template-areas:"no art" "t art" "d d";grid-template-rows:auto auto auto
+    }
+    #dpage.reading-page .dp-forcard .gc:nth-child(even){
+      grid-template-columns:96px minmax(0,1fr);grid-template-areas:"art no" "art t" "d d"
+    }
+    #dpage.reading-page .dp-forcard .gc b{margin-bottom:0;align-self:start}
+    #dpage.reading-page .dp-forcard .gc > div{margin-top:14px}
   }
 
   /* 页尾「返回主题列表」按钮换成用户给的金色星徽箭头图——图本身自带
