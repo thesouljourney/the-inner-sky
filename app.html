@@ -6485,12 +6485,12 @@
   #dpage.records-page .rc-compose .st{font-size:13px;line-height:1;color:#c9a25e;letter-spacing:0}
   #dpage.records-page .rc-compose .b{margin:6px 0 0;font-size:12px;line-height:1.75;letter-spacing:.04em;color:#77738a}
   #dpage.records-page .rc-cw{
-    flex:none;display:inline-flex;align-items:center;gap:8px;min-height:38px;padding:0 13px 0 15px;border-radius:999px;cursor:pointer;
+    flex:none;display:inline-flex;align-items:center;gap:8px;min-height:38px;padding:0 16px 0 15px;border-radius:999px;cursor:pointer;
     font-family:var(--dp-serif);font-size:12.5px;letter-spacing:.04em;color:#23264f;
-    background:rgba(255,252,246,.92);border:1px solid rgba(201,162,94,.5);box-shadow:0 6px 16px rgba(96,86,150,.08);
+    background:rgba(255,252,246,.5);border:1px solid rgba(201,162,94,.5);box-shadow:0 6px 16px rgba(96,86,150,.06);
     transition:background .2s,transform .2s
   }
-  #dpage.records-page .rc-cw:hover{background:#fff;transform:translateY(-1px)}
+  #dpage.records-page .rc-cw:hover{background:rgba(255,252,246,.75);transform:translateY(-1px)}
   #dpage.records-page .rc-cw .qi{width:16px;height:16px;color:#c9a25e;flex:none}
   #dpage.records-page .rc-cw .cv{font-size:17px;line-height:1;color:#23264f;margin-left:2px}
   #dpage.records-page .rc-new{
@@ -6561,7 +6561,7 @@
     #dpage.records-page .rc-compose .a{font-size:14.5px;gap:6px}
     #dpage.records-page .rc-compose .st{font-size:11px}
     #dpage.records-page .rc-compose .b{font-size:10.5px;margin-top:4px;line-height:1.7;letter-spacing:0;white-space:nowrap}
-    #dpage.records-page .rc-cw{min-height:32px;padding:0 7px 0 10px;gap:4px;font-size:11px;letter-spacing:0}
+    #dpage.records-page .rc-cw{min-height:32px;padding:0 11px 0 10px;gap:4px;font-size:11px;letter-spacing:0}
     #dpage.records-page .rc-cw .qi{width:13px;height:13px}
     #dpage.records-page .rc-cw .cv{font-size:15px}
   }
@@ -15663,7 +15663,7 @@ window.Guide = (function () {
       const quill = '<svg class="qi" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 3.5c-6.2.4-10.6 3.9-12.9 9.6L6 17.6l1.1.5 1.6-3.9c.9.1 2.6-.1 4.4-1.4-1.2 0-2.3-.2-2.9-.5 2.8-.4 4.9-1.9 6.3-4-1.1.2-2 .2-2.7 0 2.7-1 4.6-2.8 5.7-4.8z" fill="currentColor"/><path d="M3 20.5h9" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" fill="none"/></svg>';
       const cw = function (act, label, id) {
         return '<button type="button" class="rc-cw" data-act="' + act + '"' + (id ? ' data-id="' + esc0(id) + '"' : "") + '>' +
-          quill + '<span class="lb">' + esc0(label) + '</span><span class="cv" aria-hidden="true">›</span></button>';
+          quill + '<span class="lb">' + esc0(label) + '</span></button>';
       };
       const compose = '<div class="rc-compose"><div class="tx">' +
         (diaryToday
