@@ -1764,7 +1764,8 @@
   }
   #dpage .sky-core .sky-card .art{
     position:absolute;left:0;top:0;bottom:0;right:auto;width:44%;height:100%;
-    object-fit:cover;object-position:50% 38%;opacity:1;z-index:0;
+    /* 插画主体往右靠一点(用户要求):取景偏左,画面里的主体就往右移 */
+    object-fit:cover;object-position:12% 38%;opacity:1;z-index:0;
     -webkit-mask-image:linear-gradient(90deg,#000 72%,transparent);mask-image:linear-gradient(90deg,#000 72%,transparent)
   }
   #dpage .sky-core .sky-card > :not(.art){grid-column:2}
