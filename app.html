@@ -3351,7 +3351,7 @@
   }
   #dpage.thread-page .thread-bridge .insight .lb > i{flex:0 1 200px;height:1px;background:rgba(196,152,72,.4)}
   #dpage.thread-page .thread-bridge .insight p{position:relative;z-index:1;font-size:clamp(15px,1.7vw,18px);line-height:2;
-    max-width:26em;margin-left:auto;margin-right:auto;text-wrap:pretty}
+    max-width:26em;margin-left:auto;margin-right:auto;text-wrap:balance}
   #dpage.thread-page .thread-bridge .insight p + p{margin-top:clamp(14px,1.8vw,20px)}
   #dpage.thread-page .thread-bridge .insight .sp-l,
   #dpage.thread-page .thread-bridge .insight .sp-r{position:absolute;z-index:0;bottom:0;pointer-events:none}
@@ -3378,14 +3378,16 @@
     /* 手机:花枝缩小、贴紧两个下角,不再往上伸到文字旁边;
        底部留白跟着收,卡片不会下面空一大块 */
     /* 用户:文字左右多留一点空间,聚在中间 */
-    #dpage.thread-page .thread-bridge .insight{padding:26px 26px 64px}
+    /* 平均断行让两行一样长、两侧自然空出来 —— 两枝花叶就放进这两侧的空位
+       (贴着左下 / 右下角、跟最后一行并排),底部不用再为它们多留一截 */
+    #dpage.thread-page .thread-bridge .insight{padding:26px 22px 30px}
     #dpage.thread-page .thread-bridge .insight .sp-l,
-    #dpage.thread-page .thread-bridge .insight .sp-r{height:64px;bottom:2px;-webkit-mask-image:none;mask-image:none}
+    #dpage.thread-page .thread-bridge .insight .sp-r{height:76px;bottom:6px;-webkit-mask-image:none;mask-image:none}
     #dpage.thread-page .thread-bridge .insight .sp-l{left:6px}
     #dpage.thread-page .thread-bridge .insight .sp-r{right:6px}
     #dpage.thread-page .thread-bridge .insight .lb{margin-bottom:18px}
     #dpage.thread-page .thread-bridge .insight .lb > i{flex-basis:40px}
-    #dpage.thread-page .thread-bridge .insight p{font-size:14.5px;line-height:2}
+    #dpage.thread-page .thread-bridge .insight p{font-size:15.5px;line-height:2}
   }
 
   /* 从这里开始:星环 + 置中大标题 + 一行引导 */
