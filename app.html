@@ -3061,6 +3061,10 @@
     #dpage.thread-page .thread-trail > .thread-ch > .ch-art.a1 img,
     #dpage.thread-page .thread-trail > .thread-ch > .ch-art.a4 img{top:auto;bottom:0;object-position:50% 100%}
     #dpage.thread-page .thread-trail > .thread-ch.open > .ch-art img{transform:none}
+    /* 展开时顶端横幅要贴齐卡片上缘:02 / 03 收起时那条「80% 高、离底 6%」的设定
+       会在横幅上方留出一截白底(用户反馈),展开时改回满版 */
+    #dpage.thread-page .thread-trail > .thread-ch.open > .ch-art.a2 img,
+    #dpage.thread-page .thread-trail > .thread-ch.open > .ch-art.a3 img{top:0;bottom:0;height:100%}
   }
   @media(max-width:359px){
     #dpage.thread-page .thread-trail > .thread-ch > .ch-art{display:block}
