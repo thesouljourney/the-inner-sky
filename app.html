@@ -4061,8 +4061,11 @@
     #dpage.reading-page .dp-detail .dp-chnav > .nx{padding:12px 52px 12px 8px}
     #dpage.reading-page .dp-detail .dp-chnav > .pv::after,
     #dpage.reading-page .dp-detail .dp-chnav > .nx::after{width:38px;height:38px;font-size:16px}
-    #dpage.reading-page .dp-detail .dp-chnav .lb{font-size:11px;letter-spacing:.06em}
-    #dpage.reading-page .dp-detail .dp-chnav .tt{font-size:12.5px;line-height:1.5}
+    /* 手机只留「上一个标题 / 下一个标题」,不写章名(用户要求) */
+    #dpage.reading-page .dp-detail .dp-chnav > *{min-height:62px;display:flex;flex-direction:column;justify-content:center}
+    #dpage.reading-page .dp-detail .dp-chnav .lb{font-size:13.5px;letter-spacing:.08em;margin:0;color:#3a3852;font-weight:500}
+    #dpage.reading-page .dp-detail .dp-chnav .off .lb{color:rgba(34,35,58,.38)}
+    #dpage.reading-page .dp-detail .dp-chnav .tt{display:none}
     #dpage.reading-page .dp-detail .dp-chnav > .pv::after{left:8px}
     #dpage.reading-page .dp-detail .dp-chnav > .nx::after{right:8px}
   }
