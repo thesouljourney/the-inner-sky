@@ -3712,17 +3712,16 @@
   #dpage.reading-page .dp-forcard .gc:nth-child(4n+2),
   #dpage.reading-page .dp-forcard .gc:nth-child(4n+4){
     grid-template-columns:clamp(88px,28%,200px) minmax(0,1fr);
-    grid-template-areas:"art no" "art t" "d d"
+    grid-template-areas:"art no" "art t" "art d";grid-template-rows:auto auto 1fr
   }
   #dpage.reading-page .dp-forcard .gc:nth-child(4n+2) .gc-art{align-self:start}
-  #dpage.reading-page .dp-forcard .gc:nth-child(4n+2) .no,
-  #dpage.reading-page .dp-forcard .gc:nth-child(4n+4) .no{align-self:end}
   /* 03:编号、标题、正文靠左;图在正文块的右下,轻一点、四周留白 */
   #dpage.reading-page .dp-forcard .gc:nth-child(4n+3){
-    grid-template-columns:minmax(0,1fr);grid-template-areas:"no" "t" "d" "art"
+    grid-template-columns:minmax(0,1fr) clamp(88px,28%,200px);
+    grid-template-areas:"no art" "t art" "d art";grid-template-rows:auto auto 1fr
   }
   /* 书往上收到正文最后几行的右下旁(电脑上正文很短,右边有空位);手机上正文会写到右边,就放在正文下方 */
-  #dpage.reading-page .dp-forcard .gc:nth-child(4n+3) .gc-art{justify-self:end;margin-top:-72px;opacity:.8}
+  #dpage.reading-page .dp-forcard .gc:nth-child(4n+3) .gc-art{justify-self:end;align-self:end;opacity:.8}
   /* 04:图在左下(贴齐标题底部),编号标题在右,正文回到全宽,整段安静平衡 */
   #dpage.reading-page .dp-forcard .gc:nth-child(4n+4) .gc-art{align-self:end}
   /* 过场(Section 3):置中、大留白,让读者慢下来再进详细解读 */
@@ -3764,10 +3763,12 @@
        文字跟插画至少隔 20px */
     #dpage.reading-page .dp-forcard .gc{column-gap:20px}
     #dpage.reading-page .dp-forcard .gc .gc-art{width:100%;max-width:120px}
-    #dpage.reading-page .dp-forcard .gc:nth-child(4n+1){grid-template-columns:minmax(0,1fr) 28%}
+    /* 四段同一套:编号 → 标题 → 解读一栏,插画在整栏旁边(不在插画下方) */
+    #dpage.reading-page .dp-forcard .gc:nth-child(4n+1){grid-template-columns:minmax(0,1fr) 24%}
+    /* 03 的书是扁的、句子较长:插画栏收窄一点,句尾不会单独掉一个字 */
+    #dpage.reading-page .dp-forcard .gc:nth-child(4n+3){grid-template-columns:minmax(0,1fr) 19%;column-gap:14px}
     #dpage.reading-page .dp-forcard .gc:nth-child(4n+2),
-    #dpage.reading-page .dp-forcard .gc:nth-child(4n+4){grid-template-columns:28% minmax(0,1fr)}
-    #dpage.reading-page .dp-forcard .gc:nth-child(4n+3) .gc-art{width:30%;margin-top:4px}
+    #dpage.reading-page .dp-forcard .gc:nth-child(4n+4){grid-template-columns:24% minmax(0,1fr)}
   }
 
   /* 页尾「返回主题列表」按钮换成用户给的金色星徽箭头图——图本身自带
