@@ -3833,6 +3833,61 @@
     }
   }
 
+  /* 页尾卡 v2(用户参考图):樱花枝 + 薄纱框住的云海当底,金色细边、
+     大圆角;中间一层很淡的米白光把文字托起来。文字置中:小字引句 →
+     大字主句 → 细线星芒 → 两行补充 → 底部一颗金色细框圆形 ↓ */
+  #dpage.reading-page .dp-return{
+    flex-direction:column;justify-content:center;align-items:center;gap:0;
+    overflow:hidden;border-radius:28px;border:1px solid rgba(201,160,98,.7);
+    padding:clamp(48px,6.4vw,84px) 28px clamp(36px,4.4vw,60px);
+    background:
+      radial-gradient(ellipse 46% 58% at 50% 48%,rgba(255,250,242,.62),rgba(255,250,242,0) 100%),
+      url("assets/reading/end-card.webp") center/cover no-repeat,#f7eee6;
+    box-shadow:0 0 0 4px rgba(255,251,244,.35),0 22px 50px -24px rgba(34,35,58,.4)
+  }
+  #dpage.reading-page .dp-return .say{
+    margin:0;font-weight:400;color:#23294a;text-shadow:0 1px 10px rgba(255,249,240,.85);font-size:0;line-height:1
+  }
+  #dpage.reading-page .dp-return .say .k{
+    display:inline-block;font-size:clamp(18px,2vw,23px);letter-spacing:.12em;line-height:1.5;font-weight:500
+  }
+  #dpage.reading-page .dp-return .say .h{
+    display:inline-block;margin-top:14px;font-size:clamp(28px,3.6vw,40px);letter-spacing:.1em;line-height:1.3;font-weight:700;color:#1c2140
+  }
+  #dpage.reading-page .dp-return .say-div{width:min(440px,78%);margin:26px auto 22px;color:rgba(184,137,79,.7)}
+  #dpage.reading-page .dp-return .say-div i{transform:none}
+  #dpage.reading-page .dp-return .say-div b{font-size:14px;color:#b8894f}
+  #dpage.reading-page .dp-return .say-sub{
+    font-size:clamp(15px,1.6vw,18px);font-weight:500;letter-spacing:.12em;line-height:1.85;color:#2a2f4c
+  }
+  #dpage.reading-page .dp-return .dp-cta-round{
+    position:relative;right:auto;top:auto;transform:none;margin-top:28px;
+    width:50px;height:50px;border-radius:50%;
+    background:rgba(255,251,244,.45);border:1px solid rgba(184,137,79,.8);filter:none;
+    box-shadow:0 4px 14px rgba(34,35,58,.12);transition:background .2s
+  }
+  #dpage.reading-page .dp-return .dp-cta-round:hover{background:rgba(255,251,244,.8)}
+  #dpage.reading-page .dp-return .dp-cta-round::before{
+    content:"";position:absolute;left:50%;top:14px;width:1.5px;height:20px;margin-left:-.75px;background:#a47b45
+  }
+  #dpage.reading-page .dp-return .dp-cta-round::after{
+    content:"";position:absolute;left:50%;top:22px;width:9px;height:9px;
+    border-right:1.5px solid #a47b45;border-bottom:1.5px solid #a47b45;transform:translateX(-50%) rotate(45deg)
+  }
+  @media(max-width:640px){
+    #dpage.reading-page .dp-return{
+      padding:44px 18px 30px;border-radius:22px;
+      background:
+        radial-gradient(ellipse 60% 52% at 50% 46%,rgba(255,250,242,.7),rgba(255,250,242,0) 100%),
+        url("assets/reading/end-card.webp") 42% center/auto 100% no-repeat,#f7eee6
+    }
+    #dpage.reading-page .dp-return .say .h{margin-top:10px}
+    #dpage.reading-page .dp-return .say-div{margin:20px auto 16px}
+    #dpage.reading-page .dp-return .dp-cta-round{width:44px;height:44px;right:auto;margin-top:22px}
+    #dpage.reading-page .dp-return .dp-cta-round::before{top:12px;height:18px}
+    #dpage.reading-page .dp-return .dp-cta-round::after{top:19px;width:8px;height:8px}
+  }
+
   /* ============================================================
      生命蓝图 · 五章那张卡(.dp-detail)—— 照用户给的 example 图重做
      ------------------------------------------------------------
@@ -13153,9 +13208,10 @@ window.Guide = (function () {
          (那句是给九大主题 / 生命脉络这些「读完一段」的页面用的)。
          按钮维持默认目的地(LANDING_TOPICS = index.html#chapters,
          就是首页那组九大主题),不用另外传 href。 */
+      /* 依用户参考图:小字引句 + 大字主句两层,补充说明拆成两行 */
       foot = dpReturnFoot(false, {
-        say: dpT("不急着找到答案\n先听听内心的声音\n\n从九个不同的主题  开启属于自己的探索",
-          "There's no rush to find the answer —\nfirst, listen to your own voice.\n\nBegin your own exploration, across nine different themes."),
+        say: dpT('<span class="k">不急着找到答案</span>\n<span class="h">先听听内心的声音</span>\n\n从九个不同的主题\n开启属于自己的探索',
+          '<span class="k">There\'s no rush to find the answer —</span>\n<span class="h">first, listen to your own voice.</span>\n\nBegin your own exploration,\nacross nine different themes.'),
         round: true
       });
     }
