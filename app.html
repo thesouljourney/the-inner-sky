@@ -3378,7 +3378,7 @@
     /* 手机:花枝缩小、贴紧两个下角,不再往上伸到文字旁边;
        底部留白跟着收,卡片不会下面空一大块 */
     /* 用户:文字左右多留一点空间,聚在中间 */
-    #dpage.thread-page .thread-bridge .insight{padding:26px 36px 64px}
+    #dpage.thread-page .thread-bridge .insight{padding:26px 30px 64px}
     #dpage.thread-page .thread-bridge .insight .sp-l,
     #dpage.thread-page .thread-bridge .insight .sp-r{height:64px;bottom:2px;-webkit-mask-image:none;mask-image:none}
     #dpage.thread-page .thread-bridge .insight .sp-l{left:6px}
@@ -12818,7 +12818,8 @@ window.Guide = (function () {
     return '<div class="insight"><span class="sp-l" aria-hidden="true"></span><span class="sp-r" aria-hidden="true"></span>' +
       '<span class="lb"><i aria-hidden="true"></i><span aria-hidden="true">✦</span> ' +
       dpT("一个小小的洞察", "A small insight") + '<i aria-hidden="true"></i></span>' +
-      ss.map(function (x) { return "<p>" + esc0(x) + "</p>"; }).join("") + "</div>";
+      // 用户:卡片里的句子不带句号(一句一行,句号是多余的);问号、叹号保留
+      ss.map(function (x) { return "<p>" + esc0(x.replace(/。+$/, "")) + "</p>"; }).join("") + "</div>";
   }
   /* —— 手机版的「这一次会经过几段」——————————————————————
      只是一个很小的编辑式记号:不吸顶、不可点、不随卷动变化,也不是进度条。
