@@ -3755,11 +3755,12 @@
   #dpage.reading-page .rd-transit .st i:last-child{background:linear-gradient(90deg,rgba(196,152,72,.5),rgba(196,152,72,0))}
   #dpage.reading-page .rd-transit .t{
     margin:22px 0 0;font-family:var(--dp-serif);font-weight:600;
-    font-size:clamp(23px,2.8vw,30px);letter-spacing:.14em;line-height:1.5;color:#23264f
+    font-size:clamp(23px,2.8vw,30px);letter-spacing:.14em;line-height:1.5;color:#1c1f45;text-shadow:0 1px 10px rgba(255,250,244,.7)
   }
   #dpage.reading-page .rd-transit .s{
     margin:16px 0 0;font-family:var(--dp-serif);font-size:clamp(13.5px,1.4vw,15px);
-    line-height:2;letter-spacing:.05em;color:rgba(58,56,82,.66)
+    line-height:2;letter-spacing:.05em;color:#34324d;font-weight:500;
+    text-shadow:0 1px 8px rgba(255,250,244,.75)
   }
   /* ↓:半透明象牙小圆里的金色箭头(上方引线已拿掉),在深色星空上也看得清;按了卷到章节卡 */
   #dpage.reading-page .rd-transit .ar{
@@ -3775,6 +3776,10 @@
   }
   #dpage.reading-page .rd-transit .ar:hover{background:#fffaf0;border-color:rgba(184,137,79,.85)}
   #dpage.reading-page .rd-transit .ar:focus-visible{outline:2px solid #b8894f;outline-offset:4px}
+  /* 换章之后新章节内容淡入(只动卡片里面,卡片本身不动) */
+  #dpage.reading-page .dp-detail.rd-swap .dp-read > :not(.dp-tabs){animation:rdSwapIn .32s ease-out both}
+  @keyframes rdSwapIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  @media(prefers-reduced-motion:reduce){#dpage.reading-page .dp-detail.rd-swap .dp-read > *{animation:none}}
   @keyframes rdArBob{0%,100%{transform:translateY(0)}50%{transform:translateY(5px)}}
   @media(prefers-reduced-motion:reduce){#dpage.reading-page .rd-transit .ar{animation:none}}
   @media(max-width:640px){
@@ -11797,6 +11802,7 @@ window.Guide = (function () {
   const SOCIAL_IG = "https://www.instagram.com/the_inner.sky?igsh=dDc4YmUwZTllc2h0&utm_source=qr";
   const SOCIAL_XHS = "https://xhslink.cn/m/6XbeCmG8RPc";
   let readingNavJump = false;   // 上 / 下一章点击后,下一次渲染要卷到「详细解读」顶端
+  let readingKeepTop = null;    // 换章标签点击时章节卡在视窗里的位置,重绘后原地放回
   let favFilter = "all", favSortNew = true, favConfirmKey = null, favSearch = "";
   let saveTipEl = null, toastEl = null, pendingSel = null;
 
@@ -13223,8 +13229,18 @@ window.Guide = (function () {
       sub: sub, body: body, foot: foot,
       backLabel: dpT("返回主页", "Back to home"), backHref: LANDING_URL, seed: 99
     });
+    /* 换章(标签 / 上下一章)整页会重绘:先把页面高度撑住,免得新章节
+       较短时浏览器先把卷动位置夹回去、画面跳一下(用户反馈「会跳、不稳」) */
+    function rdHoldHeight() {
+      document.body.style.minHeight = document.documentElement.scrollHeight + "px";
+    }
     $("dpage").querySelectorAll("[data-rtab]").forEach(function (b) {
-      b.addEventListener("click", function () { location.hash = "#/reading/" + b.getAttribute("data-rtab"); });
+      b.addEventListener("click", function () {
+        const d = document.getElementById("dpDetail");
+        readingKeepTop = d ? d.getBoundingClientRect().top : null;
+        rdHoldHeight();
+        location.hash = "#/reading/" + b.getAttribute("data-rtab");
+      });
     });
     /* 手机上五个标签是一行可以左右滑的列:把目前这一章的标签带进可视范围,
        只卷这一列,不动整页 */
@@ -13258,15 +13274,21 @@ window.Guide = (function () {
        renderRoute 那边同一页内换页签本来就不会 scrollTo(0,0),所以这里
        自己把画面带到「详细解读」的顶端,读者落点就是下一章的标题。 */
     $("dpage").querySelectorAll("[data-rnav]").forEach(function (a) {
-      a.addEventListener("click", function () { readingNavJump = true; });
+      a.addEventListener("click", function () { readingNavJump = true; rdHoldHeight(); });
     });
-    if (readingNavJump) {
-      readingNavJump = false;
+    /* 重绘完:直接(不平滑)把章节卡放到定位,再让新章节淡入——
+       长距离平滑卷动加上内容同时替换,手机上看起来就是在跳 */
+    if (readingNavJump || readingKeepTop !== null) {
       const d = document.getElementById("dpDetail");
-      if (d) requestAnimationFrame(function () {
-        d.scrollIntoView({ behavior: "smooth", block: "start" });
-      });
+      if (d) {
+        const top = d.getBoundingClientRect().top + window.scrollY;
+        const y = readingNavJump ? top - 18 : top - readingKeepTop;
+        window.scrollTo({ top: Math.max(0, y), behavior: "instant" });
+        d.classList.add("rd-swap");
+      }
+      readingNavJump = false; readingKeepTop = null;
     }
+    requestAnimationFrame(function () { document.body.style.minHeight = ""; });
     /* 过场的 ↓:平滑卷到章节卡顶端,跟上 / 下一章的落点一样 */
     const tg = document.getElementById("rdTransitGo");
     if (tg) tg.addEventListener("click", function () {
