@@ -2602,17 +2602,19 @@
         /* 底图铺不满手机版的 hero(1800×643,215% 宽 ≈ 300px 高),
            所以把它贴着「底」放:留白落在上缘,跟顶栏的深蓝接得上;
            下缘是云,再交给 ::after 化进象牙色 —— 中间不会出现一条硬边。 */
-        url(assets/life/hero-sky.webp) left bottom / 215% auto no-repeat,
+        /* 跟其他页一样:底图铺满整个 hero(含顶栏),不再留一段纯深蓝 */
+        url(assets/life/hero-sky.webp) 18% bottom / cover no-repeat,
         var(--dp-navy);
-      padding-bottom:clamp(40px,11vw,64px)
+      padding-bottom:22px
     }
+    /* 手机 hero 压矮,跟其他页面同一个量级(用户:比其他页宽) */
     #dpage.thread-page .dp-hero-grid{
-      min-height:0;padding:calc(clamp(18px,5vw,30px) + 12px) 0 clamp(14px,4vw,22px)
+      min-height:0;padding:14px 0 6px
     }
-    #dpage.thread-page .thread-vow{margin-top:14px}
+    #dpage.thread-page .thread-vow{margin-top:8px}
     #dpage.thread-page .thread-vow .a{font-size:12px;letter-spacing:.16em}
-    #dpage.thread-page .thread-vow .stars{width:min(310px,86vw);margin-top:16px}
-    #dpage.thread-page .thread-vow .b{margin-top:18px;column-gap:.6em;letter-spacing:.04em}
+    #dpage.thread-page .thread-vow .stars{width:min(310px,86vw);margin-top:10px}
+    #dpage.thread-page .thread-vow .b{margin-top:10px;column-gap:.6em;letter-spacing:.04em}
     /* 手机上这两行正好压在最亮的云带上,靠一点暗色投影拉开对比,而不是把字调亮 */
     #dpage.thread-page .thread-vow .b1{
       font-size:13px;text-shadow:0 1px 10px rgba(26,24,48,.5)
