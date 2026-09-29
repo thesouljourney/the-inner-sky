@@ -1306,8 +1306,10 @@
   #dpage .sky-house .pls{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:6px;min-height:16px}
   #dpage .sky-house .pl{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
   #dpage .sky-house .pl b{font-weight:400;font-size:11.5px;letter-spacing:.03em;color:#5d5a52}
-  #dpage .sky-house:hover{
-    transform:translateY(-4px);border-color:rgba(184,146,95,.3);
+  /* 只有真的有滑鼠的装置才做悬浮上浮:手机上手指一碰就会触发 :hover 并卡住,
+     卡片往上跳 4px,滑动时看起来一跳一跳的 */
+  @media(hover:hover) and (pointer:fine){#dpage .sky-house:hover{transform:translateY(-4px)}}
+  #dpage .sky-house:hover{border-color:rgba(184,146,95,.3);
     box-shadow:0 1px 2px rgba(80,60,40,.02), 0 14px 34px rgba(80,60,40,.05), 0 0 0 1px rgba(184,146,95,.09)
   }
   #dpage .sky-house:focus-visible{outline:1px solid rgba(184,166,120,.75);outline-offset:2px}
@@ -1970,7 +1972,10 @@
        左右内距改由第一 / 最后一张卡的外距提供 = (100% − 卡宽) / 2,
        这样第一张、最后一张也能停在正中,不会贴边 */
     #dpage .sky-core,#dpage .sky-group .sky-houses{padding-left:0;padding-right:0;scroll-padding:0}
-    #dpage .sky-core .sky-card,#dpage .sky-houses .sky-house{scroll-snap-align:center}
+    /* 一次只滑一张、停在正中(snap-stop:always 避免快速一甩就跳过好几张);
+       手机上卡片不做上浮位移,滑动时位置固定不跳 */
+    #dpage .sky-core .sky-card,#dpage .sky-houses .sky-house{scroll-snap-align:center;scroll-snap-stop:always}
+    #dpage .sky-houses .sky-house,#dpage .sky-houses .sky-house[aria-expanded="true"]{transform:none;transition:border-color .3s ease,box-shadow .3s ease}
     #dpage .sky-core .sky-card:first-child{margin-left:8%}
     #dpage .sky-core .sky-card:last-child{margin-right:8%}
     #dpage .sky-houses .sky-house:first-child{margin-left:12%}
