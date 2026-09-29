@@ -3842,6 +3842,8 @@
     padding:clamp(48px,6.4vw,84px) 28px clamp(36px,4.4vw,60px);
     background:
       radial-gradient(ellipse 46% 58% at 50% 48%,rgba(255,250,242,.62),rgba(255,250,242,0) 100%),
+      /* 整张再盖一层白罩,让图退后一点(用户:背景图太突出) */
+      linear-gradient(rgba(255,251,246,.42),rgba(255,251,246,.42)),
       url("assets/reading/end-card.webp") center/cover no-repeat,#f7eee6;
     box-shadow:0 0 0 4px rgba(255,251,244,.35),0 22px 50px -24px rgba(34,35,58,.4)
   }
@@ -3879,6 +3881,7 @@
       padding:44px 18px 30px;border-radius:22px;
       background:
         radial-gradient(ellipse 60% 52% at 50% 46%,rgba(255,250,242,.7),rgba(255,250,242,0) 100%),
+        linear-gradient(rgba(255,251,246,.42),rgba(255,251,246,.42)),
         url("assets/reading/end-card.webp") 42% center/auto 100% no-repeat,#f7eee6
     }
     #dpage.reading-page .dp-return .say .h{margin-top:10px}
