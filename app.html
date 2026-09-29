@@ -3761,16 +3761,25 @@
     margin:16px 0 0;font-family:var(--dp-serif);font-size:clamp(13.5px,1.4vw,15px);
     line-height:2;letter-spacing:.05em;color:rgba(58,56,82,.66)
   }
-  /* ↓:一条细金线收在一个小箭头上,不是按钮 */
+  /* ↓:短金线接一个半透明象牙小圆里的金色箭头,在深色星空上也看得清;不是按钮 */
   #dpage.reading-page .rd-transit .ar{
-    display:block;width:1px;height:44px;margin:26px auto 0;position:relative;
-    background:linear-gradient(180deg,rgba(196,152,72,0),rgba(196,152,72,.6))
+    display:block;width:40px;height:40px;margin:56px auto 0;position:relative;border-radius:50%;
+    background:rgba(255,251,243,.82);border:1px solid rgba(184,137,79,.55);
+    box-shadow:0 0 0 6px rgba(255,251,243,.18),0 6px 18px rgba(35,38,79,.18);
+    animation:rdArBob 2.4s ease-in-out infinite
+  }
+  #dpage.reading-page .rd-transit .ar::before{
+    content:"";position:absolute;left:50%;bottom:100%;width:1.5px;height:30px;margin-bottom:8px;
+    transform:translateX(-50%);
+    background:linear-gradient(180deg,rgba(214,172,98,0),rgba(214,172,98,.95))
   }
   #dpage.reading-page .rd-transit .ar::after{
-    content:"";position:absolute;left:50%;bottom:0;width:7px;height:7px;
-    border-right:1px solid rgba(196,152,72,.75);border-bottom:1px solid rgba(196,152,72,.75);
-    transform:translate(-50%,-1px) rotate(45deg)
+    content:"";position:absolute;left:50%;top:50%;width:10px;height:10px;
+    border-right:2px solid #b8894f;border-bottom:2px solid #b8894f;
+    transform:translate(-50%,-70%) rotate(45deg)
   }
+  @keyframes rdArBob{0%,100%{transform:translateY(0)}50%{transform:translateY(5px)}}
+  @media(prefers-reduced-motion:reduce){#dpage.reading-page .rd-transit .ar{animation:none}}
   @media(max-width:640px){
     /* 页面左右留白 24px:正文区 18px − 4px + 10px */
     #dpage.reading-page .dp-forcard{padding:24px 10px 0;margin-left:-4px;margin-right:-4px}
