@@ -2893,9 +2893,6 @@
   #dpage.thread-page .thread-close .dp-reflect.rf-v2{
     padding:clamp(26px,3.4vw,44px) clamp(8px,3vw,40px) clamp(30px,4vw,48px)
   }
-  #dpage.thread-page .thread-close .rf-v2 .eb{justify-content:center;gap:14px;opacity:1;margin-bottom:16px}
-  #dpage.thread-page .thread-close .rf-v2 .eb .ic{font-size:12px;color:#aaa0d5}
-  #dpage.thread-page .thread-close .rf-v2 .eb .tx{letter-spacing:.34em;color:#8d86ab;margin-right:-.34em}
   #dpage.thread-page .thread-close .rf-v2 h3.rt{
     font-family:var(--dp-serif);font-weight:600;
     font-size:clamp(26px,3vw,34px);letter-spacing:.06em;color:#22233a
@@ -2945,7 +2942,6 @@
   #dpage.thread-page .thread-close .rf-q .s2{right:6%;top:-6px;font-size:15px;color:#9d93cf}
   #dpage.thread-page .thread-close .rf-v2 + .post{margin-top:clamp(26px,3.4vw,40px)}
   @media(max-width:767px){
-    #dpage.thread-page .thread-close .rf-v2 .eb .tx{letter-spacing:.28em;margin-right:-.28em}
     #dpage.thread-page .thread-close .rf-bd{font-size:15.5px;line-height:2}
     #dpage.thread-page .thread-close .rf-q p{font-size:20px}
   }
@@ -3271,7 +3267,7 @@
   #dpage.thread-page .thread-bridge .br-div i{flex:1;height:1px;background:rgba(196,152,72,.45)}
   #dpage.thread-page .thread-bridge .br-div b{font-weight:400;font-size:14px;line-height:1;color:#c49848}
   #dpage.thread-page .thread-bridge .pat-hd{margin:0;text-align:left}
-  #dpage.thread-page .thread-bridge .pattern{max-width:none;margin:clamp(10px,1.4vw,14px) 0 0}
+  #dpage.thread-page .thread-bridge .pattern{max-width:none;margin:clamp(14px,1.8vw,20px) 0 0}
   #dpage.thread-page .thread-bridge .pattern .tx,
   #dpage.thread-page .thread-bridge .pattern .lk{margin-top:0;color:#2c2d48;font-size:clamp(15px,1.7vw,18px);line-height:2}
   #dpage.thread-page .thread-bridge .pattern .q{font-size:clamp(17px,2vw,21px)}
@@ -3282,7 +3278,7 @@
   }
   /* 小洞察卡:放宽、半透明米白,标题两侧细线,正文靠左;左下 / 右下角各一枝花叶 */
   /* 卡片宽度收窄(原 1000px 太长):880px,两句正文一句一行,左右留给两枝花 */
-  #dpage.thread-page .thread-bridge .br-card{position:relative;max-width:880px;margin:clamp(22px,3vw,36px) auto 0}
+  #dpage.thread-page .thread-bridge .br-card{position:relative;max-width:880px;margin:clamp(44px,5.4vw,64px) auto 0}
   #dpage.thread-page .thread-bridge .insight{
     position:relative;overflow:hidden;max-width:none;margin:0;text-align:center;
     padding:clamp(24px,3vw,34px) clamp(28px,9.4vw,124px) clamp(34px,4.4vw,52px) clamp(28px,9.4vw,124px);
@@ -3294,7 +3290,7 @@
   }
   #dpage.thread-page .thread-bridge .insight .lb > i{flex:0 1 200px;height:1px;background:rgba(196,152,72,.4)}
   #dpage.thread-page .thread-bridge .insight p{position:relative;z-index:1;font-size:clamp(15px,1.7vw,18px);line-height:2}
-  #dpage.thread-page .thread-bridge .insight p + p{margin-top:0}
+  #dpage.thread-page .thread-bridge .insight p + p{margin-top:clamp(14px,1.8vw,20px)}
   #dpage.thread-page .thread-bridge .insight .sp-l,
   #dpage.thread-page .thread-bridge .insight .sp-r{position:absolute;z-index:0;bottom:0;pointer-events:none}
   /* 两枝花叶「直一点」(用户要求,依设计稿):只取素材里往上长的那一段
@@ -3319,14 +3315,14 @@
     #dpage.thread-page .thread-bridge .pattern .lk{font-size:15px}
     /* 手机:花枝缩小、贴紧两个下角,不再往上伸到文字旁边;
        底部留白跟着收,卡片不会下面空一大块 */
-    #dpage.thread-page .thread-bridge .insight{padding:20px 18px 52px}
+    #dpage.thread-page .thread-bridge .insight{padding:26px 20px 64px}
     #dpage.thread-page .thread-bridge .insight .sp-l,
     #dpage.thread-page .thread-bridge .insight .sp-r{height:64px;bottom:2px;-webkit-mask-image:none;mask-image:none}
     #dpage.thread-page .thread-bridge .insight .sp-l{left:6px}
     #dpage.thread-page .thread-bridge .insight .sp-r{right:6px}
-    #dpage.thread-page .thread-bridge .insight .lb{margin-bottom:12px}
+    #dpage.thread-page .thread-bridge .insight .lb{margin-bottom:18px}
     #dpage.thread-page .thread-bridge .insight .lb > i{flex-basis:40px}
-    #dpage.thread-page .thread-bridge .insight p{font-size:14.5px;line-height:1.95}
+    #dpage.thread-page .thread-bridge .insight p{font-size:14.5px;line-height:2}
   }
 
   /* 从这里开始:星环 + 置中大标题 + 一行引导 */
@@ -12597,8 +12593,6 @@ window.Guide = (function () {
     };
     const star = '<svg viewBox="0 0 40 40" aria-hidden="true"><path d="M20 0C21 13 27 19 40 20C27 21 21 27 20 40C19 27 13 21 0 20C13 19 19 13 20 0Z"/></svg>';
     return '<div class="dp-reflect rf-v2"><span class="glow" aria-hidden="true"></span>' +
-      '<div class="eb"><span class="ic" aria-hidden="true">✦</span><span class="tx">REFLECTION · 01</span>' +
-      '<span class="ic" aria-hidden="true">✦</span></div>' +
       '<h3 class="rt">' + dpT("留给你的思考", "A Question For You") + "</h3>" +
       '<div class="rf-rule" aria-hidden="true"><i></i><b>✦</b><i></i></div>' +
       '<div class="rf-bd">' + sent(lead).map(para).join("") + "</div>" +
