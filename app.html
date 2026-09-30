@@ -4214,7 +4214,9 @@
     margin-top:18px;padding:18px clamp(18px,2.8vw,28px) 20px;border-radius:22px;
     /* 卡片是扁长的:cover 置中只会留下中间那片空白,四角的星与月都被裁掉。
        改成贴顶,露出左上的星芒与右上的月亮 */
-    background:url(assets/reading/insight-bg.webp) center top / cover no-repeat,#efe6f2;
+    /* 用户:加一层白罩,让图退后、字更清楚 */
+    background:linear-gradient(rgba(255,252,250,.45),rgba(255,252,250,.45)),
+      url(assets/reading/insight-bg.webp) center top / cover no-repeat,#efe6f2;
     border:1px solid rgba(214,178,140,.55)
   }
   #dpage.reading-page .dp-detail .rd-insight .hd{display:flex;align-items:center;gap:12px}
