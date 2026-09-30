@@ -3462,6 +3462,9 @@
   #dpage.thread-page .thread-chapters .ch-card .ch-keys li i{
     width:6px;height:6px;border-radius:0;transform:translateY(-2px) rotate(45deg);background:rgba(196,152,72,.85)
   }
+  /* 用户:点了「沿着这条线索继续 →」、这张卡展开之后,按钮连同文字立刻藏起来;
+     收起(或改开别张)时 .on 被拿掉,按钮才回来 */
+  #dpage.thread-page .thread-chapters .ch-card.on .go{display:none}
   #dpage.thread-page .thread-chapters .ch-card .go{
     display:inline-flex;align-items:center;margin-top:16px;min-height:36px;padding:0 18px;
     border:1px solid rgba(196,152,72,.55);border-radius:999px;background:rgba(255,253,249,.6);
