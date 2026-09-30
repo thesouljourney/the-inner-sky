@@ -6398,7 +6398,8 @@
   }
   #dpage.compass-page .cp-now .cp-note-card > *{position:relative;z-index:1}
   #dpage.compass-page .cp-now .cp-note-card .nc-moon{
-    position:absolute;z-index:0;top:8px;right:8px;width:86px;height:83px;pointer-events:none;
+    /* 用户:右上角月亮星链放大 */
+    position:absolute;z-index:0;top:6px;right:6px;width:122px;height:118px;pointer-events:none;
     background:url(assets/life/cp-mobile/note-moon.webp) center / contain no-repeat
   }
   #dpage.compass-page .cp-now .cp-note-card .nc-st{
@@ -6415,10 +6416,11 @@
   }
   #dpage.compass-page .cp-now .cp-note-card .cp-ta{
     display:block;width:100%;max-width:none;box-sizing:border-box;
-    min-height:140px;margin:18px 0 0;padding:16px 18px 44px;border-radius:18px;
+    min-height:140px;margin:18px 0 0;padding:16px 18px 34px;border-radius:18px;
     text-align:left;line-height:1.9;font-size:15px;
     background:
-      url(assets/life/cp-mobile/note-quill.webp) right 6px bottom 6px / 158px auto no-repeat,
+      /* 用户:羽毛笔小小的就好 */
+      url(assets/life/cp-mobile/note-quill.webp) right 8px bottom 8px / 92px auto no-repeat,
       rgba(255,255,255,.38);
     border:1px solid rgba(255,255,255,.88);
     box-shadow:inset 0 1px 6px rgba(120,100,150,.06)
@@ -6429,10 +6431,10 @@
   #dpage.compass-page .cp-now .cp-note-card .dp-cta{min-width:200px;min-height:44px;font-size:14px;letter-spacing:.14em}
   @media(min-width:768px){
     #dpage.compass-page .cp-now .cp-note-card{padding:32px 36px 30px}
-    #dpage.compass-page .cp-now .cp-note-card .nc-moon{width:110px;height:106px}
+    #dpage.compass-page .cp-now .cp-note-card .nc-moon{width:156px;height:150px}
     #dpage.compass-page .cp-now .cp-note-card .cp-q2 b{font-size:20px}
     #dpage.compass-page .cp-now .cp-note-card .cp-q2 span{font-size:18px}
-    #dpage.compass-page .cp-now .cp-note-card .cp-ta{min-height:160px;background-size:200px auto,auto}
+    #dpage.compass-page .cp-now .cp-note-card .cp-ta{min-height:160px;background-size:118px auto,auto}
   }
 
   /* 记录:展开长在自己下面 */
