@@ -38,7 +38,7 @@
 <!-- 解读详情页字体:与 Landing(index.html)同一套 -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&family=Noto+Serif+SC:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=Noto+Serif+SC:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
   :root{
     --night:#f2ead8;        /* 米色底 */
@@ -6625,6 +6625,78 @@
   }
   #dpage.compass-page .cp-sky-foot .cp-sky-all span{font-family:var(--dp-sans);transition:transform .2s ease}
   @media(hover:hover){#dpage.compass-page .cp-sky-foot .cp-sky-all:hover span{transform:translateX(3px)}}
+
+  /* ── 我的星空记录 v3(照用户的参考图)──────────────────────
+     标题下一条 ✦ 金线 + 两行引导;卡片是半透明的雾面玻璃,右侧淡淡的月亮与云
+     (第二张换成花枝);日期用衬线旧式数字;心情胶囊依色调暖米 / 淡紫;
+     回答问题的那则,正文下面是一块浅内框;最底下是金框胶囊「✦ 查看全部星空记录 →」 */
+  #dpage.compass-page .cp-sky .cp-lead{
+    white-space:pre-line;margin-top:0;font-size:14px;line-height:1.9;letter-spacing:.08em;color:rgba(70,68,96,.78)
+  }
+  #dpage.compass-page .cp-sky .cp-lead::before{
+    content:"";display:block;width:min(56%,210px);height:22px;margin:10px auto 12px;
+    background:url(assets/life/cp-mobile/divider2.webp) center / contain no-repeat
+  }
+  #dpage.compass-page .cp-sky .cp-sky-card,
+  #dpage.compass-page .cp-sky .cp-sky-card.open{
+    overflow:hidden;isolation:isolate;padding:20px 22px 20px;border-radius:22px;
+    background:linear-gradient(160deg,rgba(255,253,250,.74),rgba(250,246,250,.6));
+    border:1px solid rgba(255,255,255,.8);
+    -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
+    box-shadow:0 14px 32px -22px rgba(80,70,120,.4)
+  }
+  #dpage.compass-page .cp-sky .cp-sky-card > *{position:relative;z-index:1}
+  #dpage.compass-page .cp-sky .cp-sky-card > .dk{
+    position:absolute;z-index:0;pointer-events:none;right:0;bottom:0;width:46%;height:100%;opacity:.5;
+    -webkit-mask-image:linear-gradient(90deg,transparent,#000 40%);mask-image:linear-gradient(90deg,transparent,#000 40%)
+  }
+  #dpage.compass-page .cp-sky .cp-sky-card.dk1 > .dk{
+    background:
+      url(assets/life/cp-mobile/keep-moon.webp) 38% 38% / auto 62% no-repeat,
+      url(assets/life/cp-mobile/kc-cloud-side.webp) right bottom / auto 100% no-repeat
+  }
+  #dpage.compass-page .cp-sky .cp-sky-card.dk2 > .dk{
+    background:
+      url(assets/life/cp-mobile/branch-white.webp) right 2px bottom -8px / auto 46% no-repeat,
+      url(assets/life/cp-mobile/kc-cloud-side.webp) right top / auto 70% no-repeat
+  }
+  #dpage.compass-page .cp-sky .cp-sky-card .dt{
+    font-family:var(--dp-display);font-weight:600;font-size:16px;letter-spacing:.1em;color:#3d4070
+  }
+  #dpage.compass-page .cp-sky .cp-sky-card .md{
+    height:28px;padding:0 13px;border:0;font-size:12.5px;letter-spacing:.12em
+  }
+  #dpage.compass-page .cp-sky .cp-sky-card .md.g{background:rgba(238,222,196,.75);color:#8a6a3e}
+  #dpage.compass-page .cp-sky .cp-sky-card .md.b{background:rgba(226,224,244,.85);color:#5a5a8a}
+  #dpage.compass-page .cp-sky .cp-sky-card .md.b i{color:#8a86c4}
+  /* 卡片的直接子层都是 position:relative(为了压在装饰图上面),所以 ··· 与选单
+     是对着表头那一列(.hd)定位,不是对着整张卡 */
+  #dpage.compass-page .cp-sky .cp-dots{top:-1px;right:-12px;color:#3d4070;font-size:10px;letter-spacing:.12em;font-weight:700}
+  #dpage.compass-page .cp-sky .cp-menu{top:32px;right:-10px}
+  #dpage.compass-page .cp-sky .cp-sky-card .bd{
+    margin-top:14px;font-size:16px;line-height:1.85;letter-spacing:.03em;color:#2a2b48
+  }
+  #dpage.compass-page .cp-sky .qbox{
+    position:relative;margin-top:14px;padding:12px 34px 12px 16px;border-radius:14px;
+    background:rgba(245,242,250,.66);border:1px solid rgba(214,208,236,.6)
+  }
+  #dpage.compass-page .cp-sky .qbox .kd{margin:0;font-size:12.5px;color:rgba(96,92,140,.85)}
+  #dpage.compass-page .cp-sky .qbox .kd i{font-size:11px}
+  #dpage.compass-page .cp-sky .qbox .qz{
+    margin:6px 0 0;padding:0;border:0;font-family:var(--dp-serif);font-size:13.5px;line-height:1.75;color:#5a5880
+  }
+  #dpage.compass-page .cp-sky .qbox .cv{
+    position:absolute;right:14px;top:12px;font-size:16px;line-height:1;color:rgba(96,92,140,.7)
+  }
+  #dpage.compass-page .cp-sky .cp-open{font-size:14px;letter-spacing:.1em;color:#2f3158}
+  #dpage.compass-page .cp-sky-foot .cp-sky-all{
+    gap:12px;min-height:46px;padding:0 26px;margin-top:4px;border-radius:999px;
+    background:rgba(255,252,246,.7);border:1px solid rgba(196,160,98,.65);
+    box-shadow:0 8px 20px -14px rgba(120,90,40,.4);
+    font-weight:600;font-size:14px;letter-spacing:.12em;color:#3d3a5c
+  }
+  #dpage.compass-page .cp-sky-foot .cp-sky-all .sp{color:#c49a5c;font-size:14px;line-height:1}
+  #dpage.compass-page .cp-sky-foot .cp-sky-all .sp small{font-size:8px;margin-left:1px;vertical-align:top}
 
   /* 划词收藏:轻盈的浮动动作,不打断阅读 */
   #dpSaveTip{position:absolute;z-index:90;display:none;align-items:center;gap:6px;
@@ -14994,19 +15066,24 @@ window.Guide = (function () {
          · 最下面不再是一张独立的「查看更多」卡,改成置中的 ✦ 分隔线 + 文字按钮 */
       const shown = rows.slice(0, 3);
       const FOLD = 66;
-      inner = '<div class="cp-sky-grid">' + shown.map(function (r) {
+      /* 心情胶囊的颜色跟着心情图示的色调:香槟金那几个是暖米,雾蓝那几个是淡紫 */
+      const moodTone = function (m) {
+        const i = window.Compass.MOODS.findIndex(function (x) { return x[0] === m || x[1] === m; });
+        return (i >= 0 && CP_MOOD_ICON[i] && CP_MOOD_ICON[i][0] === "b") ? " b" : " g";
+      };
+      inner = '<div class="cp-sky-grid">' + shown.map(function (r, idx) {
         const t = String(r.text || "");
         const open = compassOpen === r.id;
         const fold = t.length > FOLD;
-        const showQ = r.question && (open || !fold);
         const menu = compassMenu === r.id;
         const dt = window.I18N.isEN() ? compassDate(r.ts) : compassDate(r.ts).split(".").join(" · ");
         return '<article class="cp-sky-card' + (open ? " open" : "") + (fold && !open ? " folded" : "") +
-          '" data-entry="' + esc0(r.id) + '"><div class="hd">' +
+          (idx % 2 ? " dk2" : " dk1") + '" data-entry="' + esc0(r.id) + '">' +
+          '<span class="dk" aria-hidden="true"></span><div class="hd">' +
           '<span class="dt">' + esc0(dt) + "</span>" +
-          (r.mood ? '<span class="md"><i aria-hidden="true">✦</i>' + esc0(r.mood) + "</span>" : "") +
+          (r.mood ? '<span class="md' + moodTone(r.mood) + '"><i aria-hidden="true">✦</i>' + esc0(r.mood) + "</span>" : "") +
           '<button type="button" class="cp-dots" data-menu="' + esc0(r.id) + '" aria-expanded="' + (menu ? "true" : "false") +
-          '" aria-label="' + esc0(dpT("更多操作", "More")) + '"><span aria-hidden="true">···</span></button>' +
+          '" aria-label="' + esc0(dpT("更多操作", "More")) + '"><span aria-hidden="true">•••</span></button>' +
           (menu
             ? '<div class="cp-menu" role="menu">' +
               '<button type="button" role="menuitem" class="cp-edit" data-edit="' + esc0(r.id) + '">' +
@@ -15016,12 +15093,13 @@ window.Guide = (function () {
               "</div>"
             : "") +
           "</div>" +
-          (r.kind === "answer"
-            ? '<span class="kd"><i aria-hidden="true">✦</i>' + esc0(dpT("来自那天的问题", "From that day’s question")) + "</span>"
-            : "") +
           (t ? '<p class="bd">' + esc0(t) + "</p>" : "") +
-          (showQ
-            ? '<p class="qz">' + esc0(dpT("那天的问题：", "That day’s question: ")) + esc0(r.question) + "</p>"
+          /* 回答当天问题的那则:正文下面一块浅浅的内框,「✦ 来自那天的问题」+ 问题本身 */
+          (r.kind === "answer"
+            ? '<div class="qbox"><span class="kd"><i aria-hidden="true">✦</i>' +
+              esc0(dpT("来自那天的问题", "From that day’s question")) + "</span>" +
+              (r.question ? '<p class="qz">' + esc0(r.question) + "</p>" : "") +
+              '<span class="cv" aria-hidden="true">›</span></div>'
             : "") +
           (fold
             ? '<div class="cp-sky-act"><button type="button" class="cp-open" data-open="' + esc0(r.id) + '">' +
@@ -15030,12 +15108,14 @@ window.Guide = (function () {
           "</article>";
       }).join("") + "</div>" +
       '<div class="cp-sky-foot"><span class="ln" aria-hidden="true"><i></i><b>✦</b><i></i></span>' +
-        '<a class="cp-sky-all" href="#/records">' + esc0(dpT("查看全部星空记录", "See all my sky records")) +
+        '<a class="cp-sky-all" href="#/records"><span class="sp" aria-hidden="true">✦<small>✦</small></span>' +
+        esc0(dpT("查看全部星空记录", "See all my sky records")) +
         '<span aria-hidden="true">→</span></a></div>';
     }
     return '<section class="cp-sec cp-sky">' +
       compassSecHead("", dpT("我的星空记录", "My Record"), "MY RECORD",
-        dpT("一些被你留下来的片刻", "Moments you chose to keep")) +
+        dpT("这里收着你写下的片刻，\n在不同的日子里，温柔地陪伴着你。",
+            "The moments you wrote down are kept here,\nkeeping you company across different days.")) +
       compassStoreNote() +
       inner + "</section>";
   }
