@@ -324,29 +324,55 @@ header.site { position: relative; z-index: 5; }
 .guide-copy { align-self: start; }
 .guide-copy p { text-wrap: pretty; margin: 12px 0 20px; font-size: 12.5px; line-height: 1.9; color: var(--ink-2); }
 
-.rec-body { margin-top: 16px; }
-.rec-line { list-style: none; position: relative; padding-left: 22px; }
-.rec-line::before { content: ""; position: absolute; left: 6px; top: 8px; bottom: 8px; width: 1px; background: rgba(143,127,192,.35); }
-.rec-line li { position: relative; display: flex; flex-direction: column; gap: 3px; padding-bottom: 16px; }
-.rec-line li:last-child { padding-bottom: 0; }
-.rec-line .dot { position: absolute; left: -22px; top: 5px; width: 13px; height: 13px; border-radius: 50%; background: #b8a8de; box-shadow: 0 0 0 3px rgba(184,168,222,.25); }
-.rec-line .dot.moon { background: radial-gradient(circle at 65% 40%, transparent 42%, #3a3478 43%); box-shadow: none; }
-.rec-line b { font-family: var(--font-serif-sc); font-weight: 600; font-size: 14px; color: var(--ink); }
-.rec-line span:not(.dot) { text-shadow: 0 0 6px #fffaf3, 0 0 2px #fffaf3; color: #5d5b75 !important; text-wrap: pretty; font-size: 12px; line-height: 1.75; color: var(--mut); }
-
-.rec-card { background: radial-gradient(70% 80% at 22% 58%, rgba(255,251,246,.78), rgba(255,251,246,0) 75%),
-  linear-gradient(90deg, rgba(255,251,246,.55) 0%, rgba(255,251,246,.25) 55%, rgba(255,251,246,.05) 100%),
+/* 我的星空记录 / 我的收藏(依用户范例图):大标题 + 右上药丸连结,
+   里面是半透明白卡;底图的风景留在右半边,左边叠一层淡象牙让卡片站得住 */
+.rec-card { background: linear-gradient(90deg, rgba(255,251,246,.6) 0%, rgba(255,251,246,.3) 50%, rgba(255,251,246,0) 75%),
   url(assets/landing/rec-bg.webp) center / cover no-repeat, #fbf5ee; }
-.fav-card { background: linear-gradient(rgba(255,251,246,.3), rgba(255,251,246,.3)), url(assets/landing/fav-bg.webp) center / cover no-repeat, #fbf5ee; }
-.fav-card .heart { color: #d59aa8; font-size: .8em; }
-.fav-body { position: relative; margin-top: 16px; min-height: 150px; padding: 4px 90px 0 0; }
-.fav-body blockquote { position: relative; padding-left: 26px; font-family: var(--font-serif-sc); font-size: 14px; line-height: 1.95; color: var(--ink);
-  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
-.fav-body blockquote::before { content: "“"; position: absolute; left: 0; top: -8px; font-family: var(--font-display); font-size: 36px; color: rgba(143,127,192,.55); }
-.fav-body .count { text-shadow: 0 0 8px #fff8f0, 0 0 3px #fff8f0; display: inline-flex; align-items: center; gap: 6px; margin-top: 14px; font-size: 12.5px; color: var(--ink-2); }
-.fav-body .count i { font-style: normal; color: #d59aa8; }
-.fav-body:has(.empty) { min-height: 90px; }
-.fav-body .empty { font-family: var(--font-serif-sc); font-size: 13.5px; line-height: 1.95; color: var(--mut); }
+.fav-card { background: linear-gradient(90deg, rgba(255,251,246,.6) 0%, rgba(255,251,246,.3) 50%, rgba(255,251,246,0) 75%),
+  url(assets/landing/fav-bg.webp) center / cover no-repeat, #fbf5ee; }
+.rec-card, .fav-card { padding: 30px 30px 28px; min-height: 380px; }
+.rec-card .card-hd, .fav-card .card-hd { align-items: center; }
+.rec-card h3, .fav-card h3 { font-size: 28px; letter-spacing: .1em; color: #23264f; }
+.rec-card h3 .st { font-size: .6em; vertical-align: .3em; color: #d6a85a; }
+.fav-card .heart { display: inline-block; width: .8em; height: .8em; vertical-align: -.02em; margin-left: 4px; fill: none; stroke: #e28fa4; stroke-width: 1.8; }
+.card-hd .pill { flex: none; display: inline-flex; align-items: center; gap: 10px; padding: 9px 18px; border-radius: 999px;
+  font-family: var(--font-serif-sc); font-size: 13px; letter-spacing: .06em; color: #2f3160; white-space: nowrap;
+  background: rgba(255,252,248,.72); border: 1px solid rgba(255,255,255,.9); box-shadow: 0 6px 18px rgba(90,80,140,.08); backdrop-filter: blur(6px); transition: background .2s; }
+.card-hd .pill:hover { background: rgba(255,252,248,.95); }
+.card-sub { margin-top: 10px; font-family: var(--font-serif-sc); font-size: 14px; line-height: 1.8; color: #4a4a68; text-shadow: 0 0 8px #fffaf3; }
+
+.rec-list { display: flex; flex-direction: column; gap: 12px; margin-top: 20px; max-width: min(480px, 84%); }
+.rec-item { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 16px; padding: 16px 18px 16px 16px; border-radius: 18px;
+  background: rgba(255,253,250,.72); border: 1px solid rgba(255,255,255,.9); box-shadow: 0 8px 22px rgba(90,80,140,.07); backdrop-filter: blur(4px); transition: transform .2s, background .2s; }
+.rec-item:hover { transform: translateY(-2px); background: rgba(255,253,250,.88); }
+.rec-ic { position: relative; width: 84px; height: 84px; border-radius: 50%;
+  background: radial-gradient(circle at 40% 35%, #ece6f8 0%, #d4cbee 55%, #bdb2e2 100%);
+  box-shadow: 0 0 0 5px rgba(255,255,255,.7), 0 4px 14px rgba(120,100,180,.2); }
+.rec-ic img { position: absolute; left: 14%; top: 14%; width: 72%; height: 72%; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(120,90,40,.25)); }
+.rec-ic.star img { left: 8%; top: 8%; width: 84%; height: 84%; }
+.rec-tx b { white-space: nowrap; display: block; font-family: var(--font-serif-sc); font-weight: 600; font-size: 18px; letter-spacing: .06em; color: #23264f; }
+.rec-tx p { margin-top: 6px; font-size: 12.5px; line-height: 1.75; color: #5d5b75; }
+.rec-tx .meta { white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; margin-top: 8px; padding: 3px 10px; border-radius: 999px; font-size: 11.5px; color: #56547a; background: rgba(235,230,245,.7); }
+.rec-tx .meta svg { width: 12px; height: 12px; fill: none; stroke: currentColor; stroke-width: 1.6; }
+.rec-tx .meta[hidden] { display: none; }
+.rec-go { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 50%; color: #5a5690; font-size: 16px;
+  background: rgba(240,236,250,.9); border: 1px solid rgba(255,255,255,.95); box-shadow: 0 3px 10px rgba(90,80,140,.1); }
+
+.fav-body { margin-top: 16px; max-width: min(440px, 66%); }
+.fav-q { position: relative; display: block; padding: 16px 40px 12px 58px; border-radius: 16px; margin-bottom: 10px;
+  background: rgba(255,253,250,.74); border: 1px solid rgba(255,255,255,.9); box-shadow: 0 8px 22px rgba(90,80,140,.07); backdrop-filter: blur(4px); }
+.fav-q::before { content: "\201C"; position: absolute; left: 18px; top: 8px; font-family: Georgia, serif; font-size: 40px; line-height: 1; color: #c9bfe4; }
+.fav-q::after { content: "\2726"; position: absolute; right: 14px; top: 10px; font-size: 11px; color: #d6a85a; }
+.fav-q blockquote { font-family: var(--font-serif-sc); font-style: italic; font-size: 15px; line-height: 1.8; color: #23264f;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.fav-q .from { display: block; margin-top: 6px; text-align: right; font-size: 11.5px; color: #6c6a86; }
+.fav-total { display: inline-flex; align-items: center; gap: 12px; margin-top: 4px; padding: 11px 22px; border-radius: 999px;
+  font-family: var(--font-serif-sc); font-size: 15px; letter-spacing: .06em; color: #2f3160;
+  background: rgba(255,252,248,.78); border: 1px solid rgba(232,196,150,.7); box-shadow: 0 6px 18px rgba(90,80,140,.08); transition: background .2s; }
+.fav-total:hover { background: rgba(255,252,248,.95); }
+.fav-total svg { width: 15px; height: 17px; fill: none; stroke: #e28fa4; stroke-width: 1.6; }
+.fav-empty { margin-bottom: 12px; padding: 18px 20px; border-radius: 16px; font-family: var(--font-serif-sc); font-size: 14px; line-height: 1.9; color: #5d5b75;
+  background: rgba(255,253,250,.7); border: 1px solid rgba(255,255,255,.9); }
 
 /* ============================================================
    关于我们
@@ -462,9 +488,23 @@ footer.site { position: relative; overflow: hidden; background: linear-gradient(
   .guide-copy p { font-size: 11.5px; margin: 10px 0 16px; }
   .guide-copy p br:nth-of-type(n+2) { display: none; }
   .btn-soft { font-size: 12px; padding: 8px 14px; }
-  .rec-line span br { display: none; }
-  .card-hd .more { font-size: 11.5px; }
-  .fav-body blockquote { font-size: 13px; }
+  .rec-card, .fav-card { min-height: 0; padding: 22px 16px 20px; }
+  .rec-card h3, .fav-card h3 { font-size: 21px; letter-spacing: .06em; }
+  .card-hd .pill { gap: 6px; padding: 6px 12px; font-size: 11.5px; }
+  .card-sub { margin-top: 6px; font-size: 12px; }
+  .rec-list { gap: 10px; margin-top: 14px; max-width: none; }
+  .rec-item { gap: 12px; padding: 12px 12px 12px 12px; border-radius: 15px; }
+  .rec-ic { width: 58px; height: 58px; box-shadow: 0 0 0 3px rgba(255,255,255,.7), 0 3px 10px rgba(120,100,180,.2); }
+  .rec-tx b { font-size: 15px; }
+  .rec-tx p { margin-top: 3px; font-size: 11px; line-height: 1.65; }
+  .rec-tx .meta { margin-top: 5px; font-size: 10.5px; padding: 2px 8px; }
+  .rec-go { width: 30px; height: 30px; font-size: 13px; }
+  .fav-body { margin-top: 12px; max-width: none; }
+  .fav-q { padding: 12px 30px 10px 44px; border-radius: 14px; }
+  .fav-q::before { left: 13px; top: 6px; font-size: 32px; }
+  .fav-q blockquote { font-size: 13px; line-height: 1.75; }
+  .fav-q .from { font-size: 10.5px; }
+  .fav-total { gap: 8px; padding: 8px 16px; font-size: 13px; }
 
   .story { padding: 10px 0 60px; }
   .story-in { grid-template-columns: 1fr 1.25fr; gap: 16px; }
@@ -635,17 +675,27 @@ var APP_URL = "app.html";
       <div class="row row-b">
         <div class="card rec-card">
           <div class="card-hd"><h3>我的星空记录 <span class="st" aria-hidden="true">✦</span></h3>
-            <a class="more" href="app.html#/records" data-app-hash="#/records">查看我的记录 <span aria-hidden="true">→</span></a></div>
-          <div class="rec-body">
-            <ol class="rec-line">
-              <li><span class="dot moon" aria-hidden="true"></span><b>此刻的我</b><span>记下此刻的感受与状态，<br>不用急着明白，先留下来。</span></li>
-              <li><span class="dot" aria-hidden="true"></span><b>想问自己的问题</b><span>把想问自己的问题留在这里，<br>慢慢会有答案。</span></li>
-            </ol>
+            <a class="pill" href="app.html#/records" data-app-hash="#/records">查看我的记录 <span aria-hidden="true">→</span></a></div>
+          <p class="card-sub">记录那些值得回看的时刻</p>
+          <div class="rec-list">
+            <a class="rec-item" href="app.html#/records" data-app-hash="#/records">
+              <span class="rec-ic" aria-hidden="true"><img src="assets/life/cp-mobile/qm-moon.webp" alt="" loading="lazy"></span>
+              <span class="rec-tx"><b>此刻的我</b><p>记录此刻的感受与状态，<br>不用急着明白，先留下来</p>
+                <span class="meta" id="recLast" hidden><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.5"/><path d="M8 4.5V8l2.4 1.6"/></svg><span></span></span></span>
+              <span class="rec-go" aria-hidden="true">→</span>
+            </a>
+            <a class="rec-item" href="app.html#/records" data-app-hash="#/records">
+              <span class="rec-ic star" aria-hidden="true"><img src="assets/life/cp-mobile/qm-star.webp" alt="" loading="lazy"></span>
+              <span class="rec-tx"><b>想问自己的问题</b><p>把想问自己的问题留在这里，<br>慢慢会有答案</p>
+                <span class="meta" id="recQ" hidden><svg viewBox="0 0 16 16"><rect x="3" y="2" width="10" height="12" rx="1.5"/><path d="M5.5 6h5M5.5 8.5h5M5.5 11h3"/></svg><span></span></span></span>
+              <span class="rec-go" aria-hidden="true">→</span>
+            </a>
           </div>
         </div>
         <div class="card fav-card" id="favs">
-          <div class="card-hd"><h3>我的收藏 <span class="heart" aria-hidden="true">♡</span></h3>
-            <a class="more" href="app.html#/favorites" data-app-hash="#/favorites">查看我的收藏 <span aria-hidden="true">→</span></a></div>
+          <div class="card-hd"><h3>我的收藏<svg class="heart" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5s-7.5-4.6-9.3-9.2C1.4 8 3.4 4.5 6.9 4.5c2.2 0 3.8 1.3 5.1 3.1 1.3-1.8 2.9-3.1 5.1-3.1 3.5 0 5.5 3.5 4.2 6.8-1.8 4.6-9.3 9.2-9.3 9.2z"/></svg></h3>
+            <a class="pill" href="app.html#/favorites" data-app-hash="#/favorites">查看我的收藏 <span aria-hidden="true">→</span></a></div>
+          <p class="card-sub">阅读时选中让你有感觉的句子，<br>就可以收藏在这里</p>
           <div class="fav-body" id="favSlot"></div>
         </div>
       </div>
@@ -786,16 +836,37 @@ function renderChapterGrid() {
 }
 renderChapterGrid();
 
-/* ---------- 我的收藏:最新一句 + 总数;没有收藏就给一句引导 ---------- */
+/* ---------- 我的收藏:最新两句 + 总数;没有收藏就给一句引导 ---------- */
 (function () {
   var slot = document.getElementById("favSlot");
   if (!slot) return;
+  var n = parseInt(readCache("inner_sky_favs_n_v1"), 10);
+  if (!(n >= FAVS.length)) n = FAVS.length;   // 旧快照没有总数,就用手上这几句
+  var bm = '<svg viewBox="0 0 16 18" aria-hidden="true"><path d="M3 1.5h10v15l-5-3.6-5 3.6z"/></svg>';
   if (FAVS.length) {
-    slot.innerHTML = '<blockquote>' + esc(FAVS[0].text) + '</blockquote>' +
-      '<div class="count"><i aria-hidden="true">♡</i>' + FAVS.length + ' 条收藏</div>';
+    slot.innerHTML = FAVS.slice(0, 2).map(function (f) {
+      return '<a class="fav-q" href="' + appHref("#/favorites") + '" data-app-hash="#/favorites"><blockquote>' + esc(String(f.text).replace(/[。.]\s*$/, "")).replace(/，/g, "，<br>") + '</blockquote>' +
+        (f.source ? '<span class="from">来自 · ' + esc(f.source) + '</span>' : '') + '</a>';
+    }).join("") +
+      '<a class="fav-total" href="' + appHref("#/favorites") + '" data-app-hash="#/favorites">' + bm + '共收藏 ' + n + ' 句话 <span aria-hidden="true">→</span></a>';
   } else {
-    slot.innerHTML = '<p class="empty">阅读时选中让你有感觉的句子，<br>就可以收藏在这里。</p>';
+    slot.innerHTML = '<p class="fav-empty">还没有收藏的句子，<br>读到有感觉的一句，选中它就会留在这里</p>' +
+      '<a class="fav-total" href="' + appHref("#/map") + '" data-app-hash="#/map">' + bm + '开始阅读 <span aria-hidden="true">→</span></a>';
   }
+})();
+
+/* ---------- 我的星空记录:最近一次「此刻的我」+ 问题数量(应用写的小快照,必须是同一个 uid) ---------- */
+(function () {
+  var m = readCache("inner_sky_rec_meta_v1");
+  if (!m || !SESSION || !SESSION.user_id || m.uid !== SESSION.user_id) return;
+  function put(id, text) {
+    var el = document.getElementById(id);
+    if (!el || !text) return;
+    el.lastChild.textContent = text; el.hidden = false;
+  }
+  var d = /^\d{4}-(\d{2})-(\d{2})$/.exec(m.last || "");
+  if (d) put("recLast", "最近一次 · " + (+d[1]) + "月" + (+d[2]) + "日");
+  if (m.q > 0) put("recQ", m.q + " 个问题");
 })();
 
 /* ============================================================
