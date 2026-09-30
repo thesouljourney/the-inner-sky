@@ -12936,8 +12936,13 @@ window.Guide = (function () {
       if (e.target === rest && e.propertyName === "max-height" && rest.classList.contains("on"))
         rest.style.maxHeight = "none";
     });
+    /* 展开当下按钮在视窗里的位置。「收起」时把画面带回这里 ——
+       不然读完长长的正文再收起,人会停在页面下方(用户反馈)。 */
+    let openTop = null;
     btn.addEventListener("click", function () {
       const on = !rest.classList.contains("on");
+      if (on) openTop = btn.getBoundingClientRect().top;
+      const shrink = on ? 0 : rest.offsetHeight;   // 收起后按钮会往上移这么多
       rest.classList.toggle("on", on);
       btn.setAttribute("aria-expanded", on ? "true" : "false");
       btn.classList.toggle("open", on);
@@ -12945,7 +12950,14 @@ window.Guide = (function () {
       btn.querySelector(".cv").textContent = on ? "↑" : "↓";
       // 收起时要先回到当前实际高度再归零,否则从 none 直接跳 0 不会有过渡
       rest.style.maxHeight = rest.scrollHeight + "px";
-      if (!on) { rest.getBoundingClientRect(); rest.style.maxHeight = "0px"; }
+      if (!on) {
+        rest.getBoundingClientRect(); rest.style.maxHeight = "0px";
+        // 收完之后按钮的位置 = 现在的位置 - 正文高度;把它卷回展开时在视窗里的那个高度
+        const want = openTop === null ? 96 : Math.max(72, openTop);
+        const y = window.scrollY + btn.getBoundingClientRect().top - shrink - want;
+        const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion:reduce)").matches;
+        window.scrollTo({ top: Math.max(0, y), behavior: reduce ? "auto" : "smooth" });
+      }
     });
   }
 
