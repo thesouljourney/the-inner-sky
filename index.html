@@ -385,7 +385,13 @@ header.site { position: relative; z-index: 5; }
 /* ============================================================
    关于我们
    ============================================================ */
-.story { position: relative; padding: 24px 0 90px; overflow: hidden; }
+.story { position: relative; padding: 64px 0 90px; overflow: hidden; }
+/* 背景图很强:整段先铺一层很淡的象牙柔光,文字后面再多一团,字才站得住 */
+.story::before { content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  background: radial-gradient(70% 60% at 60% 45%, rgba(255,250,244,.62), rgba(255,250,244,.26) 60%, rgba(255,250,244,0) 100%); }
+.story-copy { position: relative; isolation: isolate; }
+.story-copy::before { content: ""; position: absolute; z-index: -1; inset: -12% -14% -10% -12%; pointer-events: none; border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(255,251,246,.9), rgba(255,251,246,.6) 60%, rgba(255,251,246,0) 100%); filter: blur(8px); }
 .story-valley { position: absolute; left: 0; right: 0; bottom: 0; height: 60%; background: url(assets/landing/valley.webp) center bottom / cover no-repeat; opacity: .28;
   -webkit-mask-image: linear-gradient(180deg, transparent, #000 60%); mask-image: linear-gradient(180deg, transparent, #000 60%); }
 .story-in { position: relative; display: grid; grid-template-columns: 1fr 1.1fr; align-items: center; gap: 56px; }
@@ -518,7 +524,7 @@ footer.site { position: relative; overflow: hidden; background: linear-gradient(
   .fav-q .from { font-size: 10.5px; }
   .fav-total { gap: 8px; padding: 8px 16px; font-size: 13px; }
 
-  .story { padding: 10px 0 60px; }
+  .story { padding: 44px 0 60px; }
   .story-in { grid-template-columns: 1fr 1.25fr; gap: 16px; }
   .story-copy h2 { font-size: 20px; }
   .story-copy p { margin-top: 10px; font-size: 11px; line-height: 1.85; letter-spacing: 0; }
