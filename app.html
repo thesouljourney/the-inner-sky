@@ -6060,6 +6060,44 @@
   }
 
 
+  /* ── 四个方向的展开区 v2(用户的参考图):只改排版,各方向的底色 / 插画 / 眉标颜色都不动 ──
+     · 右上角插画放大;大标题占满整行;正文淡一点、字距拉开
+     · 「为什么这适合我？」不再是一个框:上面一条 ✦ 金线,图示 + 标题 + 右边的折角,
+       那一句重点前面一条金色竖线,底下接说明
+     · 「想一想」上面也一条 ✦ 金线,左边叶子图示放大、不加圆框 */
+  #dpage.compass-page .cp-panel{padding:24px 22px 12px}
+  #dpage.compass-page .cp-panel::before{width:78%;height:300px}
+  #dpage.compass-page .cp-panel .hd{
+    max-width:none;margin-top:12px;font-family:var(--dp-serif);font-weight:700;
+    font-size:21px;line-height:1.6;letter-spacing:.03em;color:#1f2347
+  }
+  #dpage.compass-page .cp-panel .bd{
+    max-width:none;margin-top:14px;font-size:13.5px;line-height:1.95;letter-spacing:.05em;color:rgba(70,68,92,.78)
+  }
+  #dpage.compass-page .cp-panel[data-for] .cp-why{
+    position:relative;overflow:visible;margin:22px 0 0;padding:36px 0 0;border:0;border-radius:0;
+    background:url(assets/life/cp-mobile/divider2.webp) center top / min(72%,270px) auto no-repeat
+  }
+  #dpage.compass-page .cp-panel[data-for] .cp-why::before{content:none}
+  #dpage.compass-page .cp-why > summary{gap:14px;font-size:16px}
+  #dpage.compass-page .cp-why > summary::after,
+  #dpage.compass-page .cp-why[open] > summary::after{margin-left:auto;margin-right:6px;width:7px;height:7px}
+  #dpage.compass-page .cp-why .wi{width:44px;height:44px}
+  #dpage.compass-page .cp-why > .ci{
+    margin-top:18px;padding:2px 0 2px 16px;border-left:2px solid rgba(196,160,98,.7);
+    font-family:var(--dp-serif);font-weight:700;font-size:15px;line-height:1.75;color:#1f2347
+  }
+  #dpage.compass-page .cp-why > .tx{
+    margin-top:14px;font-size:13.5px;line-height:1.95;letter-spacing:.04em;color:rgba(70,68,92,.8)
+  }
+  #dpage.compass-page .cp-panel .rp{
+    grid-template-columns:52px 1fr;column-gap:14px;margin-top:22px;padding:38px 2px 0;
+    background:url(assets/life/cp-mobile/divider2.webp) center top / min(72%,270px) auto no-repeat
+  }
+  #dpage.compass-page .cp-panel .rp .ri{width:52px;height:52px;border-radius:0;filter:none;object-fit:contain}
+  #dpage.compass-page .cp-panel .rp .k{font-size:16px}
+  #dpage.compass-page .cp-panel .rp p{font-size:13.5px;line-height:1.85;color:rgba(70,68,92,.8)}
+
   /* ============================================================
      02 想留给自己的几句话 + 此刻的我(全宽度共用;桌机再放大一号)
      ------------------------------------------------------------
@@ -14247,7 +14285,8 @@ window.Guide = (function () {
       } else {
         /* openingLine → shortInsight → 情境层第二句(如果有) → 披露 → 想一想 */
         panel = '<span class="cp-eyebrow" aria-hidden="true">' + esc0(dpT("给现在的你", "For you, right now")) + "</span>" +
-          '<p class="hd">' + esc0(opening) + "</p>" +
+          /* 大标题在第一个逗号后换行(照参考图);没有逗号就照常排 */
+          '<p class="hd">' + esc0(opening).replace(/^([^，,]{4,}[，,])(?=.{4,})/, "$1<br>") + "</p>" +
           (shortIns ? '<p class="bd">' + esc0(shortIns) + "</p>" : "") +
           (st && st.micro ? '<p class="bd sub">' + esc0(st.micro) + "</p>" : "") +
           why('<p class="ci">' + esc0(c.coreInsight) + "</p>" +
