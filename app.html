@@ -6380,6 +6380,61 @@
     #dpage.compass-page .cp-now .cp-sh::before{width:40px;height:40px}
   }
 
+  /* ── 「今天有什么事情」依用户参考图重排 ──────────────────────
+     「此刻的我」上方换成用户给的金色星芒线(divider2.webp);
+     问题 + 写字处 + 按钮收进一张雾面玻璃卡:右上角月亮星链(note-moon.webp),
+     顶端一颗小金星,问题分两行(粗 / 细),写字处右下一支羽毛笔(note-quill.webp)。 */
+  #dpage.compass-page .cp-now .cp-sh::before{
+    width:min(72%,300px);height:30px;margin:0 auto 14px;filter:none;
+    background:url(assets/life/cp-mobile/divider2.webp) center / contain no-repeat
+  }
+  #dpage.compass-page .cp-now .cp-note-card{
+    position:relative;max-width:min(100%,600px);margin:34px auto 0;
+    padding:26px 18px 24px;border-radius:26px;text-align:center;
+    background:linear-gradient(180deg,rgba(255,255,255,.52),rgba(255,251,249,.34));
+    border:1px solid rgba(255,255,255,.82);
+    box-shadow:0 18px 40px -22px rgba(110,90,150,.35),inset 0 1px 0 rgba(255,255,255,.9);
+    -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)
+  }
+  #dpage.compass-page .cp-now .cp-note-card > *{position:relative;z-index:1}
+  #dpage.compass-page .cp-now .cp-note-card .nc-moon{
+    position:absolute;z-index:0;top:8px;right:8px;width:86px;height:83px;pointer-events:none;
+    background:url(assets/life/cp-mobile/note-moon.webp) center / contain no-repeat
+  }
+  #dpage.compass-page .cp-now .cp-note-card .nc-st{
+    display:block;margin:0 auto 10px;font-size:15px;line-height:1;color:#c9a35c
+  }
+  #dpage.compass-page .cp-now .cp-note-card .cp-q2{
+    margin:0;font-family:var(--dp-serif);line-height:1.75;color:var(--dp-ink)
+  }
+  #dpage.compass-page .cp-now .cp-note-card .cp-q2 b{
+    display:block;font-weight:700;font-size:18px;letter-spacing:.06em
+  }
+  #dpage.compass-page .cp-now .cp-note-card .cp-q2 span{
+    display:block;font-weight:400;font-size:17px;letter-spacing:.14em;color:#4a4760
+  }
+  #dpage.compass-page .cp-now .cp-note-card .cp-ta{
+    display:block;width:100%;max-width:none;box-sizing:border-box;
+    min-height:140px;margin:18px 0 0;padding:16px 18px 44px;border-radius:18px;
+    text-align:left;line-height:1.9;font-size:15px;
+    background:
+      url(assets/life/cp-mobile/note-quill.webp) right 6px bottom 6px / 158px auto no-repeat,
+      rgba(255,255,255,.38);
+    border:1px solid rgba(255,255,255,.88);
+    box-shadow:inset 0 1px 6px rgba(120,100,150,.06)
+  }
+  #dpage.compass-page .cp-now .cp-note-card .cp-ta::placeholder{color:rgba(110,104,130,.55);letter-spacing:.06em}
+  #dpage.compass-page .cp-now .cp-note-card .cp-ta:focus{background-color:rgba(255,255,255,.6);border-color:rgba(214,190,150,.6)}
+  #dpage.compass-page .cp-now .cp-note-card .cp-act{margin-top:20px}
+  #dpage.compass-page .cp-now .cp-note-card .dp-cta{min-width:200px;min-height:44px;font-size:14px;letter-spacing:.14em}
+  @media(min-width:768px){
+    #dpage.compass-page .cp-now .cp-note-card{padding:32px 36px 30px}
+    #dpage.compass-page .cp-now .cp-note-card .nc-moon{width:110px;height:106px}
+    #dpage.compass-page .cp-now .cp-note-card .cp-q2 b{font-size:20px}
+    #dpage.compass-page .cp-now .cp-note-card .cp-q2 span{font-size:18px}
+    #dpage.compass-page .cp-now .cp-note-card .cp-ta{min-height:160px;background-size:200px auto,auto}
+  }
+
   /* 记录:展开长在自己下面 */
   #dpage.compass-page .cp-sky-card.open{background:var(--dp-cloud)}
   #dpage.compass-page .cp-sky-card .qz{
@@ -14556,15 +14611,18 @@ window.Guide = (function () {
                   icon[1] + "</svg>" : "") +
           "<span>" + esc0(label) + "</span></button>";
       }).join("") + "</div>" +
-      '<p class="cp-q cp-q2">' +
-      esc0(dpT("今天有什么事情，一直停留在你心里？",
-               "What has been staying with you today?")) + "</p>" +
+      /* 依用户参考图:问题 + 写字处 + 按钮收进一张雾面玻璃卡,
+         右上角一弯月亮星链,写字处右下一支羽毛笔 */
+      '<div class="cp-note-card"><span class="nc-moon" aria-hidden="true"></span>' +
+      '<span class="nc-st" aria-hidden="true">✦</span>' +
+      '<p class="cp-q cp-q2"><b>' + esc0(dpT("今天有什么事情，", "What has been")) + "</b>" +
+      "<span>" + esc0(dpT("一直停留在你心里？", "staying with you today?")) + "</span></p>" +
       '<textarea id="cpNote" class="cp-ta" rows="4" placeholder="' +
-      esc0(dpT("写一点也可以，不需要把它整理得很好。",
-               "A few words is enough. It doesn’t need to be tidy.")) + '"></textarea>' +
+      esc0(dpT("写一点也可以，\n不需要把它整理得很好。",
+               "A few words is enough.\nIt doesn’t need to be tidy.")) + '"></textarea>' +
       '<div class="cp-act"><button type="button" class="dp-cta" id="cpSave">' +
-      esc0(dpT("写下此刻的想法", "Keep this moment")) + "</button>" +
-      '<span class="cp-hint" id="cpHint" aria-live="polite"></span></div>' +
+      esc0(dpT("保存这一刻", "Keep this moment")) + "</button>" +
+      '<span class="cp-hint" id="cpHint" aria-live="polite"></span></div></div>' +
       "</section>";
   }
 
