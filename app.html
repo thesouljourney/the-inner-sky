@@ -5850,6 +5850,65 @@
     #dpage.compass-page .cp-wheel-core::after{left:-56px}
     #dpage.compass-page .qm-bottom::after{right:-56px}
   }
+  /* ── 指南盘 v2(用户参考图):四个方向各是一颗半透明的珍珠白胶囊,
+     天体图示放进一枚圆形徽章、骑在胶囊上缘;左右两颗往中间压到轨道环上。
+     徽章用 ::before 在文流里、负 margin 顶出胶囊外 —— qm-cell 不加 position,
+     「消耗」底下那丛叶子(.qm-bottom::after)的定位基准维持是 .cp-wheel-core。 */
+  #dpage.compass-page .cp-wheel-core{row-gap:0;column-gap:0}
+  #dpage.compass-page .cp-rose{width:min(42vw,164px);z-index:0}
+  #dpage.compass-page .qm-cell{
+    z-index:1;gap:1px;margin-top:26px;padding:0 18px 8px;border-radius:30px;
+    background:linear-gradient(180deg,rgba(255,254,252,.86),rgba(252,247,242,.72));
+    border:1px solid rgba(214,190,150,.55);
+    box-shadow:0 6px 18px -8px rgba(120,96,140,.28),inset 0 1px 0 rgba(255,255,255,.9)
+  }
+  #dpage.compass-page .qm-cell::before,
+  #dpage.compass-page .qm-top::before,
+  #dpage.compass-page .qm-left::before,
+  #dpage.compass-page .qm-right::before,
+  #dpage.compass-page .qm-bottom::before{
+    width:44px;height:44px;margin:-23px auto 1px;border-radius:50%;
+    border:1px solid rgba(214,190,150,.6);
+    box-shadow:0 4px 12px -4px rgba(120,96,140,.3),inset 0 1px 2px rgba(255,255,255,.9)
+  }
+  #dpage.compass-page .qm-top::before{
+    background:url(assets/life/cp-mobile/qm-sun.webp) center / 74% no-repeat,
+      radial-gradient(circle at 40% 35%,#fffefb,#f6eee6 80%)
+  }
+  #dpage.compass-page .qm-left::before{
+    background:url(assets/life/cp-mobile/qm-moon.webp) center / 58% no-repeat,
+      radial-gradient(circle at 40% 35%,#fffefb,#f6eee6 80%)
+  }
+  #dpage.compass-page .qm-right::before{
+    background:url(assets/life/cp-mobile/qm-star.webp) center / 70% no-repeat,
+      radial-gradient(circle at 40% 35%,#fffefb,#f6eee6 80%)
+  }
+  #dpage.compass-page .qm-bottom::before{
+    background:url(assets/life/cp-mobile/qm-cloud.webp) center / 78% auto no-repeat,
+      radial-gradient(circle at 40% 35%,#fffefb,#f6eee6 80%)
+  }
+  #dpage.compass-page .qm-cell b{font-size:15px}
+  #dpage.compass-page .qm-cell span{font-size:10.5px;white-space:nowrap}
+  #dpage.compass-page .qm-top{margin-bottom:-6px}
+  #dpage.compass-page .qm-bottom{margin-top:-4px}
+  #dpage.compass-page .qm-left,
+  #dpage.compass-page .qm-right{max-width:none}
+  #dpage.compass-page .qm-left{justify-self:end;margin-right:-30px}
+  #dpage.compass-page .qm-right{justify-self:start;margin-left:-30px}
+  @media(min-width:768px){
+    #dpage.compass-page .cp-rose{width:240px}
+    #dpage.compass-page .qm-cell{margin-top:34px;padding:0 30px 12px;border-radius:40px}
+    #dpage.compass-page .qm-cell::before,
+    #dpage.compass-page .qm-top::before,
+    #dpage.compass-page .qm-left::before,
+    #dpage.compass-page .qm-right::before,
+    #dpage.compass-page .qm-bottom::before{width:58px;height:58px;margin:-30px auto 4px}
+    #dpage.compass-page .qm-cell b{font-size:18px}
+    #dpage.compass-page .qm-cell span{font-size:13px}
+    #dpage.compass-page .qm-top{margin-bottom:-10px}
+    #dpage.compass-page .qm-left{margin-right:-44px}
+    #dpage.compass-page .qm-right{margin-left:-44px}
+  }
   @media(max-width:767px){
     #dpage.compass-page .cp-lead{font-size:14.5px}
     #dpage.compass-page .cp-lines{margin-top:24px}
