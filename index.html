@@ -407,17 +407,23 @@ header.site { position: relative; z-index: 5; }
 /* ============================================================
    页尾
    ============================================================ */
-footer.site { position: relative; overflow: hidden; background: linear-gradient(180deg, #151a47, #0e1236); color: #d9d3ea; }
-.foot-in { position: relative; display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 20px; padding-top: 34px; padding-bottom: 26px; }
-.foot-in .brand { font-size: 16px; }
-.foot-links { display: flex; justify-content: center; gap: 36px; }
-.foot-links a { font-family: var(--font-serif-sc); font-size: 13px; letter-spacing: .08em; color: rgba(229,223,242,.85); }
-.foot-links a:hover { color: #fff; }
-.foot-social { display: flex; align-items: center; gap: 16px; }
-.foot-social a { color: rgba(229,223,242,.85); transition: color .2s; }
-.foot-social a:hover { color: #fff; }
-.foot-social .xhs { font-size: 12px; padding: 3px 8px; border: 1px solid rgba(229,223,242,.4); border-radius: 6px; }
-.foot-in .fine { grid-column: 1 / -1; text-align: center; font-size: 11.5px; letter-spacing: .04em; color: rgba(200,193,222,.6); padding-top: 18px; border-top: 1px solid rgba(255,255,255,.08); }
+/* 页脚:与内页 dp-foot 同一套 —— 深蓝星空底图、左边字标 + 标语 + 版权,右边「关于我们」+ 两个圆形社群图示 */
+footer.site { position: relative; overflow: hidden; color: rgba(249,246,242,.72);
+  background: linear-gradient(180deg, rgba(9,18,46,.55), rgba(9,18,46,.82)), url(assets/foot/foot-sky.webp) center 60% / cover no-repeat, #09122e; }
+.foot-in { position: relative; z-index: 2; max-width: 1180px; margin: 0 auto; padding: 38px 48px;
+  display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
+.foot-bd { display: flex; flex-direction: column; gap: 7px; }
+.foot-bd .wm { font-family: var(--font-display); font-size: 19px; letter-spacing: .42em; color: #f9f6f2; line-height: 1; }
+.foot-bd .tag { font-size: 12.5px; color: rgba(232,211,162,.8); letter-spacing: .04em; }
+.foot-bd .cp { font-size: 12px; color: rgba(249,246,242,.62); margin-top: 5px; }
+.foot-rt { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; }
+.foot-rt .lk { color: rgba(249,246,242,.86); font-size: 13.5px; letter-spacing: .06em; transition: color .2s; }
+.foot-rt .lk:hover { color: #f9f6f2; }
+.foot-rt .ics { display: flex; align-items: center; gap: 10px; }
+.foot-rt .ic { width: 38px; height: 38px; border-radius: 50%; border: 1px solid rgba(249,246,242,.28);
+  display: inline-flex; align-items: center; justify-content: center; color: rgba(249,246,242,.86); transition: border-color .2s, color .2s, background .2s; }
+.foot-rt .ic:hover { border-color: rgba(232,211,162,.75); color: #e8d3a2; background: rgba(249,246,242,.06); }
+.foot-rt .ic.xhs { font-size: 9px; letter-spacing: 0; line-height: 1; color: rgba(249,246,242,.9); font-weight: 500; }
 
 /* ============================================================
    平板 / 手机
@@ -532,10 +538,7 @@ footer.site { position: relative; overflow: hidden; background: linear-gradient(
   .story-copy .sign { margin-top: 12px; font-size: 26px; }
   .story-copy .sign-sub { font-size: 11px; }
 
-  .foot-in { grid-template-columns: 1fr auto; row-gap: 14px; padding-top: 26px; }
-  .foot-links { grid-column: 1 / -1; grid-row: 2; justify-content: flex-start; gap: 22px; }
-  .foot-links a { font-size: 12px; }
-  .foot-in .fine { font-size: 10.5px; }
+  .foot-in { flex-direction: column; align-items: flex-start; gap: 20px; padding: 30px 20px; }
 }
 /* 很窄的手机:导航项目收进「菜单」 */
 @media (max-width: 370px) {
@@ -737,24 +740,24 @@ var APP_URL = "app.html";
   </section>
 </main>
 
+<!-- 页脚:与内页(app.html 的 dp-foot)同一套设计 -->
 <footer class="site">
-  <div class="starfield" id="footStars" aria-hidden="true"></div>
-  <div class="wrap foot-in">
-    <span class="brand">INNER&nbsp;SKY <span class="st" aria-hidden="true">✦</span></span>
-    <nav class="foot-links">
-      <a href="#top">首页</a>
-      <a href="#chapters">探索主题</a>
-      <a href="#story">关于我们</a>
-    </nav>
-    <div class="foot-social">
-      <a href="https://www.instagram.com/the_inner.sky?igsh=dDc4YmUwZTllc2h0&amp;utm_source=qr" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
-        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
-          <rect x="3" y="3" width="18" height="18" rx="5"></rect><circle cx="12" cy="12" r="4"></circle>
-          <circle cx="17.2" cy="6.8" r="1.1" fill="currentColor" stroke="none"></circle></svg>
-      </a>
-      <a class="xhs" href="https://xhslink.cn/m/6XbeCmG8RPc" target="_blank" rel="noopener noreferrer" aria-label="小红书">小红书</a>
+  <div class="foot-in">
+    <div class="foot-bd">
+      <span class="wm">INNER&nbsp;SKY</span>
+      <span class="tag">心有苍穹，星映本真</span>
+      <span class="cp">© 2026 The Inner Sky. All rights reserved.</span>
     </div>
-    <p class="fine">© 2026 The Inner Sky. All rights reserved.</p>
+    <div class="foot-rt">
+      <a class="lk" href="#story">关于我们</a>
+      <span class="ics">
+        <a class="ic" href="https://www.instagram.com/the_inner.sky?igsh=dDc4YmUwZTllc2h0&amp;utm_source=qr" target="_blank" rel="noopener noreferrer" aria-label="Instagram" title="Instagram">
+          <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+            <rect x="3" y="3" width="18" height="18" rx="5"></rect><circle cx="12" cy="12" r="4"></circle>
+            <circle cx="17.2" cy="6.8" r="1.1" fill="currentColor" stroke="none"></circle></svg></a>
+        <a class="ic xhs" href="https://xhslink.cn/m/6XbeCmG8RPc" target="_blank" rel="noopener noreferrer" aria-label="小红书" title="小红书"><span aria-hidden="true">小红书</span></a>
+      </span>
+    </div>
   </div>
 </footer>
 
@@ -783,7 +786,6 @@ function paintStars(el, count, seed) {
   el.innerHTML = html;
 }
 paintStars(document.getElementById("heroStars"), 150, 20260818);
-paintStars(document.getElementById("footStars"), 40, 7788);
 paintStars(document.getElementById("storyStars"), 54, 77123);
 
 /* ============================================================
