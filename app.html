@@ -12180,6 +12180,8 @@ window.Guide = (function () {
     if (h === "#/compass/preview") return { k: "compass", dev: true };
     if (h === "#/favorites") return { k: "favorites" };
     if (h === "#/records") return { k: "records" };
+    /* 落地页两张卡直接带着筛选进来:此刻的我 = note,问问自己 = answer */
+    if ((m = h.match(/^#\/records\/(note|answer)$/))) return { k: "records", f: m[1] };
     if (h === "#/onboarding") return { k: "onboarding" };
     if (h === "#/settings") return { k: "settings" };
     if (h === "#/login") return { k: "login" };
@@ -12354,6 +12356,8 @@ window.Guide = (function () {
   let returnToLanding = false;   // 从 Header 的登入 / 注册入口进来
   function applyRoute() {
     curRoute = parseRoute();
+    // 只在进入路由时套用一次;之后在页面上点筛选按钮照常切换
+    if (curRoute && curRoute.k === "records" && curRoute.f) recFilter = curRoute.f;
     const dp = $("dpage");
     if (!dp) return;
     if (!curRoute) {
