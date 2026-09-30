@@ -76,7 +76,9 @@ img { display: block; max-width: 100%; }
    左边一颗金色四芒星,字加粗、深墨蓝,箭头拉开一点 */
 .thread-in .btn-cream {
   gap: 11px; padding: 11px 24px 11px 20px; font-size: 14px; font-weight: 600; letter-spacing: .1em; color: #23264f;
-  background: linear-gradient(180deg, rgba(255,251,245,.97), rgba(247,238,228,.94));
+  /* 用户:底色不透明度降低(.97 → .74),背后的星空透一点;加轻微模糊让字清楚 */
+  background: linear-gradient(180deg, rgba(255,251,245,.76), rgba(247,238,228,.7));
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
   border: 1px solid rgba(214,182,122,.55);
   box-shadow: 0 0 0 4px rgba(255,246,232,.14), 0 0 26px rgba(255,236,206,.45), 0 10px 26px rgba(10,12,40,.3);
 }
