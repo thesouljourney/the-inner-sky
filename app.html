@@ -6018,7 +6018,8 @@
     display:inline-flex;align-items:center;gap:7px;flex:0 0 auto;
     min-height:40px;padding:0 16px 0 13px;border-radius:22px;
     font-family:var(--dp-sans);font-weight:400;font-size:13px;letter-spacing:.05em;color:#5a5870;
-    background:rgba(255,253,249,.26);border:1px solid rgba(184,155,105,.28);box-shadow:none;
+    /* 用户:底色不透明度调高(.26 → .62),按钮在云海图上更清楚 */
+    background:rgba(255,253,249,.62);border:1px solid rgba(184,155,105,.32);box-shadow:none;
     transition:background .25s ease,border-color .25s ease,color .25s ease
   }
   #dpage.compass-page .cp-now .cp-mood .mi{
@@ -6029,7 +6030,7 @@
   #dpage.compass-page .cp-now .cp-mood .mi.b{color:#7f88a4}
   @media(hover:hover){
     #dpage.compass-page .cp-now .cp-mood:hover{
-      background:rgba(255,251,244,.78);border-color:rgba(184,155,105,.42);color:#3d3b52
+      background:rgba(255,251,244,.82);border-color:rgba(184,155,105,.46);color:#3d3b52
     }
   }
   #dpage.compass-page .cp-now .cp-mood.on{
