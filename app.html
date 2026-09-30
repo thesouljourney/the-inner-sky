@@ -5633,6 +5633,9 @@
       margin-bottom:10px
     }
     #dpage.compass-page .cp-ent:last-of-type{margin-bottom:0}
+    /* 最后一张(吸引)被点开时,内容区接在它下面 —— 要留跟其他卡一样的 10px,
+       不然内容区会贴着卡片(用户反馈间距跟前几张不一样) */
+    #dpage.compass-page .cp-wheel[data-active="call"] .cp-ent.d4{margin-bottom:10px}
     /* 卡片右侧的实景插画(素材本身已去背、左缘是柔边):放在 ::before
        一层,贴齐卡片右缘、高度撑满,宽度随素材比例(约占卡片右侧四成)。
        再用 mask 把插画最左边那一段慢慢淡掉,跟珍珠底色融在一起,
