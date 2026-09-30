@@ -72,6 +72,16 @@ img { display: block; max-width: 100%; }
   box-shadow: 0 8px 22px rgba(10,12,40,.28); transition: transform .3s var(--ease-soft);
 }
 .btn-cream:hover { transform: translateY(-2px); }
+/* 「看看我的生命脉络」(依用户参考图):大一点的奶油色胶囊、淡金细边与柔光,
+   左边一颗金色四芒星,字加粗、深墨蓝,箭头拉开一点 */
+.thread-in .btn-cream {
+  gap: 16px; padding: 16px 34px 16px 30px; font-size: 16px; font-weight: 600; letter-spacing: .12em; color: #23264f;
+  background: linear-gradient(180deg, rgba(255,251,245,.97), rgba(247,238,228,.94));
+  border: 1px solid rgba(214,182,122,.55);
+  box-shadow: 0 0 0 4px rgba(255,246,232,.14), 0 0 26px rgba(255,236,206,.45), 0 10px 26px rgba(10,12,40,.3);
+}
+.thread-in .btn-cream .st { width: 18px; height: 18px; flex: none; fill: #c9a061; }
+.thread-in .btn-cream .ar { margin-left: 10px; font-family: var(--font-sans, sans-serif); font-weight: 400; }
 .btn-ghost {
   display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; border-radius: 999px;
   border: 1px solid rgba(230,200,135,.55); color: #f3e7cf; font-family: var(--font-serif-sc); font-size: 12.5px; letter-spacing: .06em;
@@ -363,6 +373,8 @@ footer.site { position: relative; overflow: hidden; background: linear-gradient(
   .thread-in p { font-size: 12.5px; margin: 12px 0 20px; max-width: 250px; }
   .thread-in p br { display: none; }
   .btn-cream { padding: 9px 18px; font-size: 12.5px; }
+  .thread-in .btn-cream { gap: 12px; padding: 13px 26px 13px 22px; font-size: 14.5px; }
+  .thread-in .btn-cream .st { width: 15px; height: 15px; }
 
   .here { padding: 46px 0 22px; }
   .here-grid { gap: 8px; margin-top: 22px; }
@@ -507,7 +519,7 @@ var APP_URL = "app.html";
     <div class="wrap thread-in">
       <h2>属于我的生命脉络</h2>
       <p>你经历过的每一件事，都不是彼此分开的片段，<br>而是一条一条的线，慢慢织成现在的你。</p>
-      <a class="btn-cream" href="app.html#/map" data-app-hash="#/map">看看我的生命脉络 <span aria-hidden="true">→</span></a>
+      <a class="btn-cream" href="app.html#/map" data-app-hash="#/map"><svg class="st" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 0C10.7 6.3 13.7 9.3 20 10 13.7 10.7 10.7 13.7 10 20 9.3 13.7 6.3 10.7 0 10 6.3 9.3 9.3 6.3 10 0Z"/></svg>看看我的生命脉络 <span class="ar" aria-hidden="true">→</span></a>
     </div>
   </section>
 
