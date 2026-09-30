@@ -155,6 +155,15 @@ header.site { position: relative; z-index: 5; }
 .hero-kicker { margin-bottom: 18px; font-family: var(--font-serif-sc); color: #f3e7cf; line-height: 1.8; }
 .hero-kicker .l1 { display: block; font-size: 16px; }
 .hero-kicker .l2 { display: block; font-size: 13px; opacity: .78; letter-spacing: .08em; }
+/* 问候语(依用户参考图):字放大、第二行更清楚,底下一条既有的金色星芒分隔线
+   (assets/life/cp-mobile/divider2.webp,两端自带淡出) */
+.hero-kicker { margin-bottom: 26px; }
+.hero-kicker .l1 { font-size: 26px; letter-spacing: .04em; color: #fbf4e6; }
+.hero-kicker .l2 { margin-top: 4px; font-size: 18px; opacity: .92; letter-spacing: .1em; }
+.hero-kicker::after {
+  content: ""; display: block; width: min(100%, 360px); height: 36px; margin-top: 18px;
+  background: url(assets/life/cp-mobile/divider2.webp) left center / 100% auto no-repeat;
+}
 .brand-line { font-family: var(--font-serif-sc); font-size: 15px; letter-spacing: .18em; color: #f1e6d2; }
 .brand-line .st { color: var(--gold-2); }
 .hero-title { margin-top: 14px; font-family: var(--font-display); font-weight: 400; font-size: 64px; line-height: 1.08; letter-spacing: .01em; color: #fbf7f0; text-shadow: 0 2px 18px rgba(10,12,40,.35); }
@@ -368,6 +377,9 @@ footer.site { position: relative; overflow: hidden; background: linear-gradient(
   .hero-bg { background-image: url(assets/landing/hero-m.webp); background-position: 70% 30%; }
   .hero-bg::before { background: linear-gradient(90deg, rgba(12,15,52,.78) 0%, rgba(12,15,52,.5) 50%, rgba(12,15,52,.05) 80%); }
   .hero-copy { max-width: 280px; padding: 34px 0 110px; }
+  .hero-kicker .l1 { font-size: 22px; }
+  .hero-kicker .l2 { font-size: 15px; }
+  .hero-kicker::after { width: calc(100vw - 32px); max-width: 340px; height: 30px; margin-top: 14px; }
   .brand-line { font-size: 12.5px; letter-spacing: .14em; }
   .hero-title { font-size: 34px; margin-top: 10px; }
   .hero-rule { margin: 16px 0 14px; width: 44px; }
