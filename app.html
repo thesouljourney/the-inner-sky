@@ -5857,8 +5857,9 @@
   #dpage.compass-page .cp-wheel-core{row-gap:0;column-gap:0}
   #dpage.compass-page .cp-rose{width:min(42vw,164px);z-index:0}
   #dpage.compass-page .qm-cell{
-    z-index:1;gap:1px;margin-top:26px;padding:0 18px 8px;border-radius:30px;
-    background:linear-gradient(180deg,rgba(255,254,252,.86),rgba(252,247,242,.72));
+    /* 用户:卡片小一点、离罗盘远一点、底更透明 */
+    z-index:1;gap:1px;margin-top:22px;padding:0 13px 6px;border-radius:24px;
+    background:linear-gradient(180deg,rgba(255,254,252,.56),rgba(252,247,242,.42));
     border:1px solid rgba(214,190,150,.55);
     box-shadow:0 6px 18px -8px rgba(120,96,140,.28),inset 0 1px 0 rgba(255,255,255,.9)
   }
@@ -5867,7 +5868,7 @@
   #dpage.compass-page .qm-left::before,
   #dpage.compass-page .qm-right::before,
   #dpage.compass-page .qm-bottom::before{
-    width:44px;height:44px;margin:-23px auto 1px;border-radius:50%;
+    width:36px;height:36px;margin:-19px auto 1px;border-radius:50%;
     border:1px solid rgba(214,190,150,.6);
     box-shadow:0 4px 12px -4px rgba(120,96,140,.3),inset 0 1px 2px rgba(255,255,255,.9)
   }
@@ -5887,27 +5888,28 @@
     background:url(assets/life/cp-mobile/qm-cloud.webp) center / 78% auto no-repeat,
       radial-gradient(circle at 40% 35%,#fffefb,#f6eee6 80%)
   }
-  #dpage.compass-page .qm-cell b{font-size:15px}
-  #dpage.compass-page .qm-cell span{font-size:10.5px;white-space:nowrap}
-  #dpage.compass-page .qm-top{margin-bottom:-6px}
-  #dpage.compass-page .qm-bottom{margin-top:-4px}
+  #dpage.compass-page .qm-cell b{font-size:13.5px}
+  #dpage.compass-page .qm-cell span{font-size:10px;white-space:nowrap}
+  #dpage.compass-page .qm-top{margin-bottom:8px}
+  #dpage.compass-page .qm-bottom{margin-top:8px}
   #dpage.compass-page .qm-left,
   #dpage.compass-page .qm-right{max-width:none}
-  #dpage.compass-page .qm-left{justify-self:end;margin-right:-30px}
-  #dpage.compass-page .qm-right{justify-self:start;margin-left:-30px}
+  #dpage.compass-page .qm-left{justify-self:end;margin-right:2px}
+  #dpage.compass-page .qm-right{justify-self:start;margin-left:2px}
   @media(min-width:768px){
     #dpage.compass-page .cp-rose{width:240px}
-    #dpage.compass-page .qm-cell{margin-top:34px;padding:0 30px 12px;border-radius:40px}
+    #dpage.compass-page .qm-cell{margin-top:28px;padding:0 22px 9px;border-radius:32px}
     #dpage.compass-page .qm-cell::before,
     #dpage.compass-page .qm-top::before,
     #dpage.compass-page .qm-left::before,
     #dpage.compass-page .qm-right::before,
-    #dpage.compass-page .qm-bottom::before{width:58px;height:58px;margin:-30px auto 4px}
-    #dpage.compass-page .qm-cell b{font-size:18px}
-    #dpage.compass-page .qm-cell span{font-size:13px}
-    #dpage.compass-page .qm-top{margin-bottom:-10px}
-    #dpage.compass-page .qm-left{margin-right:-44px}
-    #dpage.compass-page .qm-right{margin-left:-44px}
+    #dpage.compass-page .qm-bottom::before{width:48px;height:48px;margin:-25px auto 3px}
+    #dpage.compass-page .qm-cell b{font-size:16px}
+    #dpage.compass-page .qm-cell span{font-size:12px}
+    #dpage.compass-page .qm-top{margin-bottom:14px}
+    #dpage.compass-page .qm-bottom{margin-top:14px}
+    #dpage.compass-page .qm-left{margin-right:10px}
+    #dpage.compass-page .qm-right{margin-left:10px}
   }
   @media(max-width:767px){
     #dpage.compass-page .cp-lead{font-size:14.5px}
