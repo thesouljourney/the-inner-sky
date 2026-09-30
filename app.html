@@ -6540,6 +6540,91 @@
     #dpage.compass-page .cp-sky-act{gap:10px}
   }
 
+  /* ── 我的星空记录 v2(内在指南页底部,用户逐条要求)──────────────
+     标题下一句轻引导;记录是暖白 88% 的日记纸笺小卡;「日期 · ✦ 心情」一组;
+     「删除」收进右上角「···」;最下面是置中的 ✦ 分隔线 + 文字按钮;
+     整个区块底下垫一层很轻的奶白雾,天空还看得到,但字更好读。 */
+  #dpage.compass-page .cp-sky{position:relative;isolation:isolate}
+  #dpage.compass-page .cp-sky::before{
+    content:"";position:absolute;z-index:-1;inset:-40px -24px -30px;pointer-events:none;
+    background:radial-gradient(ellipse 78% 64% at 50% 48%,rgba(255,250,244,.62),rgba(255,250,244,.3) 55%,rgba(255,250,244,0) 82%)
+  }
+  #dpage.compass-page .cp-sky .cp-lead{
+    display:block;margin:10px auto 0;text-align:center;
+    font-family:var(--dp-serif);font-size:14px;letter-spacing:.14em;color:rgba(88,84,110,.72)
+  }
+  #dpage.compass-page .cp-sky .cp-sky-grid{gap:20px;margin-top:24px;align-items:start}
+  #dpage.compass-page .cp-sky .cp-sky-card,
+  #dpage.compass-page .cp-sky .cp-sky-card.open{
+    position:relative;padding:16px 18px 16px;border-radius:18px;
+    background:rgba(255,252,247,.88);border:1px solid rgba(214,196,168,.42);
+    box-shadow:0 10px 26px -18px rgba(70,60,100,.35)
+  }
+  #dpage.compass-page .cp-sky .cp-sky-card .hd{
+    display:flex;align-items:center;gap:10px;flex-wrap:nowrap;padding-right:34px;min-height:28px
+  }
+  #dpage.compass-page .cp-sky .cp-sky-card .dt{
+    font-family:var(--dp-display);font-size:12.5px;letter-spacing:.16em;color:rgba(118,116,178,.85);white-space:nowrap
+  }
+  #dpage.compass-page .cp-sky .cp-sky-card .md{
+    display:inline-flex;align-items:center;gap:5px;height:26px;box-sizing:border-box;padding:0 11px;border-radius:13px;
+    font-family:var(--dp-serif);font-weight:400;font-size:12px;letter-spacing:.1em;color:#86704e;white-space:nowrap;
+    background:rgba(240,230,214,.6);border:1px solid rgba(214,196,168,.45)
+  }
+  #dpage.compass-page .cp-sky .cp-sky-card .md i,
+  #dpage.compass-page .cp-sky .cp-sky-card .kd i{font-style:normal;font-size:9px;color:#c7a771}
+  #dpage.compass-page .cp-sky .cp-dots{
+    position:absolute;top:10px;right:8px;width:34px;height:30px;padding:0;border:0;border-radius:10px;
+    background:none;cursor:pointer;font-size:16px;line-height:1;letter-spacing:.05em;color:rgba(110,106,130,.7)
+  }
+  #dpage.compass-page .cp-sky .cp-dots[aria-expanded="true"],
+  #dpage.compass-page .cp-sky .cp-dots:focus-visible{background:rgba(214,196,168,.2);outline:none}
+  #dpage.compass-page .cp-sky .cp-menu{
+    position:absolute;z-index:5;top:42px;right:10px;min-width:108px;padding:6px;border-radius:12px;
+    display:flex;flex-direction:column;
+    background:rgba(255,253,249,.98);border:1px solid rgba(214,196,168,.5);
+    box-shadow:0 12px 28px -12px rgba(50,40,80,.35)
+  }
+  #dpage.compass-page .cp-sky .cp-menu .cp-edit,
+  #dpage.compass-page .cp-sky .cp-menu .cp-del{
+    display:block;width:100%;margin:0;min-height:36px;padding:0 12px;border:0;border-radius:8px;text-align:left;
+    background:none;cursor:pointer;font-family:var(--dp-serif);font-size:13px;letter-spacing:.08em;color:var(--dp-ink)
+  }
+  #dpage.compass-page .cp-sky .cp-menu .cp-del{color:#9a4a4a}
+  @media(hover:hover){
+    #dpage.compass-page .cp-sky .cp-menu .cp-edit:hover,
+    #dpage.compass-page .cp-sky .cp-menu .cp-del:hover{background:rgba(214,196,168,.18)}
+  }
+  #dpage.compass-page .cp-sky .cp-sky-card .kd{
+    display:flex;align-items:center;gap:6px;margin-top:12px;
+    font-family:var(--dp-serif);font-weight:400;font-size:12px;letter-spacing:.14em;color:rgba(118,110,160,.85)
+  }
+  #dpage.compass-page .cp-sky .cp-sky-card .bd{
+    margin:10px 0 0;font-family:var(--dp-serif);font-weight:400;font-size:14px;line-height:1.9;color:#3f3d52;
+    display:block;-webkit-line-clamp:unset;overflow:visible;white-space:pre-line
+  }
+  /* 超过约三四行的才折叠(folded),短的整则直接显示 */
+  #dpage.compass-page .cp-sky .cp-sky-card.folded .bd{
+    display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden
+  }
+  #dpage.compass-page .cp-sky .cp-sky-act{margin-top:8px}
+  #dpage.compass-page .cp-sky .cp-open{
+    font-family:var(--dp-serif);font-size:12.5px;letter-spacing:.08em;color:#8a6f45;min-height:32px
+  }
+  #dpage.compass-page .cp-sky-foot{text-align:center;margin-top:26px}
+  #dpage.compass-page .cp-sky-foot .ln{
+    display:flex;align-items:center;gap:10px;width:min(64%,240px);margin:0 auto 10px
+  }
+  #dpage.compass-page .cp-sky-foot .ln i{flex:1;height:1px;background:linear-gradient(90deg,rgba(196,160,98,0),rgba(196,160,98,.55))}
+  #dpage.compass-page .cp-sky-foot .ln i:last-child{background:linear-gradient(90deg,rgba(196,160,98,.55),rgba(196,160,98,0))}
+  #dpage.compass-page .cp-sky-foot .ln b{font-weight:400;font-size:11px;line-height:1;color:#c7a771}
+  #dpage.compass-page .cp-sky-foot .cp-sky-all{
+    display:inline-flex;align-items:center;gap:10px;min-height:40px;
+    font-family:var(--dp-serif);font-size:13.5px;letter-spacing:.14em;color:#6d5a3b;text-decoration:none
+  }
+  #dpage.compass-page .cp-sky-foot .cp-sky-all span{font-family:var(--dp-sans);transition:transform .2s ease}
+  @media(hover:hover){#dpage.compass-page .cp-sky-foot .cp-sky-all:hover span{transform:translateX(3px)}}
+
   /* 划词收藏:轻盈的浮动动作,不打断阅读 */
   #dpSaveTip{position:absolute;z-index:90;display:none;align-items:center;gap:6px;
     font-family:"Noto Sans SC","Helvetica Neue",Arial,sans-serif;font-size:12.5px;color:#fff;background:rgba(26,22,52,.94);
@@ -12373,6 +12458,8 @@ window.Guide = (function () {
   let compassAll = false;        // 「查看全部」是否展开
   let compassOpen = "";          // 目前展开的那一则记录 id
   let compassDelAsk = "";        // 正在等确认删除的那一则 id
+  let compassMenu = "";          // 开着「···」选单(编辑 / 删除)的那一则 id
+  let compassMenuBound = false;  // 「点选单外面就关」的全局监听只挂一次
   let compassGenBusy = false;    // 正式页面的生成中
   let compassBusy = false;
   var compassDirOpen = "";       // 01 里目前打开的那一个方向(一次只有一个)
@@ -14899,43 +14986,55 @@ window.Guide = (function () {
                                         "Start with the moment above.")) + "</span></div>";
     } else {
       // 这里只放最新三则;完整的时间线在 #/records
+      /* v2(用户逐条要求):日记纸笺小卡 ——
+         · 顶端「2026 · 09 · 29  ✦ 平静」一组,右上角「···」,点开才有「编辑 / 删除」
+         · 回答当天问题的那则,正文前是「✦ 来自今天的问题」
+         · 短的记录直接全部显示;超过约三四行才折叠,按钮是「读完整记录 →」
+         · 最下面不再是一张独立的「查看更多」卡,改成置中的 ✦ 分隔线 + 文字按钮 */
       const shown = rows.slice(0, 3);
+      const FOLD = 66;
       inner = '<div class="cp-sky-grid">' + shown.map(function (r) {
         const t = String(r.text || "");
         const open = compassOpen === r.id;
-        /* 收起时只给一小段预览;点开的内容长在【这一张卡自己下面】,
-           不会跳到整页最下方(手机上这一点最重要)。 */
-        const preview = t.length > 42 ? t.slice(0, 42) + "…" : t;
-        return '<article class="cp-sky-card' + (open ? " open" : "") +
+        const fold = t.length > FOLD;
+        const showQ = r.question && (open || !fold);
+        const menu = compassMenu === r.id;
+        const dt = window.I18N.isEN() ? compassDate(r.ts) : compassDate(r.ts).split(".").join(" · ");
+        return '<article class="cp-sky-card' + (open ? " open" : "") + (fold && !open ? " folded" : "") +
           '" data-entry="' + esc0(r.id) + '"><div class="hd">' +
-          '<span class="dt">' + esc0(compassDate(r.ts)) + "</span>" +
-          (r.mood ? '<span class="md">' + esc0(r.mood) + "</span>" : "") + "</div>" +
-          (t ? '<p class="bd">' + esc0(open ? t : preview) + "</p>" : "") +
+          '<span class="dt">' + esc0(dt) + "</span>" +
+          (r.mood ? '<span class="md"><i aria-hidden="true">✦</i>' + esc0(r.mood) + "</span>" : "") +
+          '<button type="button" class="cp-dots" data-menu="' + esc0(r.id) + '" aria-expanded="' + (menu ? "true" : "false") +
+          '" aria-label="' + esc0(dpT("更多操作", "More")) + '"><span aria-hidden="true">···</span></button>' +
+          (menu
+            ? '<div class="cp-menu" role="menu">' +
+              '<button type="button" role="menuitem" class="cp-edit" data-edit="' + esc0(r.id) + '">' +
+                esc0(dpT("编辑", "Edit")) + "</button>" +
+              '<button type="button" role="menuitem" class="cp-del" data-del="' + esc0(r.id) + '">' +
+                esc0(compassDelAsk === r.id ? dpT("确定删除？", "Delete for good?") : dpT("删除", "Delete")) + "</button>" +
+              "</div>"
+            : "") +
+          "</div>" +
           (r.kind === "answer"
-            ? '<span class="kd">' + esc0(dpT("回答了今天的问题", "Answered today’s question")) + "</span>"
+            ? '<span class="kd"><i aria-hidden="true">✦</i>' + esc0(dpT("来自今天的问题", "From today’s question")) + "</span>"
             : "") +
-          (open && r.question
-            ? '<p class="qz">' + esc0(dpT("那天的问题：", "That day’s question: ")) +
-              esc0(r.question) + "</p>"
+          (t ? '<p class="bd">' + esc0(t) + "</p>" : "") +
+          (showQ
+            ? '<p class="qz">' + esc0(dpT("那天的问题：", "That day’s question: ")) + esc0(r.question) + "</p>"
             : "") +
-          '<div class="cp-sky-act">' +
-          (t.length > 42 || r.question
-            ? '<button type="button" class="cp-open" data-open="' + esc0(r.id) + '">' +
-              esc0(open ? dpT("收起", "Close") : dpT("展开", "Open")) + "</button>"
+          (fold
+            ? '<div class="cp-sky-act"><button type="button" class="cp-open" data-open="' + esc0(r.id) + '">' +
+              esc0(open ? dpT("收起 ↑", "Close ↑") : dpT("读完整记录 →", "Read the whole entry →")) + "</button></div>"
             : "") +
-          '<button type="button" class="cp-del" data-del="' + esc0(r.id) + '">' +
-          esc0(compassDelAsk === r.id ? dpT("确定删除？", "Delete for good?") : dpT("删除", "Delete")) +
-          "</button></div></article>";
-      }).join("") +
-      '<a class="cp-sky-more" href="#/records">' +
-        '<span class="st" aria-hidden="true">✦</span>' +
-        '<b>' + esc0(dpT("查看更多", "See more")) + '</b>' +
-        '<span class="sb">' + esc0(dpT("我的星空记录 · " + rows.length + " 则", "My record · " + rows.length)) + '</span>' +
-        '<span class="ar" aria-hidden="true">→</span></a>' +
-      "</div>";
+          "</article>";
+      }).join("") + "</div>" +
+      '<div class="cp-sky-foot"><span class="ln" aria-hidden="true"><i></i><b>✦</b><i></i></span>' +
+        '<a class="cp-sky-all" href="#/records">' + esc0(dpT("查看全部星空记录", "See all my sky records")) +
+        '<span aria-hidden="true">→</span></a></div>';
     }
     return '<section class="cp-sec cp-sky">' +
-      compassSecHead("", dpT("我的星空记录", "My Record"), "MY RECORD") +
+      compassSecHead("", dpT("我的星空记录", "My Record"), "MY RECORD",
+        dpT("一些被你留下来的片刻", "Moments you chose to keep")) +
       compassStoreNote() +
       inner + "</section>";
   }
@@ -15865,6 +15964,42 @@ window.Guide = (function () {
     }
     cpBindDirections();
 
+    /* 记录:右上角「···」选单(编辑 / 删除)。点选单以外的地方或按 Esc 就关掉。
+       「编辑」直接打开「我的星空记录」那一页同一个编辑浮窗 —— 不另外做第二套编辑器。 */
+    host.querySelectorAll(".cp-dots").forEach(function (bm) {
+      bm.addEventListener("click", function (e) {
+        e.stopPropagation();
+        const id = bm.getAttribute("data-menu");
+        compassMenu = (compassMenu === id) ? "" : id;
+        compassDelAsk = "";
+        compassRepaint();
+      });
+    });
+    host.querySelectorAll(".cp-menu").forEach(function (m) {
+      m.addEventListener("click", function (e) { e.stopPropagation(); });
+    });
+    host.querySelectorAll(".cp-edit").forEach(function (be) {
+      be.addEventListener("click", function () {
+        const id = be.getAttribute("data-edit");
+        const r0 = recFind(id);
+        compassMenu = ""; compassDelAsk = "";
+        recModal = { type: "edit", id: id };
+        recEditMood = r0 ? (r0.mood || "") : "";
+        recMenu = "";
+        location.hash = "#/records";
+      });
+    });
+    if (!compassMenuBound) {
+      compassMenuBound = true;
+      const shut = function () {
+        if (!compassMenu || !curRoute || curRoute.k !== "compass") return;
+        compassMenu = ""; compassDelAsk = "";
+        compassRepaint();
+      };
+      document.addEventListener("click", shut);
+      document.addEventListener("keydown", function (e) { if (e.key === "Escape") shut(); });
+    }
+
     /* 记录:展开 / 删除。展开的内容长在被点的那一张卡下面。 */
     host.querySelectorAll(".cp-open").forEach(function (b2) {
       b2.addEventListener("click", function () {
@@ -15885,6 +16020,7 @@ window.Guide = (function () {
         compassDelAsk = "";
         window.Compass.store.remove(compassOwner(), id).then(function () {
           compassEntries = (compassEntries || []).filter(function (r) { return r.id !== id; });
+          compassMenu = "";
           compassRepaint();
         });
       });
