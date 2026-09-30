@@ -6564,7 +6564,8 @@
     display:flex;align-items:center;gap:10px;flex-wrap:nowrap;padding-right:34px;min-height:28px
   }
   #dpage.compass-page .cp-sky .cp-sky-card .dt{
-    font-family:var(--dp-display);font-size:12.5px;letter-spacing:.16em;color:rgba(118,116,178,.85);white-space:nowrap
+    /* 用户:日期太细看不清 → 换成宋体 500、稍大一点、颜色加深 */
+    font-family:var(--dp-serif);font-weight:500;font-size:13px;letter-spacing:.14em;color:#6d6aa6;white-space:nowrap
   }
   #dpage.compass-page .cp-sky .cp-sky-card .md{
     display:inline-flex;align-items:center;gap:5px;height:26px;box-sizing:border-box;padding:0 11px;border-radius:13px;
@@ -15016,7 +15017,7 @@ window.Guide = (function () {
             : "") +
           "</div>" +
           (r.kind === "answer"
-            ? '<span class="kd"><i aria-hidden="true">✦</i>' + esc0(dpT("来自今天的问题", "From today’s question")) + "</span>"
+            ? '<span class="kd"><i aria-hidden="true">✦</i>' + esc0(dpT("来自那天的问题", "From that day’s question")) + "</span>"
             : "") +
           (t ? '<p class="bd">' + esc0(t) + "</p>" : "") +
           (showQ
