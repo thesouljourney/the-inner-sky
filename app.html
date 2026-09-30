@@ -2463,6 +2463,11 @@
   }
   #dpage.thread-page .ch-reader .rule{width:auto;height:auto;background:none}
   #dpage.thread-page .ch-reader .rule::before{content:"·　·　·"}
+  /* 用户:三个点不明显 → 放大、加深成香槟金 */
+  #dpage.thread-page .ch-reader .rule,#dpage.thread-page .ch-reader .dots,
+  #dpage.thread-page .ch-slot .rule,#dpage.thread-page .ch-slot .dots{
+    font-size:26px;font-weight:700;letter-spacing:.06em;color:rgba(176,132,62,.8)
+  }
   /* 中文长文的舒服行长:比外框窄一截 */
   #dpage.thread-page .ch-reader .bd{
     max-width:min(100%,680px);margin:0 auto;text-align:left;
@@ -2747,6 +2752,11 @@
       letter-spacing:.1em;color:rgba(154,106,52,.42);line-height:1;text-align:center
     }
     #dpage.thread-page .ch-slot .rule::before{content:"·　·　·"}
+    /* 用户:三个点不明显 → 放大、加深成香槟金 */
+    #dpage.thread-page .ch-reader .rule,#dpage.thread-page .ch-reader .dots,
+    #dpage.thread-page .ch-slot .rule,#dpage.thread-page .ch-slot .dots{
+      font-size:26px;font-weight:700;letter-spacing:.06em;color:rgba(176,132,62,.8)
+    }
     #dpage.thread-page .ch-slot .bd{
       max-width:100%;margin:0 auto;text-align:left;
       font-family:var(--dp-serif);font-size:15px;line-height:1.95;color:#2c2d48;font-weight:400
