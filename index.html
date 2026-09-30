@@ -240,6 +240,20 @@ header.site { position: relative; z-index: 5; }
 .here-card img { width: 100%; max-width: 190px; aspect-ratio: 1; object-fit: contain; margin-bottom: 10px; }
 .here-card h3 { font-family: var(--font-serif-sc); font-weight: 600; font-size: 18px; letter-spacing: .1em; color: var(--ink); }
 .here-card p { text-wrap: balance; margin-top: 10px; font-size: 13px; line-height: 1.85; color: var(--mut); }
+/* 依用户参考图:标题下一行副标;卡片是暖象牙到淡蜜桃的渐层 + 淡金细边,
+   正文深一点、依设计断行(手机也保留),底部一枚「— ✦ —」金色小饰 */
+.here-sub { margin-top: 10px; text-align: center; font-family: var(--font-serif-sc); font-size: 14px; letter-spacing: .1em; color: #6d6680; }
+.here .sec-title .st { font-size: 13px; color: #c9a061; }
+.here-card {
+  background: linear-gradient(180deg, rgba(255,252,247,.94), rgba(252,240,232,.9));
+  border: 1px solid rgba(226,202,170,.7);
+  box-shadow: 0 14px 30px rgba(120,80,90,.08), inset 0 1px 0 rgba(255,255,255,.9);
+}
+.here-card h3 { color: #23264f; }
+.here-card p { color: #4a4760; }
+.here-card .orn { display: flex; align-items: center; gap: 6px; margin-top: 14px; font-size: 10px; line-height: 1; color: #c9a061; }
+.here-card .orn i { display: block; width: 26px; height: 1px; background: linear-gradient(90deg, rgba(201,160,97,0), rgba(201,160,97,.7)); }
+.here-card .orn i:last-child { background: linear-gradient(90deg, rgba(201,160,97,.7), rgba(201,160,97,0)); }
 
 /* ============================================================
    你的空间:星空 / 内在指南 / 记录 / 收藏
@@ -412,8 +426,12 @@ footer.site { position: relative; overflow: hidden; background: linear-gradient(
   .here-card { padding: 12px 6px 16px; border-radius: 16px; }
   .here-card img { max-width: 96px; margin-bottom: 6px; }
   .here-card h3 { font-size: 14px; letter-spacing: .06em; }
-  .here-card p { margin-top: 6px; font-size: 10.5px; line-height: 1.7; }
-  .here-card p br { display: none; }
+  /* 依设计手动断行(<br>),每一行不再自动折;很窄的手机字跟着萤幕宽度缩一点,确保一行放得下 */
+  .here-card p { margin-top: 6px; font-size: min(10px, 2.6vw); line-height: 1.75; letter-spacing: 0; white-space: nowrap; text-wrap: nowrap; }
+  .here-card { padding-left: 3px; padding-right: 3px; }
+  .here-sub { margin-top: 6px; font-size: 12px; letter-spacing: .06em; }
+  .here-card .orn { margin-top: 10px; font-size: 8px; }
+  .here-card .orn i { width: 18px; }
 
   .spaces { padding: 22px 0 0; }
   .row { gap: 14px; margin-bottom: 14px; }
@@ -557,21 +575,22 @@ var APP_URL = "app.html";
   <section class="here">
     <div class="wrap">
       <h2 class="sec-title"><span class="st" aria-hidden="true">✦</span>在这里，你可以<span class="st" aria-hidden="true">✦</span></h2>
+      <p class="here-sub">慢慢认识自己，也慢慢把生命串起来</p>
       <div class="here-grid">
         <a class="here-card" href="app.html#/reading" data-app-hash="#/reading">
           <img src="assets/landing/know.webp" alt="" loading="lazy">
           <h3>认识自己</h3>
-          <p>从星盘与主题里，<br>理解你的性格、模式<br>与潜在可能。</p>
+          <p>从星盘与主题里，<br>理解你的性格、<br>模式与潜在可能</p><span class="orn" aria-hidden="true"><i></i>✦<i></i></span>
         </a>
         <a class="here-card" href="app.html#/map" data-app-hash="#/map">
           <img src="assets/landing/connect.webp" alt="" loading="lazy">
           <h3>连接经历</h3>
-          <p>把散落的片段连成线，<br>看见更完整的<br>人生脉络。</p>
+          <p>把散落的片段连成线，<br>看见更完整的<br>人生脉络</p><span class="orn" aria-hidden="true"><i></i>✦<i></i></span>
         </a>
         <a class="here-card" href="app.html#/records" data-app-hash="#/records">
           <img src="assets/landing/keep.webp" alt="" loading="lazy">
           <h3>留下自己</h3>
-          <p>记录你的感受、问题<br>与重要的时刻，<br>写给未来的自己。</p>
+          <p>记录你的感受、问题<br>与重要的时刻，<br>写给未来的自己</p><span class="orn" aria-hidden="true"><i></i>✦<i></i></span>
         </a>
       </div>
     </div>
