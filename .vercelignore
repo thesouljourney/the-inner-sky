@@ -1,0 +1,20 @@
+# 部署时不上传的东西(还是留在 repo 里,只是不进 Vercel 的部署档)。
+# 每次推送都会产生一个部署,这些档案原本每次都会跟着占一份 storage。
+
+# 原始高解析 PNG:网站只读 .webp 版本(assets/**/sm、art 等),
+# 页面与 JS 里没有任何一处引用 .png
+assets/**/*.png
+assets/*.png
+
+# 开发 / 设计 / 测试用,网站不会读取
+design/
+docs/
+tools/
+tests/
+github.md
+
+# 旧版或备份页面(网站入口是 index.html 与 app.html)
+*.html.html
+index3.html
+index_v2.html
+我的星空.dc.html

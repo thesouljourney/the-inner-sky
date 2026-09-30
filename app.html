@@ -2936,7 +2936,7 @@
   }
   #dpage.thread-page .thread-close .rf-v2 h3.rt{
     font-family:var(--dp-serif);font-weight:600;
-    font-size:clamp(26px,3vw,34px);letter-spacing:.06em;color:#22233a
+    font-size:clamp(21px,2.4vw,27px);letter-spacing:.06em;color:#22233a
   }
   #dpage.thread-page .thread-close .rf-rule{
     display:flex;align-items:center;justify-content:center;gap:12px;
@@ -2970,7 +2970,7 @@
   #dpage.thread-page .thread-close .rf-q p{
     position:relative;margin:0;text-align:center;text-wrap:balance;
     font-family:var(--dp-serif);font-weight:600;
-    font-size:clamp(20px,2.3vw,26px);line-height:1.75;letter-spacing:.04em;color:#2e2a5c
+    font-size:clamp(17px,1.9vw,21px);line-height:1.75;letter-spacing:.04em;color:#2e2a5c
   }
   #dpage.thread-page .thread-close .rf-q .orb{
     position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none;
@@ -3015,7 +3015,7 @@
   #dpage.thread-page .thread-close .rf-v2 + .post{margin-top:clamp(26px,3.4vw,40px)}
   @media(max-width:767px){
     #dpage.thread-page .thread-close .rf-bd{font-size:15.5px;line-height:2}
-    #dpage.thread-page .thread-close .rf-q p{font-size:20px}
+    #dpage.thread-page .thread-close .rf-q p{font-size:17px}
   }
 
   /* ============================================================
@@ -12936,8 +12936,13 @@ window.Guide = (function () {
       if (e.target === rest && e.propertyName === "max-height" && rest.classList.contains("on"))
         rest.style.maxHeight = "none";
     });
+    /* 展开当下按钮在视窗里的位置。「收起」时把画面带回这里 ——
+       不然读完长长的正文再收起,人会停在页面下方(用户反馈)。 */
+    let openTop = null;
     btn.addEventListener("click", function () {
       const on = !rest.classList.contains("on");
+      if (on) openTop = btn.getBoundingClientRect().top;
+      const shrink = on ? 0 : rest.offsetHeight;   // 收起后按钮会往上移这么多
       rest.classList.toggle("on", on);
       btn.setAttribute("aria-expanded", on ? "true" : "false");
       btn.classList.toggle("open", on);
@@ -12945,7 +12950,14 @@ window.Guide = (function () {
       btn.querySelector(".cv").textContent = on ? "↑" : "↓";
       // 收起时要先回到当前实际高度再归零,否则从 none 直接跳 0 不会有过渡
       rest.style.maxHeight = rest.scrollHeight + "px";
-      if (!on) { rest.getBoundingClientRect(); rest.style.maxHeight = "0px"; }
+      if (!on) {
+        rest.getBoundingClientRect(); rest.style.maxHeight = "0px";
+        // 收完之后按钮的位置 = 现在的位置 - 正文高度;把它卷回展开时在视窗里的那个高度
+        const want = openTop === null ? 96 : Math.max(72, openTop);
+        const y = window.scrollY + btn.getBoundingClientRect().top - shrink - want;
+        const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion:reduce)").matches;
+        window.scrollTo({ top: Math.max(0, y), behavior: reduce ? "auto" : "smooth" });
+      }
     });
   }
 
