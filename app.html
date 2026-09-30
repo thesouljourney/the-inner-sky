@@ -4208,15 +4208,13 @@
     background:rgba(236,226,238,.85);color:#4a4760;font-size:13px
   }
   /* 星盘洞察卡:小标 ✦ 星盘洞察 ——— INSIGHT。
-     底图换成用户给的淡紫星空卡(insight-bg.webp,已裁掉素材外围的粉色留白),
-     cover 铺满;圆角放大一点,盖住素材自带的圆角 */
+     底图是用户给的淡紫星空素材,cover 铺满 */
   #dpage.reading-page .dp-detail .rd-insight{
     margin-top:18px;padding:18px clamp(18px,2.8vw,28px) 20px;border-radius:22px;
-    /* 卡片是扁长的:cover 置中只会留下中间那片空白,四角的星与月都被裁掉。
-       改成贴顶,露出左上的星芒与右上的月亮 */
-    /* 用户:加一层白罩,让图退后、字更清楚 */
+    /* 底图再换成用户给的横幅星空(insight-bg2.webp,约 3:1,跟扁长的卡片比例接近),
+       置中铺满;白罩保留,让图退后、字更清楚 */
     background:linear-gradient(rgba(255,252,250,.45),rgba(255,252,250,.45)),
-      url(assets/reading/insight-bg.webp) center top / cover no-repeat,#efe6f2;
+      url(assets/reading/insight-bg2.webp) center / cover no-repeat,#efe6f2;
     border:1px solid rgba(214,178,140,.55)
   }
   #dpage.reading-page .dp-detail .rd-insight .hd{display:flex;align-items:center;gap:12px}
