@@ -5868,26 +5868,23 @@
   #dpage.compass-page .qm-left::before,
   #dpage.compass-page .qm-right::before,
   #dpage.compass-page .qm-bottom::before{
-    width:36px;height:36px;margin:-19px auto 1px;border-radius:50%;
-    border:1px solid rgba(214,190,150,.6);
-    box-shadow:0 4px 12px -4px rgba(120,96,140,.3),inset 0 1px 2px rgba(255,255,255,.9)
+    /* 用户:图示后面的圆形徽章拿掉,只留图示本身 */
+    width:36px;height:36px;margin:-19px auto 1px;border:0;box-shadow:none
   }
   #dpage.compass-page .qm-top::before{
-    background:url(assets/life/cp-mobile/qm-sun.webp) center / 74% no-repeat,
-      radial-gradient(circle at 40% 35%,#fffefb,#f6eee6 80%)
+    background:url(assets/life/cp-mobile/qm-sun.webp) center / 100% no-repeat
   }
   #dpage.compass-page .qm-left::before{
-    background:url(assets/life/cp-mobile/qm-moon.webp) center / 58% no-repeat,
-      radial-gradient(circle at 40% 35%,#fffefb,#f6eee6 80%)
+    background:url(assets/life/cp-mobile/qm-moon.webp) center / 80% no-repeat
   }
   #dpage.compass-page .qm-right::before{
-    background:url(assets/life/cp-mobile/qm-star.webp) center / 70% no-repeat,
-      radial-gradient(circle at 40% 35%,#fffefb,#f6eee6 80%)
+    background:url(assets/life/cp-mobile/qm-star.webp) center / 96% no-repeat
   }
   #dpage.compass-page .qm-bottom::before{
-    background:url(assets/life/cp-mobile/qm-cloud.webp) center / 78% auto no-repeat,
-      radial-gradient(circle at 40% 35%,#fffefb,#f6eee6 80%)
+    background:url(assets/life/cp-mobile/qm-cloud.webp) center / 100% auto no-repeat
   }
+  /* 云是横的,方框里会缩得很小:给它一个扁长的位子 */
+  #dpage.compass-page .qm-bottom::before{width:56px;height:24px;margin:-13px auto 2px}
   #dpage.compass-page .qm-cell b{font-size:13.5px}
   #dpage.compass-page .qm-cell span{font-size:10px;white-space:nowrap}
   #dpage.compass-page .qm-top{margin-bottom:8px}
@@ -5904,6 +5901,7 @@
     #dpage.compass-page .qm-left::before,
     #dpage.compass-page .qm-right::before,
     #dpage.compass-page .qm-bottom::before{width:48px;height:48px;margin:-25px auto 3px}
+    #dpage.compass-page .qm-bottom::before{width:74px;height:32px;margin:-17px auto 3px}
     #dpage.compass-page .qm-cell b{font-size:16px}
     #dpage.compass-page .qm-cell span{font-size:12px}
     #dpage.compass-page .qm-top{margin-bottom:14px}
