@@ -160,7 +160,7 @@ header.site { position: relative; z-index: 5; }
 .hero-copy .btn-primary { margin-top: 30px; }
 /* 「开启我的星空」(依用户参考图):半透明淡紫玻璃胶囊、一圈发光的淡金细边,
    左边一颗发光的四芒星,白色宋体字,右边细箭头 */
-.hero-copy .btn-primary, .thread-in .btn-primary {
+.hero-copy .btn-primary, .thread-in .btn-primary, .sky-card .btn-primary {
   gap: 8px; padding: 8px 18px 8px 15px; font-size: 13px; letter-spacing: .1em; color: #fff;
   background: linear-gradient(120deg, rgba(196,184,236,.42), rgba(170,156,220,.28) 55%, rgba(210,196,240,.36));
   border: 1px solid rgba(255,236,206,.75);
@@ -168,9 +168,9 @@ header.site { position: relative; z-index: 5; }
   text-shadow: 0 1px 8px rgba(60,40,110,.45);
   box-shadow: 0 0 0 1px rgba(255,236,206,.18), 0 0 18px rgba(255,230,190,.45), inset 0 0 18px rgba(255,255,255,.18), 0 10px 26px rgba(20,16,60,.35);
 }
-.hero-copy .btn-primary:hover, .thread-in .btn-primary:hover { box-shadow: 0 0 0 1px rgba(255,236,206,.28), 0 0 26px rgba(255,230,190,.6), inset 0 0 18px rgba(255,255,255,.22), 0 12px 30px rgba(20,16,60,.4); }
-.hero-copy .btn-primary .st, .thread-in .btn-primary .st { width: 13px; height: 13px; flex: none; fill: #fff6e2; filter: drop-shadow(0 0 5px rgba(255,226,170,.95)) drop-shadow(0 0 10px rgba(255,210,150,.6)); }
-.hero-copy .btn-primary .ar, .thread-in .btn-primary .ar { margin-left: 2px; font-family: var(--font-sans, sans-serif); }
+.hero-copy .btn-primary:hover, .thread-in .btn-primary:hover, .sky-card .btn-primary:hover { box-shadow: 0 0 0 1px rgba(255,236,206,.28), 0 0 26px rgba(255,230,190,.6), inset 0 0 18px rgba(255,255,255,.22), 0 12px 30px rgba(20,16,60,.4); }
+.hero-copy .btn-primary .st, .thread-in .btn-primary .st, .sky-card .btn-primary .st { width: 13px; height: 13px; flex: none; fill: #fff6e2; filter: drop-shadow(0 0 5px rgba(255,226,170,.95)) drop-shadow(0 0 10px rgba(255,210,150,.6)); }
+.hero-copy .btn-primary .ar, .thread-in .btn-primary .ar, .sky-card .btn-primary .ar { margin-left: 2px; font-family: var(--font-sans, sans-serif); }
 
 /* ============================================================
    主题九宫格
@@ -214,11 +214,11 @@ header.site { position: relative; z-index: 5; }
 /* 依用户参考图(桌机):标题分两行、放大、暖奶油色,外面绕一圈淡金轨道 + 一颗金色四芒星;
    说明分四行 */
 .thread-in h2 {
-  position: relative; display: inline-block; font-size: 54px; font-weight: 500; line-height: 1.32;
+  position: relative; isolation: isolate; display: inline-block; font-size: 54px; font-weight: 500; line-height: 1.32;
   letter-spacing: .12em; color: #f6ecdc; text-shadow: 0 2px 18px rgba(10,12,40,.4);
 }
 .thread-in h2::before {
-  content: ""; position: absolute; left: -14%; right: -26%; top: -16%; bottom: -18%; pointer-events: none;
+  content: ""; position: absolute; z-index: -1; left: -14%; right: -26%; top: -16%; bottom: -18%; pointer-events: none;
   transform: rotate(-9deg);
   background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 200' preserveAspectRatio='none'%3E%3Cpath d='M300 12C380 26 404 70 360 118C310 172 170 196 80 180C10 168 -6 128 30 92' fill='none' stroke='%23d8b77a' stroke-width='1.2' vector-effect='non-scaling-stroke' opacity='.8'/%3E%3C/svg%3E") center / 100% 100% no-repeat;
 }
@@ -292,6 +292,8 @@ header.site { position: relative; z-index: 5; }
 .guide-copy p { max-width: 250px; }
 .sky-copy { align-self: start; padding-top: 18px; }
 .sky-card h3 { font-size: 26px; letter-spacing: .12em; color: #fbf6ff; text-shadow: 0 2px 12px rgba(10,12,40,.5); }
+.sky-card h3 + p { margin-top: 18px; }
+.sky-card .btn-primary { margin-top: 18px; }
 .sky-card .btn-ghost { margin: 18px 0 18px; border-color: rgba(230,200,135,.75); color: #f7efdc; background: rgba(20,22,60,.25); }
 .sky-card p { max-width: 230px; text-wrap: balance; font-size: 12.5px; line-height: 1.9; color: #ece6fb; text-shadow: 0 1px 8px rgba(12,14,48,.85); }
 .sky-rule { display: flex; align-items: center; gap: 8px; width: 170px; margin-top: 16px; color: var(--gold-2); font-size: 11px; }
@@ -402,8 +404,12 @@ footer.site { position: relative; overflow: hidden; background: linear-gradient(
   .hero-rule { margin: 16px 0 14px; width: 44px; }
   .hero-sub { font-size: 14px; letter-spacing: .06em; }
   .hero-copy .btn-primary { margin-top: 22px; }
-  .hero-copy .btn-primary, .thread-in .btn-primary { padding: 6px 14px 6px 12px; font-size: 11.5px; gap: 6px; }
-  .hero-copy .btn-primary .st, .thread-in .btn-primary .st { width: 11px; height: 11px; }
+  .hero-copy .btn-primary, .thread-in .btn-primary, .sky-card .btn-primary { padding: 6px 14px 6px 12px; font-size: 11.5px; gap: 6px; }
+  .hero-copy .btn-primary .st, .thread-in .btn-primary .st, .sky-card .btn-primary .st { width: 11px; height: 11px; }
+  .sky-card h3 + p { margin-top: 12px; }
+  /* 左栏只有约 135px:按钮保持一行,可以往右伸进星盘那一侧,压在星盘上面 */
+  .sky-card .btn-primary { margin-top: 12px; white-space: nowrap; letter-spacing: .06em; }
+  .sky-card .sky-copy { z-index: 2; }
 
   .sec-title { font-size: 21px; gap: 10px; }
   .sec-title .st { font-size: 12px; }
@@ -448,7 +454,8 @@ footer.site { position: relative; overflow: hidden; background: linear-gradient(
   .sky-card p { font-size: 10.5px; line-height: 1.8; }
   .sky-rule { width: 110px; margin-top: 10px; }
   .sky-arch { width: 50%; bottom: -6%; }
-  .sky-wheel { max-width: 250px; margin: -8px -26px -8px -6px; }
+  /* 手机星盘放大:宽度由右栏决定,所以让它往两侧多伸一些,而不是只拉 max-width */
+  .sky-wheel { width: calc(100% + 34px); max-width: none; margin: -12px -18px -12px -16px; }
   .guide-copy p { font-size: 11.5px; margin: 10px 0 16px; }
   .guide-copy p br:nth-of-type(n+2) { display: none; }
   .btn-soft { font-size: 12px; padding: 8px 14px; }
@@ -606,9 +613,9 @@ var APP_URL = "app.html";
         <div class="card sky-card">
           <div class="sky-copy">
             <h3>我的星空 <span class="st" aria-hidden="true">✦</span></h3>
-            <a class="btn-ghost" href="app.html#/my-sky" data-app-hash="#/my-sky">查看我的星空 <span aria-hidden="true">→</span></a>
             <p>每个人的星空都是独一无二的，<br>它记录了你与这个世界相遇的那一刻。</p>
             <span class="sky-rule" aria-hidden="true">✦</span>
+            <a class="btn-primary" href="app.html#/my-sky" data-app-hash="#/my-sky"><svg class="st" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 0C10.6 6.6 13.4 9.4 20 10 13.4 10.6 10.6 13.4 10 20 9.4 13.4 6.6 10.6 0 10 6.6 9.4 9.4 6.6 10 0Z"/></svg>查看我的星空 <span class="ar" aria-hidden="true">→</span></a>
           </div>
           <img class="sky-arch" src="assets/landing/about.webp" alt="" loading="lazy">
           <!-- 星盘由 assets/inner-sky-chart.js 渲染使用者自己的那一张;没有资料就画空盘 -->
