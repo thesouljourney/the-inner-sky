@@ -3415,18 +3415,19 @@
   }
   #dpage.thread-page .thread-chapters .ch-card{
     position:relative;overflow:hidden;isolation:isolate;
-    padding:clamp(22px,2.8vw,32px) 44% clamp(22px,2.8vw,30px) clamp(22px,3.4vw,44px);
+    /* 用户:跟章节卡一样,文字 60 : 图片 40 */
+    padding:clamp(22px,2.8vw,32px) calc(40% + 14px) clamp(22px,2.8vw,30px) clamp(22px,3.4vw,44px);
     min-height:clamp(200px,22vw,260px);
     background:linear-gradient(180deg,rgba(255,253,250,.8),rgba(252,249,245,.68));
     border:1px solid rgba(201,178,140,.24);border-radius:22px
   }
   #dpage.thread-page .thread-chapters .ch-card > *{position:relative;z-index:1}
   #dpage.thread-page .thread-chapters .ch-card .art{
-    position:absolute;z-index:0;top:0;bottom:0;right:0;width:46%;pointer-events:none;
+    position:absolute;z-index:0;top:0;bottom:0;right:0;width:40%;pointer-events:none;
     /* 三张都是满版插画:铺满卡片右侧,往文字那边淡出 */
     background:url(assets/life/thread/step-1-desk.webp) center / cover no-repeat;
-    -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 30%);
-            mask-image:linear-gradient(90deg,transparent 0,#000 30%)
+    -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 22%);
+            mask-image:linear-gradient(90deg,transparent 0,#000 22%)
   }
   #dpage.thread-page .thread-chapters .ch-card .art.s2{background-image:url(assets/life/thread/step-2-window.webp)}
   #dpage.thread-page .thread-chapters .ch-card .art.s3{background-image:url(assets/life/thread/step-3-armillary.webp)}
@@ -3466,8 +3467,8 @@
   @media(max-width:767px){
     #dpage.thread-page .thread-intro .a{font-size:19px;letter-spacing:.04em}
     #dpage.thread-page .thread-bridge .moon-art{width:84px;right:-4px;top:-14px;opacity:.9}
-    #dpage.thread-page .thread-chapters .ch-card{padding:20px 40% 20px 18px;min-height:210px;border-radius:18px}
-    #dpage.thread-page .thread-chapters .ch-card .art{width:48%}
+    #dpage.thread-page .thread-chapters .ch-card{padding:20px calc(40% + 10px) 20px 18px;min-height:210px;border-radius:18px}
+    #dpage.thread-page .thread-chapters .ch-card .art{width:40%}
     #dpage.thread-page .thread-chapters .ch-card .t{font-size:16px}
     #dpage.thread-page .thread-chapters .ch-card .pv{font-size:12.5px;line-height:1.8}
     #dpage.thread-page .thread-chapters .ch-card .ch-keys li{font-size:12px;line-height:1.7}
