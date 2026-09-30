@@ -4765,14 +4765,14 @@
      CSS opacity 调整整层透明度)——这样蒙版颜色是画死的白,不会跟着
      底下随便什么颜色变,底色也能安心退回原本站内共用的米色
      --dp-cream,不用再另外配一个跟图片混出来的紫灰色。 */
+  /* 用户要求:底图跟卡片一起卷动 —— 不再 position:fixed,改成铺满整页、
+     满版宽往下重复(跟生命蓝图同一个做法)。compass-bg-tile.webp 是
+     「原图 + 上下翻转」接成的一张,重复时接缝对得上。白罩不变。 */
   #dpage.compass-page::before{
-    content:"";position:fixed;top:-160px;left:0;right:0;bottom:-200px;z-index:0;pointer-events:none;
+    content:"";position:absolute;inset:0;z-index:0;pointer-events:none;
     background:
       linear-gradient(rgba(255,255,255,.62),rgba(255,255,255,.62)),
-      url("assets/life/compass-bg.webp") center top / cover no-repeat;
-    /* cover 已经填满,再放大就得用 transform——盖住的范围更大,
-       裁掉更多四周,图案本身在画面上看起来更大、更近。 */
-    transform:scale(1.25);transform-origin:center top
+      url("assets/life/compass-bg-tile.webp") center top / 100% auto repeat-y
   }
   #dpage.compass-page > *{position:relative;z-index:1}
   /* 账号选单开着的时候要盖住底下所有内容——同一个老问题,同一个补丁 */
@@ -5849,9 +5849,6 @@
     #dpage.compass-page .qm-bottom::after{bottom:-30px;width:128px;height:198px;background-size:305px auto}
     #dpage.compass-page .cp-wheel-core::after{left:-56px}
     #dpage.compass-page .qm-bottom::after{right:-56px}
-    /* 整页底纹:同一张晨光云海图是直式的,宽萤幕用 cover 只会裁到最上面
-       那段偏紫的天空;改成对准中段的夕阳与云海,跟手机上看到的色调一致 */
-    #dpage.compass-page::before{background-position:center,center 47%;transform:none}
   }
   @media(max-width:767px){
     #dpage.compass-page .cp-lead{font-size:14.5px}
