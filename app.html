@@ -13522,12 +13522,25 @@ window.Guide = (function () {
         if (e.target !== full || e.propertyName !== "max-height") return;
         if (full.classList.contains("on")) full.style.maxHeight = "none";
       });
+      /* 展开当下这一段在视窗里的位置。「收起」时把画面带回这里 ——
+         以前是收起时直接 focus 按钮,浏览器趁正文还没收完就自己卷动,
+         结果停在页面下方或下一段(用户反馈)。这一段的顶端在正文上面,
+         收合不会动到它,所以量到的就是终点。 */
+      let openTop = null;
       const set = function (on) {
+        if (on) openTop = sec.getBoundingClientRect().top;
         sec.classList.toggle("open", on);
         full.classList.toggle("on", on);
         open.setAttribute("aria-expanded", on ? "true" : "false");
         full.style.maxHeight = full.scrollHeight + "px";
-        if (!on) { full.getBoundingClientRect(); full.style.maxHeight = "0px"; open.focus(); }
+        if (!on) {
+          full.getBoundingClientRect(); full.style.maxHeight = "0px";
+          open.focus({ preventScroll: true });
+          const want = openTop === null ? 96 : Math.max(72, openTop);
+          const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion:reduce)").matches;
+          window.scrollTo({ top: Math.max(0, window.scrollY + sec.getBoundingClientRect().top - want),
+                            behavior: reduce ? "auto" : "smooth" });
+        }
       };
       open.addEventListener("click", function () { set(true); });
       if (shut) shut.addEventListener("click", function () { set(false); });
