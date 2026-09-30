@@ -1,10 +1,8 @@
 # 部署时不上传的东西(还是留在 repo 里,只是不进 Vercel 的部署档)。
 # 每次推送都会产生一个部署,这些档案原本每次都会跟着占一份 storage。
 
-# 原始高解析 PNG:网站只读 .webp 版本(assets/**/sm、art 等),
-# 页面与 JS 里没有任何一处引用 .png
-assets/**/*.png
-assets/*.png
+# (没用到的原始高解析 PNG 已经从 repo 删掉了。唯一还在用的 PNG 是
+#  assets/section-bg.png —— 首页的 assets/inner-sky-chart.css 拿它当背景,不能排除)
 
 # 开发 / 设计 / 测试用,网站不会读取
 design/
