@@ -12842,8 +12842,8 @@ window.Guide = (function () {
       '<span class="tx">' + dpT("从这里开始", "Where To Start") + '</span>' +
       '<span class="ln"></span><span class="en" aria-hidden="true">✦</span></div>' +
       '<p class="dp-start-lead">' +
-      dpT("不必全部改变。<br>先挑一件现在做得到的，就够了。",
-          "You don’t have to change it all.<br>One thing you can do now is enough.") + "</p>" +
+      dpT("不必全部改变<br>先挑一件现在做得到的，就够了",
+          "You don’t have to change it all<br>One thing you can do now is enough") + "</p>" +
       '<div class="ch-cards">' +
       steps.map(function (st, i) {
         const d = dpLead(st, pv && pv["a" + i]);
@@ -12936,8 +12936,8 @@ window.Guide = (function () {
        只在前后各加一句过场 —— 让它读起来像一次落地,不是又一个方框。 */
     if (data.question)
       t += '<div class="thread-close"><p class="pre">' +
-        dpT('在离开这一页以前，<span class="l2">有一个问题，想留给现在的你。</span>',
-            'Before you leave this page, <span class="l2">one question, for the you of right now.</span>') + "</p>" +
+        dpT('在离开这一页以前，<span class="l2">有一个问题，想留给现在的你</span>',
+            'Before you leave this page, <span class="l2">one question, for the you of right now</span>') + "</p>" +
         dpThreadReflectHtml(data.question) +
         '<p class="post">' + dpT("不需要马上回答", "It doesn’t need an answer today") +
         '<span class="l2">' + dpT("有些答案，会慢慢长出来",
