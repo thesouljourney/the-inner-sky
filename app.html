@@ -5565,7 +5565,8 @@
     }
     #dpage.compass-page .cp-startfrom{
       position:relative;display:flex;order:8;flex-direction:column;align-items:center;gap:6px;
-      text-align:center;margin:20px 0 26px;padding:40px 0
+      /* 用户:整段(含上面那条分隔线)往下移;下面那条分隔线拿掉,底部内距跟着收 */
+      text-align:center;margin:44px 0 18px;padding:40px 0 14px
     }
     /* 天空从这里开始慢慢安静下来:往下一路铺到四张卡底下,盖过中间
        卡与卡的缝隙,让卡片区变成视觉主角,而不是天空/罗盘/卡片素材
@@ -6252,6 +6253,8 @@
     background:url(assets/life/cp-mobile/divider.webp) center / contain no-repeat
   }
   #dpage.compass-page .cp-ask-card .mk{width:150px;height:14px}
+  /* 「从一个方向开始」只留标题上面那一条分隔线,副标题下面那条拿掉(用户要求) */
+  #dpage.compass-page .cp-startfrom span::after{content:none}
   /* 三句以上时仍是缩短版:只取中间那颗星附近 */
   #dpage.compass-page .cp-lines:has(> p:nth-child(3)) > p + p::before{
     width:90px;height:12px;background-size:auto 100%
