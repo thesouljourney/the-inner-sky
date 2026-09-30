@@ -2466,7 +2466,8 @@
   /* 中文长文的舒服行长:比外框窄一截 */
   #dpage.thread-page .ch-reader .bd{
     max-width:min(100%,680px);margin:0 auto;text-align:left;
-    font-size:16px;line-height:2.05;color:#2c2d48;font-weight:300
+    /* 用户:详细解读的字体与字级跟上面的引子(.pv)一样 —— 宋体 400 */
+    font-family:var(--dp-serif);font-size:clamp(15.5px,1.6vw,17.5px);line-height:2.05;color:#2c2d48;font-weight:400
   }
   #dpage.thread-page .ch-reader .bd p{margin:0 0 22px}
   #dpage.thread-page .ch-reader .bd p:last-child{margin-bottom:0}
@@ -2748,7 +2749,7 @@
     #dpage.thread-page .ch-slot .rule::before{content:"·　·　·"}
     #dpage.thread-page .ch-slot .bd{
       max-width:100%;margin:0 auto;text-align:left;
-      font-size:15.5px;line-height:1.9;color:#2c2d48;font-weight:300
+      font-family:var(--dp-serif);font-size:15px;line-height:1.95;color:#2c2d48;font-weight:400
     }
     #dpage.thread-page .ch-slot .bd p{margin:0 0 17px}
     #dpage.thread-page .ch-slot .bd p:last-child{margin-bottom:0}
