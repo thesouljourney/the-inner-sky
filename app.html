@@ -4288,6 +4288,120 @@
   }
 
   /* ============================================================
+     生命蓝图 · 五章卡片 v4(用户参考图 + 用户给的六张素材)
+     ------------------------------------------------------------
+     右上角月亮星环(rd-moon-lg)、编号「01 ✦ ———」、大标题、小的「— ✦ —」、
+     摘要逐句换行 → 金色星芒分隔线(rd-divider)→「继续探索」(左边一组星芒 rd-spark3b)
+     → 下一章预告小卡(rd-moon-sm 插画 + 「继续阅读 →」)→ 上 / 下一个主题
+     ============================================================ */
+  #dpage.reading-page .dp-detail::before,
+  #dpage.reading-page .dp-detail::after,
+  #dpage.reading-page .dp-detail .dp-read::after{content:none}
+  #dpage.reading-page .dp-detail .rd-hd{border-top:0;margin-top:14px;padding-top:26px}
+  #dpage.reading-page .dp-detail .rd-deco.rd-moon{
+    right:-34px;top:-8px;width:clamp(200px,34vw,300px);aspect-ratio:620/521;
+    background:url(assets/reading/rd-moon-lg.webp) center / contain no-repeat;opacity:.95;
+    -webkit-mask-image:radial-gradient(ellipse 70% 70% at 62% 44%,#000 55%,transparent 100%);
+            mask-image:radial-gradient(ellipse 70% 70% at 62% 44%,#000 55%,transparent 100%)
+  }
+  #dpage.reading-page .dp-detail .rd-sp{
+    position:absolute;z-index:0;pointer-events:none;right:14px;top:clamp(150px,22vw,200px);width:40px;aspect-ratio:360/385;
+    background:url(assets/reading/rd-spark3a.webp) center / contain no-repeat;opacity:.9
+  }
+  #dpage.reading-page .dp-detail .rd-no{
+    display:flex;align-items:center;gap:12px;font-family:var(--dp-display);font-weight:600;
+    font-size:clamp(20px,2.2vw,24px);letter-spacing:.1em;color:#6f6aa0
+  }
+  #dpage.reading-page .dp-detail .rd-no .s{
+    display:block;flex:none;width:18px;height:20px;background:url(assets/reading/rd-star.webp) center / contain no-repeat
+  }
+  #dpage.reading-page .dp-detail .rd-no .l{
+    display:block;width:min(48%,260px);height:1px;background:linear-gradient(90deg,rgba(196,160,98,.6),rgba(196,160,98,0))
+  }
+  #dpage.reading-page .dp-detail .rd-hd h3.dp-h{
+    margin-top:14px;font-size:clamp(24px,2.8vw,30px);letter-spacing:.08em;color:#1b2146;padding-right:clamp(110px,24vw,220px)
+  }
+  #dpage.reading-page .dp-detail .rd-cap{margin:14px 0 22px}
+  #dpage.reading-page .dp-detail .rd-cap .st i{width:22px}
+  #dpage.reading-page .dp-detail .rd-sum{
+    font-size:clamp(15px,1.5vw,16.5px)!important;line-height:2;letter-spacing:.04em;color:#2c2e46;padding:0 0 20px!important
+  }
+  /* 继续探索:上面一条金色星芒线,左边一组星芒,不再是紫色圆标与右侧圆箭头 */
+  #dpage.reading-page .dp-detail .fold-btn{
+    border-top:0;margin-top:8px;padding:34px 0 6px;column-gap:16px;
+    background:url(assets/reading/rd-divider.webp) center top / min(100%,420px) auto no-repeat
+  }
+  #dpage.reading-page .dp-detail .fold-btn .ic{
+    width:52px;height:52px;border-radius:0;box-shadow:none;font-size:0;color:transparent;
+    background:url(assets/reading/rd-spark3b.webp) center / contain no-repeat
+  }
+  #dpage.reading-page .dp-detail .fold-btn .tx{font-size:19px;font-weight:700;letter-spacing:.08em;color:#1b2146}
+  #dpage.reading-page .dp-detail .fold-btn .sb{font-size:13px;letter-spacing:.06em;color:#8a82a6}
+  #dpage.reading-page .dp-detail .fold-btn .cv{background:none;width:auto;height:auto;color:#8a82a6}
+  #dpage.reading-page .dp-detail .fold-btn:not(.open) .cv{display:none}
+  /* 下一章预告小卡 */
+  #dpage.reading-page .dp-detail .rd-next{
+    position:relative;overflow:hidden;isolation:isolate;margin-top:20px;padding:22px 22px 20px;border-radius:22px;
+    background:linear-gradient(120deg,rgba(252,244,234,.95),rgba(250,242,240,.9));
+    border:1px solid rgba(222,186,140,.55);box-shadow:0 12px 30px -22px rgba(80,60,40,.35)
+  }
+  #dpage.reading-page .dp-detail .rd-next > *{position:relative;z-index:1}
+  #dpage.reading-page .dp-detail .rd-next > .art{
+    position:absolute;z-index:0;right:-18px;top:-10px;width:62%;height:120%;pointer-events:none;
+    background:url(assets/reading/rd-moon-sm.webp) right top / contain no-repeat;opacity:.9;
+    -webkit-mask-image:linear-gradient(90deg,transparent,#000 40%);mask-image:linear-gradient(90deg,transparent,#000 40%)
+  }
+  #dpage.reading-page .dp-detail .rd-next .rd-no{font-size:18px}
+  #dpage.reading-page .dp-detail .rd-next .rd-no .s{width:14px;height:16px}
+  #dpage.reading-page .dp-detail .rd-next .t{
+    display:block;margin-top:12px;font-family:var(--dp-serif);font-weight:700;font-size:21px;letter-spacing:.08em;color:#1b2146
+  }
+  #dpage.reading-page .dp-detail .rd-next .p{
+    margin:12px 0 0;max-width:70%;font-family:var(--dp-serif);font-size:13.5px;line-height:1.95;color:#3a3c56
+  }
+  #dpage.reading-page .dp-detail .rd-next .go{
+    display:inline-flex;align-items:center;gap:10px;margin-top:14px;float:right;
+    min-height:40px;padding:0 20px;border-radius:999px;text-decoration:none;
+    background:rgba(244,238,252,.92);border:1px solid rgba(196,180,226,.7);
+    font-family:var(--dp-serif);font-size:14px;letter-spacing:.1em;color:#4a4478;
+    box-shadow:0 6px 14px -8px rgba(90,70,150,.35)
+  }
+  #dpage.reading-page .dp-detail .rd-next::after{content:"";display:block;clear:both}
+  /* 上 / 下一个主题:没有底色,上面一条细线、中间一条竖线,两端细箭头,章名要看得到 */
+  #dpage.reading-page .dp-detail .dp-chnav{
+    margin-top:22px;border:0;border-top:1px solid rgba(201,178,140,.45);border-radius:0;background:none;box-shadow:none
+  }
+  #dpage.reading-page .dp-detail .dp-chnav > *{padding:16px 8px 6px 44px;min-height:0}
+  #dpage.reading-page .dp-detail .dp-chnav > .nx{padding:16px 44px 6px 8px}
+  #dpage.reading-page .dp-detail .dp-chnav > .pv::after,
+  #dpage.reading-page .dp-detail .dp-chnav > .nx::after{
+    width:auto;height:auto;background:none;color:#3d3f6e;font-size:22px;top:calc(50% + 5px)
+  }
+  #dpage.reading-page .dp-detail .dp-chnav > .pv::after{left:4px}
+  #dpage.reading-page .dp-detail .dp-chnav > .nx::after{right:4px}
+  #dpage.reading-page .dp-detail .dp-chnav > .nx::before{top:18px;bottom:6px;background:rgba(201,178,140,.5)}
+  #dpage.reading-page .dp-detail .dp-chnav .lb{font-size:11.5px;letter-spacing:.1em;color:#8a82a6}
+  #dpage.reading-page .dp-detail .dp-chnav .tt{display:block;font-family:var(--dp-serif);font-weight:700;font-size:15px;color:#1b2146}
+  @media(min-width:900px){
+    #dpage.reading-page .dp-detail .rd-sum{padding-right:170px!important}
+  }
+  @media(max-width:767px){
+    #dpage.reading-page .dp-detail .rd-deco.rd-moon{width:190px;right:-40px;top:-4px}
+    #dpage.reading-page .dp-detail .rd-hd h3.dp-h{font-size:23px;padding-right:96px}
+    #dpage.reading-page .dp-detail .rd-sum{font-size:14.5px!important}
+    #dpage.reading-page .dp-detail .fold-btn .tx{font-size:17px}
+    #dpage.reading-page .dp-detail .fold-btn .sb{font-size:11.5px}
+    #dpage.reading-page .dp-detail .fold-btn .ic{width:44px;height:44px}
+    #dpage.reading-page .dp-detail .rd-next{padding:18px 16px 16px}
+    #dpage.reading-page .dp-detail .rd-next .t{font-size:18px}
+    #dpage.reading-page .dp-detail .rd-next .p{max-width:none;font-size:12.5px}
+    #dpage.reading-page .dp-detail .rd-next .go{font-size:13px;min-height:36px;padding:0 16px}
+    #dpage.reading-page .dp-detail .dp-chnav > *{padding:14px 6px 4px 34px}
+    #dpage.reading-page .dp-detail .dp-chnav > .nx{padding:14px 34px 4px 6px}
+    #dpage.reading-page .dp-detail .dp-chnav .tt{display:block;font-size:14px}
+  }
+
+  /* ============================================================
      我的收藏(#/favorites)—— 专属 hero 实景
      ------------------------------------------------------------
      跟生命蓝图那页同一个做法:hero 换成用户给的实景图,上面叠一层
@@ -13756,17 +13870,6 @@ window.Guide = (function () {
         return x.title || ((window.I18N.isEN() ? "Chapter " : "第" + "一二三四五"[i]) + (window.I18N.isEN() ? String(i + 1) : "章"));
       }
       const favSrc = dpT("生命蓝图", "Blueprint");
-      /* 章首右上的星月线稿:一道大弧、两条垂坠的点线、一颗四角星、一弯新月 */
-      const RD_DECO = '<svg viewBox="0 0 200 200" fill="none" stroke-linecap="round">' +
-        '<path d="M60 8 C150 20 196 90 188 196" stroke="#c9a877" stroke-width="1" opacity=".75"/>' +
-        '<path d="M34 190 A70 70 0 0 1 150 70" stroke="#c9a877" stroke-width=".8" opacity=".45"/>' +
-        '<path d="M130 0 V44" stroke="#c9a877" stroke-width=".8" stroke-dasharray="1.5 4" opacity=".8"/>' +
-        '<path d="M170 0 V112" stroke="#c9a877" stroke-width=".8" stroke-dasharray="1.5 4" opacity=".8"/>' +
-        '<circle cx="130" cy="48" r="2" fill="#c9a877"/><circle cx="170" cy="116" r="2" fill="#c9a877"/>' +
-        '<path d="M170 64 L173 78 L186 81 L173 84 L170 98 L167 84 L154 81 L167 78 Z" fill="#c49a6c"/>' +
-        '<circle cx="106" cy="118" r="26" fill="#e9e1ef" opacity=".9"/>' +
-        '<path d="M112 92 A26 26 0 1 1 112 144 A20 26 0 1 0 112 92 Z" fill="#b9a3c9" opacity=".85"/></svg>';
-
       /* ---- 专属建议的位置:预设在「详细解读」之前 ----
          例外:某一条建议本身就是针对某一个详细解读标题写的 → 放到那一章正文的下面。
          以下四项(含既有的别名写法)永远留在上方的「专属建议」总区块,不下放:
@@ -13870,6 +13973,25 @@ window.Guide = (function () {
          标题一律取自现有的 chs(与页签同一份资料、同一个顺序、同一个 index),
          不另建清单、不写死章名。首章 / 末章那一侧渲染成不可点的 .off,
          元素仍然占位,所以切章时两颗按钮的位置不会跳动。 */
+      /* 摘要在句号 / 问号 / 叹号与「——」之后换行(字一个都不改,只是排版) */
+      function rdLines(t) {
+        return String(t || "").split(/(?<=[。！？!?])|(?<=——)/).map(function (x) { return esc0(x.trim()); })
+          .filter(Boolean).join("<br>");
+      }
+      /* 下一章的预告小卡(依参考图):编号 + 标题 + 摘要的前两句 + 「继续阅读 →」。
+         最后一章没有下一章,就整张不印。内容全部取自下一章自己的资料,不另外产生文字 */
+      function rdNextCard() {
+        const n = readingTab + 1;
+        if (n >= chs.length) return "";
+        const nx = chs[n];
+        const lead = String(nx.summary || nx.body || "").split(/(?<=[。！？!?])/).slice(0, 2).join("");
+        return '<div class="rd-next"><span class="art" aria-hidden="true"></span>' +
+          '<span class="rd-no" aria-hidden="true">' + ("0" + (n + 1)).slice(-2) + '<i class="s"></i><i class="l"></i></span>' +
+          '<b class="t">' + esc0(chName(nx, n)) + "</b>" +
+          (lead ? '<p class="p">' + rdLines(lead) + "</p>" : "") +
+          '<a class="go" data-rnav href="#/reading/' + n + '">' + esc0(dpT("继续阅读", "Keep reading")) +
+          '<span aria-hidden="true">→</span></a></div>';
+      }
       function chNav() {
         // cls 只决定左 / 右对齐;i 落在 chs 范围内才是可点的连结,否则同样大小的静态块
         const cell = function (i, cls, label, endText) {
@@ -13881,8 +14003,8 @@ window.Guide = (function () {
             : '<span class="' + cls + ' off" aria-disabled="true">' + inner + '</span>';
         };
         return '<nav class="dp-chnav" aria-label="' + esc0(dpT("章节导航", "Chapter navigation")) + '">' +
-          cell(readingTab - 1, "pv", dpT("上一个标题", "Previous"), dpT("这是第一章", "This is the first")) +
-          cell(readingTab + 1, "nx", dpT("下一个标题", "Next"), dpT("这是最后一章", "This is the last")) +
+          cell(readingTab - 1, "pv", dpT("上一个主题", "Previous"), dpT("这是第一章", "This is the first")) +
+          cell(readingTab + 1, "nx", dpT("下一个主题", "Next"), dpT("这是最后一章", "This is the last")) +
           "</nav>";
       }
       body += '<div class="dp-card dp-detail" id="dpDetail"><div class="dp-read">' +
@@ -13890,14 +14012,17 @@ window.Guide = (function () {
           return '<button data-rtab="' + i + '"' + (i === readingTab ? ' class="on"' : "") + ">" + esc0(chName(x, i)) + "</button>";
         }).join("") + "</div>" +
         /* 章首(依用户参考图):编号 → 大标题 → ✦ 细线 + 英文小标,右上一组星月线稿 */
-        '<div class="rd-hd"><span class="rd-deco" aria-hidden="true">' + RD_DECO + "</span>" +
-        '<span class="rd-no" aria-hidden="true">' + ("0" + (readingTab + 1)).slice(-2) + "</span>" +
+        /* v4(用户参考图):右上角换成月亮星环插画;编号后面接一颗星芒 + 一条细线 */
+        '<div class="rd-hd"><span class="rd-deco rd-moon" aria-hidden="true"></span>' +
+        '<span class="rd-sp" aria-hidden="true"></span>' +
+        '<span class="rd-no" aria-hidden="true">' + ("0" + (readingTab + 1)).slice(-2) +
+        '<i class="s"></i><i class="l"></i></span>' +
         '<h3 class="dp-h">' + esc0(chName(ch, readingTab)) + "</h3>" +
         '<div class="rd-cap"><span class="st" aria-hidden="true"><i></i>✦<i></i></span>' +
         favB + "</div></div>" +
         (ch.summary ? '<div class="dp-quote rd-sum" style="text-align:left;padding:8px 0 16px;font-size:15.5px"' +
           ' data-saveable data-source="' + esc0(favSrc) + '" data-source-type="life_blueprint"' +
-          ' data-section="' + esc0(chName(ch, readingTab)) + '">' + esc0(ch.summary) + "</div>" : "") +
+          ' data-section="' + esc0(chName(ch, readingTab)) + '">' + rdLines(ch.summary) + "</div>" : "") +
         '<div class="dp-prose" data-saveable data-source="' + esc0(favSrc) +
         '" data-source-type="life_blueprint" data-section="' + esc0(chName(ch, readingTab)) + '">' +
         dpPara(ch.body) + "</div>" +
@@ -13908,6 +14033,7 @@ window.Guide = (function () {
         (ownCards.length
           ? cardsHtml(ownCards)
           : "") +
+        rdNextCard() +
         // 这一章的最终阅读出口:排在正文与章末专属建议全部结束之后
         chNav() +
         "</div></div>";
@@ -13963,7 +14089,7 @@ window.Guide = (function () {
       if (fb && !fb.querySelector(".ic")) {
         const ic = document.createElement("span"); ic.className = "ic"; ic.setAttribute("aria-hidden", "true"); ic.textContent = "✦";
         const sb = document.createElement("span"); sb.className = "sb";
-        sb.textContent = dpT("深入了解这部分为你的生活带来的启发", "See what this part brings to your life");
+        sb.textContent = dpT("深入了解这部分，会如何走进你的生活", "See how this part moves through your life");
         fb.insertBefore(ic, fb.firstChild);
         fb.querySelector(".tx").after(sb);
       }
