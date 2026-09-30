@@ -12939,9 +12939,9 @@ window.Guide = (function () {
         dpT('在离开这一页以前，<span class="l2">有一个问题，想留给现在的你。</span>',
             'Before you leave this page, <span class="l2">one question, for the you of right now.</span>') + "</p>" +
         dpThreadReflectHtml(data.question) +
-        '<p class="post">' + dpT("不需要马上回答。", "It doesn’t need an answer today.") +
-        '<span class="l2">' + dpT("有些答案，会慢慢长出来。",
-                                  "Some answers take their own time.") + "</span></p></div>";
+        '<p class="post">' + dpT("不需要马上回答", "It doesn’t need an answer today") +
+        '<span class="l2">' + dpT("有些答案，会慢慢长出来",
+                                  "Some answers take their own time") + "</span></p></div>";
     if (data.question && data.action) t += spark;
     if (data.action) t += dpReflectHtml("a", data.action);
     h += "</div>";                                   // /.thread-trail
