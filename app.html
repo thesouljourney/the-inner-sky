@@ -13148,8 +13148,13 @@ window.Guide = (function () {
     favType = favType || "";
     const PV = dpPvMap(data);
     let h = '<div class="tp-wrap">';
+    /* 用户:每个主题最上面的 quote 不放句号 —— 跟生命脉络的星语卡同一个做法:
+       在句号处断行、拿掉每一句结尾的「。」,内文其他标点不动,原文一字不改 */
     if (data.tagline)
-      h += '<div class="tp-intro"><p>' + esc0(data.tagline) + "</p></div>";
+      h += '<div class="tp-intro"><p>' +
+        String(data.tagline).split(/(?<=。)/).map(function (x) { return x.trim(); }).filter(Boolean)
+          .map(function (x) { return esc0(x.replace(/[。.]+$/, "")); }).join("<br>") +
+        "</p></div>";
     h += (data.sections || []).map(function (sc, si) {
       const k = favKey(favSource, sc.title || "", sc.body || "");
       const btn = '<button class="fav-btn' + (isFaved(k) ? " on" : "") + '" data-fav="' + esc0(k) +
