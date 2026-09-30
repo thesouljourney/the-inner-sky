@@ -78,11 +78,6 @@ img { display: block; max-width: 100%; }
   transition: background .25s;
 }
 .btn-ghost:hover { background: rgba(255,255,255,.08); }
-.btn-soft {
-  display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: 999px;
-  background: var(--grad); color: #fff; font-family: var(--font-serif-sc); font-size: 13px; letter-spacing: .08em;
-  box-shadow: 0 8px 20px rgba(193,140,190,.3);
-}
 
 /* ============================================================
    Hero
@@ -160,7 +155,7 @@ header.site { position: relative; z-index: 5; }
 .hero-copy .btn-primary { margin-top: 30px; }
 /* 「开启我的星空」(依用户参考图):半透明淡紫玻璃胶囊、一圈发光的淡金细边,
    左边一颗发光的四芒星,白色宋体字,右边细箭头 */
-.hero-copy .btn-primary, .thread-in .btn-primary, .sky-card .btn-primary {
+.hero-copy .btn-primary, .thread-in .btn-primary, .sky-card .btn-primary, .guide-card .btn-primary {
   gap: 8px; padding: 8px 18px 8px 15px; font-size: 13px; letter-spacing: .1em; color: #fff;
   background: linear-gradient(120deg, rgba(196,184,236,.42), rgba(170,156,220,.28) 55%, rgba(210,196,240,.36));
   border: 1px solid rgba(255,236,206,.75);
@@ -168,9 +163,9 @@ header.site { position: relative; z-index: 5; }
   text-shadow: 0 1px 8px rgba(60,40,110,.45);
   box-shadow: 0 0 0 1px rgba(255,236,206,.18), 0 0 18px rgba(255,230,190,.45), inset 0 0 18px rgba(255,255,255,.18), 0 10px 26px rgba(20,16,60,.35);
 }
-.hero-copy .btn-primary:hover, .thread-in .btn-primary:hover, .sky-card .btn-primary:hover { box-shadow: 0 0 0 1px rgba(255,236,206,.28), 0 0 26px rgba(255,230,190,.6), inset 0 0 18px rgba(255,255,255,.22), 0 12px 30px rgba(20,16,60,.4); }
-.hero-copy .btn-primary .st, .thread-in .btn-primary .st, .sky-card .btn-primary .st { width: 13px; height: 13px; flex: none; fill: #fff6e2; filter: drop-shadow(0 0 5px rgba(255,226,170,.95)) drop-shadow(0 0 10px rgba(255,210,150,.6)); }
-.hero-copy .btn-primary .ar, .thread-in .btn-primary .ar, .sky-card .btn-primary .ar { margin-left: 2px; font-family: var(--font-sans, sans-serif); }
+.hero-copy .btn-primary:hover, .thread-in .btn-primary:hover, .sky-card .btn-primary:hover, .guide-card:hover .btn-primary { box-shadow: 0 0 0 1px rgba(255,236,206,.28), 0 0 26px rgba(255,230,190,.6), inset 0 0 18px rgba(255,255,255,.22), 0 12px 30px rgba(20,16,60,.4); }
+.hero-copy .btn-primary .st, .thread-in .btn-primary .st, .sky-card .btn-primary .st, .guide-card .btn-primary .st { width: 13px; height: 13px; flex: none; fill: #fff6e2; filter: drop-shadow(0 0 5px rgba(255,226,170,.95)) drop-shadow(0 0 10px rgba(255,210,150,.6)); }
+.hero-copy .btn-primary .ar, .thread-in .btn-primary .ar, .sky-card .btn-primary .ar, .guide-card .btn-primary .ar { margin-left: 2px; font-family: var(--font-sans, sans-serif); }
 
 /* ============================================================
    主题九宫格
@@ -288,8 +283,7 @@ header.site { position: relative; z-index: 5; }
 .sky-card::after { content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
   background: linear-gradient(90deg, rgba(18,20,60,.6) 0%, rgba(18,20,60,.3) 42%, rgba(18,20,60,0) 62%); }
 .sky-card > * { position: relative; z-index: 1; }
-.sky-card p br, .guide-copy p br { display: none; }
-.guide-copy p { max-width: 250px; }
+.sky-card p br { display: none; }
 .sky-copy { align-self: start; padding-top: 18px; }
 .sky-card h3 { font-size: 26px; letter-spacing: .12em; color: #fbf6ff; text-shadow: 0 2px 12px rgba(10,12,40,.5); }
 .sky-card h3 + p { margin-top: 18px; }
@@ -317,12 +311,25 @@ header.site { position: relative; z-index: 5; }
 .sky-wheel .isky-tip .t { font-size: 13px; }
 .sky-wheel .isky-tip .b { font-size: 11.5px; }
 
-.guide-card { display: block;
-  /* 水彩花卉底图;文字那一侧叠一层淡象牙白,字才站得住 */
-  background: linear-gradient(90deg, rgba(255,251,246,.62) 0%, rgba(255,251,246,.35) 50%, rgba(255,251,246,.08) 100%),
+/* 我的内在指南(依用户范例图):左边大标题 + 金色分隔线 + 两段文字 + 统一 CTA,
+   右边一只金色星空罗盘浮在水彩花卉底图上 */
+.guide-card { display: flex; align-items: center; padding: 34px 30px;
+  background: linear-gradient(90deg, rgba(255,251,246,.7) 0%, rgba(255,251,246,.4) 45%, rgba(255,251,246,0) 70%),
     url(assets/landing/guide-bg.webp) center / cover no-repeat, #fbf5ee; }
-.guide-copy { align-self: start; }
-.guide-copy p { text-wrap: pretty; margin: 12px 0 20px; font-size: 12.5px; line-height: 1.9; color: var(--ink-2); }
+.guide-copy { position: relative; z-index: 1; }
+.guide-art { position: absolute; z-index: 0; right: -4%; top: 50%; width: 58%; max-width: 340px; transform: translateY(-50%); pointer-events: none;
+  filter: drop-shadow(0 6px 18px rgba(170,130,70,.18)); }
+.guide-card h3 { font-size: 28px; letter-spacing: .12em; color: #23264f; }
+.guide-card h3 .st { font-size: .6em; vertical-align: .3em; color: #d6a85a; }
+.guide-rule { display: flex; align-items: center; gap: 8px; width: 210px; margin-top: 14px; color: #d6a85a; font-size: 12px; line-height: 1; }
+.guide-rule::before, .guide-rule::after { content: ""; flex: 1; height: 1px; background: linear-gradient(90deg, rgba(214,168,90,0), rgba(214,168,90,.75)); }
+.guide-rule::after { background: linear-gradient(90deg, rgba(214,168,90,.75), rgba(214,168,90,0)); }
+.guide-copy p { margin-top: 16px; font-family: var(--font-serif-sc); font-size: 14px; line-height: 1.85; letter-spacing: .04em; color: #3f3f62; text-shadow: 0 0 8px #fffaf3; }
+.guide-copy p + p { margin-top: 12px; }
+/* 统一 CTA 在浅色底上:淡紫玻璃再深一点,白字才看得清 */
+.guide-card .btn-primary { margin-top: 24px;
+  background: linear-gradient(120deg, rgba(160,144,214,.78), rgba(140,124,200,.66) 55%, rgba(176,160,224,.74));
+  border-color: rgba(236,204,150,.9); }
 
 /* 我的星空记录 / 我的收藏(依用户范例图):大标题 + 右上药丸连结,
    里面是半透明白卡;底图的风景留在右半边,左边叠一层淡象牙让卡片站得住 */
@@ -432,8 +439,8 @@ footer.site { position: relative; overflow: hidden; background: linear-gradient(
   .hero-rule { margin: 16px 0 14px; width: 44px; }
   .hero-sub { font-size: 14px; letter-spacing: .06em; }
   .hero-copy .btn-primary { margin-top: 22px; }
-  .hero-copy .btn-primary, .thread-in .btn-primary, .sky-card .btn-primary { padding: 6px 14px 6px 12px; font-size: 11.5px; gap: 6px; }
-  .hero-copy .btn-primary .st, .thread-in .btn-primary .st, .sky-card .btn-primary .st { width: 11px; height: 11px; }
+  .hero-copy .btn-primary, .thread-in .btn-primary, .sky-card .btn-primary, .guide-card .btn-primary { padding: 6px 14px 6px 12px; font-size: 11.5px; gap: 6px; }
+  .hero-copy .btn-primary .st, .thread-in .btn-primary .st, .sky-card .btn-primary .st, .guide-card .btn-primary .st { width: 11px; height: 11px; }
   .sky-card h3 + p { margin-top: 12px; }
   /* 左栏只有约 135px:按钮保持一行,可以往右伸进星盘那一侧,压在星盘上面 */
   .sky-card .btn-primary { margin-top: 12px; white-space: nowrap; letter-spacing: .04em; gap: 5px; padding: 5px 11px 5px 10px; font-size: 10.5px; }
@@ -485,9 +492,13 @@ footer.site { position: relative; overflow: hidden; background: linear-gradient(
   .sky-arch { width: 50%; bottom: -6%; }
   /* 手机星盘放大:宽度由右栏决定,所以让它往两侧多伸一些,而不是只拉 max-width */
   .sky-wheel { width: calc(100% + 34px); max-width: none; margin: -12px -18px -12px -16px; }
-  .guide-copy p { font-size: 11.5px; margin: 10px 0 16px; }
-  .guide-copy p br:nth-of-type(n+2) { display: none; }
-  .btn-soft { font-size: 12px; padding: 8px 14px; }
+  .guide-card { padding: 24px 18px; min-height: 250px; }
+  .guide-card h3 { font-size: 21px; letter-spacing: .08em; }
+  .guide-rule { width: 150px; margin-top: 10px; font-size: 10px; }
+  .guide-copy p { margin-top: 10px; font-size: 12px; line-height: 1.8; }
+  .guide-copy p + p { margin-top: 8px; }
+  .guide-card .btn-primary { margin-top: 16px; }
+  .guide-art { width: 50%; right: -6%; }
   .rec-card, .fav-card { min-height: 0; padding: 22px 16px 20px; }
   .rec-card h3, .fav-card h3 { font-size: 21px; letter-spacing: .06em; }
   .card-hd .pill { gap: 6px; padding: 6px 12px; font-size: 11.5px; }
@@ -665,10 +676,13 @@ var APP_URL = "app.html";
           <div class="sky-wheel isky-wheel" id="iskyWheel" data-app="app.html"></div>
         </div>
         <a class="card guide-card" href="app.html#/compass" data-app-hash="#/compass">
+          <img class="guide-art" src="assets/life/compass.webp" alt="" loading="lazy">
           <div class="guide-copy">
-            <h3>我的内在指南</h3>
-            <p>在变化的日子里，<br>给自己一些温柔的提醒。<br>这里有「此刻的我」、「想问自己的问题」<br>以及为你量身的思考指引。</p>
-            <span class="btn-soft">打开我的内在指南 <span aria-hidden="true">→</span></span>
+            <h3>我的内在指南 <span class="st" aria-hidden="true">✦</span></h3>
+            <span class="guide-rule" aria-hidden="true">✦</span>
+            <p>在变化的日子里，<br>给自己一些温柔的提醒</p>
+            <p>这里有「此刻的我」、<br>「想问自己的问题」，<br>以及属于你的思考指引</p>
+            <span class="btn-primary"><svg class="st" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 0C10.6 6.6 13.4 9.4 20 10 13.4 10.6 10.6 13.4 10 20 9.4 13.4 6.6 10.6 0 10 6.6 9.4 9.4 6.6 10 0Z"/></svg>打开我的内在指南 <span class="ar" aria-hidden="true">→</span></span>
           </div>
         </a>
       </div>
