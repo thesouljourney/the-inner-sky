@@ -6608,6 +6608,8 @@
   #dpage .dp-quote-card .save-badge:hover{color:#8a5f2a}
   #dpage .dp-quote-card .save-badge.confirm{color:#b4645a}
   #dpage .dp-count{font-size:12.5px;color:var(--dp-mut);margin-bottom:18px}
+  /* 搜索筛掉的卡片 / 「没有符合的句子」:hidden 属性要赢过 display:flex / block */
+  #dpage .dp-quote-card[hidden],#dpage .fav-nomatch[hidden]{display:none}
   @media(max-width:520px){#dpage .dp-quotes{grid-template-columns:1fr}}
   @media(max-width:600px){
     #dpage .fav-toolbar{flex-wrap:wrap;padding:6px 14px}
@@ -16216,6 +16218,19 @@ window.Guide = (function () {
     }
   }
 
+  function favApplySearch() {
+    const host = $("dpage");
+    if (!host) return;
+    const q = favSearch.trim().toLowerCase();
+    let n = 0;
+    host.querySelectorAll(".dp-quote-card[data-q]").forEach(function (c) {
+      const hit = !q || c.getAttribute("data-q").indexOf(q) >= 0;
+      c.hidden = !hit;
+      if (hit) n++;
+    });
+    const none = host.querySelector(".fav-nomatch");
+    if (none) none.hidden = n > 0;
+  }
   function renderFavoritesPage() {
     const c = activeChart();
     let body = "";
@@ -16233,13 +16248,11 @@ window.Guide = (function () {
         '<a class="dp-cta" style="margin-top:18px" href="' + LANDING_TOPICS + '">' +
         dpT("开始探索", "Start exploring") + "</a></div>";
     } else {
-      const q = favSearch.trim().toLowerCase();
-      let shown = list.filter(function (f) {
-        if (!q) return true;
-        return [f.text, f.source, f.section].some(function (v) {
-          return v && String(v).toLowerCase().indexOf(q) >= 0;
-        });
-      });
+      /* 搜索不再重建整页:卡片一律全部印出来,每张带一份可搜索的文字(data-q),
+         打字时只切换卡片的显示 / 隐藏(见 favApplySearch)。以前每打一个字就
+         重建一次 input —— 中文输入法组字到一半会被打断、iOS 键盘也会掉,
+         看起来就是「搜索框打不了字」。 */
+      let shown = list.slice();
       shown.sort(function (a, b) {
         const ta = String(a.ts || ""), tb = String(b.ts || "");
         return favSortNew ? (tb < ta ? -1 : tb > ta ? 1 : 0) : (ta < tb ? -1 : ta > tb ? 1 : 0);
@@ -16268,7 +16281,9 @@ window.Guide = (function () {
           const tagStyle = accent ?
             ' style="background:color-mix(in srgb,' + accent + ' 20%, white);' +
             'color:color-mix(in srgb,' + accent + ' 65%, black)"' : '';
-          return '<div class="dp-quote-card"><span class="qm" aria-hidden="true">❝</span>' +
+          const hay = [f.text, f.source, f.section].filter(Boolean).join(" ").toLowerCase()
+            .replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+          return '<div class="dp-quote-card" data-q="' + hay + '"><span class="qm" aria-hidden="true">❝</span>' +
             '<blockquote>' + esc0(f.text) + '</blockquote>' +
             '<div class="tags">' +
             (f.source ? '<span class="tag"' + tagStyle + '>' + esc0(f.source) + '</span>' : "") +
@@ -16282,9 +16297,9 @@ window.Guide = (function () {
             '<path d="M6 4h12v16l-6-4-6 4V4z"></path></svg>' +
             '<span>' + (confirming ? dpT("确定取消?", "Confirm remove?") : dpT("已收藏", "Saved")) + '</span>' +
             '</button></div></div>';
-        }).join("") + '</div>' :
-        '<div class="dp-card dp-loading"><span class="g">✦</span>' +
-        dpT("没有符合的句子。", "No lines match your search.") + '</div>')
+        }).join("") + '</div>' : "") +
+        '<div class="dp-card dp-loading fav-nomatch" hidden><span class="g">✦</span>' +
+        dpT("没有符合的句子。", "No lines match your search.") + '</div>'
       ;
     }
 
@@ -16311,16 +16326,18 @@ window.Guide = (function () {
     });
     // 搜索框:整页是重新渲染的,每次打字都会重建 input——重建完把焦点
     // 跟光标位置还原回去,不然打到一半输入框会跳掉焦点。
+    // 搜索框:只筛选卡片,不重建 input —— 焦点、光标、输入法组字都不会被打断。
+    // 组字中(拼音还没选字)先不筛,compositionend 再筛一次。
     const si = $("dpage").querySelector("[data-fav-search]");
     if (si) {
-      si.addEventListener("input", function () {
+      si.addEventListener("input", function (e) {
         favSearch = si.value;
-        const pos = si.selectionStart;
-        renderFavoritesPage();
-        const next = $("dpage").querySelector("[data-fav-search]");
-        if (next) { next.focus(); next.setSelectionRange(pos, pos); }
+        if (e.isComposing) return;
+        favApplySearch();
       });
+      si.addEventListener("compositionend", function () { favSearch = si.value; favApplySearch(); });
     }
+    favApplySearch();
   }
 
   /* ============================================================
