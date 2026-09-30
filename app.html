@@ -5858,7 +5858,7 @@
   #dpage.compass-page .cp-rose{width:min(42vw,164px);z-index:0}
   #dpage.compass-page .qm-cell{
     /* 用户:卡片小一点、离罗盘远一点、底更透明 */
-    z-index:1;gap:1px;margin-top:22px;padding:0 13px 6px;border-radius:24px;
+    z-index:1;gap:1px;margin-top:44px;padding:0 13px 7px;border-radius:24px;
     background:linear-gradient(180deg,rgba(255,254,252,.56),rgba(252,247,242,.42));
     border:1px solid rgba(214,190,150,.55);
     box-shadow:0 6px 18px -8px rgba(120,96,140,.28),inset 0 1px 0 rgba(255,255,255,.9)
@@ -5869,7 +5869,8 @@
   #dpage.compass-page .qm-right::before,
   #dpage.compass-page .qm-bottom::before{
     /* 用户:图示后面的圆形徽章拿掉,只留图示本身 */
-    width:36px;height:36px;margin:-19px auto 1px;border:0;box-shadow:none
+    /* 用户:图示整个放到卡片外面(卡片上方),不再骑在边框上 */
+    width:36px;height:36px;margin:-42px auto 14px;border:0;box-shadow:none
   }
   #dpage.compass-page .qm-top::before{
     background:url(assets/life/cp-mobile/qm-sun.webp) center / 100% no-repeat
@@ -5884,28 +5885,28 @@
     background:url(assets/life/cp-mobile/qm-cloud.webp) center / 100% auto no-repeat
   }
   /* 云是横的,方框里会缩得很小:给它一个扁长的位子 */
-  #dpage.compass-page .qm-bottom::before{width:56px;height:24px;margin:-13px auto 2px}
+  #dpage.compass-page .qm-bottom::before{width:56px;height:24px;margin:-30px auto 14px}
   #dpage.compass-page .qm-cell b{font-size:13.5px}
   #dpage.compass-page .qm-cell span{font-size:10px;white-space:nowrap}
   #dpage.compass-page .qm-top{margin-bottom:8px}
-  #dpage.compass-page .qm-bottom{margin-top:8px}
+  #dpage.compass-page .qm-bottom{margin-top:40px}
   #dpage.compass-page .qm-left,
   #dpage.compass-page .qm-right{max-width:none}
   #dpage.compass-page .qm-left{justify-self:end;margin-right:2px}
   #dpage.compass-page .qm-right{justify-self:start;margin-left:2px}
   @media(min-width:768px){
     #dpage.compass-page .cp-rose{width:240px}
-    #dpage.compass-page .qm-cell{margin-top:28px;padding:0 22px 9px;border-radius:32px}
+    #dpage.compass-page .qm-cell{margin-top:58px;padding:0 22px 10px;border-radius:32px}
     #dpage.compass-page .qm-cell::before,
     #dpage.compass-page .qm-top::before,
     #dpage.compass-page .qm-left::before,
     #dpage.compass-page .qm-right::before,
-    #dpage.compass-page .qm-bottom::before{width:48px;height:48px;margin:-25px auto 3px}
-    #dpage.compass-page .qm-bottom::before{width:74px;height:32px;margin:-17px auto 3px}
+    #dpage.compass-page .qm-bottom::before{width:48px;height:48px;margin:-55px auto 16px}
+    #dpage.compass-page .qm-bottom::before{width:74px;height:32px;margin:-39px auto 16px}
     #dpage.compass-page .qm-cell b{font-size:16px}
     #dpage.compass-page .qm-cell span{font-size:12px}
     #dpage.compass-page .qm-top{margin-bottom:14px}
-    #dpage.compass-page .qm-bottom{margin-top:14px}
+    #dpage.compass-page .qm-bottom{margin-top:54px}
     #dpage.compass-page .qm-left{margin-right:10px}
     #dpage.compass-page .qm-right{margin-left:10px}
   }
