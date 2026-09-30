@@ -17257,9 +17257,18 @@ window.Guide = (function () {
             clue.appendChild(keys.cloneNode(true));
           }
           box.querySelector(".ch-shut .tx").textContent = dpT("收起", "Close");
+          /* 「收起 ↑」:收回卡片原本的样子(引子 + 「沿着这条线索继续 →」回来,
+             见 CSS 的 .ch-card.on .go),再平滑卷回这张卡的顶端 ——
+             卡顶停在视窗上方约 96px,不贴着浏览器顶,也不会停在页面下方或下一张卡。
+             卡片在展开区的上面,展开区收合不影响它的位置,所以当下量的就是终点。 */
           box.querySelector(".ch-shut").addEventListener("click", function () {
             close();
-            card.focus();
+            card.focus({ preventScroll: true });
+            const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion:reduce)").matches;
+            window.scrollTo({
+              top: Math.max(0, window.scrollY + card.getBoundingClientRect().top - 96),
+              behavior: reduce ? "auto" : "smooth"
+            });
           });
           mount.appendChild(box);
           cards.forEach(function (c) { c.classList.remove("on"); c.setAttribute("aria-expanded", "false"); });
