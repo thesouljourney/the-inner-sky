@@ -35,6 +35,8 @@
   } catch (e) { /* 出任何差错都不要紧:init() 稍后一样会把登入页显示出来 */ }
 })();
 </script>
+<!-- 简 / 繁 显示切换(与首页共用);要在字体与样式之前,繁体模式才能先藏起页面不闪简体 -->
+<script src="assets/zh-script.js"></script>
 <!-- 解读详情页字体:与 Landing(index.html)同一套 -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -476,6 +478,15 @@
   #dpage .dp-navlink:hover{color:var(--dp-light)}
   #dpage .dp-navlink.on{color:var(--dp-light);border-bottom-color:rgba(232,211,162,.7)}
   #dpage .dp-acct{position:relative;flex:none}
+  /* 简 / 繁 切换(assets/zh-script.js) */
+  #dpage .zh-sw{display:inline-flex;flex:none;padding:2px;border-radius:999px;border:1px solid rgba(249,246,242,.3);background:rgba(249,246,242,.06)}
+  #dpage .zh-sw button{min-width:26px;padding:3px 8px;border:0;border-radius:999px;background:transparent;cursor:pointer;
+    font-family:var(--dp-serif);font-size:12px;line-height:1.2;color:rgba(249,246,242,.75);transition:background .2s,color .2s}
+  #dpage .zh-sw button.on{background:rgba(249,246,242,.18);color:var(--dp-light)}
+  #dpage .dp-brand{white-space:nowrap}
+  @media(max-width:480px){
+    #dpage .zh-sw button{min-width:22px;padding:3px 6px;font-size:11px}
+  }
   #dpage .dp-acct-btn{
     display:inline-flex;align-items:center;gap:8px;max-width:56vw;cursor:pointer;
     font-family:var(--dp-sans);font-size:13.5px;letter-spacing:.05em;color:rgba(249,246,242,.9);
@@ -8460,7 +8471,8 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       el.setAttribute("title", T(el.getAttribute("data-i18n-title")));
     });
     document.title = T("docTitle");
-    document.documentElement.setAttribute("lang", lang === "en" ? "en" : "zh-CN");
+    document.documentElement.setAttribute("lang", lang === "en" ? "en" :
+      (document.documentElement.classList.contains("zh-tw") ? "zh-Hant-TW" : "zh-CN"));
   }
 
   function setLang(l, opts) {
@@ -12740,6 +12752,13 @@ window.Guide = (function () {
       '</div></footer>';
   }
 
+  /* 简 / 繁 切换:点了由 assets/zh-script.js 记住选择并重新载入 */
+  function dpScriptSwitch() {
+    const m = (window.ZhScript && window.ZhScript.mode) || "s";
+    return '<div class="zh-sw" role="group" aria-label="简体 / 繁体">' +
+      '<button type="button" data-zh-script="s"' + (m === "s" ? ' class="on" aria-pressed="true"' : ' aria-pressed="false"') + '>简</button>' +
+      '<button type="button" data-zh-script="t"' + (m === "t" ? ' class="on" aria-pressed="true"' : ' aria-pressed="false"') + '>繁</button></div>';
+  }
   function dpTopbarHtml() {
     const here = (curRoute && curRoute.k) || "";
     const items = dpNavItems();
@@ -12757,7 +12776,7 @@ window.Guide = (function () {
     return '<div class="dp-topbar">' +
       '<a class="dp-brand" href="' + esc0(LANDING_URL) + '" aria-label="' +
       esc0(dpT("回到首页", "Back to home")) + '"><span class="s" aria-hidden="true">✶</span> INNER SKY</a>' +
-      '<nav class="dp-nav">' + inline +
+      '<nav class="dp-nav">' + inline + dpScriptSwitch() +
       '<div class="dp-acct" id="dpAcct">' +
       '<button type="button" class="dp-acct-btn" id="dpAcctBtn" aria-haspopup="true" aria-expanded="false">' +
       '<span class="nm">' + esc0(dpAcctName()) + '</span><span class="caret" aria-hidden="true">▾</span></button>' +
@@ -14110,7 +14129,8 @@ window.Guide = (function () {
       const rect = sel.getRangeAt(0).getBoundingClientRect();
       if (!rect || !rect.width) { hideSaveTip(); return; }
       pendingSel = {
-        text: text.slice(0, 600),
+        // 繁体模式下画面是繁体,存回简体(资料一律简体,同一句不会因切换简繁变两笔)
+        text: (window.ZhScript ? window.ZhScript.toS(text) : text).slice(0, 600),
         source: box.getAttribute("data-source") || "",
         sourceType: box.getAttribute("data-source-type") || "",
         section: box.getAttribute("data-section") || "",

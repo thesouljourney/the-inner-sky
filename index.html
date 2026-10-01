@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="assets/zh-script.js"></script>
 <title>Inner Sky · Know Yourself Through the Stars</title>
 <meta name="description" content="看见完整的自己。Inner Sky 用星盘陪你慢慢理解自己,不被定义、不被标签。">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -107,6 +108,11 @@ header.site { position: relative; z-index: 5; }
 .nav-links a:hover, .nav-links a.on { color: #fff; }
 .nav-links a.on::after { content: ""; position: absolute; left: 0; right: 0; bottom: -2px; height: 1px; background: var(--gold-2); }
 .nav-right { display: flex; align-items: center; gap: 10px; }
+/* 简 / 繁 切换(assets/zh-script.js 负责转换与记住选择) */
+.zh-sw { display: inline-flex; flex: none; padding: 2px; border-radius: 999px; border: 1px solid rgba(255,255,255,.28); background: rgba(255,255,255,.06); }
+.zh-sw button { min-width: 26px; padding: 3px 8px; border: 0; border-radius: 999px; background: transparent; cursor: pointer;
+  font-family: var(--font-serif-sc); font-size: 12px; line-height: 1.2; color: rgba(245,239,228,.75); transition: background .2s, color .2s; }
+.zh-sw button.on { background: rgba(255,255,255,.18); color: #fff; }
 .nav-cta, .nav-user-btn {
   display: inline-flex; align-items: center; gap: 8px; padding: 7px 16px; border-radius: 999px; cursor: pointer;
   border: 1px solid rgba(245,239,228,.45); background: rgba(255,255,255,.06); color: #f5efe4;
@@ -521,8 +527,8 @@ footer.site { position: relative; overflow: hidden; color: rgba(249,246,242,.72)
 
   .foot-in { flex-direction: column; align-items: flex-start; gap: 20px; padding: 30px 20px; }
 }
-/* 很窄的手机:导航项目收进「菜单」 */
-@media (max-width: 370px) {
+/* 手机:导航项目收进「菜单」(加了「简 / 繁」切换之后,原本 370px 的门槛放不下,放宽到所有手机) */
+@media (max-width: 440px) {
   .nav-links { display: none; }
   .nav-right { margin-left: auto; }
   .nav-menu:not([hidden]) { display: block; }
@@ -558,6 +564,7 @@ var APP_URL = "app.html";
         <a href="#story">关于我们</a>
       </nav>
       <div class="nav-right">
+        <div class="zh-sw" role="group" aria-label="简体 / 繁体"><button type="button" data-zh-script="s">简</button><button type="button" data-zh-script="t">繁</button></div>
         <!-- 很窄的手机:横向导航收起后,公开入口改由这个菜单提供,不让项目消失 -->
         <div class="nav-menu nav-user" id="navMenu">
           <button type="button" class="nav-user-btn" id="navMenuBtn" aria-haspopup="true" aria-expanded="false">
