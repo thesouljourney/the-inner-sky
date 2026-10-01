@@ -6480,7 +6480,7 @@
 
   /* ── 「今天有什么事情」依用户参考图重排 ──────────────────────
      「此刻的我」上方换成用户给的金色星芒线(divider2.webp);
-     问题 + 写字处 + 按钮收进一张雾面玻璃卡:右上角月亮星链(note-moon.webp),
+     问题 + 写字处 + 按钮收进一张雾面玻璃卡:(右上角月亮星链已依用户要求删掉),
      顶端一颗小金星,问题分两行(粗 / 细),写字处右下一支羽毛笔(note-quill.webp)。 */
   #dpage.compass-page .cp-now .cp-sh::before{
     width:min(72%,300px);height:30px;margin:0 auto 14px;filter:none;
@@ -6496,11 +6496,6 @@
     -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)
   }
   #dpage.compass-page .cp-now .cp-note-card > *{position:relative;z-index:1}
-  #dpage.compass-page .cp-now .cp-note-card .nc-moon{
-    /* 用户:右上角月亮星链放大 */
-    position:absolute;z-index:0;top:6px;right:6px;width:122px;height:118px;pointer-events:none;
-    background:url(assets/life/cp-mobile/note-moon.webp) center / contain no-repeat
-  }
   #dpage.compass-page .cp-now .cp-note-card .nc-st{
     display:block;margin:0 auto 10px;font-size:15px;line-height:1;color:#c9a35c
   }
@@ -6531,7 +6526,6 @@
   #dpage.compass-page .cp-now .cp-note-card .dp-cta{min-width:156px;min-height:36px;padding:0 18px;font-size:13px;letter-spacing:.12em}
   @media(min-width:768px){
     #dpage.compass-page .cp-now .cp-note-card{padding:32px 36px 30px}
-    #dpage.compass-page .cp-now .cp-note-card .nc-moon{width:156px;height:150px}
     #dpage.compass-page .cp-now .cp-note-card .cp-q2 b{font-size:16px}
     #dpage.compass-page .cp-now .cp-note-card .cp-q2 span{font-size:14.5px}
     #dpage.compass-page .cp-now .cp-note-card .cp-ta{min-height:160px;background-size:118px auto,auto}
@@ -14948,9 +14942,9 @@ window.Guide = (function () {
                   icon[1] + "</svg>" : "") +
           "<span>" + esc0(label) + "</span></button>";
       }).join("") + "</div>" +
-      /* 依用户参考图:问题 + 写字处 + 按钮收进一张雾面玻璃卡,
-         右上角一弯月亮星链,写字处右下一支羽毛笔 */
-      '<div class="cp-note-card"><span class="nc-moon" aria-hidden="true"></span>' +
+      /* 依用户参考图:问题 + 写字处 + 按钮收进一张雾面玻璃卡,写字处右下一支羽毛笔
+         (右上角原本的月亮星链,用户要求删掉) */
+      '<div class="cp-note-card">' +
       '<span class="nc-st" aria-hidden="true">✦</span>' +
       '<p class="cp-q cp-q2"><b>' + esc0(dpT("今天有什么事情，", "What has been")) + "</b>" +
       "<span>" + esc0(dpT("一直停留在你心里？", "staying with you today?")) + "</span></p>" +
