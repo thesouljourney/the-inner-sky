@@ -2852,7 +2852,8 @@
     /* —— 4. 长文的呼吸:本来就自成一句的短段落,给它引句的排法 ——
           文字一个字都没改、没搬、没删,只是这一段的字级与留白不一样。
           由 JS 依内容判断挂上 .pq,每一章最多一句;没有合适的就不会出现。 */
-    #dpage.thread-page .ch-full .dp-prose p.pq{
+    #dpage.thread-page .ch-full .dp-prose p.pq,
+    #dpage.thread-page .thread-trail > .thread-ch .ch-full .dp-prose p.pq{
       position:relative;margin:26px 0 26px;padding:22px 4px 0;
       font-family:var(--dp-serif);font-weight:400;
       font-size:18.5px;line-height:1.95;letter-spacing:.015em;color:#22233a
@@ -3308,11 +3309,11 @@
     box-shadow:0 0 34px rgba(186,176,232,.26),0 10px 26px rgba(96,86,150,.06)
   }
   #dpage.thread-page .thread-bridge .insight .lb{
-    display:block;margin-bottom:12px;font-family:var(--dp-sans);font-size:12.5px;letter-spacing:.2em;color:#8a7351
+    display:block;margin-bottom:12px;font-family:var(--dp-serif);font-size:12.5px;letter-spacing:.2em;color:#8a7351
   }
   #dpage.thread-page .thread-bridge .insight .lb span{color:rgba(196,152,72,.95)}
   #dpage.thread-page .thread-bridge .insight p{
-    margin:0;font-family:var(--dp-sans);font-size:clamp(14.5px,1.6vw,16px);line-height:2;color:#2c2d48
+    margin:0;font-family:var(--dp-serif);font-size:clamp(14.5px,1.6vw,16px);line-height:2;color:#2c2d48
   }
   #dpage.thread-page .thread-bridge .insight p + p{margin-top:8px}
 
@@ -3907,7 +3908,7 @@
     font-size:clamp(23px,2.8vw,30px);letter-spacing:.14em;line-height:1.5;color:#1c1f45;text-shadow:0 1px 10px rgba(255,250,244,.7)
   }
   #dpage.reading-page .rd-transit .s{
-    margin:16px 0 0;font-family:var(--dp-sans);font-size:clamp(13.5px,1.4vw,15px);
+    margin:16px 0 0;font-family:var(--dp-serif);font-size:clamp(13.5px,1.4vw,15px);
     line-height:2;letter-spacing:.05em;color:#34324d;font-weight:500;
     text-shadow:0 1px 8px rgba(255,250,244,.75)
   }
@@ -6507,18 +6508,18 @@
     margin:0;font-family:var(--dp-serif);line-height:1.75;color:var(--dp-ink)
   }
   #dpage.compass-page .cp-now .cp-note-card .cp-q2 b{
-    display:block;font-weight:700;font-size:16px;letter-spacing:.06em
+    display:block;font-weight:700;font-size:14.5px;letter-spacing:.06em
   }
   #dpage.compass-page .cp-now .cp-note-card .cp-q2 span{
-    display:block;font-weight:400;font-size:15px;letter-spacing:.12em;color:#4a4760
+    display:block;font-weight:400;font-size:13.5px;letter-spacing:.12em;color:#4a4760
   }
   #dpage.compass-page .cp-now .cp-note-card .cp-ta{
     display:block;width:100%;max-width:none;box-sizing:border-box;
     min-height:140px;margin:18px 0 0;padding:16px 18px 34px;border-radius:18px;
     text-align:left;line-height:1.9;font-size:15px;
     background:
-      /* 用户:羽毛笔小小的就好 */
-      url(assets/life/cp-mobile/note-quill.webp) right 8px bottom 8px / 92px auto no-repeat,
+      /* 用户:羽毛笔小小的就好;素材本身已调淡(约 42% 不透明),不抢字 */
+      url(assets/life/cp-mobile/note-quill.webp?v=2) right 8px bottom 8px / 92px auto no-repeat,
       rgba(255,255,255,.38);
     border:1px solid rgba(255,255,255,.88);
     box-shadow:none
@@ -6531,8 +6532,8 @@
   @media(min-width:768px){
     #dpage.compass-page .cp-now .cp-note-card{padding:32px 36px 30px}
     #dpage.compass-page .cp-now .cp-note-card .nc-moon{width:156px;height:150px}
-    #dpage.compass-page .cp-now .cp-note-card .cp-q2 b{font-size:18px}
-    #dpage.compass-page .cp-now .cp-note-card .cp-q2 span{font-size:16px}
+    #dpage.compass-page .cp-now .cp-note-card .cp-q2 b{font-size:16px}
+    #dpage.compass-page .cp-now .cp-note-card .cp-q2 span{font-size:14.5px}
     #dpage.compass-page .cp-now .cp-note-card .cp-ta{min-height:160px;background-size:118px auto,auto}
   }
 
@@ -7181,6 +7182,31 @@
   }
   /* 浮窗开着的时候,正文区整层要在 Hero 之上,标题才不会透过浮窗 */
   #dpage.records-page .dp-body:has(.rc-overlay){z-index:3}
+
+  /* 详细解读(生命蓝图 / 生命脉络)的正文与引子:字级、行高、字重、字距跟主题页
+     .tp-full .dp-prose p / .tp-peek .pv 完全同一套(用户要求)。放在最后,盖过各页
+     先前各自写的数字;!important 只为了压过原本就带 !important 的 .rd-sum */
+  #dpage.reading-page .dp-detail .rd-sum,
+  #dpage.reading-page .dp-detail .dp-prose,
+  #dpage.reading-page .dp-detail .dp-prose p:not(.pq),
+  #dpage.thread-page .thread-trail > .thread-ch .ch-peek .pv,
+  #dpage.thread-page .thread-trail > .thread-ch .ch-full .dp-prose,
+  #dpage.thread-page .thread-trail > .thread-ch .ch-full .dp-prose p:not(.pq),
+  #dpage.thread-page .ch-reader .pv,
+  #dpage.thread-page .ch-reader .bd,
+  #dpage.thread-page .ch-reader .bd p:not(.pq),
+  #dpage.thread-page .ch-slot .pv,
+  #dpage.thread-page .ch-slot .bd,
+  #dpage.thread-page .ch-slot .bd p:not(.pq),
+  #dpage.thread-page .thread-chapters .ch-card .pv{
+    font-family:var(--dp-sans)!important;font-weight:400!important;
+    font-size:clamp(14px, 13.7px + .1vw, 14.5px)!important;line-height:1.9!important;letter-spacing:.01em!important
+  }
+  /* 「从这里开始」卡片的重点列表:跟主题页 .tp-peek .ch-keys li 同一套 */
+  #dpage.thread-page .thread-chapters .ch-card .ch-keys li{
+    font-family:var(--dp-sans)!important;font-weight:500!important;
+    font-size:clamp(13px, 12.7px + .1vw, 13.5px)!important;line-height:1.7!important;letter-spacing:.01em!important
+  }
 </style>
 </head>
 <!-- legacy-off 直接写在标签上,不等 JS。
@@ -14929,7 +14955,7 @@ window.Guide = (function () {
       '<p class="cp-q cp-q2"><b>' + esc0(dpT("今天有什么事情，", "What has been")) + "</b>" +
       "<span>" + esc0(dpT("一直停留在你心里？", "staying with you today?")) + "</span></p>" +
       '<textarea id="cpNote" class="cp-ta" rows="4" placeholder="' +
-      esc0(dpT("写一点也可以，\n不需要把它整理得很好。",
+      esc0(dpT("写一点也可以，\n不需要把它整理得很好",
                "A few words is enough.\nIt doesn’t need to be tidy.")) + '"></textarea>' +
       '<div class="cp-act"><button type="button" class="dp-cta" id="cpSave">' +
       esc0(dpT("保存这一刻", "Keep this moment")) + "</button>" +
@@ -16400,7 +16426,7 @@ window.Guide = (function () {
     }
     dpScaffold({
       title: dpT("我的星空记录", "My Sky Record"),
-      sub: dpT("那些曾经停下来看看自己的时刻，\n都被留在这里。", "The moments you stopped to look at yourself\nare kept here."),
+      sub: dpT("那些曾经停下来看看自己的时刻，\n都被留在这里", "The moments you stopped to look at yourself\nare kept here."),
       body: body,
       backLabel: dpT("返回内在指南", "Back to my compass"),
       backHref: "#/compass",
