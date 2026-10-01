@@ -14366,7 +14366,7 @@ window.Guide = (function () {
     return '<section class="cp-sec cp-compass">' +
       /* 手机专属副标(桌机/平板不显示,见 CSS),用既有 .cp-lead 插槽 */
       compassSecHead("01", dpT("我的内在指南", "My Inner Compass"), "MY INNER COMPASS",
-        dpT("这是属于你的四个内在方向\n当你需要停下来时，回来看看自己。",
+        dpT("这是属于你的四个内在方向\n当你需要停下来时，回来看看自己",
             "These are your four inner directions —\ncome back to them whenever you need to pause.")) +
       '<div class="cp-wheel" data-active="' + esc0(active || "") + '">' +
       coreWithMap + ents + panel + "</div></section>";
@@ -15969,9 +15969,9 @@ window.Guide = (function () {
       title: dpT("我的内在指南", "My Inner Compass"),
       sub: "A gentler way forward.",
       lead: '<div class="cp-intro">' +
-        dpT("你不需要一次把人生想清楚。", "You don’t have to work your whole life out at once.") +
+        dpT("你不需要一次把人生想清楚", "You don’t have to work your whole life out at once.") +
         '<span class="p2">' +
-        dpT("这不是关于你应该成为谁，\n而是把你的生命重新放回你手里，\n陪你在每一个当下，\n走向更靠近自己的生活。",
+        dpT("这不是关于你应该成为谁，\n而是把你的生命重新放回你手里，\n陪你在每一个当下，\n走向更靠近自己的生活",
             "This isn’t about who you should become.\nIt is about putting your life back in your own hands,\nand walking with you, moment by moment,\ntoward a life that sits closer to you.")
           .split("\n").map(function (x) { return esc0(x); }).join("<br>") +
         "</span></div>",
@@ -16373,7 +16373,7 @@ window.Guide = (function () {
             '<p class="b">' + esc0(dpT("已经写下了，", "It’s written —")) + "<br>" + esc0(dpT("想起什么，随时回来补上几句。", "add a line whenever you like.")) + '</p></div>' +
             cw("edit", dpT("继续补写", "Add a little more"), diaryToday.id)
           : '<p class="a"><span class="st" aria-hidden="true">✦</span>' + esc0(dpT("小小日记", "Little diary")) + '</p>' +
-            '<p class="b">' + esc0(dpT("今天发生了什么？", "What happened today —")) + "<br>" + esc0(dpT("或只是一点想留下来的东西。", "or something you’d like to keep.")) + '</p></div>' +
+            '<p class="b">' + esc0(dpT("今天发生了什么？", "What happened today —")) + "<br>" + esc0(dpT("或只是一点想留下来的东西", "or something you’d like to keep.")) + '</p></div>' +
             cw("new", dpT("写下今天的小小日记", "Write today’s page"))) +
         '</div>';
       /* 此刻的我与问问自己在内在指南里写;两样今天都写过,就不再放「写下新的记录」 */
