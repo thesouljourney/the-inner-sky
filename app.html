@@ -13601,7 +13601,7 @@ window.Guide = (function () {
                  "See which parts are still waiting to be found")) + "</span>"
       : "";
     // say:不传就跟改动前逐字相同——只有生命蓝图这一页传了自己的一段
-    const say = o.say || dpT("你不是来寻找答案,\n而是来重新看见自己。", "You are not here for answers —\nyou are here to see yourself again.");
+    const say = o.say || dpT("你不是来寻找答案,\n而是来重新看见自己", "You are not here for answers —\nyou are here to see yourself again.");
     /* say 里用空行分成两段的话,第二段(补充说明那句)另外包一层
        .say-sub,好让它套一个跟主句不一样的小字级——不传空行(其他
        页面都没有)就跟改动前一样,整段一起印,没有 .say-sub。 */
@@ -13856,7 +13856,8 @@ window.Guide = (function () {
           const icon = CARD_ICON[String(cd.title || "").trim()] || ICON_ORDER[i % ICON_ORDER.length];
           /* 编辑式的四段(不再是四张一样的卡):编号 → 标题 → 正文,正文在逗号 / 破折号
              之后断行(字一个都不改,只是排版),插画按段落各自摆位(见 CSS 的 .gc:nth-child) */
-          const line = String(cd.line || "").split(/(?<=[，,；;])|(?=——)/)
+          // 句尾的句号不显示(只是排版,原文不动)
+          const line = String(cd.line || "").replace(/[。.]\s*$/, "").split(/(?<=[，,；;])|(?=——)/)
             .map(function (x) { return esc0(x.trim()); }).filter(Boolean).join("<br>");
           return '<div class="gc">' +
             /* 不能用 loading="lazy"——这张图本身是 position:absolute,部分浏览器算不出
