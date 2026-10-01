@@ -2852,7 +2852,8 @@
     /* —— 4. 长文的呼吸:本来就自成一句的短段落,给它引句的排法 ——
           文字一个字都没改、没搬、没删,只是这一段的字级与留白不一样。
           由 JS 依内容判断挂上 .pq,每一章最多一句;没有合适的就不会出现。 */
-    #dpage.thread-page .ch-full .dp-prose p.pq{
+    #dpage.thread-page .ch-full .dp-prose p.pq,
+    #dpage.thread-page .thread-trail > .thread-ch .ch-full .dp-prose p.pq{
       position:relative;margin:26px 0 26px;padding:22px 4px 0;
       font-family:var(--dp-serif);font-weight:400;
       font-size:18.5px;line-height:1.95;letter-spacing:.015em;color:#22233a
@@ -3308,11 +3309,11 @@
     box-shadow:0 0 34px rgba(186,176,232,.26),0 10px 26px rgba(96,86,150,.06)
   }
   #dpage.thread-page .thread-bridge .insight .lb{
-    display:block;margin-bottom:12px;font-family:var(--dp-sans);font-size:12.5px;letter-spacing:.2em;color:#8a7351
+    display:block;margin-bottom:12px;font-family:var(--dp-serif);font-size:12.5px;letter-spacing:.2em;color:#8a7351
   }
   #dpage.thread-page .thread-bridge .insight .lb span{color:rgba(196,152,72,.95)}
   #dpage.thread-page .thread-bridge .insight p{
-    margin:0;font-family:var(--dp-sans);font-size:clamp(14.5px,1.6vw,16px);line-height:2;color:#2c2d48
+    margin:0;font-family:var(--dp-serif);font-size:clamp(14.5px,1.6vw,16px);line-height:2;color:#2c2d48
   }
   #dpage.thread-page .thread-bridge .insight p + p{margin-top:8px}
 
@@ -7181,6 +7182,25 @@
   }
   /* 浮窗开着的时候,正文区整层要在 Hero 之上,标题才不会透过浮窗 */
   #dpage.records-page .dp-body:has(.rc-overlay){z-index:3}
+
+  /* 详细解读(生命蓝图 / 生命脉络)的正文与引子:字级、行高、字重、字距跟主题页
+     .tp-full .dp-prose p / .tp-peek .pv 完全同一套(用户要求)。放在最后,盖过各页
+     先前各自写的数字;!important 只为了压过原本就带 !important 的 .rd-sum */
+  #dpage.reading-page .dp-detail .rd-sum,
+  #dpage.reading-page .dp-detail .dp-prose,
+  #dpage.reading-page .dp-detail .dp-prose p:not(.pq),
+  #dpage.thread-page .thread-trail > .thread-ch .ch-peek .pv,
+  #dpage.thread-page .thread-trail > .thread-ch .ch-full .dp-prose,
+  #dpage.thread-page .thread-trail > .thread-ch .ch-full .dp-prose p:not(.pq),
+  #dpage.thread-page .ch-reader .pv,
+  #dpage.thread-page .ch-reader .bd,
+  #dpage.thread-page .ch-reader .bd p:not(.pq),
+  #dpage.thread-page .ch-slot .pv,
+  #dpage.thread-page .ch-slot .bd,
+  #dpage.thread-page .ch-slot .bd p:not(.pq){
+    font-family:var(--dp-sans)!important;font-weight:400!important;
+    font-size:clamp(14px, 13.7px + .1vw, 14.5px)!important;line-height:1.9!important;letter-spacing:.01em!important
+  }
 </style>
 </head>
 <!-- legacy-off 直接写在标签上,不等 JS。
