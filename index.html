@@ -78,11 +78,6 @@ img { display: block; max-width: 100%; }
   transition: background .25s;
 }
 .btn-ghost:hover { background: rgba(255,255,255,.08); }
-.btn-soft {
-  display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: 999px;
-  background: var(--grad); color: #fff; font-family: var(--font-serif-sc); font-size: 13px; letter-spacing: .08em;
-  box-shadow: 0 8px 20px rgba(193,140,190,.3);
-}
 
 /* ============================================================
    Hero
@@ -143,12 +138,34 @@ header.site { position: relative; z-index: 5; }
 .hero-kicker { margin-bottom: 18px; font-family: var(--font-serif-sc); color: #f3e7cf; line-height: 1.8; }
 .hero-kicker .l1 { display: block; font-size: 16px; }
 .hero-kicker .l2 { display: block; font-size: 13px; opacity: .78; letter-spacing: .08em; }
+/* 问候语(依用户参考图):字放大、第二行更清楚,底下一条既有的金色星芒分隔线
+   (assets/life/cp-mobile/divider2.webp,两端自带淡出) */
+.hero-kicker { margin-bottom: 26px; }
+.hero-kicker .l1 { font-size: 26px; letter-spacing: .04em; color: #fbf4e6; }
+.hero-kicker .l2 { margin-top: 4px; font-size: 18px; opacity: .92; letter-spacing: .1em; }
+.hero-kicker::after {
+  content: ""; display: block; width: min(100%, 240px); height: 22px; margin-top: 14px;
+  background: url(assets/life/cp-mobile/divider2.webp) left center / 100% auto no-repeat;
+}
 .brand-line { font-family: var(--font-serif-sc); font-size: 15px; letter-spacing: .18em; color: #f1e6d2; }
 .brand-line .st { color: var(--gold-2); }
 .hero-title { margin-top: 14px; font-family: var(--font-display); font-weight: 400; font-size: 64px; line-height: 1.08; letter-spacing: .01em; color: #fbf7f0; text-shadow: 0 2px 18px rgba(10,12,40,.35); }
 .hero-rule { display: block; width: 56px; height: 1px; margin: 24px 0 20px; background: linear-gradient(90deg, var(--gold-2), rgba(230,200,135,0)); }
 .hero-sub { font-family: var(--font-serif-sc); font-size: 17px; line-height: 1.9; letter-spacing: .1em; color: #f1ebe2; }
 .hero-copy .btn-primary { margin-top: 30px; }
+/* 「开启我的星空」(依用户参考图):半透明淡紫玻璃胶囊、一圈发光的淡金细边,
+   左边一颗发光的四芒星,白色宋体字,右边细箭头 */
+.hero-copy .btn-primary, .thread-in .btn-primary, .sky-card .btn-primary, .guide-card .btn-primary {
+  gap: 8px; padding: 8px 18px 8px 15px; font-size: 13px; letter-spacing: .1em; color: #fff;
+  background: linear-gradient(120deg, rgba(196,184,236,.42), rgba(170,156,220,.28) 55%, rgba(210,196,240,.36));
+  border: 1px solid rgba(255,236,206,.75);
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+  text-shadow: 0 1px 8px rgba(60,40,110,.45);
+  box-shadow: 0 0 0 1px rgba(255,236,206,.18), 0 0 18px rgba(255,230,190,.45), inset 0 0 18px rgba(255,255,255,.18), 0 10px 26px rgba(20,16,60,.35);
+}
+.hero-copy .btn-primary:hover, .thread-in .btn-primary:hover, .sky-card .btn-primary:hover, .guide-card:hover .btn-primary { box-shadow: 0 0 0 1px rgba(255,236,206,.28), 0 0 26px rgba(255,230,190,.6), inset 0 0 18px rgba(255,255,255,.22), 0 12px 30px rgba(20,16,60,.4); }
+.hero-copy .btn-primary .st, .thread-in .btn-primary .st, .sky-card .btn-primary .st, .guide-card .btn-primary .st { width: 13px; height: 13px; flex: none; fill: #fff6e2; filter: drop-shadow(0 0 5px rgba(255,226,170,.95)) drop-shadow(0 0 10px rgba(255,210,150,.6)); }
+.hero-copy .btn-primary .ar, .thread-in .btn-primary .ar, .sky-card .btn-primary .ar, .guide-card .btn-primary .ar { margin-left: 2px; font-family: var(--font-sans, sans-serif); }
 
 /* ============================================================
    主题九宫格
@@ -189,7 +206,10 @@ header.site { position: relative; z-index: 5; }
 .thread-bg { background-color: #151a47 !important; }
 .thread-in { position: relative; z-index: 2; padding: 110px 20px 120px; }
 .thread-in h2 { font-family: var(--font-serif-sc); font-weight: 600; font-size: 30px; letter-spacing: .1em; }
-.thread-in p { margin: 16px 0 28px; font-family: var(--font-serif-sc); font-size: 15px; line-height: 2; letter-spacing: .06em; color: rgba(246,240,230,.9); }
+/* 标题与其他 section 标题同一规格(28px / 手机 21px、600、字距 .1em),深色底上用暖奶油色;说明分四行 */
+.thread-in h2 { font-size: 28px; line-height: 1.4; color: #f6ecdc; text-shadow: 0 2px 18px rgba(10,12,40,.4); }
+.thread-in h2 .st { font-size: .55em; vertical-align: .35em; margin-left: 4px; color: #f0cf8c; }
+.thread-in p { margin: 18px 0 30px; font-family: var(--font-serif-sc); font-size: 17px; line-height: 1.95; letter-spacing: .08em; color: rgba(246,240,230,.92); }
 
 /* ============================================================
    在这里，你可以
@@ -205,6 +225,20 @@ header.site { position: relative; z-index: 5; }
 .here-card img { width: 100%; max-width: 190px; aspect-ratio: 1; object-fit: contain; margin-bottom: 10px; }
 .here-card h3 { font-family: var(--font-serif-sc); font-weight: 600; font-size: 18px; letter-spacing: .1em; color: var(--ink); }
 .here-card p { text-wrap: balance; margin-top: 10px; font-size: 13px; line-height: 1.85; color: var(--mut); }
+/* 依用户参考图:标题下一行副标;卡片是暖象牙到淡蜜桃的渐层 + 淡金细边,
+   正文深一点、依设计断行(手机也保留),底部一枚「— ✦ —」金色小饰 */
+.here-sub { margin-top: 10px; text-align: center; font-family: var(--font-serif-sc); font-size: 14px; letter-spacing: .1em; color: #6d6680; }
+.here .sec-title .st { font-size: 13px; color: #c9a061; }
+.here-card {
+  background: linear-gradient(180deg, rgba(255,252,247,.94), rgba(252,240,232,.9));
+  border: 1px solid rgba(226,202,170,.7);
+  box-shadow: 0 14px 30px rgba(120,80,90,.08), inset 0 1px 0 rgba(255,255,255,.9);
+}
+.here-card h3 { color: #23264f; }
+.here-card p { color: #4a4760; }
+.here-card .orn { display: flex; align-items: center; gap: 6px; margin-top: 14px; font-size: 10px; line-height: 1; color: #c9a061; }
+.here-card .orn i { display: block; width: 26px; height: 1px; background: linear-gradient(90deg, rgba(201,160,97,0), rgba(201,160,97,.7)); }
+.here-card .orn i:last-child { background: linear-gradient(90deg, rgba(201,160,97,.7), rgba(201,160,97,0)); }
 
 /* ============================================================
    你的空间:星空 / 内在指南 / 记录 / 收藏
@@ -236,10 +270,13 @@ header.site { position: relative; z-index: 5; }
 .sky-card::after { content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
   background: linear-gradient(90deg, rgba(18,20,60,.6) 0%, rgba(18,20,60,.3) 42%, rgba(18,20,60,0) 62%); }
 .sky-card > * { position: relative; z-index: 1; }
-.sky-card p br, .guide-copy p br { display: none; }
-.guide-copy p { max-width: 250px; }
+.sky-card p br { display: none; }
 .sky-copy { align-self: start; padding-top: 18px; }
 .sky-card h3 { font-size: 26px; letter-spacing: .12em; color: #fbf6ff; text-shadow: 0 2px 12px rgba(10,12,40,.5); }
+.sky-card h3 + p { margin-top: 18px; }
+/* 用户:「查看我的星空」比另外两颗再小一号 */
+.sky-card .btn-primary { margin-top: 18px; gap: 6px; padding: 6px 14px 6px 12px; font-size: 12px; }
+.sky-card .btn-primary .st { width: 11px; height: 11px; }
 .sky-card .btn-ghost { margin: 18px 0 18px; border-color: rgba(230,200,135,.75); color: #f7efdc; background: rgba(20,22,60,.25); }
 .sky-card p { max-width: 230px; text-wrap: balance; font-size: 12.5px; line-height: 1.9; color: #ece6fb; text-shadow: 0 1px 8px rgba(12,14,48,.85); }
 .sky-rule { display: flex; align-items: center; gap: 8px; width: 170px; margin-top: 16px; color: var(--gold-2); font-size: 11px; }
@@ -261,41 +298,83 @@ header.site { position: relative; z-index: 5; }
 .sky-wheel .isky-tip .t { font-size: 13px; }
 .sky-wheel .isky-tip .b { font-size: 11.5px; }
 
-.guide-card { display: block;
-  /* 水彩花卉底图;文字那一侧叠一层淡象牙白,字才站得住 */
-  background: linear-gradient(90deg, rgba(255,251,246,.62) 0%, rgba(255,251,246,.35) 50%, rgba(255,251,246,.08) 100%),
+/* 我的内在指南(依用户范例图):左边大标题 + 金色分隔线 + 两段文字 + 统一 CTA,
+   右边一只金色星空罗盘浮在水彩花卉底图上 */
+.guide-card { display: flex; align-items: center; padding: 34px 30px 34px 48px;
+  background: linear-gradient(90deg, rgba(255,251,246,.7) 0%, rgba(255,251,246,.4) 45%, rgba(255,251,246,0) 70%),
     url(assets/landing/guide-bg.webp) center / cover no-repeat, #fbf5ee; }
-.guide-copy { align-self: start; }
-.guide-copy p { text-wrap: pretty; margin: 12px 0 20px; font-size: 12.5px; line-height: 1.9; color: var(--ink-2); }
+.guide-copy { position: relative; z-index: 1; }
+.guide-art { position: absolute; z-index: 0; right: -4%; top: 50%; width: 58%; max-width: 340px; transform: translateY(-50%); pointer-events: none;
+  filter: drop-shadow(0 6px 18px rgba(170,130,70,.18)); }
+.guide-card h3 { font-size: 28px; letter-spacing: .12em; color: #23264f; }
+.guide-card h3 .st { font-size: .6em; vertical-align: .3em; color: #d6a85a; }
+.guide-rule { display: flex; align-items: center; gap: 8px; width: 210px; margin-top: 14px; color: #d6a85a; font-size: 12px; line-height: 1; }
+.guide-rule::before, .guide-rule::after { content: ""; flex: 1; height: 1px; background: linear-gradient(90deg, rgba(214,168,90,0), rgba(214,168,90,.75)); }
+.guide-rule::after { background: linear-gradient(90deg, rgba(214,168,90,.75), rgba(214,168,90,0)); }
+.guide-copy p { margin-top: 16px; font-family: var(--font-serif-sc); font-size: 14px; line-height: 1.85; letter-spacing: .04em; color: #3f3f62; text-shadow: 0 0 8px #fffaf3; }
+.guide-copy p + p { margin-top: 12px; }
+/* 统一 CTA 在浅色底上:淡紫玻璃再深一点,白字才看得清 */
+.guide-card .btn-primary { margin-top: 24px;
+  background: linear-gradient(120deg, rgba(160,144,214,.5), rgba(140,124,200,.4) 55%, rgba(176,160,224,.46));
+  border-color: rgba(236,204,150,.75);
+  box-shadow: 0 0 0 1px rgba(255,236,206,.14), 0 0 14px rgba(255,230,190,.3), inset 0 0 16px rgba(255,255,255,.16), 0 6px 16px rgba(60,50,110,.14); }
 
-.rec-body { margin-top: 16px; }
-.rec-line { list-style: none; position: relative; padding-left: 22px; }
-.rec-line::before { content: ""; position: absolute; left: 6px; top: 8px; bottom: 8px; width: 1px; background: rgba(143,127,192,.35); }
-.rec-line li { position: relative; display: flex; flex-direction: column; gap: 3px; padding-bottom: 16px; }
-.rec-line li:last-child { padding-bottom: 0; }
-.rec-line .dot { position: absolute; left: -22px; top: 5px; width: 13px; height: 13px; border-radius: 50%; background: #b8a8de; box-shadow: 0 0 0 3px rgba(184,168,222,.25); }
-.rec-line .dot.moon { background: radial-gradient(circle at 65% 40%, transparent 42%, #3a3478 43%); box-shadow: none; }
-.rec-line b { font-family: var(--font-serif-sc); font-weight: 600; font-size: 14px; color: var(--ink); }
-.rec-line span:not(.dot) { text-shadow: 0 0 6px #fffaf3, 0 0 2px #fffaf3; color: #5d5b75 !important; text-wrap: pretty; font-size: 12px; line-height: 1.75; color: var(--mut); }
-
-.rec-card { background: radial-gradient(70% 80% at 22% 58%, rgba(255,251,246,.78), rgba(255,251,246,0) 75%),
-  linear-gradient(90deg, rgba(255,251,246,.55) 0%, rgba(255,251,246,.25) 55%, rgba(255,251,246,.05) 100%),
+/* 我的星空记录 / 我的收藏(依用户范例图):大标题 + 右上药丸连结,
+   里面是半透明白卡;底图的风景留在右半边,左边叠一层淡象牙让卡片站得住 */
+.rec-card { background: linear-gradient(90deg, rgba(255,251,246,.6) 0%, rgba(255,251,246,.3) 50%, rgba(255,251,246,0) 75%),
   url(assets/landing/rec-bg.webp) center / cover no-repeat, #fbf5ee; }
-.fav-card { background: linear-gradient(rgba(255,251,246,.3), rgba(255,251,246,.3)), url(assets/landing/fav-bg.webp) center / cover no-repeat, #fbf5ee; }
-.fav-card .heart { color: #d59aa8; font-size: .8em; }
-.fav-body { position: relative; margin-top: 16px; min-height: 150px; padding: 4px 90px 0 0; }
-.fav-body blockquote { position: relative; padding-left: 26px; font-family: var(--font-serif-sc); font-size: 14px; line-height: 1.95; color: var(--ink);
-  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
-.fav-body blockquote::before { content: "“"; position: absolute; left: 0; top: -8px; font-family: var(--font-display); font-size: 36px; color: rgba(143,127,192,.55); }
-.fav-body .count { text-shadow: 0 0 8px #fff8f0, 0 0 3px #fff8f0; display: inline-flex; align-items: center; gap: 6px; margin-top: 14px; font-size: 12.5px; color: var(--ink-2); }
-.fav-body .count i { font-style: normal; color: #d59aa8; }
-.fav-body:has(.empty) { min-height: 90px; }
-.fav-body .empty { font-family: var(--font-serif-sc); font-size: 13.5px; line-height: 1.95; color: var(--mut); }
+.fav-card { background: linear-gradient(90deg, rgba(255,251,246,.6) 0%, rgba(255,251,246,.3) 50%, rgba(255,251,246,0) 75%),
+  url(assets/landing/fav-bg.webp) center / cover no-repeat, #fbf5ee; }
+.rec-card, .fav-card { padding: 30px 30px 28px; min-height: 380px; }
+.rec-card .card-hd, .fav-card .card-hd { align-items: center; }
+.rec-card h3, .fav-card h3 { font-size: 28px; letter-spacing: .1em; color: #23264f; }
+.rec-card h3 .st { font-size: .6em; vertical-align: .3em; color: #d6a85a; }
+.fav-card .heart { display: inline-block; width: .8em; height: .8em; vertical-align: -.02em; margin-left: 4px; fill: none; stroke: #e28fa4; stroke-width: 1.8; }
+.card-sub { margin-top: 10px; font-family: var(--font-serif-sc); font-size: 14px; line-height: 1.8; color: #4a4a68; text-shadow: 0 0 8px #fffaf3; }
+
+.rec-list { display: flex; flex-direction: column; gap: 12px; margin-top: 20px; max-width: min(480px, 84%); }
+.rec-item { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 16px; padding: 16px 18px 16px 16px; border-radius: 18px;
+  background: rgba(255,253,250,.72); border: 1px solid rgba(255,255,255,.9); box-shadow: 0 8px 22px rgba(90,80,140,.07); backdrop-filter: blur(4px); transition: transform .2s, background .2s; }
+.rec-item:hover { transform: translateY(-2px); background: rgba(255,253,250,.88); }
+.rec-ic { position: relative; width: 84px; height: 84px; border-radius: 50%;
+  background: radial-gradient(circle at 40% 35%, #ece6f8 0%, #d4cbee 55%, #bdb2e2 100%);
+  box-shadow: 0 0 0 5px rgba(255,255,255,.7), 0 4px 14px rgba(120,100,180,.2); }
+.rec-ic img { position: absolute; left: 14%; top: 14%; width: 72%; height: 72%; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(120,90,40,.25)); }
+.rec-ic.star img { left: 8%; top: 8%; width: 84%; height: 84%; }
+.rec-tx b { white-space: nowrap; display: block; font-family: var(--font-serif-sc); font-weight: 600; font-size: 18px; letter-spacing: .06em; color: #23264f; }
+.rec-tx p { margin-top: 6px; font-size: 12.5px; line-height: 1.75; color: #5d5b75; }
+.rec-tx .meta { white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; margin-top: 8px; padding: 3px 10px; border-radius: 999px; font-size: 11.5px; color: #56547a; background: rgba(235,230,245,.7); }
+.rec-tx .meta svg { width: 12px; height: 12px; fill: none; stroke: currentColor; stroke-width: 1.6; }
+.rec-tx .meta[hidden] { display: none; }
+.rec-go { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 50%; color: #5a5690; font-size: 16px;
+  background: rgba(240,236,250,.9); border: 1px solid rgba(255,255,255,.95); box-shadow: 0 3px 10px rgba(90,80,140,.1); }
+
+.fav-body { margin-top: 16px; max-width: min(440px, 66%); }
+.fav-q { position: relative; display: block; padding: 16px 40px 12px 44px; border-radius: 16px; margin-bottom: 10px;
+  background: rgba(255,253,250,.74); border: 1px solid rgba(255,255,255,.9); box-shadow: 0 8px 22px rgba(90,80,140,.07); backdrop-filter: blur(4px); }
+.fav-q::before { content: "\201C"; position: absolute; left: 16px; top: 10px; font-family: Georgia, serif; font-size: 40px; line-height: 1; color: #c9bfe4; }
+.fav-q::after { content: "\2726"; position: absolute; right: 14px; top: 10px; font-size: 11px; color: #d6a85a; }
+.fav-q blockquote { font-family: var(--font-serif-sc); font-style: normal; font-size: 15px; letter-spacing: .03em; line-height: 1.8; color: #23264f;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.fav-q .from { display: block; margin-top: 6px; text-align: right; font-size: 11.5px; color: #6c6a86; }
+.fav-total { display: inline-flex; align-items: center; gap: 12px; margin-top: 4px; padding: 11px 22px; border-radius: 999px;
+  font-family: var(--font-serif-sc); font-size: 15px; letter-spacing: .06em; color: #2f3160;
+  background: rgba(255,252,248,.78); border: 1px solid rgba(232,196,150,.7); box-shadow: 0 6px 18px rgba(90,80,140,.08); transition: background .2s; }
+.fav-total:hover { background: rgba(255,252,248,.95); }
+.fav-total svg { width: 15px; height: 17px; fill: none; stroke: #e28fa4; stroke-width: 1.6; }
+.fav-empty { margin-bottom: 12px; padding: 18px 20px; border-radius: 16px; font-family: var(--font-serif-sc); font-size: 14px; line-height: 1.9; color: #5d5b75;
+  background: rgba(255,253,250,.7); border: 1px solid rgba(255,255,255,.9); }
 
 /* ============================================================
    关于我们
    ============================================================ */
-.story { position: relative; padding: 24px 0 90px; overflow: hidden; }
+.story { position: relative; padding: 64px 0 90px; overflow: hidden; }
+/* 背景图很强:整段先铺一层很淡的象牙柔光,文字后面再多一团,字才站得住 */
+.story::before { content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  background: radial-gradient(90% 80% at 60% 45%, rgba(255,250,244,.62), rgba(255,250,244,.3) 65%, rgba(255,250,244,0) 100%); }
+.story-copy { position: relative; isolation: isolate; }
+.story-copy::before { content: ""; position: absolute; z-index: -1; inset: -32% -30% -28% -30%; pointer-events: none; border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(255,251,246,.9), rgba(255,251,246,.68) 55%, rgba(255,251,246,.3) 80%, rgba(255,251,246,0) 100%); filter: blur(12px); }
 .story-valley { position: absolute; left: 0; right: 0; bottom: 0; height: 60%; background: url(assets/landing/valley.webp) center bottom / cover no-repeat; opacity: .28;
   -webkit-mask-image: linear-gradient(180deg, transparent, #000 60%); mask-image: linear-gradient(180deg, transparent, #000 60%); }
 .story-in { position: relative; display: grid; grid-template-columns: 1fr 1.1fr; align-items: center; gap: 56px; }
@@ -311,17 +390,23 @@ header.site { position: relative; z-index: 5; }
 /* ============================================================
    页尾
    ============================================================ */
-footer.site { position: relative; overflow: hidden; background: linear-gradient(180deg, #151a47, #0e1236); color: #d9d3ea; }
-.foot-in { position: relative; display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 20px; padding-top: 34px; padding-bottom: 26px; }
-.foot-in .brand { font-size: 16px; }
-.foot-links { display: flex; justify-content: center; gap: 36px; }
-.foot-links a { font-family: var(--font-serif-sc); font-size: 13px; letter-spacing: .08em; color: rgba(229,223,242,.85); }
-.foot-links a:hover { color: #fff; }
-.foot-social { display: flex; align-items: center; gap: 16px; }
-.foot-social a { color: rgba(229,223,242,.85); transition: color .2s; }
-.foot-social a:hover { color: #fff; }
-.foot-social .xhs { font-size: 12px; padding: 3px 8px; border: 1px solid rgba(229,223,242,.4); border-radius: 6px; }
-.foot-in .fine { grid-column: 1 / -1; text-align: center; font-size: 11.5px; letter-spacing: .04em; color: rgba(200,193,222,.6); padding-top: 18px; border-top: 1px solid rgba(255,255,255,.08); }
+/* 页脚:与内页 dp-foot 同一套 —— 深蓝星空底图、左边字标 + 标语 + 版权,右边「关于我们」+ 两个圆形社群图示 */
+footer.site { position: relative; overflow: hidden; color: rgba(249,246,242,.72);
+  background: linear-gradient(180deg, rgba(9,18,46,.55), rgba(9,18,46,.82)), url(assets/foot/foot-sky.webp) center 60% / cover no-repeat, #09122e; }
+.foot-in { position: relative; z-index: 2; max-width: 1180px; margin: 0 auto; padding: 38px 48px;
+  display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
+.foot-bd { display: flex; flex-direction: column; gap: 7px; }
+.foot-bd .wm { font-family: var(--font-display); font-size: 19px; letter-spacing: .42em; color: #f9f6f2; line-height: 1; }
+.foot-bd .tag { font-size: 12.5px; color: rgba(232,211,162,.8); letter-spacing: .04em; }
+.foot-bd .cp { font-size: 12px; color: rgba(249,246,242,.62); margin-top: 5px; }
+.foot-rt { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; }
+.foot-rt .lk { color: rgba(249,246,242,.86); font-size: 13.5px; letter-spacing: .06em; transition: color .2s; }
+.foot-rt .lk:hover { color: #f9f6f2; }
+.foot-rt .ics { display: flex; align-items: center; gap: 10px; }
+.foot-rt .ic { width: 38px; height: 38px; border-radius: 50%; border: 1px solid rgba(249,246,242,.28);
+  display: inline-flex; align-items: center; justify-content: center; color: rgba(249,246,242,.86); transition: border-color .2s, color .2s, background .2s; }
+.foot-rt .ic:hover { border-color: rgba(232,211,162,.75); color: #e8d3a2; background: rgba(249,246,242,.06); }
+.foot-rt .ic.xhs { font-size: 9px; letter-spacing: 0; line-height: 1; color: rgba(249,246,242,.9); font-weight: 500; }
 
 /* ============================================================
    平板 / 手机
@@ -342,11 +427,21 @@ footer.site { position: relative; overflow: hidden; background: linear-gradient(
   .hero-bg { background-image: url(assets/landing/hero-m.webp); background-position: 70% 30%; }
   .hero-bg::before { background: linear-gradient(90deg, rgba(12,15,52,.78) 0%, rgba(12,15,52,.5) 50%, rgba(12,15,52,.05) 80%); }
   .hero-copy { max-width: 280px; padding: 34px 0 110px; }
+  .hero-kicker .l1 { font-size: 22px; }
+  .hero-kicker .l2 { font-size: 15px; }
+  .hero-kicker::after { width: 190px; height: 18px; margin-top: 10px; }
   .brand-line { font-size: 12.5px; letter-spacing: .14em; }
   .hero-title { font-size: 34px; margin-top: 10px; }
   .hero-rule { margin: 16px 0 14px; width: 44px; }
   .hero-sub { font-size: 14px; letter-spacing: .06em; }
-  .hero-copy .btn-primary { margin-top: 22px; padding: 11px 24px; font-size: 14px; }
+  .hero-copy .btn-primary { margin-top: 22px; }
+  .hero-copy .btn-primary, .thread-in .btn-primary, .sky-card .btn-primary, .guide-card .btn-primary { padding: 6px 14px 6px 12px; font-size: 11.5px; gap: 6px; }
+  .hero-copy .btn-primary .st, .thread-in .btn-primary .st, .sky-card .btn-primary .st, .guide-card .btn-primary .st { width: 11px; height: 11px; }
+  .sky-card h3 + p { margin-top: 12px; }
+  /* 左栏只有约 135px:按钮保持一行,可以往右伸进星盘那一侧,压在星盘上面 */
+  .sky-card .btn-primary { margin-top: 12px; white-space: nowrap; letter-spacing: .04em; gap: 5px; padding: 5px 11px 5px 10px; font-size: 10.5px; }
+  .sky-card .btn-primary .st { width: 9px; height: 9px; }
+  .sky-card .sky-copy { z-index: 2; }
 
   .sec-title { font-size: 21px; gap: 10px; }
   .sec-title .st { font-size: 12px; }
@@ -359,9 +454,11 @@ footer.site { position: relative; overflow: hidden; background: linear-gradient(
 
   .thread-bg { background-position: 70% 60%; }
   .thread-in { padding: 76px 16px 84px; }
-  .thread-in h2 { font-size: 22px; }
-  .thread-in p { font-size: 12.5px; margin: 12px 0 20px; max-width: 250px; }
-  .thread-in p br { display: none; }
+  /* 手机(依用户参考图):标题分两行、放大、暖奶油色;说明固定三行 */
+  .thread-in br.d { display: none; }
+  .thread-in h2 { font-size: 21px; }
+  .thread-in p { font-size: 14px; line-height: 1.95; margin: 14px 0 24px; max-width: none; color: rgba(246,240,230,.92);
+    text-shadow: 0 1px 10px rgba(12,14,44,.85), 0 0 2px rgba(12,14,44,.6); }
   .btn-cream { padding: 9px 18px; font-size: 12.5px; }
 
   .here { padding: 46px 0 22px; }
@@ -369,8 +466,12 @@ footer.site { position: relative; overflow: hidden; background: linear-gradient(
   .here-card { padding: 12px 6px 16px; border-radius: 16px; }
   .here-card img { max-width: 96px; margin-bottom: 6px; }
   .here-card h3 { font-size: 14px; letter-spacing: .06em; }
-  .here-card p { margin-top: 6px; font-size: 10.5px; line-height: 1.7; }
-  .here-card p br { display: none; }
+  /* 依设计手动断行(<br>),每一行不再自动折;很窄的手机字跟着萤幕宽度缩一点,确保一行放得下 */
+  .here-card p { margin-top: 6px; font-size: min(10px, 2.6vw); line-height: 1.75; letter-spacing: 0; white-space: nowrap; text-wrap: nowrap; }
+  .here-card { padding-left: 3px; padding-right: 3px; }
+  .here-sub { margin-top: 6px; font-size: 12px; letter-spacing: .06em; }
+  .here-card .orn { margin-top: 10px; font-size: 8px; }
+  .here-card .orn i { width: 18px; }
 
   .spaces { padding: 22px 0 0; }
   .row { gap: 14px; margin-bottom: 14px; }
@@ -383,15 +484,33 @@ footer.site { position: relative; overflow: hidden; background: linear-gradient(
   .sky-card p { font-size: 10.5px; line-height: 1.8; }
   .sky-rule { width: 110px; margin-top: 10px; }
   .sky-arch { width: 50%; bottom: -6%; }
-  .sky-wheel { max-width: 250px; margin: -8px -26px -8px -6px; }
-  .guide-copy p { font-size: 11.5px; margin: 10px 0 16px; }
-  .guide-copy p br:nth-of-type(n+2) { display: none; }
-  .btn-soft { font-size: 12px; padding: 8px 14px; }
-  .rec-line span br { display: none; }
-  .card-hd .more { font-size: 11.5px; }
-  .fav-body blockquote { font-size: 13px; }
+  /* 手机星盘放大:宽度由右栏决定,所以让它往两侧多伸一些,而不是只拉 max-width */
+  .sky-wheel { width: calc(100% + 34px); max-width: none; margin: -12px -18px -12px -16px; }
+  .guide-card { padding: 24px 18px 24px 30px; min-height: 250px; }
+  .guide-card h3 { font-size: 21px; letter-spacing: .08em; }
+  .guide-rule { width: 150px; margin-top: 10px; font-size: 10px; }
+  .guide-copy p { margin-top: 10px; font-size: 12px; line-height: 1.8; }
+  .guide-copy p + p { margin-top: 8px; }
+  .guide-card .btn-primary { margin-top: 16px; }
+  .guide-art { width: 50%; right: -6%; }
+  .rec-card, .fav-card { min-height: 0; padding: 22px 16px 20px; }
+  .rec-card h3, .fav-card h3 { font-size: 21px; letter-spacing: .06em; }
+  .card-sub { margin-top: 6px; font-size: 12px; }
+  .rec-list { gap: 10px; margin-top: 14px; max-width: none; }
+  .rec-item { gap: 12px; padding: 12px 12px 12px 12px; border-radius: 15px; }
+  .rec-ic { width: 58px; height: 58px; box-shadow: 0 0 0 3px rgba(255,255,255,.7), 0 3px 10px rgba(120,100,180,.2); }
+  .rec-tx b { font-size: 15px; }
+  .rec-tx p { margin-top: 3px; font-size: 11px; line-height: 1.65; }
+  .rec-tx .meta { margin-top: 5px; font-size: 10.5px; padding: 2px 8px; }
+  .rec-go { width: 30px; height: 30px; font-size: 13px; }
+  .fav-body { margin-top: 12px; max-width: none; }
+  .fav-q { padding: 12px 30px 10px 34px; border-radius: 14px; }
+  .fav-q::before { left: 11px; top: 8px; font-size: 30px; }
+  .fav-q blockquote { font-size: 13px; line-height: 1.75; }
+  .fav-q .from { font-size: 10.5px; }
+  .fav-total { gap: 8px; padding: 8px 16px; font-size: 13px; }
 
-  .story { padding: 10px 0 60px; }
+  .story { padding: 44px 0 60px; }
   .story-in { grid-template-columns: 1fr 1.25fr; gap: 16px; }
   .story-copy h2 { font-size: 20px; }
   .story-copy p { margin-top: 10px; font-size: 11px; line-height: 1.85; letter-spacing: 0; }
@@ -399,10 +518,7 @@ footer.site { position: relative; overflow: hidden; background: linear-gradient(
   .story-copy .sign { margin-top: 12px; font-size: 26px; }
   .story-copy .sign-sub { font-size: 11px; }
 
-  .foot-in { grid-template-columns: 1fr auto; row-gap: 14px; padding-top: 26px; }
-  .foot-links { grid-column: 1 / -1; grid-row: 2; justify-content: flex-start; gap: 22px; }
-  .foot-links a { font-size: 12px; }
-  .foot-in .fine { font-size: 10.5px; }
+  .foot-in { flex-direction: column; align-items: flex-start; gap: 20px; padding: 30px 20px; }
 }
 /* 很窄的手机:导航项目收进「菜单」 */
 @media (max-width: 370px) {
@@ -485,9 +601,9 @@ var APP_URL = "app.html";
       <p class="brand-line animate-fade-up">心有苍穹，星映本真 <span class="bl-emoji" aria-hidden="true">💖</span></p>
       <h1 class="hero-title animate-fade-up" style="--animation-delay:.08s">Know Yourself<br>Through the Stars</h1>
       <span class="hero-rule animate-fade-up" style="--animation-delay:.14s" aria-hidden="true"></span>
-      <p class="hero-sub animate-fade-up" style="--animation-delay:.2s">不是为了寻找答案，<br>而是看见更完整的自己。</p>
+      <p class="hero-sub animate-fade-up" style="--animation-delay:.2s">不是为了寻找答案，<br>而是看见更完整的自己</p>
       <!-- 开启我的星空 = 打开用户既有的生命蓝图,不生成新内容 -->
-      <a class="btn-primary animate-fade-up" style="--animation-delay:.28s" href="app.html#/reading" data-app-hash="#/reading">开启我的星空 <span aria-hidden="true">✦</span></a>
+      <a class="btn-primary animate-fade-up" style="--animation-delay:.28s" href="app.html#/reading" data-app-hash="#/reading"><svg class="st" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 0C10.6 6.6 13.4 9.4 20 10 13.4 10.6 10.6 13.4 10 20 9.4 13.4 6.6 10.6 0 10 6.6 9.4 9.4 6.6 10 0Z"/></svg>开启我的星空 <span class="ar" aria-hidden="true">→</span></a>
     </div>
   </div>
 </div>
@@ -505,30 +621,31 @@ var APP_URL = "app.html";
   <section class="thread-band" aria-label="属于我的生命脉络">
     <div class="thread-bg" aria-hidden="true"></div>
     <div class="wrap thread-in">
-      <h2>属于我的生命脉络</h2>
-      <p>你经历过的每一件事，都不是彼此分开的片段，<br>而是一条一条的线，慢慢织成现在的你。</p>
-      <a class="btn-cream" href="app.html#/map" data-app-hash="#/map">看看我的生命脉络 <span aria-hidden="true">→</span></a>
+      <h2>属于我的生命脉络 <span class="st" aria-hidden="true">✦</span></h2>
+      <p>你经历过的每一件事，<br>都不是彼此分开的片段，<br>而是一条一条的线，<br class="d">慢慢织成现在的你</p>
+      <a class="btn-primary" href="app.html#/map" data-app-hash="#/map"><svg class="st" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 0C10.7 6.3 13.7 9.3 20 10 13.7 10.7 10.7 13.7 10 20 9.3 13.7 6.3 10.7 0 10 6.3 9.3 9.3 6.3 10 0Z"/></svg>看看我的生命脉络 <span class="ar" aria-hidden="true">→</span></a>
     </div>
   </section>
 
   <section class="here">
     <div class="wrap">
       <h2 class="sec-title"><span class="st" aria-hidden="true">✦</span>在这里，你可以<span class="st" aria-hidden="true">✦</span></h2>
+      <p class="here-sub">慢慢认识自己，也慢慢把生命串起来</p>
       <div class="here-grid">
         <a class="here-card" href="app.html#/reading" data-app-hash="#/reading">
           <img src="assets/landing/know.webp" alt="" loading="lazy">
           <h3>认识自己</h3>
-          <p>从星盘与主题里，<br>理解你的性格、模式<br>与潜在可能。</p>
+          <p>从星盘与主题里，<br>理解你的性格、<br>模式与潜在可能</p><span class="orn" aria-hidden="true"><i></i>✦<i></i></span>
         </a>
         <a class="here-card" href="app.html#/map" data-app-hash="#/map">
           <img src="assets/landing/connect.webp" alt="" loading="lazy">
           <h3>连接经历</h3>
-          <p>把散落的片段连成线，<br>看见更完整的<br>人生脉络。</p>
+          <p>把散落的片段连成线，<br>看见更完整的<br>人生脉络</p><span class="orn" aria-hidden="true"><i></i>✦<i></i></span>
         </a>
         <a class="here-card" href="app.html#/records" data-app-hash="#/records">
           <img src="assets/landing/keep.webp" alt="" loading="lazy">
           <h3>留下自己</h3>
-          <p>记录你的感受、问题<br>与重要的时刻，<br>写给未来的自己。</p>
+          <p>记录你的感受、问题<br>与重要的时刻，<br>写给未来的自己</p><span class="orn" aria-hidden="true"><i></i>✦<i></i></span>
         </a>
       </div>
     </div>
@@ -540,36 +657,47 @@ var APP_URL = "app.html";
         <div class="card sky-card">
           <div class="sky-copy">
             <h3>我的星空 <span class="st" aria-hidden="true">✦</span></h3>
-            <a class="btn-ghost" href="app.html#/my-sky" data-app-hash="#/my-sky">查看我的星空 <span aria-hidden="true">→</span></a>
             <p>每个人的星空都是独一无二的，<br>它记录了你与这个世界相遇的那一刻。</p>
             <span class="sky-rule" aria-hidden="true">✦</span>
+            <a class="btn-primary" href="app.html#/my-sky" data-app-hash="#/my-sky"><svg class="st" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 0C10.6 6.6 13.4 9.4 20 10 13.4 10.6 10.6 13.4 10 20 9.4 13.4 6.6 10.6 0 10 6.6 9.4 9.4 6.6 10 0Z"/></svg>查看我的星空 <span class="ar" aria-hidden="true">→</span></a>
           </div>
           <img class="sky-arch" src="assets/landing/about.webp" alt="" loading="lazy">
           <!-- 星盘由 assets/inner-sky-chart.js 渲染使用者自己的那一张;没有资料就画空盘 -->
           <div class="sky-wheel isky-wheel" id="iskyWheel" data-app="app.html"></div>
         </div>
         <a class="card guide-card" href="app.html#/compass" data-app-hash="#/compass">
+          <img class="guide-art" src="assets/life/compass.webp" alt="" loading="lazy">
           <div class="guide-copy">
-            <h3>我的内在指南</h3>
-            <p>在变化的日子里，<br>给自己一些温柔的提醒。<br>这里有「此刻的我」、「想问自己的问题」<br>以及为你量身的思考指引。</p>
-            <span class="btn-soft">打开我的内在指南 <span aria-hidden="true">→</span></span>
+            <h3>我的内在指南 <span class="st" aria-hidden="true">✦</span></h3>
+            <span class="guide-rule" aria-hidden="true">✦</span>
+            <p>在变化的日子里，<br>给自己一些温柔的提醒</p>
+            <p>这里有「此刻的我」、<br>「想问自己的问题」，<br>以及属于你的思考指引</p>
+            <span class="btn-primary"><svg class="st" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 0C10.6 6.6 13.4 9.4 20 10 13.4 10.6 10.6 13.4 10 20 9.4 13.4 6.6 10.6 0 10 6.6 9.4 9.4 6.6 10 0Z"/></svg>打开我的内在指南 <span class="ar" aria-hidden="true">→</span></span>
           </div>
         </a>
       </div>
       <div class="row row-b">
         <div class="card rec-card">
-          <div class="card-hd"><h3>我的星空记录 <span class="st" aria-hidden="true">✦</span></h3>
-            <a class="more" href="app.html#/records" data-app-hash="#/records">查看我的记录 <span aria-hidden="true">→</span></a></div>
-          <div class="rec-body">
-            <ol class="rec-line">
-              <li><span class="dot moon" aria-hidden="true"></span><b>此刻的我</b><span>记下此刻的感受与状态，<br>不用急着明白，先留下来。</span></li>
-              <li><span class="dot" aria-hidden="true"></span><b>想问自己的问题</b><span>把想问自己的问题留在这里，<br>慢慢会有答案。</span></li>
-            </ol>
+          <div class="card-hd"><h3>我的星空记录 <span class="st" aria-hidden="true">✦</span></h3></div>
+          <p class="card-sub">记录那些值得回看的时刻</p>
+          <div class="rec-list">
+            <a class="rec-item" href="app.html#/records/note" data-app-hash="#/records/note">
+              <span class="rec-ic" aria-hidden="true"><img src="assets/life/cp-mobile/qm-moon.webp" alt="" loading="lazy"></span>
+              <span class="rec-tx"><b>此刻的我</b><p>记录此刻的感受与状态，<br>不用急着明白，先留下来</p>
+                <span class="meta" id="recLast" hidden><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.5"/><path d="M8 4.5V8l2.4 1.6"/></svg><span></span></span></span>
+              <span class="rec-go" aria-hidden="true">→</span>
+            </a>
+            <a class="rec-item" href="app.html#/records/answer" data-app-hash="#/records/answer">
+              <span class="rec-ic star" aria-hidden="true"><img src="assets/life/cp-mobile/qm-star.webp" alt="" loading="lazy"></span>
+              <span class="rec-tx"><b>想问自己的问题</b><p>把想问自己的问题留在这里，<br>慢慢会有答案</p>
+                <span class="meta" id="recQ" hidden><svg viewBox="0 0 16 16"><rect x="3" y="2" width="10" height="12" rx="1.5"/><path d="M5.5 6h5M5.5 8.5h5M5.5 11h3"/></svg><span></span></span></span>
+              <span class="rec-go" aria-hidden="true">→</span>
+            </a>
           </div>
         </div>
         <div class="card fav-card" id="favs">
-          <div class="card-hd"><h3>我的收藏 <span class="heart" aria-hidden="true">♡</span></h3>
-            <a class="more" href="app.html#/favorites" data-app-hash="#/favorites">查看我的收藏 <span aria-hidden="true">→</span></a></div>
+          <div class="card-hd"><h3>我的收藏<svg class="heart" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5s-7.5-4.6-9.3-9.2C1.4 8 3.4 4.5 6.9 4.5c2.2 0 3.8 1.3 5.1 3.1 1.3-1.8 2.9-3.1 5.1-3.1 3.5 0 5.5 3.5 4.2 6.8-1.8 4.6-9.3 9.2-9.3 9.2z"/></svg></h3></div>
+          <p class="card-sub">阅读时选中让你有感觉的句子，<br>就可以收藏在这里</p>
           <div class="fav-body" id="favSlot"></div>
         </div>
       </div>
@@ -590,24 +718,24 @@ var APP_URL = "app.html";
   </section>
 </main>
 
+<!-- 页脚:与内页(app.html 的 dp-foot)同一套设计 -->
 <footer class="site">
-  <div class="starfield" id="footStars" aria-hidden="true"></div>
-  <div class="wrap foot-in">
-    <span class="brand">INNER&nbsp;SKY <span class="st" aria-hidden="true">✦</span></span>
-    <nav class="foot-links">
-      <a href="#top">首页</a>
-      <a href="#chapters">探索主题</a>
-      <a href="#story">关于我们</a>
-    </nav>
-    <div class="foot-social">
-      <a href="https://www.instagram.com/the_inner.sky?igsh=dDc4YmUwZTllc2h0&amp;utm_source=qr" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
-        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
-          <rect x="3" y="3" width="18" height="18" rx="5"></rect><circle cx="12" cy="12" r="4"></circle>
-          <circle cx="17.2" cy="6.8" r="1.1" fill="currentColor" stroke="none"></circle></svg>
-      </a>
-      <a class="xhs" href="https://xhslink.cn/m/6XbeCmG8RPc" target="_blank" rel="noopener noreferrer" aria-label="小红书">小红书</a>
+  <div class="foot-in">
+    <div class="foot-bd">
+      <span class="wm">INNER&nbsp;SKY</span>
+      <span class="tag">心有苍穹，星映本真</span>
+      <span class="cp">© 2026 The Inner Sky. All rights reserved.</span>
     </div>
-    <p class="fine">© 2026 The Inner Sky. All rights reserved.</p>
+    <div class="foot-rt">
+      <a class="lk" href="#story">关于我们</a>
+      <span class="ics">
+        <a class="ic" href="https://www.instagram.com/the_inner.sky?igsh=dDc4YmUwZTllc2h0&amp;utm_source=qr" target="_blank" rel="noopener noreferrer" aria-label="Instagram" title="Instagram">
+          <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+            <rect x="3" y="3" width="18" height="18" rx="5"></rect><circle cx="12" cy="12" r="4"></circle>
+            <circle cx="17.2" cy="6.8" r="1.1" fill="currentColor" stroke="none"></circle></svg></a>
+        <a class="ic xhs" href="https://xhslink.cn/m/6XbeCmG8RPc" target="_blank" rel="noopener noreferrer" aria-label="小红书" title="小红书"><span aria-hidden="true">小红书</span></a>
+      </span>
+    </div>
   </div>
 </footer>
 
@@ -636,7 +764,6 @@ function paintStars(el, count, seed) {
   el.innerHTML = html;
 }
 paintStars(document.getElementById("heroStars"), 150, 20260818);
-paintStars(document.getElementById("footStars"), 40, 7788);
 paintStars(document.getElementById("storyStars"), 54, 77123);
 
 /* ============================================================
@@ -710,16 +837,37 @@ function renderChapterGrid() {
 }
 renderChapterGrid();
 
-/* ---------- 我的收藏:最新一句 + 总数;没有收藏就给一句引导 ---------- */
+/* ---------- 我的收藏:最新两句 + 总数;没有收藏就给一句引导 ---------- */
 (function () {
   var slot = document.getElementById("favSlot");
   if (!slot) return;
+  var n = parseInt(readCache("inner_sky_favs_n_v1"), 10);
+  if (!(n >= FAVS.length)) n = FAVS.length;   // 旧快照没有总数,就用手上这几句
+  var bm = '<svg viewBox="0 0 16 18" aria-hidden="true"><path d="M3 1.5h10v15l-5-3.6-5 3.6z"/></svg>';
   if (FAVS.length) {
-    slot.innerHTML = '<blockquote>' + esc(FAVS[0].text) + '</blockquote>' +
-      '<div class="count"><i aria-hidden="true">♡</i>' + FAVS.length + ' 条收藏</div>';
+    slot.innerHTML = FAVS.slice(0, 2).map(function (f) {
+      return '<a class="fav-q" href="' + appHref("#/favorites") + '" data-app-hash="#/favorites"><blockquote>' + esc(String(f.text).replace(/[。.]\s*$/, "")).replace(/，/g, "，<br>") + '</blockquote>' +
+        (f.source ? '<span class="from">来自 · ' + esc(f.source) + '</span>' : '') + '</a>';
+    }).join("") +
+      '<a class="fav-total" href="' + appHref("#/favorites") + '" data-app-hash="#/favorites">' + bm + '共收藏 ' + n + ' 句话 <span aria-hidden="true">→</span></a>';
   } else {
-    slot.innerHTML = '<p class="empty">阅读时选中让你有感觉的句子，<br>就可以收藏在这里。</p>';
+    slot.innerHTML = '<p class="fav-empty">还没有收藏的句子，<br>读到有感觉的一句，选中它就会留在这里</p>' +
+      '<a class="fav-total" href="' + appHref("#/map") + '" data-app-hash="#/map">' + bm + '开始阅读 <span aria-hidden="true">→</span></a>';
   }
+})();
+
+/* ---------- 我的星空记录:最近一次「此刻的我」+ 问题数量(应用写的小快照,必须是同一个 uid) ---------- */
+(function () {
+  var m = readCache("inner_sky_rec_meta_v1");
+  if (!m || !SESSION || !SESSION.user_id || m.uid !== SESSION.user_id) return;
+  function put(id, text) {
+    var el = document.getElementById(id);
+    if (!el || !text) return;
+    el.lastChild.textContent = text; el.hidden = false;
+  }
+  var d = /^\d{4}-(\d{2})-(\d{2})$/.exec(m.last || "");
+  if (d) put("recLast", "最近一次 · " + (+d[1]) + "月" + (+d[2]) + "日");
+  if (m.q > 0) put("recQ", m.q + " 个问题");
 })();
 
 /* ============================================================

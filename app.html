@@ -10438,6 +10438,8 @@ window.Guide = (function () {
       // c 之前没有在这个函式里取过,整段会抛 ReferenceError,收藏快照永远写不出去
       var ac = activeChart();
       localStorage.setItem("inner_sky_favs_v1", JSON.stringify(((ac && ac.favs) || []).slice(0, 4)));
+      // 快照只留前 4 句,落地页的「共收藏 N 句话」要另外记总数
+      localStorage.setItem("inner_sky_favs_n_v1", String(((ac && ac.favs) || []).length));
     } catch (e) { }
   }
 
@@ -12178,6 +12180,8 @@ window.Guide = (function () {
     if (h === "#/compass/preview") return { k: "compass", dev: true };
     if (h === "#/favorites") return { k: "favorites" };
     if (h === "#/records") return { k: "records" };
+    /* 落地页两张卡直接带着筛选进来:此刻的我 = note,问问自己 = answer */
+    if ((m = h.match(/^#\/records\/(note|answer)$/))) return { k: "records", f: m[1] };
     if (h === "#/onboarding") return { k: "onboarding" };
     if (h === "#/settings") return { k: "settings" };
     if (h === "#/login") return { k: "login" };
@@ -12352,6 +12356,8 @@ window.Guide = (function () {
   let returnToLanding = false;   // 从 Header 的登入 / 注册入口进来
   function applyRoute() {
     curRoute = parseRoute();
+    // 只在进入路由时套用一次;之后在页面上点筛选按钮照常切换
+    if (curRoute && curRoute.k === "records" && curRoute.f) recFilter = curRoute.f;
     const dp = $("dpage");
     if (!dp) return;
     if (!curRoute) {
@@ -13522,12 +13528,25 @@ window.Guide = (function () {
         if (e.target !== full || e.propertyName !== "max-height") return;
         if (full.classList.contains("on")) full.style.maxHeight = "none";
       });
+      /* 展开当下这一段在视窗里的位置。「收起」时把画面带回这里 ——
+         以前是收起时直接 focus 按钮,浏览器趁正文还没收完就自己卷动,
+         结果停在页面下方或下一段(用户反馈)。这一段的顶端在正文上面,
+         收合不会动到它,所以量到的就是终点。 */
+      let openTop = null;
       const set = function (on) {
+        if (on) openTop = sec.getBoundingClientRect().top;
         sec.classList.toggle("open", on);
         full.classList.toggle("on", on);
         open.setAttribute("aria-expanded", on ? "true" : "false");
         full.style.maxHeight = full.scrollHeight + "px";
-        if (!on) { full.getBoundingClientRect(); full.style.maxHeight = "0px"; open.focus(); }
+        if (!on) {
+          full.getBoundingClientRect(); full.style.maxHeight = "0px";
+          open.focus({ preventScroll: true });
+          const want = openTop === null ? 96 : Math.max(72, openTop);
+          const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion:reduce)").matches;
+          window.scrollTo({ top: Math.max(0, window.scrollY + sec.getBoundingClientRect().top - want),
+                            behavior: reduce ? "auto" : "smooth" });
+        }
       };
       open.addEventListener("click", function () { set(true); });
       if (shut) shut.addEventListener("click", function () { set(false); });
@@ -14113,6 +14132,18 @@ window.Guide = (function () {
      ============================================================ */
   function compassOwner() {
     return window.Cloud.userId() || "anon";
+  }
+  /* 落地页「我的星空记录」卡用的小快照:最近一次「此刻的我」的日期 + 问题数量。
+     只存日期和数字,不存任何记录内容;uid 对不上的快照落地页不采用。 */
+  function recSnapshot(rows) {
+    try {
+      let last = "", q = 0;
+      (rows || []).forEach(function (r) {
+        if (r.kind === "answer") q++;
+        else if (r.ts && r.ts > last) last = r.ts;
+      });
+      localStorage.setItem("inner_sky_rec_meta_v1", JSON.stringify({ uid: window.Cloud.userId() || "", last: last.slice(0, 10), q: q }));
+    } catch (e) { }
   }
   /* 今天的问题:跟着「使用者 + 日期」轮换 —— 同一天回来是同一题,
      不同的人不会永远看到同一题。 */
@@ -15969,6 +16000,7 @@ window.Guide = (function () {
        不可以先闪一下生成,再被云端那一份盖掉。 */
     compassResolveCanonical();
 
+    if (compassEntries) recSnapshot(compassEntries);
     // 第一次进来才去读记录;之后重画沿用已经载到的那一份
     if (compassEntries === null && !compassBusy) {
       compassBusy = true;
@@ -16379,6 +16411,7 @@ window.Guide = (function () {
       seed: 29
     });
     if (!c) return;
+    if (compassEntries) recSnapshot(compassEntries);
     if (compassEntries === null && !compassBusy) {
       compassBusy = true;
       window.Compass.store.list(compassOwner()).then(function (rs) {
