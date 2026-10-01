@@ -7197,9 +7197,15 @@
   #dpage.thread-page .ch-reader .bd p:not(.pq),
   #dpage.thread-page .ch-slot .pv,
   #dpage.thread-page .ch-slot .bd,
-  #dpage.thread-page .ch-slot .bd p:not(.pq){
+  #dpage.thread-page .ch-slot .bd p:not(.pq),
+  #dpage.thread-page .thread-chapters .ch-card .pv{
     font-family:var(--dp-sans)!important;font-weight:400!important;
     font-size:clamp(14px, 13.7px + .1vw, 14.5px)!important;line-height:1.9!important;letter-spacing:.01em!important
+  }
+  /* 「从这里开始」卡片的重点列表:跟主题页 .tp-peek .ch-keys li 同一套 */
+  #dpage.thread-page .thread-chapters .ch-card .ch-keys li{
+    font-family:var(--dp-sans)!important;font-weight:500!important;
+    font-size:clamp(13px, 12.7px + .1vw, 13.5px)!important;line-height:1.7!important;letter-spacing:.01em!important
   }
 </style>
 </head>
