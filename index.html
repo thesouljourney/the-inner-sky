@@ -253,6 +253,8 @@ header.site { position: relative; z-index: 5; }
 .row { display: grid; gap: 22px; margin-bottom: 22px; }
 .row-a { grid-template-columns: 1.3fr 1fr; }
 .row-b { grid-template-columns: 1fr 1fr; }
+.row-solo { grid-template-columns: 1fr; }
+.spaces-sky { padding: 0 0 30px; }
 .card {
   position: relative; overflow: hidden; border-radius: var(--radius); padding: 26px 26px;
   background: rgba(255,253,250,.86); border: 1px solid rgba(233,222,212,.9); box-shadow: 0 14px 34px rgba(60,50,100,.07);
@@ -617,24 +619,6 @@ var APP_URL = "app.html";
 </div>
 
 <main class="page">
-  <section class="topics" id="chapters">
-    <div class="wrap">
-      <h2 class="sec-title"><span class="st" aria-hidden="true">✦</span>探索属于你的主题<span class="st" aria-hidden="true">✦</span></h2>
-      <p class="sec-sub">每一个主题，都是理解自己的入口。</p>
-      <!-- 星体由 CHAPTERS 数据渲染,新增主题只需往数组里加一项 -->
-      <div class="chapter-grid" id="chapterGrid"></div>
-    </div>
-  </section>
-
-  <section class="thread-band" aria-label="属于我的生命脉络">
-    <div class="thread-bg" aria-hidden="true"></div>
-    <div class="wrap thread-in">
-      <h2>属于我的生命脉络 <span class="st" aria-hidden="true">✦</span></h2>
-      <p>你经历过的每一件事，<br>都不是彼此分开的片段，<br>而是一条一条的线，<br class="d">慢慢织成现在的你</p>
-      <a class="btn-primary" href="app.html#/map" data-app-hash="#/map"><svg class="st" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 0C10.7 6.3 13.7 9.3 20 10 13.7 10.7 10.7 13.7 10 20 9.3 13.7 6.3 10.7 0 10 6.3 9.3 9.3 6.3 10 0Z"/></svg>看看我的生命脉络 <span class="ar" aria-hidden="true">→</span></a>
-    </div>
-  </section>
-
   <section class="here">
     <div class="wrap">
       <h2 class="sec-title"><span class="st" aria-hidden="true">✦</span>在这里，你可以<span class="st" aria-hidden="true">✦</span></h2>
@@ -659,9 +643,10 @@ var APP_URL = "app.html";
     </div>
   </section>
 
-  <section class="spaces" id="sky" aria-label="你的空间">
+  <!-- 我的星空:依用户要求放在「在这里,你可以」之后、探索主题之前 -->
+  <section class="spaces spaces-sky" id="sky" aria-label="我的星空">
     <div class="wrap">
-      <div class="row row-a">
+      <div class="row row-solo">
         <div class="card sky-card">
           <div class="sky-copy">
             <h3>我的星空 <span class="st" aria-hidden="true">✦</span></h3>
@@ -673,6 +658,32 @@ var APP_URL = "app.html";
           <!-- 星盘由 assets/inner-sky-chart.js 渲染使用者自己的那一张;没有资料就画空盘 -->
           <div class="sky-wheel isky-wheel" id="iskyWheel" data-app="app.html"></div>
         </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="topics" id="chapters">
+    <div class="wrap">
+      <h2 class="sec-title"><span class="st" aria-hidden="true">✦</span>探索属于你的主题<span class="st" aria-hidden="true">✦</span></h2>
+      <p class="sec-sub">每一个主题，都是理解自己的入口。</p>
+      <!-- 星体由 CHAPTERS 数据渲染,新增主题只需往数组里加一项 -->
+      <div class="chapter-grid" id="chapterGrid"></div>
+    </div>
+  </section>
+
+  <section class="thread-band" aria-label="属于我的生命脉络">
+    <div class="thread-bg" aria-hidden="true"></div>
+    <div class="wrap thread-in">
+      <h2>属于我的生命脉络 <span class="st" aria-hidden="true">✦</span></h2>
+      <p>你经历过的每一件事，<br>都不是彼此分开的片段，<br>而是一条一条的线，<br class="d">慢慢织成现在的你</p>
+      <a class="btn-primary" href="app.html#/map" data-app-hash="#/map"><svg class="st" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 0C10.7 6.3 13.7 9.3 20 10 13.7 10.7 10.7 13.7 10 20 9.3 13.7 6.3 10.7 0 10 6.3 9.3 9.3 6.3 10 0Z"/></svg>看看我的生命脉络 <span class="ar" aria-hidden="true">→</span></a>
+    </div>
+  </section>
+
+
+  <section class="spaces" aria-label="你的空间">
+    <div class="wrap">
+      <div class="row row-solo">
         <a class="card guide-card" href="app.html#/compass" data-app-hash="#/compass">
           <img class="guide-art" src="assets/life/compass.webp" alt="" loading="lazy">
           <div class="guide-copy">
