@@ -6910,7 +6910,8 @@
   #dpage.records-page .dp-hero{
     color:var(--dp-ink);text-align:center;
     position:relative;z-index:1;isolation:isolate;background:none;
-    padding-top:0;padding-bottom:clamp(40px,6vw,80px)
+    /* 顶部内距不再归零:跟其他页面同一个 26px,顶栏(Logo / 导航 / 账号)位置全站一致 */
+    padding-bottom:clamp(40px,6vw,80px)
   }
   #dpage.records-page .dp-hero::before{
     content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
@@ -6925,7 +6926,7 @@
   #dpage.records-page .dp-hero .dp-back{color:#fffaf0;text-shadow:0 1px 8px rgba(20,24,60,.45)}
   #dpage.records-page .dp-hero .dp-acct-btn{color:rgba(255,251,243,.92);border-color:rgba(255,251,243,.45);text-shadow:0 1px 8px rgba(20,24,60,.4)}
   #dpage.records-page .dp-hero .dp-acct-btn .caret{color:rgba(255,251,243,.7)}
-  #dpage.records-page .dp-hero .dp-hero-grid{padding-top:clamp(110px,14vw,190px)}
+  #dpage.records-page .dp-hero .dp-hero-grid{padding-top:calc(clamp(110px,14vw,190px) - 26px)}
   #dpage.records-page .dp-hero .dp-stars{display:none}
   #dpage.records-page .dp-brand{color:var(--dp-ink)}
   #dpage.records-page .dp-brand .s{color:#b8a678}
@@ -9556,7 +9557,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
      旧记录里已经存下的心情字(例如「有点乱」)照样会显示,只是不再出现在选项里。 */
   const MOODS = [
     ["平静", "Calm"], ["有点开心", "A little happy"], ["有些期待", "Quietly hopeful"], ["心里暖暖的", "Warm inside"],
-    ["有点累", "A bit tired"], ["有点焦虑", "A bit anxious"], ["有些难过", "A little sad"], ["说不清楚", "Hard to say"]
+    ["有点累", "A bit tired"], ["有点乱", "A bit scattered"], ["有些难过", "A little sad"], ["说不清楚", "Hard to say"]
   ];
   const MOODS_MORE = [
     ["有点孤单", "A bit lonely"], ["有点委屈", "A bit wronged"], ["有点烦躁", "A bit irritable"], ["有些失落", "A little let down"],
