@@ -3074,8 +3074,9 @@ function testCompassProductPage() {
 
   // 此刻的我:日常说法,不诊断
   const moods = html.slice(html.indexOf("const MOODS = ["), html.indexOf("];", html.indexOf("const MOODS = [")));
+  // 「有点焦虑」是用户指定的日常说法(依参考图),不算临床诊断;其余词仍然禁止
   checkEq("[prod] 心情选项不使用临床词汇",
-    /焦虑|抑郁|创伤|解离|失调|障碍/.test(moods), false);
+    /抑郁|创伤|解离|失调|障碍|焦虑症/.test(moods), false);
   checkEq("[prod] 心情由使用者自己选", /data-mood=/.test(page), true);
 }
 
