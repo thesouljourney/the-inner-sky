@@ -13883,6 +13883,13 @@ window.Guide = (function () {
           const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion:reduce)").matches;
           window.scrollTo({ top: Math.max(0, window.scrollY + sec.getBoundingClientRect().top - want),
                             behavior: reduce ? "auto" : "smooth" });
+        } else {
+          // 用户:点「继续读这一段」之后跟「从这里开始」一样,画面带到这一段的开头(约视窗上方 96px)
+          requestAnimationFrame(function () {
+            const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion:reduce)").matches;
+            window.scrollTo({ top: Math.max(0, window.scrollY + sec.getBoundingClientRect().top - 96),
+                              behavior: reduce ? "auto" : "smooth" });
+          });
         }
       };
       open.addEventListener("click", function () { set(true); });
