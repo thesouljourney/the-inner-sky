@@ -7311,6 +7311,14 @@
   @media(min-width:768px){
     #dpage .dp-hero .dp-hero-grid{max-width:var(--dp-hero-w);margin-left:auto;margin-right:auto}
   }
+
+  /* 主题页「值得记住」:星芒、引号、左边竖线、两句之间的 ✦ 细线都换成这个主题的颜色
+     (--theme-accent 由 dpTopicAccent() 写入;其他页面的「值得记住」不受影响) */
+  #dpage.topic-page .dp-keep .hd .ic{color:var(--theme-accent)}
+  #dpage.topic-page .dp-keep .q .mk{color:var(--theme-accent);opacity:.6}
+  #dpage.topic-page .dp-keep .q .bd{border-left-color:color-mix(in srgb,var(--theme-accent) 55%,transparent)}
+  #dpage.topic-page .dp-keep .sp .ln{background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--theme-accent) 40%,transparent),transparent)}
+  #dpage.topic-page .dp-keep .sp .st{color:var(--theme-accent)}
 </style>
 </head>
 <!-- legacy-off 直接写在标签上,不等 JS。
