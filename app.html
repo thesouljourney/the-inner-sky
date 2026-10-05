@@ -7401,6 +7401,24 @@
   }
   #dpage.thread-page .thread-chapters .ch-reader .moon,
   #dpage.thread-page .thread-chapters .ch-slot .moon{margin-top:clamp(18px,2.2vw,24px)}
+
+  /* 「一个小小的洞察」(桌机):文字铺到左右两枝花叶之间,不再缩成中间很窄的一条 */
+  @media(min-width:768px){
+    #dpage.thread-page .thread-bridge .insight{padding-left:clamp(28px,21%,200px);padding-right:clamp(28px,21%,200px)}
+    /* 用户:换行要自然 —— 写满一行再换下一行,只避免最后一行剩一个字 */
+    #dpage.thread-page .thread-bridge .insight p{max-width:none;text-wrap:pretty}
+    #dpage.thread-page .thread-bridge .insight .lb{white-space:nowrap}
+  }
+
+  /* 生成等待时的 quote:宋体、置中,换句时淡出淡入 */
+  #dpage .dp-wait-q{
+    margin:-28px auto 0;padding:0 20px 56px;max-width:28em;text-align:center;
+    font-family:var(--dp-serif);font-size:clamp(15px,1.6vw,17px);line-height:1.9;letter-spacing:.06em;color:#3b3f78;
+    transition:opacity .6s ease
+  }
+  #dpage .dp-wait-q::before{content:"✦";display:block;margin-bottom:10px;font-size:11px;color:#c9a061}
+  #dpage .dp-wait-q.out{opacity:0}
+  @media (prefers-reduced-motion:reduce){#dpage .dp-wait-q{transition:none}}
 </style>
 </head>
 <!-- legacy-off 直接写在标签上,不等 JS。
@@ -12889,6 +12907,29 @@ window.Guide = (function () {
   const pvSkip = {};
 
   window.addEventListener("hashchange", applyRoute);
+  /* (放在首次 applyRoute() 之前:冷启动若直接落在等待画面,dpLoading 就会用到它们) */
+  var DP_WAIT_QUOTES = [
+    "慢慢来，星星也是一颗一颗亮起来的",
+    "你不需要一次把人生想清楚",
+    "每一个停下来的时刻，都是在靠近自己",
+    "理解自己，本来就不是一件急的事",
+    "你走过的每一段路，都没有白走",
+    "有些答案，要等心安静下来才听得见",
+    "不是为了寻找答案，而是看见更完整的自己",
+    "星空不会催你，你也不用催自己",
+    "温柔地对待，那个正在改变的自己",
+    "你比你以为的，更了解自己"
+  ];
+  var DP_WAIT_MS = 7000;
+  function dpWaitQuote() { return DP_WAIT_QUOTES[Math.floor(Date.now() / DP_WAIT_MS) % DP_WAIT_QUOTES.length]; }
+  setInterval(function () {
+    const el = document.getElementById("dpWaitQ");
+    if (!el) return;
+    const next = dpWaitQuote();
+    if (el.textContent === next) return;
+    el.classList.add("out");
+    setTimeout(function () { el.textContent = next; el.classList.remove("out"); }, 600);
+  }, 1000);
   applyRoute();   // 冷启动带路由 hash 时立即渲染(登录后 applyDeepLink 会再刷新一次)
 
   // ---------- 页面骨架与共用件 ----------
@@ -13819,11 +13860,16 @@ window.Guide = (function () {
       '<br><a class="dp-cta" style="margin-top:16px" href="' + LANDING_URL + '">' + dpT("回到主页", "Back to home") + "</a></div>";
   }
   // 柔和的等待:三颗微光星点缓慢呼吸,不是 spinner,也不换背景
-  function dpLoading(msg) {
+  // withQuote:后台在生成解读时(要等一分钟左右),底下多一句固定的 quote,每 7 秒换一句
+  function dpLoading(msg, withQuote) {
     return '<div class="dp-card"><div class="dp-dots">' +
       '<span class="dot"></span><span class="dot"></span><span class="dot"></span>' +
-      '<span class="tx">' + esc0(msg) + '</span></div></div>';
+      '<span class="tx">' + esc0(msg) + '</span></div>' +
+      (withQuote ? '<p class="dp-wait-q" id="dpWaitQ">' + esc0(dpWaitQuote()) + "</p>" : "") +
+      "</div>";
   }
+  /* 等待时的固定 quote。依时间轮换(不是随机):页面在等待期间重画,接着显示的
+     还是同一句,不会突然跳一句;只有到了下一个 7 秒才换 */
   function dpError(err, retryId) {
     return '<div class="dp-card dp-loading">' + dpT("这次没有生成成功。", "Generation didn’t go through.") +
       '<br><span style="font-size:12px;opacity:.8">' + esc0((err && err.hint) || (err && err.msg) || "") + "</span><br>" +
@@ -13959,10 +14005,10 @@ window.Guide = (function () {
         markTopicRead(tid);
         ensureTopicPreviews(c, tid, saved);
       }
-      else if (topicBusy) body = dpLoading(dpT("正在为你整理这一章,大约需要一分钟…", "Preparing this chapter for you — about a minute…"));
+      else if (topicBusy) body = dpLoading(dpT("正在为你整理这一章,大约需要一分钟…", "Preparing this chapter for you — about a minute…"), true);
       else if (topicErrs[tid]) body = dpError(topicErrs[tid], "dpRetryT");
       else if (window.I18N.isEN()) body = '<div class="dp-card">' + missingLangHtml("dpGenT") + "</div>";
-      else body = dpLoading(dpT("正在为你整理这一章,大约需要一分钟…", "Preparing…"));
+      else body = dpLoading(dpT("正在为你整理这一章,大约需要一分钟…", "Preparing…"), true);
     }
     // 底部「上一个 / 1 of 9 / 下一个」主题导航已整组移除(含其 wrapper 与留白)
     const foot = dpReturnFoot();
@@ -13996,9 +14042,9 @@ window.Guide = (function () {
     else {
       const saved = window.Reading.reviveTopic((c[window.Reading.LK("qa")] || {})[qid]);
       if (saved) body = dpAnswerHtml(saved, q.q, "question");
-      else if (qaBusy) body = dpLoading(dpT("正在为你探索这个问题…", "Exploring this question for you…"));
+      else if (qaBusy) body = dpLoading(dpT("正在为你探索这个问题…", "Exploring this question for you…"), true);
       else if (qaErrs[qid]) body = dpError(qaErrs[qid], "dpRetryQ");
-      else body = dpLoading(dpT("正在为你探索这个问题…", "Exploring this question for you…"));
+      else body = dpLoading(dpT("正在为你探索这个问题…", "Exploring this question for you…"), true);
     }
     const foot =
       '<div class="dp-footnav">' +
@@ -14021,7 +14067,7 @@ window.Guide = (function () {
     if (c && curResult) r = window.Reading.reviveReading(c[window.Reading.LK("reading")]);
     if (!c || !curResult) body = dpNeedChart();
     else if (!r) {
-      if (autoGenBusy) body = dpLoading(dpT("正在为你整理生命蓝图,大约需要一分钟…", "Preparing your blueprint — about a minute…"));
+      if (autoGenBusy) body = dpLoading(dpT("正在为你整理生命蓝图,大约需要一分钟…", "Preparing your blueprint — about a minute…"), true);
       else body = '<div class="dp-card dp-loading"><span class="g">✹</span>' +
         dpT("你的生命蓝图还没有生成。", "Your blueprint hasn’t been created yet.") +
         '<br><button class="dp-cta" style="margin-top:16px" id="dpGenB">' + dpT("现在生成", "Generate now") + "</button></div>";
@@ -17794,7 +17840,7 @@ window.Guide = (function () {
                                              "You are not here for answers —\nyou are here to see yourself again") });
         ensureThreadPreviews(c, saved);
       }
-      else if (mapBusy) body = dpLoading(dpT("正在把九个主题收束成一条线…", "Drawing the nine together…"));
+      else if (mapBusy) body = dpLoading(dpT("正在把九个主题收束成一条线…", "Drawing the nine together…"), true);
       else if (mapErr) body = dpError(mapErr, "dpRetryM");
       else if (done < THREAD_GATE) {
         // 还没读完九个主题:安静地显示进度,不催促
