@@ -18018,8 +18018,17 @@ window.Guide = (function () {
           card.setAttribute("aria-controls", mount.id);
           cur = i;
           grow(mount, true);
-          /* 刻意不做 scrollIntoView:内容就长在被点的那张卡下面,
-             使用者的视线本来就在那里,把页面拉走反而会迷路。 */
+          /* 用户:点「沿着这条线索继续」之后,画面带到这张卡的开头,从头开始读
+             (卡顶停在视窗上方约 96px,跟「收起」回来的位置一样)。
+             上一张开着的卡刚被清掉,先等版面更新再量位置 */
+          requestAnimationFrame(function () {
+            const item = card.closest(".ch-item") || card;
+            const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion:reduce)").matches;
+            window.scrollTo({
+              top: Math.max(0, window.scrollY + item.getBoundingClientRect().top - 96),
+              behavior: reduce ? "auto" : "smooth"
+            });
+          });
         };
         cards.forEach(function (card, i) {
           card.addEventListener("click", function () {
