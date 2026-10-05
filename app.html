@@ -4236,24 +4236,25 @@
   /* 星盘洞察卡:小标 ✦ 星盘洞察 ——— INSIGHT。
      底图是用户给的淡紫星空素材,cover 铺满 */
   #dpage.reading-page .dp-detail .rd-insight{
-    margin-top:18px;padding:18px clamp(18px,2.8vw,28px) 20px;border-radius:22px;
-    /* 底图再换成用户给的横幅星空(insight-bg2.webp,约 3:1,跟扁长的卡片比例接近),
-       置中铺满;白罩保留,让图退后、字更清楚 */
-    background:linear-gradient(rgba(255,252,250,.45),rgba(255,252,250,.45)),
+    position:relative;margin-top:18px;padding:22px clamp(20px,3.2vw,36px) 16px;border-radius:22px;
+    background:linear-gradient(120deg,rgba(246,238,250,.55),rgba(255,246,240,.5)),
       url(assets/reading/insight-bg2.webp) center / cover no-repeat,#efe6f2;
-    border:1px solid rgba(214,178,140,.55)
+    border:1px solid rgba(214,178,140,.6);box-shadow:0 8px 24px rgba(120,100,160,.08)
   }
-  #dpage.reading-page .dp-detail .rd-insight .hd{display:flex;align-items:center;gap:12px}
-  #dpage.reading-page .dp-detail .rd-insight .hd i{font-style:normal;color:#9a8cc0;font-size:16px;line-height:1}
-  #dpage.reading-page .dp-detail .rd-insight .hd .zh{font-family:var(--dp-sans);font-size:14px;letter-spacing:.3em;color:#6f6a8a}
-  #dpage.reading-page .dp-detail .rd-insight .hd .ln{flex:1;height:1px;background:rgba(154,140,190,.35)}
-  #dpage.reading-page .dp-detail .rd-insight .hd .en{font-family:var(--dp-display);font-size:10.5px;letter-spacing:.3em;color:#8e86a6}
-  #dpage.reading-page .dp-detail .rd-insight .it + .it{margin-top:18px}
-  #dpage.reading-page .dp-detail .rd-insight .it + .it{margin-top:18px}
-  #dpage.reading-page .dp-detail .rd-insight b{
-    display:block;font-family:var(--dp-serif);font-weight:700;font-size:clamp(16px,1.6vw,18px);color:#1A2342;margin-bottom:4px
+  #dpage.reading-page .dp-detail .rd-insight .hd{display:flex;align-items:center;gap:10px}
+  #dpage.reading-page .dp-detail .rd-insight .hd i{font-style:normal;color:#c9a061;font-size:20px;line-height:1}
+  #dpage.reading-page .dp-detail .rd-insight .hd .zh{font-family:var(--dp-serif);font-size:12.5px;letter-spacing:.12em;color:#8a85a3}
+  #dpage.reading-page .dp-detail .rd-insight .bd{
+    margin-top:12px;font-family:var(--dp-serif);font-weight:600;font-size:clamp(17px,1.9vw,21px);
+    line-height:1.85;letter-spacing:.02em;color:#1f2444
   }
-  #dpage.reading-page .dp-detail .rd-insight .bd > div{font-family:var(--dp-sans);font-size:13.5px;line-height:1.8;color:#3b3a55}
+  #dpage.reading-page .dp-detail .rd-save{
+    display:flex;align-items:center;gap:6px;margin:6px 0 0 auto;padding:4px 2px;border:0;background:none;cursor:pointer;
+    font-family:var(--dp-serif);font-size:12.5px;letter-spacing:.06em;color:#6f6a8a
+  }
+  #dpage.reading-page .dp-detail .rd-save svg{width:14px;height:16px;fill:none;stroke:#4a4670;stroke-width:1.6}
+  #dpage.reading-page .dp-detail .rd-save.on svg{fill:#4a4670}
+  #dpage.reading-page .dp-detail .rd-save:hover{color:#3b3a55}
   /* 上 / 下一个标题:两端各一颗圆形箭头,下一个是实心紫 */
   #dpage.reading-page .dp-detail .dp-chnav{margin-top:18px;border-radius:999px;background:rgba(255,252,248,.8)}
   #dpage.reading-page .dp-detail .dp-chnav > *{position:relative;padding:14px 20px 14px 76px}
@@ -4282,8 +4283,14 @@
     #dpage.reading-page .dp-detail .fold-btn .tx{font-size:14px}
     #dpage.reading-page .dp-detail .fold-btn{column-gap:12px}
     #dpage.reading-page .dp-detail .fold-btn .sb{font-size:10.5px;letter-spacing:.02em}
-    #dpage.reading-page .dp-detail .rd-insight b{font-size:14.5px}
-    #dpage.reading-page .dp-detail .rd-insight .bd > div{font-size:12.5px}
+    #dpage.reading-page .dp-detail .rd-insight{padding:18px 18px 12px;border-radius:18px}
+    #dpage.reading-page .dp-detail .rd-insight .hd i{font-size:16px}
+    #dpage.reading-page .dp-detail .rd-insight .hd .zh{font-size:11.5px}
+    #dpage.reading-page .dp-detail .rd-insight .bd{margin-top:10px;font-size:15.5px;line-height:1.8}
+    /* 手机一行放不下整个分句,强制断行反而留下很短的尾巴 —— 改成自然换行 */
+    #dpage.reading-page .dp-detail .rd-insight .bd br{display:none}
+    #dpage.reading-page .dp-detail .rd-insight .bd{text-wrap:pretty}
+    #dpage.reading-page .dp-detail .rd-save{font-size:11.5px}
     #dpage.reading-page .dp-detail .dp-chnav{margin-top:14px}
     #dpage.reading-page .dp-detail .dp-chnav > *{padding:8px 8px 8px 44px}
     #dpage.reading-page .dp-detail .dp-chnav > .nx{padding:8px 44px 8px 8px}
@@ -11138,6 +11145,11 @@ window.Guide = (function () {
     renderFavs();
     return i < 0;
   }
+  // 「收藏语句」按钮的内容:书签图示 + 字(已收藏时图示填满)
+  function rdSaveInner(on) {
+    return '<svg viewBox="0 0 16 18" aria-hidden="true"><path d="M3 1.5h10v15l-5-3.6-5 3.6z"/></svg><span>' +
+      (on ? dpT("已收藏", "Saved") : dpT("收藏语句", "Save this line")) + "</span>";
+  }
   function favButton(k) {
     return '<button class="fav-btn' + (isFaved(k) ? " on" : "") + '" data-fav="' + esc0(k) + '" title="' + esc0(T("saveIt")) + '">' +
       (isFaved(k) ? "★" : "☆") + '</button>';
@@ -11155,7 +11167,8 @@ window.Guide = (function () {
       title: b.getAttribute("data-section") || ""
     };
     const on = toggleFav(b.getAttribute("data-fav"), payload);
-    b.textContent = on ? "★" : "☆";
+    if (b.hasAttribute("data-fav-label")) b.innerHTML = rdSaveInner(on);
+    else b.textContent = on ? "★" : "☆";
     b.classList.toggle("on", on);
   });
 
@@ -13875,14 +13888,24 @@ window.Guide = (function () {
       // 建议卡片:正文可以划词收藏(与主题阅读同一套 selection / save 逻辑)
       /* 章末的专属建议:依用户参考图做成「星盘洞察」卡 —— 小标 + 细线 + INSIGHT,
          下面是标题与正文(用户要求不放素材;内容本身一个字都不改) */
+      /* 用户参考图:每一条一张「留给你的话」卡 —— 左上小金星 + 小标,句子放大(宋体),
+         右下「收藏语句」。收藏走既有的 data-fav 机制(跟主题页同一套 key / payload),
+         所以会出现在「我的收藏」。句子在逗号 / 分号后断行,字一个都不改。 */
       function cardsHtml(list) {
-        return '<div class="rd-insight">' +
-          list.map(function (cd) {
-            return '<div class="it"><div class="bd"><b>' + esc0(cd.title) + "</b>" +
-              '<div data-saveable data-source="' + esc0(favSrc) + '" data-source-type="life_blueprint"' +
-              ' data-section="' + esc0(dpT("专属建议", "For you") + " · " + String(cd.title || "")) + '">' +
-              esc0(cd.line || "") + "</div></div></div>";
-          }).join("") + "</div>";
+        return list.map(function (cd) {
+          const line = String(cd.line || "");
+          const sec = dpT("专属建议", "For you") + " · " + String(cd.title || "");
+          const k = favKey(favSrc, sec, line);
+          const on = isFaved(k);
+          const shown = line.split(/(?<=[，,；;])/).map(function (x) { return esc0(x.trim()); }).filter(Boolean).join("<br>");
+          return '<div class="rd-insight">' +
+            '<div class="hd"><i aria-hidden="true">✦</i><span class="zh">' + dpT("留给你的话", "For you") + "</span></div>" +
+            '<div class="bd" data-saveable data-source="' + esc0(favSrc) + '" data-source-type="life_blueprint"' +
+            ' data-section="' + esc0(sec) + '">' + shown + "</div>" +
+            '<button type="button" class="rd-save' + (on ? " on" : "") + '" data-fav-label="1" data-fav="' + esc0(k) + '"' +
+            ' data-text="' + esc0(line) + '" data-source="' + esc0(favSrc) + '" data-source-type="life_blueprint"' +
+            ' data-section="' + esc0(sec) + '">' + rdSaveInner(on) + "</button></div>";
+        }).join("");
       }
       /* 页面最上方那组「专属建议」(topCards)改成 2×2 的插画卡网格,
          用户给的参考图那种做法:编号 + 右上角一张插画 + 标题 + 正文。
