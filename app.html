@@ -8438,8 +8438,14 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     "Your Gifts and Your Growing Edge", "The Direction Life Keeps Inviting You Toward",
     "The Shape of Your Journey"];
 
+  /* 目前网站只提供中文(简 / 繁由 assets/zh-script.js 负责,与这里无关)。
+     英文切换已经隐藏,但旧版界面时期点过「EN」的帐号,本机与云端 prefs 里
+     还留着 "en",登入后就整站变英文、又没有按钮切回来。
+     ZH_ONLY = true 时:忽略任何已存的 "en"(本机或云端),一律中文,也不再接受切到英文。
+     旧的设定值不删除;日后要重新开放英文,把这里改成 false 即可。 */
+  const ZH_ONLY = true;
   let lang = "zh";
-  try { const v = localStorage.getItem(LS_KEY); if (v === "en" || v === "zh") lang = v; } catch (e) { }
+  try { const v = localStorage.getItem(LS_KEY); if (!ZH_ONLY && (v === "en" || v === "zh")) lang = v; } catch (e) { }
 
   const hooks = [];
   function idx() { return lang === "en" ? 1 : 0; }
@@ -8477,6 +8483,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
 
   function setLang(l, opts) {
     if (l !== "en" && l !== "zh") return;
+    if (ZH_ONLY && l === "en") return;   // 云端 adopt 与旧版 EN 按钮都会走到这里
     if (l === lang) return;
     lang = l;
     try { localStorage.setItem(LS_KEY, l); } catch (e) { }
