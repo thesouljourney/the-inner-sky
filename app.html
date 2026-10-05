@@ -7301,6 +7301,17 @@
     #dpage.compass-page .cp-now .cp-mood-more,
     #dpage.compass-page .cp-now .cp-mood-write{font-size:12.5px}
   }
+
+  /* 全站 hero 文字区同一个宽度(用户:靠左的页面左边界要一致、不要太靠左)。
+     用的是全站预设的内容宽度 —— 跟 --dp-wide 的预设断点相同,但独立一个变数,
+     主题页 / 我的星空这些自己改过 --dp-wide 的页面,hero 也照样对齐。只管桌机与平板,手机本来就一致 */
+  #dpage{--dp-hero-w:1180px}
+  @media(max-width:1440px){#dpage{--dp-hero-w:1100px}}
+  @media(max-width:1320px){#dpage{--dp-hero-w:min(1020px,calc(100vw - 120px))}}
+  @media(max-width:1024px){#dpage{--dp-hero-w:100%}}
+  @media(min-width:768px){
+    #dpage .dp-hero .dp-hero-grid{max-width:var(--dp-hero-w);margin-left:auto;margin-right:auto}
+  }
 </style>
 </head>
 <!-- legacy-off 直接写在标签上,不等 JS。
