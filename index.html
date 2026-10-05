@@ -192,6 +192,12 @@ header.site { position: relative; z-index: 5; }
 .planet-chapter:hover { transform: translateY(-4px); }
 .planet-chapter .orb { width: 112px; height: 112px; display: grid; place-items: center; margin-bottom: 6px; filter: drop-shadow(0 8px 16px rgba(80,60,130,.18)); }
 .planet-chapter .orb img { width: 100%; height: 100%; object-fit: contain; }
+/* 已读状态(恢复 #77 之前的做法):没读过的星球偏灰、褪色;读过(.read)恢复全彩;
+   滑过没读过的会稍微回一点颜色 */
+.planet-chapter .orb img { filter: grayscale(.82) saturate(.35) brightness(1.04) opacity(.72); transition: filter .35s var(--ease-soft); }
+.planet-chapter .orb.read img { filter: none; }
+.planet-chapter:hover .orb img { filter: grayscale(.45) saturate(.6) opacity(.9); }
+.planet-chapter:hover .orb.read img { filter: none; }
 .planet-chapter .name { font-family: var(--font-serif-sc); font-weight: 600; font-size: 17px; letter-spacing: .08em; color: var(--ink); }
 .planet-chapter .cap { text-wrap: balance; font-size: 12.5px; line-height: 1.6; color: var(--mut); letter-spacing: .02em; }
 .planet-chapter .done { display: none; }
