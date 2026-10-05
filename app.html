@@ -7385,6 +7385,13 @@
   }
   #dpage.thread-page .thread-chapters .ch-reader .clue .st,
   #dpage.thread-page .thread-chapters .ch-slot .clue .st{margin:0 0 8px}
+  /* 星芒移到小卡外的正上方(卡片往下让出位置) */
+  #dpage.thread-page .thread-chapters .ch-reader .clue,
+  #dpage.thread-page .thread-chapters .ch-slot .clue{position:relative;margin-top:clamp(50px,5vw,58px)}
+  #dpage.thread-page .thread-chapters .ch-reader .clue .st,
+  #dpage.thread-page .thread-chapters .ch-slot .clue .st{
+    position:absolute;left:50%;top:-26px;transform:translateX(-50%);margin:0;line-height:1
+  }
   #dpage.thread-page .thread-chapters .ch-reader .clue .lb,
   #dpage.thread-page .thread-chapters .ch-slot .clue .lb{
     font-family:var(--dp-sans);font-weight:500;font-size:clamp(13px, 12.7px + .1vw, 13.5px);
