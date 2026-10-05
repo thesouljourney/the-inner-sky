@@ -4248,10 +4248,12 @@
   #dpage.reading-page .dp-detail .rd-insight .hd{display:flex;align-items:center;gap:10px}
   #dpage.reading-page .dp-detail .rd-insight .hd i{font-style:normal;color:#c9a061;font-size:20px;line-height:1}
   #dpage.reading-page .dp-detail .rd-insight .hd .zh{font-family:var(--dp-serif);font-size:12.5px;letter-spacing:.12em;color:#8a85a3}
+  /* 句子用跟详细解读正文同一套:黑体 400、14–14.5px、行高 1.9(用户:原本太大) */
   #dpage.reading-page .dp-detail .rd-insight .bd{
-    margin-top:12px;font-family:var(--dp-serif);font-weight:600;font-size:clamp(17px,1.9vw,21px);
-    line-height:1.85;letter-spacing:.02em;color:#1f2444
+    margin-top:10px;font-family:var(--dp-sans);font-weight:400;font-size:clamp(14px, 13.7px + .1vw, 14.5px);
+    line-height:1.9;letter-spacing:.01em;color:#2F3142
   }
+  #dpage.reading-page .dp-detail .rd-insight .bd br{display:none}
   #dpage.reading-page .dp-detail .rd-save{
     display:flex;align-items:center;gap:6px;margin:6px 0 0 auto;padding:4px 2px;border:0;background:none;cursor:pointer;
     font-family:var(--dp-serif);font-size:12.5px;letter-spacing:.06em;color:#6f6a8a
@@ -4290,9 +4292,6 @@
     #dpage.reading-page .dp-detail .rd-insight{padding:18px 18px 12px;border-radius:18px}
     #dpage.reading-page .dp-detail .rd-insight .hd i{font-size:16px}
     #dpage.reading-page .dp-detail .rd-insight .hd .zh{font-size:11.5px}
-    #dpage.reading-page .dp-detail .rd-insight .bd{margin-top:10px;font-size:15.5px;line-height:1.8}
-    /* 手机一行放不下整个分句,强制断行反而留下很短的尾巴 —— 改成自然换行 */
-    #dpage.reading-page .dp-detail .rd-insight .bd br{display:none}
     #dpage.reading-page .dp-detail .rd-insight .bd{text-wrap:pretty}
     #dpage.reading-page .dp-detail .rd-save{font-size:11.5px}
     #dpage.reading-page .dp-detail .dp-chnav{margin-top:14px}
