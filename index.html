@@ -558,6 +558,17 @@ footer.site { position: relative; overflow: hidden; color: rgba(249,246,242,.72)
   .here-card p { width: 100%; max-width: 190px; }
   .here-card p br { display: none; }
 }
+/* 首页顶栏的「简 / 繁」与账号 / 登入按钮:压在 hero 的亮色拱门上看不清 ——
+   加一层深蓝半透明底 + 模糊,边框与文字加亮 */
+.zh-sw, .nav-cta, .nav-user-btn {
+  background: rgba(20,24,64,.55); border-color: rgba(255,244,222,.7);
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+  box-shadow: 0 4px 14px rgba(10,12,40,.25); text-shadow: 0 1px 4px rgba(10,12,40,.5);
+}
+.nav-cta, .nav-user-btn { color: #fff; }
+.nav-cta:hover, .nav-user-btn:hover { background: rgba(28,32,80,.7); }
+.zh-sw button { color: rgba(255,248,236,.85); }
+.zh-sw button.on { background: rgba(255,244,222,.92); color: #23264f; text-shadow: none; }
 </style>
 <link rel="stylesheet" href="assets/inner-sky-chart.css?v=5">
 </head>

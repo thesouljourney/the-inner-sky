@@ -4252,14 +4252,14 @@
   /* 句子用跟详细解读正文同一套:黑体 400、14–14.5px、行高 1.9(用户:原本太大) */
   #dpage.reading-page .dp-detail .rd-insight .bd{
     margin-top:10px;font-family:var(--dp-sans);font-weight:400;font-size:clamp(14px, 13.7px + .1vw, 14.5px);
-    line-height:1.9;letter-spacing:.01em;color:#2F3142
+    line-height:1.9;letter-spacing:.01em;color:#23264f
   }
   #dpage.reading-page .dp-detail .rd-insight .bd br{display:none}
   #dpage.reading-page .dp-detail .rd-save{
-    display:flex;align-items:center;gap:6px;margin:6px 0 0 auto;padding:4px 2px;border:0;background:none;cursor:pointer;
-    font-family:var(--dp-serif);font-size:12.5px;letter-spacing:.06em;color:#6f6a8a
+    display:flex;align-items:center;gap:5px;margin:4px 0 0 auto;padding:3px 2px;border:0;background:none;cursor:pointer;
+    font-family:var(--dp-serif);font-size:11.5px;letter-spacing:.06em;color:#6f6a8a
   }
-  #dpage.reading-page .dp-detail .rd-save svg{width:14px;height:16px;fill:none;stroke:#4a4670;stroke-width:1.6}
+  #dpage.reading-page .dp-detail .rd-save svg{width:12px;height:14px;fill:none;stroke:#4a4670;stroke-width:1.6}
   #dpage.reading-page .dp-detail .rd-save.on svg{fill:#4a4670}
   #dpage.reading-page .dp-detail .rd-save:hover{color:#3b3a55}
   /* 上 / 下一个标题:两端各一颗圆形箭头,下一个是实心紫 */
@@ -4294,7 +4294,7 @@
     #dpage.reading-page .dp-detail .rd-insight .hd i{font-size:16px}
     #dpage.reading-page .dp-detail .rd-insight .hd .zh{font-size:11.5px}
     #dpage.reading-page .dp-detail .rd-insight .bd{text-wrap:pretty}
-    #dpage.reading-page .dp-detail .rd-save{font-size:11.5px}
+    #dpage.reading-page .dp-detail .rd-save{font-size:11px}
     #dpage.reading-page .dp-detail .dp-chnav{margin-top:14px}
     #dpage.reading-page .dp-detail .dp-chnav > *{padding:8px 8px 8px 44px}
     #dpage.reading-page .dp-detail .dp-chnav > .nx{padding:8px 44px 8px 8px}
@@ -14096,9 +14096,10 @@ window.Guide = (function () {
         return list.map(function (cd) {
           const line = String(cd.line || "");
           const sec = dpT("专属建议", "For you") + " · " + String(cd.title || "");
+          const lineShown = line.replace(/[。.]\s*$/, "");   // 句尾句号不显示(收藏仍存原句)
           const k = favKey(favSrc, sec, line);
           const on = isFaved(k);
-          const shown = line.split(/(?<=[，,；;])/).map(function (x) { return esc0(x.trim()); }).filter(Boolean).join("<br>");
+          const shown = lineShown.split(/(?<=[，,；;])/).map(function (x) { return esc0(x.trim()); }).filter(Boolean).join("<br>");
           return '<div class="rd-insight">' +
             '<div class="hd"><i aria-hidden="true">✦</i><span class="zh">' + dpT("留给你的话", "For you") + "</span></div>" +
             '<div class="bd" data-saveable data-source="' + esc0(favSrc) + '" data-source-type="life_blueprint"' +
