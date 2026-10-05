@@ -3046,7 +3046,8 @@
     grid-template-areas:"mk art" "bd art";
     grid-template-rows:auto 1fr;
     max-width:980px;margin:0 auto clamp(10px,1.2vw,14px);
-    min-height:clamp(300px,30vw,380px);
+    /* 用户:卡片太高 —— 收起时高度跟着内容走,只留一个下限 */
+    min-height:clamp(220px,20vw,270px);
     background:linear-gradient(180deg,rgba(255,253,250,.8),rgba(252,249,245,.68));
     border:1px solid rgba(201,178,140,.24);border-radius:22px;
     box-shadow:0 12px 34px rgba(60,50,90,.045)
@@ -3159,7 +3160,7 @@
   /* 手机:同样左右交错,插画那一侧收窄;字小一号 */
   @media(max-width:767px){
     #dpage.thread-page .thread-trail > .thread-ch{
-      grid-template-columns:minmax(0,60fr) minmax(0,40fr);min-height:300px;border-radius:18px;
+      grid-template-columns:minmax(0,60fr) minmax(0,40fr);min-height:240px;border-radius:18px;
       margin-bottom:10px
     }
     #dpage.thread-page .thread-trail > .thread-ch:nth-of-type(even){grid-template-columns:minmax(0,40fr) minmax(0,60fr)}
