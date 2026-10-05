@@ -6821,6 +6821,13 @@
   #dpage .dp-quote-card .save-badge svg{flex:none}
   #dpage .dp-quote-card .save-badge:hover{color:#8a5f2a}
   #dpage .dp-quote-card .save-badge.confirm{color:#b4645a}
+  /* 确认取消时:「保留收藏」(主要、比较显眼)+「确定取消?」(次要、红字) */
+  #dpage .dp-quote-card .fav-confirm{display:flex;align-items:center;gap:14px}
+  #dpage .dp-quote-card .fav-confirm .keep{
+    padding:5px 14px;border-radius:999px;cursor:pointer;font-family:var(--dp-serif);font-size:12px;letter-spacing:.04em;
+    color:#6a5230;background:rgba(255,250,242,.9);border:1px solid rgba(201,160,97,.55);transition:background .2s
+  }
+  #dpage .dp-quote-card .fav-confirm .keep:hover{background:#fff}
   #dpage .dp-count{font-size:12.5px;color:var(--dp-mut);margin-bottom:18px}
   /* 搜索筛掉的卡片 / 「没有符合的句子」:hidden 属性要赢过 display:flex / block */
   #dpage .dp-quote-card[hidden],#dpage .fav-nomatch[hidden]{display:none}
@@ -16679,11 +16686,14 @@ window.Guide = (function () {
             '<div class="acts">' +
             (back ? '<a class="back" href="' + esc0(back) + '">' + dpT("回到这段阅读", "Back to this reading") +
               '<span aria-hidden="true">→</span></a>' : '<span></span>') +
+            // 确认取消时多一个「保留收藏」:误按了可以直接退回,不会删掉
+            (confirming ? '<span class="fav-confirm"><button type="button" class="keep" data-fav-keep>' +
+              dpT("保留收藏", "Keep it") + '</button>' : '') +
             '<button class="save-badge' + (confirming ? " confirm" : "") + '" data-fav-rm="' + k + '">' +
             '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8">' +
             '<path d="M6 4h12v16l-6-4-6 4V4z"></path></svg>' +
             '<span>' + (confirming ? dpT("确定取消?", "Confirm remove?") : dpT("已收藏", "Saved")) + '</span>' +
-            '</button></div></div>';
+            '</button>' + (confirming ? '</span>' : '') + '</div></div>';
         }).join("") + '</div>' : "") +
         '<div class="dp-card dp-loading fav-nomatch" hidden><span class="g">✦</span>' +
         dpT("没有符合的句子。", "No lines match your search.") + '</div>'
@@ -16702,6 +16712,9 @@ window.Guide = (function () {
     const sb = $("dpage").querySelector("[data-fav-sort]");
     if (sb) sb.addEventListener("click", function () { favSortNew = !favSortNew; renderFavoritesPage(); });
     // 取消收藏:先确认一次,避免误触永久删除
+    $("dpage").querySelectorAll("[data-fav-keep]").forEach(function (b) {
+      b.addEventListener("click", function () { favConfirmKey = null; renderFavoritesPage(); });
+    });
     $("dpage").querySelectorAll("[data-fav-rm]").forEach(function (b) {
       b.addEventListener("click", function () {
         const key = b.getAttribute("data-fav-rm");
