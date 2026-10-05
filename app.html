@@ -3045,7 +3045,7 @@
     grid-template-columns:minmax(0,60fr) minmax(0,40fr);
     grid-template-areas:"mk art" "bd art";
     grid-template-rows:auto 1fr;
-    max-width:980px;margin:0 auto clamp(16px,2vw,24px);
+    max-width:980px;margin:0 auto clamp(10px,1.2vw,14px);
     min-height:clamp(300px,30vw,380px);
     background:linear-gradient(180deg,rgba(255,253,250,.8),rgba(252,249,245,.68));
     border:1px solid rgba(201,178,140,.24);border-radius:22px;
@@ -3160,7 +3160,7 @@
   @media(max-width:767px){
     #dpage.thread-page .thread-trail > .thread-ch{
       grid-template-columns:minmax(0,60fr) minmax(0,40fr);min-height:300px;border-radius:18px;
-      margin-bottom:14px
+      margin-bottom:10px
     }
     #dpage.thread-page .thread-trail > .thread-ch:nth-of-type(even){grid-template-columns:minmax(0,40fr) minmax(0,60fr)}
     #dpage.thread-page .thread-trail > .thread-ch > .ch-mark{padding:22px 0 0 18px;gap:10px}
@@ -3440,7 +3440,7 @@
   }
   /* 三件事:一张一列的横式卡,插画在右 */
   #dpage.thread-page .thread-chapters .ch-cards{
-    grid-template-columns:minmax(0,1fr);max-width:980px;margin:0 auto;gap:clamp(12px,1.6vw,18px)
+    grid-template-columns:minmax(0,1fr);max-width:980px;margin:0 auto;gap:clamp(8px,1vw,12px)
   }
   #dpage.thread-page .thread-chapters .ch-card{
     position:relative;overflow:hidden;isolation:isolate;
