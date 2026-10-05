@@ -7480,6 +7480,18 @@
   #dpage.compass-page .cp-sky .cp-menu svg{
     width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round
   }
+  /* 主题页底部卡片的字色:跟 #/reading「留给你的话」同一组 —— 句子深靛紫到梅紫的柔和渐层,
+     两颗星芒保留暖金,按钮字改成深梅紫 */
+  @media (min-width:768px){
+    #dpage.topic-page .dp-return .say{
+      color:#3a2f62;
+      background:linear-gradient(100deg,#2e2a5e 0%,#4d3a72 55%,#7a4c72 100%);
+      -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent
+    }
+    #dpage.topic-page .dp-return .say::before,
+    #dpage.topic-page .dp-return .say::after{-webkit-text-fill-color:#b8894f}
+    #dpage.topic-page .dp-return .dp-cta{color:#5a4478}
+  }
 </style>
 </head>
 <!-- legacy-off 直接写在标签上,不等 JS。
