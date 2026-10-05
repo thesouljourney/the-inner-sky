@@ -7463,6 +7463,10 @@
   #dpage.reading-page .dp-detail .rd-save svg{stroke:#8a6f8c}
   #dpage.reading-page .dp-detail .rd-save.on svg{fill:#8a6f8c}
   #dpage.reading-page .dp-detail .rd-save:hover{color:#5e4a6e}
+  /* 我的星空记录:··· 选单是放在表头(.hd)里的;卡片直接子层都是 z-index:1,
+     后面的正文会盖过选单(用户反馈:选单被文字挡住)。把表头那一层抬高 */
+  #dpage.compass-page .cp-sky .cp-sky-card > .hd{z-index:4}
+  #dpage.compass-page .cp-sky .cp-menu{background:#fffdf9}
 </style>
 </head>
 <!-- legacy-off 直接写在标签上,不等 JS。
