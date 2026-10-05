@@ -7448,8 +7448,9 @@
       box-shadow:0 6px 18px rgba(9,18,46,.08)
     }
   }
-  /* 「留给你的思考」「试试看」:图示本身四周有一圈透明留白,原本 12px 的间距看起来太宽(用户反馈),拿掉 */
-  #dpage.topic-page .tp-reflect .hd{gap:0}
+  /* 「留给你的思考」「试试看」:图示本身上下有一圈透明留白,标题列跟卡顶、跟正文的
+     上下距离看起来太宽(用户反馈)。用负边距把那圈留白吃掉 */
+  #dpage.topic-page .tp-reflect .hd{margin:-10px 0 -12px}
 </style>
 </head>
 <!-- legacy-off 直接写在标签上,不等 JS。
