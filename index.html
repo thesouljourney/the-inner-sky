@@ -280,6 +280,10 @@ header.site { position: relative; z-index: 5; }
 .sky-card > * { position: relative; z-index: 1; }
 .sky-card p br { display: none; }
 .sky-copy { align-self: start; padding-top: 18px; }
+/* 桌机:卡片变整排宽之后,文字不要贴在左上角 —— 垂直置中、往内收一点 */
+@media (min-width: 641px) {
+  .spaces-sky .sky-copy { align-self: center; padding: 0 0 0 clamp(20px, 3.5vw, 56px); }
+}
 .sky-card h3 { font-size: 26px; letter-spacing: .12em; color: #fbf6ff; text-shadow: 0 2px 12px rgba(10,12,40,.5); }
 .sky-card h3 + p { margin-top: 18px; }
 /* 用户:「查看我的星空」比另外两颗再小一号 */
