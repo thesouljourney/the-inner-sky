@@ -7434,8 +7434,9 @@
   }
   /* 主题页最下面「你不是来寻找答案…」那张卡:降低不透明度,让背景透出来 */
   #dpage.topic-page .dp-return{background:rgba(252,249,246,.78)}
-  /* 电脑版主题页底部卡片:那句话放大、一行、置中;「返回主题列表」缩小,放在那句话下方置中 */
-  @media (min-width:768px){
+  /* 主题页底部:那句话放大、置中(电脑一行);「返回主题列表」缩小,放在那句话下方置中。
+     手机版也一样(用户要求),只在下面另外缩字级 */
+  @media all{
     #dpage.topic-page .dp-return{display:flex;flex-direction:column;align-items:center;gap:20px;padding:30px 28px 28px}
     #dpage.topic-page .dp-return .say{font-size:17px;letter-spacing:.06em;white-space:nowrap;text-align:center;color:var(--dp-ink)}
     #dpage.topic-page .dp-return .say br{display:none}
@@ -7481,8 +7482,8 @@
     width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round
   }
   /* 主题页底部卡片的字色:跟 #/reading「留给你的话」同一组 —— 句子深靛紫到梅紫的柔和渐层,
-     两颗星芒保留暖金,按钮字改成深梅紫 */
-  @media (min-width:768px){
+     两颗星芒保留暖金,按钮字改成深梅紫(电脑与手机都套用) */
+  @media all{
     #dpage.topic-page .dp-return .say{
       color:#3a2f62;
       background:linear-gradient(100deg,#2e2a5e 0%,#4d3a72 55%,#7a4c72 100%);
@@ -7494,6 +7495,13 @@
   }
   /* 用户:主题页最下面那张卡片拿掉,只留那句话与「返回主题列表」 */
   #dpage.topic-page .dp-return{background:none;border:0;box-shadow:none;border-radius:0}
+  /* 手机:跟电脑一样一行,两颗星芒夹着;字级与星芒间距缩小,360px 宽也放得下 */
+  @media (max-width:767px){
+    #dpage.topic-page .dp-return{gap:18px;padding:26px 0 22px}
+    #dpage.topic-page .dp-return .say{font-size:14.5px;line-height:1.8;letter-spacing:.02em}
+    #dpage.topic-page .dp-return .say::before,
+    #dpage.topic-page .dp-return .say::after{font-size:9px;margin:0 8px}
+  }
 </style>
 </head>
 <!-- legacy-off 直接写在标签上,不等 JS。
