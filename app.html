@@ -7401,6 +7401,13 @@
   }
   #dpage.thread-page .thread-chapters .ch-reader .moon,
   #dpage.thread-page .thread-chapters .ch-slot .moon{margin-top:clamp(18px,2.2vw,24px)}
+
+  /* 「一个小小的洞察」(桌机):文字铺到左右两枝花叶之间,不再缩成中间很窄的一条 */
+  @media(min-width:768px){
+    #dpage.thread-page .thread-bridge .insight{padding-left:clamp(28px,21%,200px);padding-right:clamp(28px,21%,200px)}
+    #dpage.thread-page .thread-bridge .insight p{max-width:none;text-wrap:balance}
+    #dpage.thread-page .thread-bridge .insight .lb{white-space:nowrap}
+  }
 </style>
 </head>
 <!-- legacy-off 直接写在标签上,不等 JS。
