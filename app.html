@@ -3046,7 +3046,8 @@
     grid-template-areas:"mk art" "bd art";
     grid-template-rows:auto 1fr;
     max-width:980px;margin:0 auto clamp(10px,1.2vw,14px);
-    min-height:clamp(300px,30vw,380px);
+    /* 用户:卡片太高 —— 收起时高度跟着内容走,只留一个下限 */
+    min-height:clamp(220px,20vw,270px);
     background:linear-gradient(180deg,rgba(255,253,250,.8),rgba(252,249,245,.68));
     border:1px solid rgba(201,178,140,.24);border-radius:22px;
     box-shadow:0 12px 34px rgba(60,50,90,.045)
@@ -3107,16 +3108,16 @@
   /* 「探索这一章 →」/「收起 ↑」:香槟细框的胶囊 */
   #dpage.thread-page .thread-trail > .thread-ch .ch-open,
   #dpage.thread-page .thread-trail > .thread-ch .ch-shut{
-    margin-top:18px;min-height:40px;padding:0 22px;border-radius:999px;
+    margin-top:16px;min-height:32px;padding:0 16px;border-radius:999px;
     border:1px solid rgba(196,152,72,.55);background:rgba(255,253,249,.82);
-    font-family:var(--dp-serif);font-size:13.5px;letter-spacing:.12em;color:#3b3f78;
+    font-family:var(--dp-serif);font-size:12.5px;letter-spacing:.1em;color:#3b3f78;
     transition:background .3s ease,border-color .3s ease
   }
   #dpage.thread-page .thread-trail > .thread-ch .ch-open:hover,
   #dpage.thread-page .thread-trail > .thread-ch .ch-shut:hover{
     background:rgba(255,250,240,.9);border-color:rgba(196,152,72,.8);color:#23264f
   }
-  #dpage.thread-page .thread-trail > .thread-ch .ch-open .cv{font-size:13px}
+  #dpage.thread-page .thread-trail > .thread-ch .ch-open .cv{font-size:12px}
   /* 插画:占满卡片的一侧,往文字那一侧淡出 */
   #dpage.thread-page .thread-trail > .thread-ch > .ch-art{
     grid-area:art;position:relative;align-self:stretch;justify-self:stretch;
@@ -3159,7 +3160,7 @@
   /* 手机:同样左右交错,插画那一侧收窄;字小一号 */
   @media(max-width:767px){
     #dpage.thread-page .thread-trail > .thread-ch{
-      grid-template-columns:minmax(0,60fr) minmax(0,40fr);min-height:300px;border-radius:18px;
+      grid-template-columns:minmax(0,60fr) minmax(0,40fr);min-height:240px;border-radius:18px;
       margin-bottom:10px
     }
     #dpage.thread-page .thread-trail > .thread-ch:nth-of-type(even){grid-template-columns:minmax(0,40fr) minmax(0,60fr)}
@@ -3174,7 +3175,7 @@
     #dpage.thread-page .thread-trail > .thread-ch .ch-full .dp-prose{font-size:15px;line-height:1.95}
     #dpage.thread-page .thread-trail > .thread-ch .ch-open,
     #dpage.thread-page .thread-trail > .thread-ch .ch-shut{
-      margin-top:14px;min-height:36px;padding:0 16px;font-size:12px;letter-spacing:.1em
+      margin-top:14px;min-height:30px;padding:0 13px;font-size:11.5px;letter-spacing:.1em
     }
     /* 展开读原文:插画改成卡片顶端一条横幅,原文用整张卡的宽度,不挤在窄栏里 */
     #dpage.thread-page .thread-trail > .thread-ch.open,
@@ -7319,6 +7320,51 @@
   #dpage.topic-page .dp-keep .q .bd{border-left-color:color-mix(in srgb,var(--theme-accent) 55%,transparent)}
   #dpage.topic-page .dp-keep .sp .ln{background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--theme-accent) 40%,transparent),transparent)}
   #dpage.topic-page .dp-keep .sp .st{color:var(--theme-accent)}
+
+  /* 「从这里开始」:展开的详细解读接在同一张卡里(用户:跟上面的章节卡一样),
+     卡片上的号码 / 标题 / 摘要保留,展开区不再重复号码与标题,也不再隔一段空白。
+     阅读区(#chReader / 手机的 .ch-slot)是排在卡片后面的 grid 项目:
+     用负的 margin 抵掉 grid gap,收起时高度 0 也不会多出一段空隙 */
+  #dpage.thread-page .thread-chapters{--chg:clamp(8px,1vw,12px)}
+  #dpage.thread-page .thread-chapters .ch-cards{gap:var(--chg)}
+  #dpage.thread-page .thread-chapters .ch-cards > .ch-reader,
+  #dpage.thread-page .thread-chapters .ch-cards > .ch-slot{margin-top:calc(-1 * var(--chg))}
+  #dpage.thread-page .thread-chapters .ch-card.on{border-bottom-left-radius:0;border-bottom-right-radius:0;border-bottom-color:transparent}
+  #dpage.thread-page .thread-chapters .ch-reader .in,
+  #dpage.thread-page .thread-chapters .ch-slot .in{
+    margin-top:0;text-align:left;
+    padding:4px clamp(22px,3.4vw,44px) clamp(22px,2.8vw,32px);
+    background:rgba(252,249,245,.68);
+    border:1px solid rgba(201,178,140,.24);border-top:0;
+    border-radius:0 0 22px 22px;box-shadow:none
+  }
+  #dpage.thread-page .thread-chapters .ch-reader .in::before,
+  #dpage.thread-page .thread-chapters .ch-slot .in::before{
+    left:clamp(22px,3.4vw,44px);right:clamp(22px,3.4vw,44px);width:auto;transform:none;
+    background:linear-gradient(90deg,rgba(201,178,140,.4),rgba(201,178,140,0))
+  }
+  #dpage.thread-page .thread-chapters .ch-reader .in > .no,
+  #dpage.thread-page .thread-chapters .ch-reader .in > .t,
+  #dpage.thread-page .thread-chapters .ch-reader .in > .st,
+  #dpage.thread-page .thread-chapters .ch-slot .in > .no,
+  #dpage.thread-page .thread-chapters .ch-slot .in > .t,
+  #dpage.thread-page .thread-chapters .ch-slot .in > .st{display:none}
+  #dpage.thread-page .thread-chapters .ch-reader .bd,
+  #dpage.thread-page .thread-chapters .ch-slot .bd{max-width:min(100%,680px);margin:18px 0 0;text-align:left}
+  #dpage.thread-page .thread-chapters .ch-reader .pv,
+  #dpage.thread-page .thread-chapters .ch-slot .pv,
+  #dpage.thread-page .thread-chapters .ch-reader .clue,
+  #dpage.thread-page .thread-chapters .ch-slot .clue{margin-left:0;margin-right:0;text-align:left}
+  #dpage.thread-page .thread-chapters .ch-reader .dots,
+  #dpage.thread-page .thread-chapters .ch-slot .dots,
+  #dpage.thread-page .thread-chapters .ch-reader .rule,
+  #dpage.thread-page .thread-chapters .ch-slot .rule{text-align:left}
+  @media(max-width:767px){
+    #dpage.thread-page .thread-chapters .ch-reader .in,
+    #dpage.thread-page .thread-chapters .ch-slot .in{padding:2px 18px 22px;border-radius:0 0 18px 18px}
+    #dpage.thread-page .thread-chapters .ch-reader .in::before,
+    #dpage.thread-page .thread-chapters .ch-slot .in::before{left:18px;right:18px}
+  }
 </style>
 </head>
 <!-- legacy-off 直接写在标签上,不等 JS。
