@@ -7371,6 +7371,36 @@
     #dpage.thread-page .thread-chapters .ch-slot .in::before{left:18px;right:18px}
     #dpage.thread-page .thread-chapters .ch-slot{margin-top:0}
   }
+
+  /* 「这一章的线索」(从这里开始的展开区):拿掉三颗点;整段放进一张小卡;
+     标题与每一条线索都跟详细解读正文同一套字(黑体 400、14–14.5px),不再是细体小字 */
+  #dpage.thread-page .thread-chapters .ch-reader .dots,
+  #dpage.thread-page .thread-chapters .ch-slot .dots{display:none}
+  #dpage.thread-page .thread-chapters .ch-reader .clue,
+  #dpage.thread-page .thread-chapters .ch-slot .clue{
+    margin:clamp(26px,3vw,34px) auto 0;max-width:min(100%,600px);
+    padding:clamp(18px,2.2vw,24px) clamp(18px,2.6vw,28px);border-radius:16px;text-align:center;
+    background:rgba(255,252,246,.55);border:1px solid rgba(201,178,140,.26);
+    box-shadow:0 6px 18px rgba(120,100,70,.04)
+  }
+  #dpage.thread-page .thread-chapters .ch-reader .clue .st,
+  #dpage.thread-page .thread-chapters .ch-slot .clue .st{margin:0 0 8px}
+  #dpage.thread-page .thread-chapters .ch-reader .clue .lb,
+  #dpage.thread-page .thread-chapters .ch-slot .clue .lb{
+    font-family:var(--dp-sans);font-weight:500;font-size:clamp(14px, 13.7px + .1vw, 14.5px);
+    letter-spacing:.12em;color:#8a7351
+  }
+  #dpage.thread-page .thread-chapters .ch-reader .clue .ch-keys,
+  #dpage.thread-page .thread-chapters .ch-slot .clue .ch-keys{
+    margin-top:12px;padding-top:12px;border-top:1px solid rgba(201,178,140,.3)
+  }
+  #dpage.thread-page .thread-chapters .ch-reader .clue .ch-keys li,
+  #dpage.thread-page .thread-chapters .ch-slot .clue .ch-keys li{
+    font-family:var(--dp-sans);font-weight:400;font-size:clamp(14px, 13.7px + .1vw, 14.5px);
+    line-height:1.9;letter-spacing:.01em;color:#2F3142
+  }
+  #dpage.thread-page .thread-chapters .ch-reader .moon,
+  #dpage.thread-page .thread-chapters .ch-slot .moon{margin-top:clamp(18px,2.2vw,24px)}
 </style>
 </head>
 <!-- legacy-off 直接写在标签上,不等 JS。
@@ -17988,8 +18018,17 @@ window.Guide = (function () {
           card.setAttribute("aria-controls", mount.id);
           cur = i;
           grow(mount, true);
-          /* 刻意不做 scrollIntoView:内容就长在被点的那张卡下面,
-             使用者的视线本来就在那里,把页面拉走反而会迷路。 */
+          /* 用户:点「沿着这条线索继续」之后,画面带到这张卡的开头,从头开始读
+             (卡顶停在视窗上方约 96px,跟「收起」回来的位置一样)。
+             上一张开着的卡刚被清掉,先等版面更新再量位置 */
+          requestAnimationFrame(function () {
+            const item = card.closest(".ch-item") || card;
+            const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion:reduce)").matches;
+            window.scrollTo({
+              top: Math.max(0, window.scrollY + item.getBoundingClientRect().top - 96),
+              behavior: reduce ? "auto" : "smooth"
+            });
+          });
         };
         cards.forEach(function (card, i) {
           card.addEventListener("click", function () {
