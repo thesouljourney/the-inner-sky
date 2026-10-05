@@ -12882,8 +12882,9 @@ window.Guide = (function () {
       dpTopbarHtml() +
       '<div class="dp-hero-grid"><div>' +
       (o.chip ? '<span class="dp-chip">' + esc0(o.chip) + '</span>' : "") +
-      '<h1 class="dp-title">' + esc0(o.title || "") + '</h1>' +
-      (o.sub ? '<div class="dp-sub">' + esc0(o.sub) + '</div>' : "") +
+      // 用户:每个页面 hero 的文字,每一行最后都不要句号(标题与副标都是)
+      '<h1 class="dp-title">' + esc0(String(o.title || "").replace(/。+(?=\n|$)/g, "")) + '</h1>' +
+      (o.sub ? '<div class="dp-sub">' + esc0(String(o.sub).replace(/。+(?=\n|$)/g, "")) + '</div>' : "") +
       /* lead / side 是两个可选插槽:目前只有「我的完整星盘」用到 ——
          它要把标题与盘面并排放进同一个 hero。其他页面不传就跟以前一样。 */
       (o.lead || "") +
