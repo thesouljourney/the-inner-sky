@@ -7434,6 +7434,13 @@
   }
   /* 主题页最下面「你不是来寻找答案…」那张卡:降低不透明度,让背景透出来 */
   #dpage.topic-page .dp-return{background:rgba(252,249,246,.5)}
+  /* 电脑版主题页底部卡片:那句话放大、一行、置中;「返回主题列表」缩小靠右 */
+  @media (min-width:768px){
+    #dpage.topic-page .dp-return{display:grid;grid-template-columns:1fr auto 1fr;gap:20px;padding:22px 28px}
+    #dpage.topic-page .dp-return .say{grid-column:2;font-size:17px;letter-spacing:.06em;white-space:nowrap;text-align:center;color:var(--dp-ink)}
+    #dpage.topic-page .dp-return .say br{display:none}
+    #dpage.topic-page .dp-return .dp-cta{grid-column:3;justify-self:end;font-size:12.5px;padding:8px 20px}
+  }
 </style>
 </head>
 <!-- legacy-off 直接写在标签上,不等 JS。
@@ -13929,7 +13936,7 @@ window.Guide = (function () {
                  "See which parts are still waiting to be found")) + "</span>"
       : "";
     // say:不传就跟改动前逐字相同——只有生命蓝图这一页传了自己的一段
-    const say = o.say || dpT("你不是来寻找答案,\n而是来重新看见自己", "You are not here for answers —\nyou are here to see yourself again.");
+    const say = o.say || dpT("你不是来寻找答案，\n而是来重新看见自己", "You are not here for answers —\nyou are here to see yourself again.");
     /* say 里用空行分成两段的话,第二段(补充说明那句)另外包一层
        .say-sub,好让它套一个跟主句不一样的小字级——不传空行(其他
        页面都没有)就跟改动前一样,整段一起印,没有 .say-sub。 */
