@@ -7426,6 +7426,12 @@
   #dpage .dp-wait-q::before{content:"✦";display:block;margin-bottom:10px;font-size:11px;color:#c9a061}
   #dpage .dp-wait-q.out{opacity:0}
   @media (prefers-reduced-motion:reduce){#dpage .dp-wait-q{transition:none}}
+  /* 健康主题的免责声明:小字、斜体、淡一点 */
+  /* !important:各页正文 p 的字级规则选择器更长、部分本身带 !important */
+  #dpage .dp-prose p.dp-disclaim{
+    font-size:12px !important;font-style:italic !important;line-height:1.8 !important;
+    letter-spacing:.02em !important;color:#8a8496 !important;font-weight:400 !important
+  }
 </style>
 </head>
 <!-- legacy-off 直接写在标签上,不等 JS。
@@ -13109,9 +13115,19 @@ window.Guide = (function () {
       '<div class="dp-body">' + (o.body || "") + (o.foot || "") + '</div>' +
       dpFooterHtml();
   }
+  /* 「本章节仅供自我觉察,不构成医疗建议…」这句免责声明是生成时写在正文开头或结尾的;
+     显示时把它拆成独立一段,用小字斜体,不跟正文混在一起 */
   function dpPara(x) {
     return esc0(x).split(/\n\s*\n|\n/).filter(function (y) { return y.trim(); })
-      .map(function (y) { return "<p>" + y.trim() + "</p>"; }).join("");
+      .map(function (y) {
+        y = y.trim();
+        const m = y.match(/本章节仅供自我觉察[^。\n]*。?/);
+        if (!m) return "<p>" + y + "</p>";
+        const pre = y.slice(0, m.index).trim(), post = y.slice(m.index + m[0].length).trim();
+        return (pre ? "<p>" + pre + "</p>" : "") +
+          '<p class="dp-disclaim">' + m[0].replace(/[。.]$/, "") + "</p>" +
+          (post ? "<p>" + post + "</p>" : "");
+      }).join("");
   }
   /* ============================================================
      渐进展开(段落感知)—— 一个地方写,好几处共用
