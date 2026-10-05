@@ -3296,12 +3296,12 @@
     font-size:clamp(14px,1.6vw,16px);line-height:2.05;color:rgba(58,56,82,.72)
   }
   #dpage.thread-page .thread-bridge .pat-hd{
-    margin:clamp(34px,4.4vw,52px) auto 0;font-family:var(--dp-sans);
+    margin:clamp(34px,4.4vw,52px) auto 0;font-family:var(--dp-serif);
     font-size:clamp(13px,1.4vw,14.5px);letter-spacing:.14em;color:#8a7351
   }
   #dpage.thread-page .thread-bridge .pat-hd span{color:rgba(196,152,72,.95)}
   #dpage.thread-page .thread-bridge .pattern{max-width:min(100%,30em);margin:clamp(18px,2.4vw,26px) auto 0}
-  #dpage.thread-page .thread-bridge .pattern p{margin:0;font-family:var(--dp-sans);font-weight:400}
+  #dpage.thread-page .thread-bridge .pattern p{margin:0;font-family:var(--dp-serif);font-weight:400}
   #dpage.thread-page .thread-bridge .pattern .lk{
     font-size:clamp(14.5px,1.6vw,16.5px);line-height:2;color:#4a4a66;margin-top:14px
   }
@@ -3356,8 +3356,12 @@
   #dpage.thread-page .thread-bridge .pat-hd{margin:0;text-align:left}
   #dpage.thread-page .thread-bridge .pattern{max-width:none;margin:clamp(14px,1.8vw,20px) 0 0}
   #dpage.thread-page .thread-bridge .pattern .tx,
-  #dpage.thread-page .thread-bridge .pattern .lk{margin-top:0;color:#2c2d48;font-size:clamp(15px,1.7vw,18px);line-height:2}
+  #dpage.thread-page .thread-bridge .pattern .lk{margin-top:0;color:#2c2d48;font-size:clamp(14px,1.55vw,16.5px);line-height:2}
   #dpage.thread-page .thread-bridge .pattern .q{font-size:clamp(17px,2vw,21px)}
+  /* 结论句:单独一行、稍微加粗,字级跟正文一样 */
+  #dpage.thread-page .thread-bridge .pattern .key{
+    margin-top:10px;font-weight:700;font-size:clamp(14.5px,1.6vw,17px);line-height:2;letter-spacing:.02em;color:#23264f
+  }
   /* 右上的花月缩小一点,贴在引子右边 */
   #dpage.thread-page .thread-bridge .moon-art{
     z-index:0;top:clamp(0px,1vw,16px);right:clamp(0px,2vw,30px);width:clamp(110px,15vw,200px);opacity:1;
@@ -3400,7 +3404,7 @@
     #dpage.thread-page .thread-bridge .lead{font-size:15.5px;margin-top:0;padding-right:70px}
     #dpage.thread-page .thread-bridge .moon-art{width:92px;top:-6px;right:-6px;opacity:.9}
     #dpage.thread-page .thread-bridge .pattern .tx,
-    #dpage.thread-page .thread-bridge .pattern .lk{font-size:15px}
+    #dpage.thread-page .thread-bridge .pattern .lk{font-size:14px}
     /* 手机:花枝缩小、贴紧两个下角,不再往上伸到文字旁边;
        底部留白跟着收,卡片不会下面空一大块 */
     /* 用户:文字左右多留一点空间,聚在中间 */
@@ -4236,24 +4240,25 @@
   /* 星盘洞察卡:小标 ✦ 星盘洞察 ——— INSIGHT。
      底图是用户给的淡紫星空素材,cover 铺满 */
   #dpage.reading-page .dp-detail .rd-insight{
-    margin-top:18px;padding:18px clamp(18px,2.8vw,28px) 20px;border-radius:22px;
-    /* 底图再换成用户给的横幅星空(insight-bg2.webp,约 3:1,跟扁长的卡片比例接近),
-       置中铺满;白罩保留,让图退后、字更清楚 */
-    background:linear-gradient(rgba(255,252,250,.45),rgba(255,252,250,.45)),
+    position:relative;margin-top:18px;padding:22px clamp(20px,3.2vw,36px) 16px;border-radius:22px;
+    background:linear-gradient(120deg,rgba(246,238,250,.55),rgba(255,246,240,.5)),
       url(assets/reading/insight-bg2.webp) center / cover no-repeat,#efe6f2;
-    border:1px solid rgba(214,178,140,.55)
+    border:1px solid rgba(214,178,140,.6);box-shadow:0 8px 24px rgba(120,100,160,.08)
   }
-  #dpage.reading-page .dp-detail .rd-insight .hd{display:flex;align-items:center;gap:12px}
-  #dpage.reading-page .dp-detail .rd-insight .hd i{font-style:normal;color:#9a8cc0;font-size:16px;line-height:1}
-  #dpage.reading-page .dp-detail .rd-insight .hd .zh{font-family:var(--dp-sans);font-size:14px;letter-spacing:.3em;color:#6f6a8a}
-  #dpage.reading-page .dp-detail .rd-insight .hd .ln{flex:1;height:1px;background:rgba(154,140,190,.35)}
-  #dpage.reading-page .dp-detail .rd-insight .hd .en{font-family:var(--dp-display);font-size:10.5px;letter-spacing:.3em;color:#8e86a6}
-  #dpage.reading-page .dp-detail .rd-insight .it + .it{margin-top:18px}
-  #dpage.reading-page .dp-detail .rd-insight .it + .it{margin-top:18px}
-  #dpage.reading-page .dp-detail .rd-insight b{
-    display:block;font-family:var(--dp-serif);font-weight:700;font-size:clamp(16px,1.6vw,18px);color:#1A2342;margin-bottom:4px
+  #dpage.reading-page .dp-detail .rd-insight .hd{display:flex;align-items:center;gap:10px}
+  #dpage.reading-page .dp-detail .rd-insight .hd i{font-style:normal;color:#c9a061;font-size:20px;line-height:1}
+  #dpage.reading-page .dp-detail .rd-insight .hd .zh{font-family:var(--dp-serif);font-size:12.5px;letter-spacing:.12em;color:#8a85a3}
+  #dpage.reading-page .dp-detail .rd-insight .bd{
+    margin-top:12px;font-family:var(--dp-serif);font-weight:600;font-size:clamp(17px,1.9vw,21px);
+    line-height:1.85;letter-spacing:.02em;color:#1f2444
   }
-  #dpage.reading-page .dp-detail .rd-insight .bd > div{font-family:var(--dp-sans);font-size:13.5px;line-height:1.8;color:#3b3a55}
+  #dpage.reading-page .dp-detail .rd-save{
+    display:flex;align-items:center;gap:6px;margin:6px 0 0 auto;padding:4px 2px;border:0;background:none;cursor:pointer;
+    font-family:var(--dp-serif);font-size:12.5px;letter-spacing:.06em;color:#6f6a8a
+  }
+  #dpage.reading-page .dp-detail .rd-save svg{width:14px;height:16px;fill:none;stroke:#4a4670;stroke-width:1.6}
+  #dpage.reading-page .dp-detail .rd-save.on svg{fill:#4a4670}
+  #dpage.reading-page .dp-detail .rd-save:hover{color:#3b3a55}
   /* 上 / 下一个标题:两端各一颗圆形箭头,下一个是实心紫 */
   #dpage.reading-page .dp-detail .dp-chnav{margin-top:18px;border-radius:999px;background:rgba(255,252,248,.8)}
   #dpage.reading-page .dp-detail .dp-chnav > *{position:relative;padding:14px 20px 14px 76px}
@@ -4282,8 +4287,14 @@
     #dpage.reading-page .dp-detail .fold-btn .tx{font-size:14px}
     #dpage.reading-page .dp-detail .fold-btn{column-gap:12px}
     #dpage.reading-page .dp-detail .fold-btn .sb{font-size:10.5px;letter-spacing:.02em}
-    #dpage.reading-page .dp-detail .rd-insight b{font-size:14.5px}
-    #dpage.reading-page .dp-detail .rd-insight .bd > div{font-size:12.5px}
+    #dpage.reading-page .dp-detail .rd-insight{padding:18px 18px 12px;border-radius:18px}
+    #dpage.reading-page .dp-detail .rd-insight .hd i{font-size:16px}
+    #dpage.reading-page .dp-detail .rd-insight .hd .zh{font-size:11.5px}
+    #dpage.reading-page .dp-detail .rd-insight .bd{margin-top:10px;font-size:15.5px;line-height:1.8}
+    /* 手机一行放不下整个分句,强制断行反而留下很短的尾巴 —— 改成自然换行 */
+    #dpage.reading-page .dp-detail .rd-insight .bd br{display:none}
+    #dpage.reading-page .dp-detail .rd-insight .bd{text-wrap:pretty}
+    #dpage.reading-page .dp-detail .rd-save{font-size:11.5px}
     #dpage.reading-page .dp-detail .dp-chnav{margin-top:14px}
     #dpage.reading-page .dp-detail .dp-chnav > *{padding:8px 8px 8px 44px}
     #dpage.reading-page .dp-detail .dp-chnav > .nx{padding:8px 44px 8px 8px}
@@ -6066,6 +6077,15 @@
     #dpage.compass-page .cp-panel[data-for="drain"] .cp-why{background:#FFF1F5;border-color:#EFD5DD}
     #dpage.compass-page .cp-panel[data-for="call"] .cp-why{background:#F1F2FC;border-color:#D8DAEE}
   }
+  /* 「吸引」这一个方向:入口卡与展开区换成浅紫(用户:原本的珍珠白跟第一张卡重复) */
+  #dpage.compass-page .cp-ent.d4{
+    background-image:linear-gradient(135deg,rgba(250,248,255,.96),rgba(242,238,253,.9));
+    border-color:rgba(170,150,220,.2)
+  }
+  #dpage.compass-page .cp-panel[data-for="call"]{
+    background:linear-gradient(180deg,rgba(251,249,255,.97),rgba(243,239,253,.95));
+    border-color:rgba(170,150,220,.2)
+  }
 
 
   /* ── 四个方向的展开区 v2(用户的参考图):只改排版,各方向的底色 / 插画 / 眉标颜色都不动 ──
@@ -6805,6 +6825,13 @@
   #dpage .dp-quote-card .save-badge svg{flex:none}
   #dpage .dp-quote-card .save-badge:hover{color:#8a5f2a}
   #dpage .dp-quote-card .save-badge.confirm{color:#b4645a}
+  /* 确认取消时:「保留收藏」(主要、比较显眼)+「确定取消?」(次要、红字) */
+  #dpage .dp-quote-card .fav-confirm{display:flex;align-items:center;gap:14px}
+  #dpage .dp-quote-card .fav-confirm .keep{
+    padding:5px 14px;border-radius:999px;cursor:pointer;font-family:var(--dp-serif);font-size:12px;letter-spacing:.04em;
+    color:#6a5230;background:rgba(255,250,242,.9);border:1px solid rgba(201,160,97,.55);transition:background .2s
+  }
+  #dpage .dp-quote-card .fav-confirm .keep:hover{background:#fff}
   #dpage .dp-count{font-size:12.5px;color:var(--dp-mut);margin-bottom:18px}
   /* 搜索筛掉的卡片 / 「没有符合的句子」:hidden 属性要赢过 display:flex / block */
   #dpage .dp-quote-card[hidden],#dpage .fav-nomatch[hidden]{display:none}
@@ -6883,7 +6910,8 @@
   #dpage.records-page .dp-hero{
     color:var(--dp-ink);text-align:center;
     position:relative;z-index:1;isolation:isolate;background:none;
-    padding-top:0;padding-bottom:clamp(40px,6vw,80px)
+    /* 顶部内距不再归零:跟其他页面同一个 26px,顶栏(Logo / 导航 / 账号)位置全站一致 */
+    padding-bottom:clamp(40px,6vw,80px)
   }
   #dpage.records-page .dp-hero::before{
     content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
@@ -6898,7 +6926,7 @@
   #dpage.records-page .dp-hero .dp-back{color:#fffaf0;text-shadow:0 1px 8px rgba(20,24,60,.45)}
   #dpage.records-page .dp-hero .dp-acct-btn{color:rgba(255,251,243,.92);border-color:rgba(255,251,243,.45);text-shadow:0 1px 8px rgba(20,24,60,.4)}
   #dpage.records-page .dp-hero .dp-acct-btn .caret{color:rgba(255,251,243,.7)}
-  #dpage.records-page .dp-hero .dp-hero-grid{padding-top:clamp(110px,14vw,190px)}
+  /* 标题位置跟其他页面一样(紧接在顶栏下面),不再额外往下推 */
   #dpage.records-page .dp-hero .dp-stars{display:none}
   #dpage.records-page .dp-brand{color:var(--dp-ink)}
   #dpage.records-page .dp-brand .s{color:#b8a678}
@@ -6974,8 +7002,9 @@
   #dpage.records-page .rc-tag.d{background:rgba(170,206,196,.3);color:#4f7a70}
   #dpage.records-page .rc-main{margin:10px 0 0;font-family:var(--dp-sans);font-size:14.5px;line-height:1.85;color:#23264f}
   #dpage.records-page .rc-sub{margin:6px 0 0;font-size:13px;line-height:1.8;color:#6f6a7e}
+  #dpage.records-page .rc-tags{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding-right:36px}
   #dpage.records-page .rc-mood{
-    display:inline-block;margin-top:10px;padding:3px 12px;border-radius:999px;font-size:12px;color:#6f6a7e;
+    display:inline-block;margin-top:0;padding:3px 12px;border-radius:999px;font-size:12px;color:#6f6a7e;
     background:rgba(234,228,240,.7)
   }
   #dpage.records-page .rc-more{
@@ -7211,6 +7240,66 @@
   #dpage.thread-page .thread-chapters .ch-card .ch-keys li{
     font-family:var(--dp-sans)!important;font-weight:500!important;
     font-size:clamp(13px, 12.7px + .1vw, 13.5px)!important;line-height:1.7!important;letter-spacing:.01em!important
+  }
+
+  /* ── 此刻的我 · 心情(依用户参考图) ─────────────────────────────
+     大标题 → 问句 → 小字「最多选择两项」→ 两行各四颗胶囊(奶油底 + 金细边,
+     图示金 / 雾蓝;选中:淡紫底 + 紫边 + 紫色打勾)→「更多心情 ⌄ | ＋ 写下我的感受」。
+     「更多心情」展开后再两行各四颗。放在最后,盖过先前几版的心情样式。 */
+  #dpage.compass-page .cp-now .cp-mood-hint{
+    margin:8px auto 0;text-align:center;font-family:var(--dp-serif);font-size:12.5px;letter-spacing:.12em;color:#8e88a6
+  }
+  #dpage.compass-page .cp-now .cp-moods{
+    display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;
+    max-width:min(100%,640px);margin:20px auto 0;padding:0
+  }
+  #dpage.compass-page .cp-now .cp-moods-more{margin-top:12px}
+  #dpage.compass-page .cp-now .cp-moods[hidden]{display:none}
+  #dpage.compass-page .cp-now .cp-mood{
+    display:inline-flex;align-items:center;justify-content:center;gap:10px;min-width:0;
+    min-height:50px;padding:0 12px;border-radius:999px;
+    font-family:var(--dp-serif);font-weight:500;font-size:14.5px;letter-spacing:.06em;color:#2f3155;white-space:nowrap;
+    background:rgba(255,252,247,.92);border:1px solid rgba(214,178,120,.6);
+    box-shadow:0 4px 14px rgba(150,120,80,.06);
+    transition:background .2s ease,border-color .2s ease,color .2s ease
+  }
+  #dpage.compass-page .cp-now .cp-mood .mi{width:18px;height:18px}
+  #dpage.compass-page .cp-now .cp-mood .mi.g{color:#c9a061}
+  #dpage.compass-page .cp-now .cp-mood .mi.b{color:#c9a061}
+  #dpage.compass-page .cp-now .cp-mood.on{
+    background:rgba(234,228,250,.95);border-color:rgba(140,122,200,.75);color:#3a3366;
+    box-shadow:0 4px 16px rgba(130,110,200,.14)
+  }
+  #dpage.compass-page .cp-now .cp-mood .ck,
+  #dpage.records-page .rc-mc .ck{display:block;width:20px;height:20px;flex:none}
+  #dpage.compass-page .cp-now .cp-mood .ck circle,
+  #dpage.records-page .rc-mc .ck circle{fill:#8d7cc4;stroke:none}
+  #dpage.compass-page .cp-now .cp-mood .ck path,
+  #dpage.records-page .rc-mc .ck path{fill:none;stroke:#fff;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  @media(hover:hover){
+    #dpage.compass-page .cp-now .cp-mood:not(.on):hover{background:#fffdf9;border-color:rgba(214,178,120,.85)}
+  }
+  #dpage.compass-page .cp-now .cp-mood-foot{
+    display:flex;align-items:center;justify-content:center;gap:18px;margin:18px auto 0
+  }
+  #dpage.compass-page .cp-now .cp-mood-foot .sep{width:1px;height:18px;background:rgba(140,130,170,.3)}
+  #dpage.compass-page .cp-now .cp-mood-more,
+  #dpage.compass-page .cp-now .cp-mood-write{
+    display:inline-flex;align-items:center;gap:6px;padding:6px 2px;border:0;background:none;cursor:pointer;
+    font-family:var(--dp-serif);font-size:13.5px;letter-spacing:.06em;color:#6a6390
+  }
+  #dpage.compass-page .cp-now .cp-mood-more svg{width:11px;height:8px;fill:none;stroke:currentColor;stroke-width:1.4;transition:transform .2s ease}
+  #dpage.compass-page .cp-now .cp-mood-more.open svg{transform:rotate(180deg)}
+  #dpage.compass-page .cp-now .cp-mood-more:hover,
+  #dpage.compass-page .cp-now .cp-mood-write:hover{color:#3a3366}
+  @media(max-width:767px){
+    #dpage.compass-page .cp-now .cp-moods{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+    #dpage.compass-page .cp-now .cp-mood{min-height:46px;font-size:13.5px;gap:8px}
+    #dpage.compass-page .cp-now .cp-mood .mi,
+    #dpage.compass-page .cp-now .cp-mood .ck{width:17px;height:17px}
+    #dpage.compass-page .cp-now .cp-mood-foot{gap:14px}
+    #dpage.compass-page .cp-now .cp-mood-more,
+    #dpage.compass-page .cp-now .cp-mood-write{font-size:12.5px}
   }
 </style>
 </head>
@@ -9464,16 +9553,21 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   /* 今天的心情选项(版面的一部分,不是生成内容) */
   /* 此刻的状态。刻意用日常说法,不用临床词汇 ——
      这一栏是使用者告诉自己现在怎么样,不是系统在判断他。 */
+  /* 依用户参考图:主要 8 个(两行各四),「更多心情」再 8 个。
+     旧记录里已经存下的心情字(例如「有点乱」)照样会显示,只是不再出现在选项里。 */
   const MOODS = [
-    ["平静", "Calm"], ["有点累", "A bit tired"], ["有点乱", "A bit scattered"],
-    ["还不错", "Doing okay"], ["想一个人待着", "Wanting to be alone"],
-    ["有些期待", "Quietly hopeful"], ["提不起劲", "Low on energy"],
-    ["正在重新开始", "Starting over"]
+    ["平静", "Calm"], ["有点开心", "A little happy"], ["有些期待", "Quietly hopeful"], ["心里暖暖的", "Warm inside"],
+    ["有点累", "A bit tired"], ["有点乱", "A bit scattered"], ["有些难过", "A little sad"], ["说不清楚", "Hard to say"]
+  ];
+  const MOODS_MORE = [
+    ["有点孤单", "A bit lonely"], ["有点委屈", "A bit wronged"], ["有点烦躁", "A bit irritable"], ["有些失落", "A little let down"],
+    ["感到满足", "Content"], ["心怀感激", "Grateful"], ["提不起劲", "Low on energy"], ["想独处", "Wanting to be alone"]
   ];
 
   window.Compass = {
     DIRECTIONS: DIRECTIONS,
     MOODS: MOODS,
+    MOODS_MORE: MOODS_MORE,
     directions: directions,
     reminders: reminders,
     question: question,
@@ -11138,6 +11232,11 @@ window.Guide = (function () {
     renderFavs();
     return i < 0;
   }
+  // 「收藏语句」按钮的内容:书签图示 + 字(已收藏时图示填满)
+  function rdSaveInner(on) {
+    return '<svg viewBox="0 0 16 18" aria-hidden="true"><path d="M3 1.5h10v15l-5-3.6-5 3.6z"/></svg><span>' +
+      (on ? dpT("已收藏", "Saved") : dpT("收藏语句", "Save this line")) + "</span>";
+  }
   function favButton(k) {
     return '<button class="fav-btn' + (isFaved(k) ? " on" : "") + '" data-fav="' + esc0(k) + '" title="' + esc0(T("saveIt")) + '">' +
       (isFaved(k) ? "★" : "☆") + '</button>';
@@ -11155,7 +11254,8 @@ window.Guide = (function () {
       title: b.getAttribute("data-section") || ""
     };
     const on = toggleFav(b.getAttribute("data-fav"), payload);
-    b.textContent = on ? "★" : "☆";
+    if (b.hasAttribute("data-fav-label")) b.innerHTML = rdSaveInner(on);
+    else b.textContent = on ? "★" : "☆";
     b.classList.toggle("on", on);
   });
 
@@ -12848,8 +12948,9 @@ window.Guide = (function () {
       dpTopbarHtml() +
       '<div class="dp-hero-grid"><div>' +
       (o.chip ? '<span class="dp-chip">' + esc0(o.chip) + '</span>' : "") +
-      '<h1 class="dp-title">' + esc0(o.title || "") + '</h1>' +
-      (o.sub ? '<div class="dp-sub">' + esc0(o.sub) + '</div>' : "") +
+      // 用户:每个页面 hero 的文字,每一行最后都不要句号(标题与副标都是)
+      '<h1 class="dp-title">' + esc0(String(o.title || "").replace(/。+(?=\n|$)/g, "")) + '</h1>' +
+      (o.sub ? '<div class="dp-sub">' + esc0(String(o.sub).replace(/。+(?=\n|$)/g, "")) + '</div>' : "") +
       /* lead / side 是两个可选插槽:目前只有「我的完整星盘」用到 ——
          它要把标题与盘面并排放进同一个 hero。其他页面不传就跟以前一样。 */
       (o.lead || "") +
@@ -13257,7 +13358,19 @@ window.Guide = (function () {
      没有「」的句子就原样当一段正文。 */
   function dpThreadPattern(text) {
     const parts = String(text).split(/(「[^」]+」)/).filter(function (x) { return x !== ""; });
-    if (parts.length < 2) return '<div class="pattern"><p class="tx">' + esc0(text) + "</p></div>";
+    if (parts.length < 2) {
+      /* 没有「」的句子:把最有力的结论句单独成行、稍微加粗(用户要求)。
+         结论句 = 最后一个冒号「：」之后的那一段;没有冒号就取最后一个「——」之后。
+         字一个都不改,只是切开排;切出来太短(< 6 字)或找不到就维持整段。 */
+      const t = String(text);
+      let cut = Math.max(t.lastIndexOf("："), t.lastIndexOf(":"));
+      let lead, key;
+      if (cut > 0) { lead = t.slice(0, cut + 1); key = t.slice(cut + 1); }
+      else if ((cut = t.lastIndexOf("——")) > 0) { lead = t.slice(0, cut + 2); key = t.slice(cut + 2); }
+      if (key && key.trim().length >= 6 && lead.trim().length >= 6)
+        return '<div class="pattern"><p class="tx">' + esc0(lead.trim()) + '</p><p class="key">' + esc0(key.trim()) + "</p></div>";
+      return '<div class="pattern"><p class="tx">' + esc0(text) + "</p></div>";
+    }
     let seenQ = false;
     return '<div class="pattern">' + parts.map(function (x) {
       if (x.charAt(0) === "「") { seenQ = true; return '<p class="q">' + esc0(x) + "</p>"; }
@@ -13875,14 +13988,24 @@ window.Guide = (function () {
       // 建议卡片:正文可以划词收藏(与主题阅读同一套 selection / save 逻辑)
       /* 章末的专属建议:依用户参考图做成「星盘洞察」卡 —— 小标 + 细线 + INSIGHT,
          下面是标题与正文(用户要求不放素材;内容本身一个字都不改) */
+      /* 用户参考图:每一条一张「留给你的话」卡 —— 左上小金星 + 小标,句子放大(宋体),
+         右下「收藏语句」。收藏走既有的 data-fav 机制(跟主题页同一套 key / payload),
+         所以会出现在「我的收藏」。句子在逗号 / 分号后断行,字一个都不改。 */
       function cardsHtml(list) {
-        return '<div class="rd-insight">' +
-          list.map(function (cd) {
-            return '<div class="it"><div class="bd"><b>' + esc0(cd.title) + "</b>" +
-              '<div data-saveable data-source="' + esc0(favSrc) + '" data-source-type="life_blueprint"' +
-              ' data-section="' + esc0(dpT("专属建议", "For you") + " · " + String(cd.title || "")) + '">' +
-              esc0(cd.line || "") + "</div></div></div>";
-          }).join("") + "</div>";
+        return list.map(function (cd) {
+          const line = String(cd.line || "");
+          const sec = dpT("专属建议", "For you") + " · " + String(cd.title || "");
+          const k = favKey(favSrc, sec, line);
+          const on = isFaved(k);
+          const shown = line.split(/(?<=[，,；;])/).map(function (x) { return esc0(x.trim()); }).filter(Boolean).join("<br>");
+          return '<div class="rd-insight">' +
+            '<div class="hd"><i aria-hidden="true">✦</i><span class="zh">' + dpT("留给你的话", "For you") + "</span></div>" +
+            '<div class="bd" data-saveable data-source="' + esc0(favSrc) + '" data-source-type="life_blueprint"' +
+            ' data-section="' + esc0(sec) + '">' + shown + "</div>" +
+            '<button type="button" class="rd-save' + (on ? " on" : "") + '" data-fav-label="1" data-fav="' + esc0(k) + '"' +
+            ' data-text="' + esc0(line) + '" data-source="' + esc0(favSrc) + '" data-source-type="life_blueprint"' +
+            ' data-section="' + esc0(sec) + '">' + rdSaveInner(on) + "</button></div>";
+        }).join("");
       }
       /* 页面最上方那组「专属建议」(topCards)改成 2×2 的插画卡网格,
          用户给的参考图那种做法:编号 + 右上角一张插画 + 标题 + 正文。
@@ -14914,14 +15037,48 @@ window.Guide = (function () {
   /* 心情线稿:20×20、1.2px 描边、不填色 */
   var CP_MOOD_ICON = [
     ["b", '<path d="M6 15h8.5a3 3 0 0 0 .3-6 4.5 4.5 0 0 0-8.6-1A3.5 3.5 0 0 0 6 15z"/>'],
+    ["g", '<circle cx="10" cy="10" r="3.2"/><path d="M10 2.6v1.8M10 15.6v1.8M2.6 10h1.8M15.6 10h1.8M4.8 4.8l1.3 1.3M13.9 13.9l1.3 1.3M4.8 15.2l1.3-1.3M13.9 6.1l1.3-1.3"/>'],
+    ["g", '<path d="M10 17.2v-6M10 11.2c0-3 2.4-5 5.8-5 0 3.2-2.4 5-5.8 5zM10 12.6c0-2.5-2-4.2-5-4.2 0 2.7 2 4.2 5 4.2z"/>'],
+    ["g", '<path d="M10 16.2s-6-3.6-6-7.6A3.3 3.3 0 0 1 10 6.7a3.3 3.3 0 0 1 6 1.9c0 4-6 7.6-6 7.6z"/>'],
     ["b", '<path d="M6 15h8.5a3 3 0 0 0 .3-6 4.5 4.5 0 0 0-8.6-1A3.5 3.5 0 0 0 6 15z"/><path d="M8 11.6q.8.7 1.6 0M11 11.6q.8.7 1.6 0"/>'],
     ["b", '<ellipse cx="10" cy="10" rx="7.5" ry="2.8" transform="rotate(30 10 10)"/><ellipse cx="10" cy="10" rx="7.5" ry="2.8" transform="rotate(-30 10 10)"/><circle cx="10" cy="10" r=".9"/>'],
-    ["g", '<circle cx="10" cy="10" r="3.2"/><path d="M10 2.6v1.8M10 15.6v1.8M2.6 10h1.8M15.6 10h1.8M4.8 4.8l1.3 1.3M13.9 13.9l1.3 1.3M4.8 15.2l1.3-1.3M13.9 6.1l1.3-1.3"/>'],
     ["b", '<path d="M13.2 3.4a6.6 6.6 0 1 0 3.4 11.4A5.6 5.6 0 0 1 13.2 3.4z"/>'],
-    ["g", '<path d="M10 17.2v-6M10 11.2c0-3 2.4-5 5.8-5 0 3.2-2.4 5-5.8 5zM10 12.6c0-2.5-2-4.2-5-4.2 0 2.7 2 4.2 5 4.2z"/>'],
-    ["g", '<path d="M3 14.2h14M6 14.2a4 4 0 0 1 8 0M10 7.4v1.6M5 9.6l1 1M15 9.6l-1 1"/>'],
     ["g", '<path d="M10 2.6c.6 4 2.3 5.8 6.4 7.4-4.1 1.6-5.8 3.4-6.4 7.4-.6-4-2.3-5.8-6.4-7.4 4.1-1.6 5.8-3.4 6.4-7.4z"/>']
   ];
+  var CP_MOOD_ICON_MORE = [
+    ["b", '<circle cx="10" cy="8.5" r="2.4"/><path d="M3.5 15.5h13"/>'],
+    ["b", '<path d="M6 12.5h8.5a3 3 0 0 0 .3-6 4.5 4.5 0 0 0-8.6-1A3.5 3.5 0 0 0 6 12.5z"/><path d="M8 15v1.6M12 15v1.6"/>'],
+    ["b", '<path d="M3 10l2.4-3 2.4 6 2.4-6 2.4 6 2.4-6 1.6 3"/>'],
+    ["b", '<path d="M6 4.5c5 0 8 3 8 8-5 0-8-3-8-8z"/><path d="M6 4.5l8 8M14 12.5l2 3"/>'],
+    ["g", '<path d="M5 8h9v3.5a4.5 4.5 0 0 1-9 0V8zM14 9h1.5a2 2 0 0 1 0 4H14M7.5 4.5v1.5M10.5 4v2"/>'],
+    ["g", '<path d="M9 15.5s-5-3-5-6.4A2.8 2.8 0 0 1 9 7.5a2.8 2.8 0 0 1 5 1.6c0 3.4-5 6.4-5 6.4z"/><path d="M15.5 2.8v3M14 4.3h3"/>'],
+    ["g", '<path d="M3 14.2h14M6 14.2a4 4 0 0 1 8 0M10 7.4v1.6M5 9.6l1 1M15 9.6l-1 1"/>'],
+    ["b", '<path d="M6 17V4.5h8V17M4 17h12M11.5 10.5h.01"/>']
+  ];
+  /* 心情最多选两项:存成「A、B」一个字串(资料栏位不变)。再点一次取消;
+     已经两项时再点第三个,换掉最早选的那一个 */
+  var CP_MOOD_SEP = "、";
+  function cpMoodList(v) { return String(v || "").split(CP_MOOD_SEP).filter(Boolean); }
+  function cpMoodToggle(cur, v) {
+    var a = cpMoodList(cur), k = a.indexOf(v);
+    if (k >= 0) a.splice(k, 1); else { a.push(v); if (a.length > 2) a.shift(); }
+    return a.join(CP_MOOD_SEP);
+  }
+  // 依心情字找图示(主要 / 更多两组);旧心情没有图示就回 null
+  function cpMoodIcon(label) {
+    var C = window.Compass, i = C.MOODS.findIndex(function (x) { return x[0] === label || x[1] === label; });
+    if (i >= 0) return CP_MOOD_ICON[i];
+    i = C.MOODS_MORE.findIndex(function (x) { return x[0] === label || x[1] === label; });
+    return i >= 0 ? CP_MOOD_ICON_MORE[i] : null;
+  }
+  var CP_CHECK = '<svg class="ck" viewBox="0 0 20 20" aria-hidden="true" focusable="false"><circle cx="10" cy="10" r="9"/><path d="M6 10.3l2.6 2.6L14 7.4"/></svg>';
+  function cpMoodBtn(cls, m, ic, sel) {
+    var label = dpT(m[0], m[1]), on = cpMoodList(sel).indexOf(label) >= 0;
+    return '<button type="button" class="' + cls + (on ? " on" : "") + '" data-mood="' + esc0(label) +
+      '" aria-pressed="' + (on ? "true" : "false") + '">' +
+      (on ? CP_CHECK : (ic ? '<svg class="mi ' + ic[0] + '" viewBox="0 0 20 20" aria-hidden="true" focusable="false">' + ic[1] + "</svg>" : "")) +
+      "<span>" + esc0(label) + "</span></button>";
+  }
 
   /* 以使用者本地的日期为准(不是 UTC) */
   function compassDayKey(iso) {
@@ -14955,20 +15112,21 @@ window.Guide = (function () {
     return '<section class="cp-sec cp-now">' +
       compassSecHead("", dpT("此刻的我", "Right Now"), "RIGHT NOW") +
       '<p class="cp-q">' + esc0(dpT("今天的天空怎么样？", "How is your sky today?")) + "</p>" +
-      '<div class="cp-moods" role="group" aria-label="' +
-      esc0(dpT("今天的心情", "Today’s weather")) + '">' +
-      window.Compass.MOODS.map(function (m, i) {
-        const label = dpT(m[0], m[1]);
-        /* 每个心情一个极小的线稿图示,跟 MOODS 同顺序;纯装饰,文字才是按钮名称。
-           只用两种色:香槟金(g)与雾蓝灰(b),不是每颗各一个颜色。 */
-        const icon = CP_MOOD_ICON[i];
-        return '<button type="button" class="cp-mood' + (compassMood === label ? " on" : "") +
-          '" data-mood="' + esc0(label) + '" aria-pressed="' +
-          (compassMood === label ? "true" : "false") + '">' +
-          (icon ? '<svg class="mi ' + icon[0] + '" viewBox="0 0 20 20" aria-hidden="true" focusable="false">' +
-                  icon[1] + "</svg>" : "") +
-          "<span>" + esc0(label) + "</span></button>";
-      }).join("") + "</div>" +
+      '<p class="cp-mood-hint">' + esc0(dpT("不必只选一种感受，最多选择两项", "You don’t have to pick just one — up to two")) + "</p>" +
+      '<div class="cp-moods" role="group" aria-label="' + esc0(dpT("今天的心情", "Today’s weather")) + '">' +
+      window.Compass.MOODS.map(function (m, i) { return cpMoodBtn("cp-mood", m, CP_MOOD_ICON[i], compassMood); }).join("") + "</div>" +
+      (function () {
+        // 已经选了「更多心情」里的某一项,就直接展开,不然看不到自己选了什么
+        const moreOn = window.Compass.MOODS_MORE.some(function (m) { return cpMoodList(compassMood).indexOf(dpT(m[0], m[1])) >= 0; });
+        return '<div class="cp-moods cp-moods-more" id="cpMoodsMore" role="group"' + (moreOn ? "" : " hidden") + '>' +
+          window.Compass.MOODS_MORE.map(function (m, i) { return cpMoodBtn("cp-mood", m, CP_MOOD_ICON_MORE[i], compassMood); }).join("") +
+          "</div>" +
+          '<div class="cp-mood-foot"><button type="button" class="cp-mood-more' + (moreOn ? " open" : "") + '" id="cpMoodMoreBtn" aria-expanded="' +
+          (moreOn ? "true" : "false") + '" aria-controls="cpMoodsMore">' + esc0(dpT("更多心情", "More feelings")) +
+          '<svg viewBox="0 0 12 8" aria-hidden="true"><path d="M1 1.5l5 5 5-5"/></svg></button>' +
+          '<span class="sep" aria-hidden="true"></span>' +
+          '<button type="button" class="cp-mood-write" id="cpMoodWrite">＋ ' + esc0(dpT("写下我的感受", "Write how I feel")) + "</button></div>";
+      })() +
       /* 依用户参考图:问题 + 写字处 + 按钮收进一张雾面玻璃卡,写字处右下一支羽毛笔
          (右上角原本的月亮星链,用户要求删掉) */
       '<div class="cp-note-card">' +
@@ -15192,8 +15350,8 @@ window.Guide = (function () {
       const FOLD = 66;
       /* 心情胶囊的颜色跟着心情图示的色调:香槟金那几个是暖米,雾蓝那几个是淡紫 */
       const moodTone = function (m) {
-        const i = window.Compass.MOODS.findIndex(function (x) { return x[0] === m || x[1] === m; });
-        return (i >= 0 && CP_MOOD_ICON[i] && CP_MOOD_ICON[i][0] === "b") ? " b" : " g";
+        const ic = cpMoodIcon(m);
+        return (ic && ic[0] === "b") ? " b" : " g";
       };
       inner = '<div class="cp-sky-grid">' + shown.map(function (r, idx) {
         const t = String(r.text || "");
@@ -15205,7 +15363,8 @@ window.Guide = (function () {
           (idx % 2 ? " dk2" : " dk1") + '" data-entry="' + esc0(r.id) + '">' +
           '<span class="dk" aria-hidden="true"></span><div class="hd">' +
           '<span class="dt">' + esc0(dt) + "</span>" +
-          (r.mood ? '<span class="md' + moodTone(r.mood) + '"><i aria-hidden="true">✦</i>' + esc0(r.mood) + "</span>" : "") +
+          // 两项心情各自一颗胶囊
+          cpMoodList(r.mood).map(function (m) { return '<span class="md' + moodTone(m) + '"><i aria-hidden="true">✦</i>' + esc0(m) + "</span>"; }).join("") +
           '<button type="button" class="cp-dots" data-menu="' + esc0(r.id) + '" aria-expanded="' + (menu ? "true" : "false") +
           '" aria-label="' + esc0(dpT("更多操作", "More")) + '"><span aria-hidden="true">•••</span></button>' +
           (menu
@@ -16066,17 +16225,37 @@ window.Guide = (function () {
         });
       }
     }
-    // 心情:单选,再点一次取消
+    // 心情:最多两项,再点一次取消;选中的那颗图示换成打勾
     host.querySelectorAll(".cp-mood").forEach(function (b) {
       b.addEventListener("click", function () {
-        const v = b.getAttribute("data-mood");
-        compassMood = (compassMood === v) ? "" : v;
+        compassMood = cpMoodToggle(compassMood, b.getAttribute("data-mood"));
+        const sel = cpMoodList(compassMood);
         host.querySelectorAll(".cp-mood").forEach(function (x) {
-          const on = x.getAttribute("data-mood") === compassMood;
+          const v = x.getAttribute("data-mood"), on = sel.indexOf(v) >= 0;
+          if (on === x.classList.contains("on")) return;
           x.classList.toggle("on", on);
           x.setAttribute("aria-pressed", on ? "true" : "false");
+          const ic = cpMoodIcon(v), old = x.querySelector("svg");
+          if (old) old.remove();
+          x.insertAdjacentHTML("afterbegin", on ? CP_CHECK :
+            (ic ? '<svg class="mi ' + ic[0] + '" viewBox="0 0 20 20" aria-hidden="true" focusable="false">' + ic[1] + "</svg>" : ""));
         });
       });
+    });
+    const moreBtn = document.getElementById("cpMoodMoreBtn");
+    if (moreBtn) moreBtn.addEventListener("click", function () {
+      const box = document.getElementById("cpMoodsMore");
+      const open = box.hidden;
+      box.hidden = !open;
+      moreBtn.classList.toggle("open", open);
+      moreBtn.setAttribute("aria-expanded", open ? "true" : "false");
+    });
+    const writeBtn = document.getElementById("cpMoodWrite");
+    if (writeBtn) writeBtn.addEventListener("click", function () {
+      const ta = document.getElementById("cpNote");
+      if (!ta) return;
+      ta.scrollIntoView({ behavior: "smooth", block: "center" });
+      setTimeout(function () { try { ta.focus({ preventScroll: true }); } catch (e) { ta.focus(); } }, 350);
     });
 
     /* 每种记录一天一则:画面上今天写过就不会再出现表单;万一另一个分页已经写过,
@@ -16277,10 +16456,11 @@ window.Guide = (function () {
     const sub = isQ ? r.text : "";
     const menu = recMenu === r.id;
     return '<div class="rc-blk ' + recKindCls(r) + '">' +
-      '<span class="rc-tag ' + recKindCls(r) + '">' + esc0(recKindLabel(r)) + '</span>' +
+      // 类别与心情两个 tag 放同一排(用户要求:心情放在「此刻的我」旁边)
+      '<div class="rc-tags"><span class="rc-tag ' + recKindCls(r) + '">' + esc0(recKindLabel(r)) + '</span>' +
+      cpMoodList(r.mood).map(function (m) { return '<span class="rc-mood">' + esc0(m) + '</span>'; }).join("") + '</div>' +
       (main ? '<p class="rc-main">' + recBr(main) + '</p>' : "") +
       (sub ? '<p class="rc-sub">' + recBr(sub) + '</p>' : "") +
-      (r.mood ? '<span class="rc-mood">' + esc0(r.mood) + '</span>' : "") +
       '<button type="button" class="rc-more" data-menu="' + esc0(r.id) + '" aria-haspopup="menu" aria-expanded="' +
         (menu ? "true" : "false") + '" aria-label="' + esc0(dpT("更多操作", "More")) + '">⋯</button>' +
       (menu ? '<div class="rc-menu" role="menu">' +
@@ -16351,15 +16531,12 @@ window.Guide = (function () {
         (r.text ? '<h4>' + esc0(isQ ? dpT("我的回答", "My answer") : isD ? dpT("今天的日记", "Today’s page") : dpT("我写下的", "What I wrote")) + '</h4><div class="rc-box">' + recBr(r.text) + '</div>' : "") +
         '<p class="rc-when"><i aria-hidden="true">◷</i>' + esc0(dpT("创建于 ", "Created ") + recStamp(r.ts)) + '</p>';
     } else if (recModal.type === "edit") {
-      /* 「此刻的我」可以重新选今天的天空:同一组心情与图示,单选,再点一次取消 */
+      /* 「此刻的我」可以重新选今天的天空:同一组心情与图示(主要 + 更多),最多两项,再点一次取消 */
       const moodPick = (isQ || isD) ? "" : '<h4>' + esc0(dpT("今天的天空怎么样？", "How is your sky today?")) + '</h4>' +
-        '<div class="rc-moods" role="group">' + window.Compass.MOODS.map(function (m, i) {
-          const label = dpT(m[0], m[1]), on = recEditMood === label, ic = CP_MOOD_ICON[i];
-          return '<button type="button" class="rc-mc' + (on ? " on" : "") + '" data-mood="' + esc0(label) +
-            '" aria-pressed="' + (on ? "true" : "false") + '">' +
-            (ic ? '<svg class="mi ' + ic[0] + '" viewBox="0 0 20 20" aria-hidden="true" focusable="false">' + ic[1] + "</svg>" : "") +
-            '<span>' + esc0(label) + '</span></button>';
-        }).join("") + '</div>';
+        '<div class="rc-moods" role="group">' +
+        window.Compass.MOODS.map(function (m, i) { return cpMoodBtn("rc-mc", m, CP_MOOD_ICON[i], recEditMood); }).join("") +
+        window.Compass.MOODS_MORE.map(function (m, i) { return cpMoodBtn("rc-mc", m, CP_MOOD_ICON_MORE[i], recEditMood); }).join("") +
+        '</div>';
       inner = head(dpT("编辑记录", "Edit record")) + moodPick +
         (isQ && r.question ? '<h4>' + esc0(dpT("问题内容", "The question")) + '</h4>' +
           '<textarea class="rc-ta" id="rcQ" maxlength="160" rows="3">' + esc0(r.question) + '</textarea>' +
@@ -16509,10 +16686,16 @@ window.Guide = (function () {
     host.querySelectorAll(".rc-mc").forEach(function (b) {
       b.addEventListener("click", function () {
         const v = b.getAttribute("data-mood");
-        recEditMood = recEditMood === v ? "" : v;
+        recEditMood = cpMoodToggle(recEditMood, v);
+        const sel = cpMoodList(recEditMood);
         host.querySelectorAll(".rc-mc").forEach(function (x) {
-          const on = x.getAttribute("data-mood") === recEditMood;
+          const mv = x.getAttribute("data-mood"), on = sel.indexOf(mv) >= 0;
+          if (on === x.classList.contains("on")) return;
           x.classList.toggle("on", on); x.setAttribute("aria-pressed", on ? "true" : "false");
+          const ic = cpMoodIcon(mv), old = x.querySelector("svg");
+          if (old) old.remove();
+          x.insertAdjacentHTML("afterbegin", on ? CP_CHECK :
+            (ic ? '<svg class="mi ' + ic[0] + '" viewBox="0 0 20 20" aria-hidden="true" focusable="false">' + ic[1] + "</svg>" : ""));
         });
       });
     });
@@ -16645,11 +16828,14 @@ window.Guide = (function () {
             '<div class="acts">' +
             (back ? '<a class="back" href="' + esc0(back) + '">' + dpT("回到这段阅读", "Back to this reading") +
               '<span aria-hidden="true">→</span></a>' : '<span></span>') +
+            // 确认取消时多一个「保留收藏」:误按了可以直接退回,不会删掉
+            (confirming ? '<span class="fav-confirm"><button type="button" class="keep" data-fav-keep>' +
+              dpT("保留收藏", "Keep it") + '</button>' : '') +
             '<button class="save-badge' + (confirming ? " confirm" : "") + '" data-fav-rm="' + k + '">' +
             '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8">' +
             '<path d="M6 4h12v16l-6-4-6 4V4z"></path></svg>' +
             '<span>' + (confirming ? dpT("确定取消?", "Confirm remove?") : dpT("已收藏", "Saved")) + '</span>' +
-            '</button></div></div>';
+            '</button>' + (confirming ? '</span>' : '') + '</div></div>';
         }).join("") + '</div>' : "") +
         '<div class="dp-card dp-loading fav-nomatch" hidden><span class="g">✦</span>' +
         dpT("没有符合的句子。", "No lines match your search.") + '</div>'
@@ -16668,6 +16854,9 @@ window.Guide = (function () {
     const sb = $("dpage").querySelector("[data-fav-sort]");
     if (sb) sb.addEventListener("click", function () { favSortNew = !favSortNew; renderFavoritesPage(); });
     // 取消收藏:先确认一次,避免误触永久删除
+    $("dpage").querySelectorAll("[data-fav-keep]").forEach(function (b) {
+      b.addEventListener("click", function () { favConfirmKey = null; renderFavoritesPage(); });
+    });
     $("dpage").querySelectorAll("[data-fav-rm]").forEach(function (b) {
       b.addEventListener("click", function () {
         const key = b.getAttribute("data-fav-rm");
