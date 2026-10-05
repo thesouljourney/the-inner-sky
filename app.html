@@ -7426,6 +7426,21 @@
   #dpage .dp-wait-q::before{content:"✦";display:block;margin-bottom:10px;font-size:11px;color:#c9a061}
   #dpage .dp-wait-q.out{opacity:0}
   @media (prefers-reduced-motion:reduce){#dpage .dp-wait-q{transition:none}}
+  /* 健康主题的免责声明:小字、斜体、淡一点 */
+  /* !important:各页正文 p 的字级规则选择器更长、部分本身带 !important */
+  #dpage .dp-prose p.dp-disclaim{
+    font-size:12px !important;font-style:italic !important;line-height:1.8 !important;
+    letter-spacing:.02em !important;color:#8a8496 !important;font-weight:400 !important
+  }
+  /* 主题页最下面「你不是来寻找答案…」那张卡:降低不透明度,让背景透出来 */
+  #dpage.topic-page .dp-return{background:rgba(252,249,246,.5)}
+  /* 电脑版主题页底部卡片:那句话放大、一行、置中;「返回主题列表」缩小,放在那句话下方置中 */
+  @media (min-width:768px){
+    #dpage.topic-page .dp-return{display:flex;flex-direction:column;align-items:center;gap:20px;padding:30px 28px 28px}
+    #dpage.topic-page .dp-return .say{font-size:17px;letter-spacing:.06em;white-space:nowrap;text-align:center;color:var(--dp-ink)}
+    #dpage.topic-page .dp-return .say br{display:none}
+    #dpage.topic-page .dp-return .dp-cta{font-size:12.5px;padding:8px 20px}
+  }
 </style>
 </head>
 <!-- legacy-off 直接写在标签上,不等 JS。
@@ -13109,9 +13124,19 @@ window.Guide = (function () {
       '<div class="dp-body">' + (o.body || "") + (o.foot || "") + '</div>' +
       dpFooterHtml();
   }
+  /* 「本章节仅供自我觉察,不构成医疗建议…」这句免责声明是生成时写在正文开头或结尾的;
+     显示时把它拆成独立一段,用小字斜体,不跟正文混在一起 */
   function dpPara(x) {
     return esc0(x).split(/\n\s*\n|\n/).filter(function (y) { return y.trim(); })
-      .map(function (y) { return "<p>" + y.trim() + "</p>"; }).join("");
+      .map(function (y) {
+        y = y.trim();
+        const m = y.match(/本章节仅供自我觉察[^。\n]*。?/);
+        if (!m) return "<p>" + y + "</p>";
+        const pre = y.slice(0, m.index).trim(), post = y.slice(m.index + m[0].length).trim();
+        return (pre ? "<p>" + pre + "</p>" : "") +
+          '<p class="dp-disclaim">' + m[0].replace(/[。.]$/, "") + "</p>" +
+          (post ? "<p>" + post + "</p>" : "");
+      }).join("");
   }
   /* ============================================================
      渐进展开(段落感知)—— 一个地方写,好几处共用
@@ -13836,7 +13861,7 @@ window.Guide = (function () {
          结果停在页面下方或下一段(用户反馈)。这一段的顶端在正文上面,
          收合不会动到它,所以量到的就是终点。 */
       let openTop = null;
-      const set = function (on) {
+      const set = function (on, kb) {
         if (on) openTop = sec.getBoundingClientRect().top;
         sec.classList.toggle("open", on);
         full.classList.toggle("on", on);
@@ -13844,7 +13869,9 @@ window.Guide = (function () {
         full.style.maxHeight = full.scrollHeight + "px";
         if (!on) {
           full.getBoundingClientRect(); full.style.maxHeight = "0px";
-          open.focus({ preventScroll: true });
+          /* 只有用键盘收起时才把焦点交回「继续读这一段」;滑鼠/手指点的不移焦点,
+             否则按钮外会突然出现一圈对焦框(用户反馈) */
+          if (kb) open.focus({ preventScroll: true });
           const want = openTop === null ? 96 : Math.max(72, openTop);
           const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion:reduce)").matches;
           window.scrollTo({ top: Math.max(0, window.scrollY + sec.getBoundingClientRect().top - want),
@@ -13852,7 +13879,7 @@ window.Guide = (function () {
         }
       };
       open.addEventListener("click", function () { set(true); });
-      if (shut) shut.addEventListener("click", function () { set(false); });
+      if (shut) shut.addEventListener("click", function (e) { set(false, e.detail === 0); });
     });
   }
   function dpNeedChart() {
@@ -13909,7 +13936,7 @@ window.Guide = (function () {
                  "See which parts are still waiting to be found")) + "</span>"
       : "";
     // say:不传就跟改动前逐字相同——只有生命蓝图这一页传了自己的一段
-    const say = o.say || dpT("你不是来寻找答案,\n而是来重新看见自己", "You are not here for answers —\nyou are here to see yourself again.");
+    const say = o.say || dpT("你不是来寻找答案，\n而是来重新看见自己", "You are not here for answers —\nyou are here to see yourself again.");
     /* say 里用空行分成两段的话,第二段(补充说明那句)另外包一层
        .say-sub,好让它套一个跟主句不一样的小字级——不传空行(其他
        页面都没有)就跟改动前一样,整段一起印,没有 .say-sub。 */
@@ -17925,7 +17952,7 @@ window.Guide = (function () {
         const shut = sec.querySelector(".ch-shut");
         const full = sec.querySelector(".ch-full");
         if (!open || !full) return;
-        const set = function (on) {
+        const set = function (on, kb) {
           open.setAttribute("aria-expanded", on ? "true" : "false");
           if (on) {
             sec.classList.add("open"); grow(full, true);
@@ -17953,10 +17980,10 @@ window.Guide = (function () {
             const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion:reduce)").matches;
             window.scrollTo({ top: window.scrollY + top - 88, behavior: reduce ? "auto" : "smooth" });
           }
-          open.focus({ preventScroll: true });
+          if (kb) open.focus({ preventScroll: true });
         };
         open.addEventListener("click", function () { set(true); });
-        if (shut) shut.addEventListener("click", function () { set(false); });
+        if (shut) shut.addEventListener("click", function (e) { set(false, e.detail === 0); });
       });
 
       /* —— 几个重要章节 ——
