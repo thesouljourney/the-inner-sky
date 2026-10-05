@@ -7387,7 +7387,7 @@
   #dpage.thread-page .thread-chapters .ch-slot .clue .st{margin:0 0 8px}
   #dpage.thread-page .thread-chapters .ch-reader .clue .lb,
   #dpage.thread-page .thread-chapters .ch-slot .clue .lb{
-    font-family:var(--dp-sans);font-weight:500;font-size:clamp(14px, 13.7px + .1vw, 14.5px);
+    font-family:var(--dp-sans);font-weight:500;font-size:clamp(13px, 12.7px + .1vw, 13.5px);
     letter-spacing:.12em;color:#8a7351
   }
   #dpage.thread-page .thread-chapters .ch-reader .clue .ch-keys,
@@ -7396,8 +7396,8 @@
   }
   #dpage.thread-page .thread-chapters .ch-reader .clue .ch-keys li,
   #dpage.thread-page .thread-chapters .ch-slot .clue .ch-keys li{
-    font-family:var(--dp-sans);font-weight:400;font-size:clamp(14px, 13.7px + .1vw, 14.5px);
-    line-height:1.9;letter-spacing:.01em;color:#2F3142
+    font-family:var(--dp-sans);font-weight:400;font-size:clamp(13px, 12.7px + .1vw, 13.5px);
+    line-height:1.85;letter-spacing:.01em;color:#2F3142
   }
   #dpage.thread-page .thread-chapters .ch-reader .moon,
   #dpage.thread-page .thread-chapters .ch-slot .moon{margin-top:clamp(18px,2.2vw,24px)}
@@ -17873,7 +17873,18 @@ window.Guide = (function () {
         if (!open || !full) return;
         const set = function (on) {
           open.setAttribute("aria-expanded", on ? "true" : "false");
-          if (on) { sec.classList.add("open"); grow(full, true); return; }
+          if (on) {
+            sec.classList.add("open"); grow(full, true);
+            // 用户:点「探索这一章」之后,画面带到这一章的开头(卡顶停在视窗上方约 96px)
+            requestAnimationFrame(function () {
+              const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion:reduce)").matches;
+              window.scrollTo({
+                top: Math.max(0, window.scrollY + sec.getBoundingClientRect().top - 96),
+                behavior: reduce ? "auto" : "smooth"
+              });
+            });
+            return;
+          }
           /* 收起:一次收好,不做高度动画 —— 动画期间引子已经回来、原文还没收完,
              同一段字会叠两次;而且「收起」在长长的原文最底下,收完之后画面
              会停在下一章。所以直接收起,再把这一章的开头带回视线里。 */
