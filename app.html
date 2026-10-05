@@ -7380,11 +7380,18 @@
   #dpage.thread-page .thread-chapters .ch-slot .clue{
     margin:clamp(26px,3vw,34px) auto 0;max-width:min(100%,600px);
     padding:clamp(18px,2.2vw,24px) clamp(18px,2.6vw,28px);border-radius:16px;text-align:center;
-    background:rgba(255,252,246,.55);border:1px solid rgba(201,178,140,.26);
+    background:rgba(255,252,246,.3);border:1px solid rgba(201,178,140,.24);
     box-shadow:0 6px 18px rgba(120,100,70,.04)
   }
   #dpage.thread-page .thread-chapters .ch-reader .clue .st,
   #dpage.thread-page .thread-chapters .ch-slot .clue .st{margin:0 0 8px}
+  /* 星芒移到小卡外的正上方(卡片往下让出位置) */
+  #dpage.thread-page .thread-chapters .ch-reader .clue,
+  #dpage.thread-page .thread-chapters .ch-slot .clue{position:relative;margin-top:clamp(50px,5vw,58px)}
+  #dpage.thread-page .thread-chapters .ch-reader .clue .st,
+  #dpage.thread-page .thread-chapters .ch-slot .clue .st{
+    position:absolute;left:50%;top:-26px;transform:translateX(-50%);margin:0;line-height:1
+  }
   #dpage.thread-page .thread-chapters .ch-reader .clue .lb,
   #dpage.thread-page .thread-chapters .ch-slot .clue .lb{
     font-family:var(--dp-sans);font-weight:500;font-size:clamp(13px, 12.7px + .1vw, 13.5px);
