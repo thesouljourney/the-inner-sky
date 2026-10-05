@@ -7321,49 +7321,55 @@
   #dpage.topic-page .dp-keep .sp .ln{background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--theme-accent) 40%,transparent),transparent)}
   #dpage.topic-page .dp-keep .sp .st{color:var(--theme-accent)}
 
-  /* 「从这里开始」:展开的详细解读接在同一张卡里(用户:跟上面的章节卡一样),
-     卡片上的号码 / 标题 / 摘要保留,展开区不再重复号码与标题,也不再隔一段空白。
-     阅读区(#chReader / 手机的 .ch-slot)是排在卡片后面的 grid 项目:
-     用负的 margin 抵掉 grid gap,收起时高度 0 也不会多出一段空隙 */
-  #dpage.thread-page .thread-chapters{--chg:clamp(8px,1vw,12px)}
-  #dpage.thread-page .thread-chapters .ch-cards{gap:var(--chg)}
-  #dpage.thread-page .thread-chapters .ch-cards > .ch-reader,
-  #dpage.thread-page .thread-chapters .ch-cards > .ch-slot{margin-top:calc(-1 * var(--chg))}
-  #dpage.thread-page .thread-chapters .ch-card.on{border-bottom-left-radius:0;border-bottom-right-radius:0;border-bottom-color:transparent}
+  /* 「从这里开始」:外层 .ch-item 是真正的卡片(底色 / 边框 / 圆角都在这里),
+     摘要按钮(.ch-card)与展开的详细解读(#chReader / 手机的 .ch-slot)都放在它里面。
+     展开区不重复号码 / 标题 / 摘要;正文铺满卡片宽度;「这一章的线索」与收尾记号置中 */
+  #dpage.thread-page .thread-chapters .ch-item{
+    position:relative;overflow:hidden;border-radius:22px;
+    background:linear-gradient(180deg,rgba(255,253,250,.8),rgba(252,249,245,.68));
+    border:1px solid rgba(201,178,140,.24)
+  }
+  #dpage.thread-page .thread-chapters .ch-item > .ch-card,
+  #dpage.thread-page .thread-chapters .ch-item > .ch-card.on{
+    width:100%;border:0;border-radius:0;background:transparent;box-shadow:none;transform:none
+  }
   #dpage.thread-page .thread-chapters .ch-reader .in,
   #dpage.thread-page .thread-chapters .ch-slot .in{
-    margin-top:0;text-align:left;
-    padding:4px clamp(22px,3.4vw,44px) clamp(22px,2.8vw,32px);
-    background:rgba(252,249,245,.68);
-    border:1px solid rgba(201,178,140,.24);border-top:0;
-    border-radius:0 0 22px 22px;box-shadow:none
+    margin:0;text-align:left;background:none;border:0;border-radius:0;box-shadow:none;
+    padding:6px clamp(22px,3.4vw,44px) clamp(22px,2.8vw,32px)
   }
   #dpage.thread-page .thread-chapters .ch-reader .in::before,
   #dpage.thread-page .thread-chapters .ch-slot .in::before{
     left:clamp(22px,3.4vw,44px);right:clamp(22px,3.4vw,44px);width:auto;transform:none;
-    background:linear-gradient(90deg,rgba(201,178,140,.4),rgba(201,178,140,0))
+    background:linear-gradient(90deg,rgba(201,178,140,0),rgba(201,178,140,.45),rgba(201,178,140,0))
   }
   #dpage.thread-page .thread-chapters .ch-reader .in > .no,
   #dpage.thread-page .thread-chapters .ch-reader .in > .t,
   #dpage.thread-page .thread-chapters .ch-reader .in > .st,
+  #dpage.thread-page .thread-chapters .ch-reader .in > .pv,
+  #dpage.thread-page .thread-chapters .ch-reader .in > .rule,
   #dpage.thread-page .thread-chapters .ch-slot .in > .no,
   #dpage.thread-page .thread-chapters .ch-slot .in > .t,
-  #dpage.thread-page .thread-chapters .ch-slot .in > .st{display:none}
+  #dpage.thread-page .thread-chapters .ch-slot .in > .st,
+  #dpage.thread-page .thread-chapters .ch-slot .in > .pv,
+  #dpage.thread-page .thread-chapters .ch-slot .in > .rule{display:none}
   #dpage.thread-page .thread-chapters .ch-reader .bd,
-  #dpage.thread-page .thread-chapters .ch-slot .bd{max-width:min(100%,680px);margin:18px 0 0;text-align:left}
-  #dpage.thread-page .thread-chapters .ch-reader .pv,
-  #dpage.thread-page .thread-chapters .ch-slot .pv,
-  #dpage.thread-page .thread-chapters .ch-reader .clue,
-  #dpage.thread-page .thread-chapters .ch-slot .clue{margin-left:0;margin-right:0;text-align:left}
+  #dpage.thread-page .thread-chapters .ch-slot .bd{max-width:none;margin:22px 0 0;text-align:left}
   #dpage.thread-page .thread-chapters .ch-reader .dots,
   #dpage.thread-page .thread-chapters .ch-slot .dots,
-  #dpage.thread-page .thread-chapters .ch-reader .rule,
-  #dpage.thread-page .thread-chapters .ch-slot .rule{text-align:left}
+  #dpage.thread-page .thread-chapters .ch-reader .moon,
+  #dpage.thread-page .thread-chapters .ch-slot .moon{text-align:center}
+  #dpage.thread-page .thread-chapters .ch-reader .clue,
+  #dpage.thread-page .thread-chapters .ch-slot .clue{max-width:min(100%,560px);margin-left:auto;margin-right:auto;text-align:center}
+  #dpage.thread-page .thread-chapters .ch-reader .ch-shut,
+  #dpage.thread-page .thread-chapters .ch-slot .ch-shut{display:flex;margin-left:auto;margin-right:auto}
   @media(max-width:767px){
+    #dpage.thread-page .thread-chapters .ch-item{border-radius:18px}
     #dpage.thread-page .thread-chapters .ch-reader .in,
-    #dpage.thread-page .thread-chapters .ch-slot .in{padding:2px 18px 22px;border-radius:0 0 18px 18px}
+    #dpage.thread-page .thread-chapters .ch-slot .in{padding:4px 18px 22px}
     #dpage.thread-page .thread-chapters .ch-reader .in::before,
     #dpage.thread-page .thread-chapters .ch-slot .in::before{left:18px;right:18px}
+    #dpage.thread-page .thread-chapters .ch-slot{margin-top:0}
   }
 </style>
 </head>
@@ -13480,7 +13486,8 @@ window.Guide = (function () {
         /* 每张卡后面都跟着一个空的展开位:手机上点开的那一章就长在自己这张卡下面,
            桌机上这一格是 display:none,内容改放整排卡片下方那一个共用阅读区。
            两边共用同一个 box,原文不会在 DOM 里存两份、图也不会载两次。 */
-        return '<button type="button" class="ch-card" data-ch="' + i + '"' +
+        // 外层 .ch-item 才是「卡片」:摘要按钮与展开的详细解读都在同一张卡里面
+        return '<div class="ch-item"><button type="button" class="ch-card" data-ch="' + i + '"' +
           ' aria-expanded="false" aria-controls="chReader">' +
           '<span class="no">' + ("0" + (i + 1)).slice(-2) + "</span>" +
           '<span class="gl" aria-hidden="true">' + THREAD_NODE[i % THREAD_NODE.length] + "</span>" +
@@ -13492,7 +13499,7 @@ window.Guide = (function () {
           '<span class="ch-src" hidden>' + dpParaRich(st.body) + "</span>" +
           '<span class="art s' + (i % 3 + 1) + '" aria-hidden="true"></span>' +
           "</button>" +
-          '<div class="ch-slot" id="chSlot' + i + '" aria-live="polite"></div>';
+          '<div class="ch-slot" id="chSlot' + i + '" aria-live="polite"></div></div>';
       }).join("") + "</div>" +
       '<div class="ch-reader" id="chReader" aria-live="polite"></div></div>';
   }
@@ -17937,6 +17944,20 @@ window.Guide = (function () {
           }
           // 完整原文原样搬过来,不重新产生任何文字
           box.querySelector(".bd").innerHTML = src ? src.innerHTML : "";
+          /* 卡片上方已经有摘要(原文开头那几句):详细解读里不再重复一次 ——
+             第一段若以摘要开头,就把那一截拿掉;拿掉后几乎没剩字就整段移除 */
+          if (pv) {
+            const norm = function (t) { return String(t || "").replace(/\s/g, ""); };
+            const sum = norm(pv.textContent).replace(/[…\.。]+$/, "");
+            const p1 = box.querySelector(".bd p");
+            if (sum.length >= 8 && p1 && norm(p1.textContent).indexOf(sum) === 0) {
+              let rest = String(p1.textContent).replace(/^\s+/, "");
+              let k = 0, n = 0;
+              while (k < rest.length && n < sum.length) { if (!/\s/.test(rest[k])) n++; k++; }
+              rest = rest.slice(k).replace(/^[\s。.…，,]+/, "");
+              if (rest.length < 4) p1.remove(); else p1.textContent = rest;
+            }
+          }
           /* 「这一章的线索」用的就是卡片上那几条 —— 同一份 dpDerive 的结果,
              不是另外产生的文字 */
           const keys = card.querySelector(".ch-keys");
