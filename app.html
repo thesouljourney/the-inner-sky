@@ -6990,8 +6990,9 @@
   #dpage.records-page .rc-tag.d{background:rgba(170,206,196,.3);color:#4f7a70}
   #dpage.records-page .rc-main{margin:10px 0 0;font-family:var(--dp-sans);font-size:14.5px;line-height:1.85;color:#23264f}
   #dpage.records-page .rc-sub{margin:6px 0 0;font-size:13px;line-height:1.8;color:#6f6a7e}
+  #dpage.records-page .rc-tags{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding-right:36px}
   #dpage.records-page .rc-mood{
-    display:inline-block;margin-top:10px;padding:3px 12px;border-radius:999px;font-size:12px;color:#6f6a7e;
+    display:inline-block;margin-top:0;padding:3px 12px;border-radius:999px;font-size:12px;color:#6f6a7e;
     background:rgba(234,228,240,.7)
   }
   #dpage.records-page .rc-more{
@@ -16309,10 +16310,11 @@ window.Guide = (function () {
     const sub = isQ ? r.text : "";
     const menu = recMenu === r.id;
     return '<div class="rc-blk ' + recKindCls(r) + '">' +
-      '<span class="rc-tag ' + recKindCls(r) + '">' + esc0(recKindLabel(r)) + '</span>' +
+      // 类别与心情两个 tag 放同一排(用户要求:心情放在「此刻的我」旁边)
+      '<div class="rc-tags"><span class="rc-tag ' + recKindCls(r) + '">' + esc0(recKindLabel(r)) + '</span>' +
+      (r.mood ? '<span class="rc-mood">' + esc0(r.mood) + '</span>' : "") + '</div>' +
       (main ? '<p class="rc-main">' + recBr(main) + '</p>' : "") +
       (sub ? '<p class="rc-sub">' + recBr(sub) + '</p>' : "") +
-      (r.mood ? '<span class="rc-mood">' + esc0(r.mood) + '</span>' : "") +
       '<button type="button" class="rc-more" data-menu="' + esc0(r.id) + '" aria-haspopup="menu" aria-expanded="' +
         (menu ? "true" : "false") + '" aria-label="' + esc0(dpT("更多操作", "More")) + '">⋯</button>' +
       (menu ? '<div class="rc-menu" role="menu">' +
