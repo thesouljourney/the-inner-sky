@@ -7448,6 +7448,21 @@
       box-shadow:0 6px 18px rgba(9,18,46,.08)
     }
   }
+  /* 「留给你的思考」「试试看」:图示本身上下有一圈透明留白,标题列跟卡顶、跟正文的
+     上下距离看起来太宽(用户反馈)。用负边距把那圈留白吃掉 */
+  #dpage.topic-page .tp-reflect .hd{margin:-10px 0 -12px}
+  /* #/reading「留给你的话」:字色改成跟金星、背景同一组的配色 ——
+     小标暖金褐,句子深靛紫到梅紫的柔和渐层,收藏键淡梅紫 */
+  #dpage.reading-page .dp-detail .rd-insight .hd .zh{color:#a07d4e;font-weight:500}
+  #dpage.reading-page .dp-detail .rd-insight .bd{
+    width:fit-content;max-width:100%;color:#3a2f62;
+    background:linear-gradient(100deg,#2e2a5e 0%,#4d3a72 55%,#7a4c72 100%);
+    -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent
+  }
+  #dpage.reading-page .dp-detail .rd-save{color:#8a6f8c}
+  #dpage.reading-page .dp-detail .rd-save svg{stroke:#8a6f8c}
+  #dpage.reading-page .dp-detail .rd-save.on svg{fill:#8a6f8c}
+  #dpage.reading-page .dp-detail .rd-save:hover{color:#5e4a6e}
 </style>
 </head>
 <!-- legacy-off 直接写在标签上,不等 JS。
@@ -13883,6 +13898,13 @@ window.Guide = (function () {
           const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion:reduce)").matches;
           window.scrollTo({ top: Math.max(0, window.scrollY + sec.getBoundingClientRect().top - want),
                             behavior: reduce ? "auto" : "smooth" });
+        } else {
+          // 用户:点「继续读这一段」之后跟「从这里开始」一样,画面带到这一段的开头(约视窗上方 96px)
+          requestAnimationFrame(function () {
+            const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion:reduce)").matches;
+            window.scrollTo({ top: Math.max(0, window.scrollY + sec.getBoundingClientRect().top - 96),
+                              behavior: reduce ? "auto" : "smooth" });
+          });
         }
       };
       open.addEventListener("click", function () { set(true); });
