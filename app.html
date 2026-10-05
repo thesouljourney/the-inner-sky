@@ -7433,13 +7433,20 @@
     letter-spacing:.02em !important;color:#8a8496 !important;font-weight:400 !important
   }
   /* 主题页最下面「你不是来寻找答案…」那张卡:降低不透明度,让背景透出来 */
-  #dpage.topic-page .dp-return{background:rgba(252,249,246,.5)}
+  #dpage.topic-page .dp-return{background:rgba(252,249,246,.78)}
   /* 电脑版主题页底部卡片:那句话放大、一行、置中;「返回主题列表」缩小,放在那句话下方置中 */
   @media (min-width:768px){
     #dpage.topic-page .dp-return{display:flex;flex-direction:column;align-items:center;gap:20px;padding:30px 28px 28px}
     #dpage.topic-page .dp-return .say{font-size:17px;letter-spacing:.06em;white-space:nowrap;text-align:center;color:var(--dp-ink)}
     #dpage.topic-page .dp-return .say br{display:none}
     #dpage.topic-page .dp-return .dp-cta{font-size:12.5px;padding:8px 20px}
+    #dpage.topic-page .dp-return .say{font-weight:600}
+    #dpage.topic-page .dp-return .say::before,
+    #dpage.topic-page .dp-return .say::after{content:"✦";font-size:12px;color:#b8894f;vertical-align:.18em;margin:0 14px}
+    #dpage.topic-page .dp-return .dp-cta{
+      background:linear-gradient(135deg,#c9c0e2 0%,#f4d8d5 100%);color:#4e4673;
+      box-shadow:0 6px 18px rgba(9,18,46,.08)
+    }
   }
 </style>
 </head>
