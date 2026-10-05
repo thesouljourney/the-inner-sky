@@ -17873,7 +17873,18 @@ window.Guide = (function () {
         if (!open || !full) return;
         const set = function (on) {
           open.setAttribute("aria-expanded", on ? "true" : "false");
-          if (on) { sec.classList.add("open"); grow(full, true); return; }
+          if (on) {
+            sec.classList.add("open"); grow(full, true);
+            // 用户:点「探索这一章」之后,画面带到这一章的开头(卡顶停在视窗上方约 96px)
+            requestAnimationFrame(function () {
+              const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion:reduce)").matches;
+              window.scrollTo({
+                top: Math.max(0, window.scrollY + sec.getBoundingClientRect().top - 96),
+                behavior: reduce ? "auto" : "smooth"
+              });
+            });
+            return;
+          }
           /* 收起:一次收好,不做高度动画 —— 动画期间引子已经回来、原文还没收完,
              同一段字会叠两次;而且「收起」在长长的原文最底下,收完之后画面
              会停在下一章。所以直接收起,再把这一章的开头带回视线里。 */
