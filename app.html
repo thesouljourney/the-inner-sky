@@ -7467,6 +7467,19 @@
      后面的正文会盖过选单(用户反馈:选单被文字挡住)。把表头那一层抬高 */
   #dpage.compass-page .cp-sky .cp-sky-card > .hd{z-index:4}
   #dpage.compass-page .cp-sky .cp-menu{background:#fffdf9}
+  /* ··· 选单:两颗小图示横排的小胶囊 */
+  #dpage.compass-page .cp-sky .cp-menu{
+    flex-direction:row;align-items:center;gap:2px;min-width:0;padding:4px;border-radius:12px;top:30px;right:-8px
+  }
+  #dpage.compass-page .cp-sky .cp-menu .cp-edit,
+  #dpage.compass-page .cp-sky .cp-menu .cp-del{
+    display:inline-flex;align-items:center;justify-content:center;width:34px;min-height:34px;padding:0;border-radius:9px;color:#4a4670
+  }
+  #dpage.compass-page .cp-sky .cp-menu .cp-del{color:#9a4a4a}
+  #dpage.compass-page .cp-sky .cp-menu .cp-del.ask{width:auto;padding:0 10px;font-size:12.5px;white-space:nowrap}
+  #dpage.compass-page .cp-sky .cp-menu svg{
+    width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round
+  }
 </style>
 </head>
 <!-- legacy-off 直接写在标签上,不等 JS。
@@ -15584,10 +15597,17 @@ window.Guide = (function () {
           '" aria-label="' + esc0(dpT("更多操作", "More")) + '"><span aria-hidden="true">•••</span></button>' +
           (menu
             ? '<div class="cp-menu" role="menu">' +
-              '<button type="button" role="menuitem" class="cp-edit" data-edit="' + esc0(r.id) + '">' +
-                esc0(dpT("编辑", "Edit")) + "</button>" +
-              '<button type="button" role="menuitem" class="cp-del" data-del="' + esc0(r.id) + '">' +
-                esc0(compassDelAsk === r.id ? dpT("确定删除？", "Delete for good?") : dpT("删除", "Delete")) + "</button>" +
+              // 用户:选单改成两个小图示(笔 = 编辑、垃圾桶 = 删除);文字留在 aria-label / title。
+              // 删除第一下之后要再确认,那时才印出「确定删除？」三个字,免得误删
+              '<button type="button" role="menuitem" class="cp-edit" data-edit="' + esc0(r.id) + '" aria-label="' +
+                esc0(dpT("编辑", "Edit")) + '" title="' + esc0(dpT("编辑", "Edit")) + '">' +
+                '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9a2.1 2.1 0 0 0-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/></svg></button>' +
+              '<button type="button" role="menuitem" class="cp-del' + (compassDelAsk === r.id ? " ask" : "") + '" data-del="' + esc0(r.id) +
+                '" aria-label="' + esc0(compassDelAsk === r.id ? dpT("确定删除？", "Delete for good?") : dpT("删除", "Delete")) +
+                '" title="' + esc0(dpT("删除", "Delete")) + '">' +
+                (compassDelAsk === r.id ? esc0(dpT("确定删除？", "Delete for good?"))
+                  : '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16"/><path d="M9 7V4.5h6V7"/><path d="M6.5 7l1 13h9l1-13"/><path d="M10.5 11v5.5M13.5 11v5.5"/></svg>') +
+                "</button>" +
               "</div>"
             : "") +
           "</div>" +
