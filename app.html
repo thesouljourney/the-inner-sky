@@ -4248,10 +4248,12 @@
   #dpage.reading-page .dp-detail .rd-insight .hd{display:flex;align-items:center;gap:10px}
   #dpage.reading-page .dp-detail .rd-insight .hd i{font-style:normal;color:#c9a061;font-size:20px;line-height:1}
   #dpage.reading-page .dp-detail .rd-insight .hd .zh{font-family:var(--dp-serif);font-size:12.5px;letter-spacing:.12em;color:#8a85a3}
+  /* 句子用跟详细解读正文同一套:黑体 400、14–14.5px、行高 1.9(用户:原本太大) */
   #dpage.reading-page .dp-detail .rd-insight .bd{
-    margin-top:12px;font-family:var(--dp-serif);font-weight:600;font-size:clamp(17px,1.9vw,21px);
-    line-height:1.85;letter-spacing:.02em;color:#1f2444
+    margin-top:10px;font-family:var(--dp-sans);font-weight:400;font-size:clamp(14px, 13.7px + .1vw, 14.5px);
+    line-height:1.9;letter-spacing:.01em;color:#2F3142
   }
+  #dpage.reading-page .dp-detail .rd-insight .bd br{display:none}
   #dpage.reading-page .dp-detail .rd-save{
     display:flex;align-items:center;gap:6px;margin:6px 0 0 auto;padding:4px 2px;border:0;background:none;cursor:pointer;
     font-family:var(--dp-serif);font-size:12.5px;letter-spacing:.06em;color:#6f6a8a
@@ -4290,9 +4292,6 @@
     #dpage.reading-page .dp-detail .rd-insight{padding:18px 18px 12px;border-radius:18px}
     #dpage.reading-page .dp-detail .rd-insight .hd i{font-size:16px}
     #dpage.reading-page .dp-detail .rd-insight .hd .zh{font-size:11.5px}
-    #dpage.reading-page .dp-detail .rd-insight .bd{margin-top:10px;font-size:15.5px;line-height:1.8}
-    /* 手机一行放不下整个分句,强制断行反而留下很短的尾巴 —— 改成自然换行 */
-    #dpage.reading-page .dp-detail .rd-insight .bd br{display:none}
     #dpage.reading-page .dp-detail .rd-insight .bd{text-wrap:pretty}
     #dpage.reading-page .dp-detail .rd-save{font-size:11.5px}
     #dpage.reading-page .dp-detail .dp-chnav{margin-top:14px}
@@ -7250,20 +7249,20 @@
     margin:8px auto 0;text-align:center;font-family:var(--dp-serif);font-size:12.5px;letter-spacing:.12em;color:#8e88a6
   }
   #dpage.compass-page .cp-now .cp-moods{
-    display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;
-    max-width:min(100%,640px);margin:20px auto 0;padding:0
+    display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;
+    max-width:min(100%,600px);margin:20px auto 0;padding:0
   }
   #dpage.compass-page .cp-now .cp-moods-more{margin-top:12px}
   #dpage.compass-page .cp-now .cp-moods[hidden]{display:none}
   #dpage.compass-page .cp-now .cp-mood{
-    display:inline-flex;align-items:center;justify-content:center;gap:10px;min-width:0;
-    min-height:50px;padding:0 12px;border-radius:999px;
-    font-family:var(--dp-serif);font-weight:500;font-size:14.5px;letter-spacing:.06em;color:#2f3155;white-space:nowrap;
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;min-width:0;
+    min-height:42px;padding:0 10px;border-radius:999px;
+    font-family:var(--dp-serif);font-weight:500;font-size:13px;letter-spacing:.06em;color:#2f3155;white-space:nowrap;
     background:rgba(255,252,247,.92);border:1px solid rgba(214,178,120,.6);
     box-shadow:0 4px 14px rgba(150,120,80,.06);
     transition:background .2s ease,border-color .2s ease,color .2s ease
   }
-  #dpage.compass-page .cp-now .cp-mood .mi{width:18px;height:18px}
+  #dpage.compass-page .cp-now .cp-mood .mi{width:16px;height:16px}
   #dpage.compass-page .cp-now .cp-mood .mi.g{color:#c9a061}
   #dpage.compass-page .cp-now .cp-mood .mi.b{color:#c9a061}
   #dpage.compass-page .cp-now .cp-mood.on{
@@ -7271,7 +7270,7 @@
     box-shadow:0 4px 16px rgba(130,110,200,.14)
   }
   #dpage.compass-page .cp-now .cp-mood .ck,
-  #dpage.records-page .rc-mc .ck{display:block;width:20px;height:20px;flex:none}
+  #dpage.records-page .rc-mc .ck{display:block;width:18px;height:18px;flex:none}
   #dpage.compass-page .cp-now .cp-mood .ck circle,
   #dpage.records-page .rc-mc .ck circle{fill:#8d7cc4;stroke:none}
   #dpage.compass-page .cp-now .cp-mood .ck path,
@@ -7294,13 +7293,32 @@
   #dpage.compass-page .cp-now .cp-mood-write:hover{color:#3a3366}
   @media(max-width:767px){
     #dpage.compass-page .cp-now .cp-moods{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-    #dpage.compass-page .cp-now .cp-mood{min-height:46px;font-size:13.5px;gap:8px}
+    #dpage.compass-page .cp-now .cp-mood{min-height:40px;font-size:12.5px;gap:7px}
     #dpage.compass-page .cp-now .cp-mood .mi,
-    #dpage.compass-page .cp-now .cp-mood .ck{width:17px;height:17px}
+    #dpage.compass-page .cp-now .cp-mood .ck{width:15px;height:15px}
     #dpage.compass-page .cp-now .cp-mood-foot{gap:14px}
     #dpage.compass-page .cp-now .cp-mood-more,
     #dpage.compass-page .cp-now .cp-mood-write{font-size:12.5px}
   }
+
+  /* 全站 hero 文字区同一个宽度(用户:靠左的页面左边界要一致、不要太靠左)。
+     用的是全站预设的内容宽度 —— 跟 --dp-wide 的预设断点相同,但独立一个变数,
+     主题页 / 我的星空这些自己改过 --dp-wide 的页面,hero 也照样对齐。只管桌机与平板,手机本来就一致 */
+  #dpage{--dp-hero-w:1180px}
+  @media(max-width:1440px){#dpage{--dp-hero-w:1100px}}
+  @media(max-width:1320px){#dpage{--dp-hero-w:min(1020px,calc(100vw - 120px))}}
+  @media(max-width:1024px){#dpage{--dp-hero-w:100%}}
+  @media(min-width:768px){
+    #dpage .dp-hero .dp-hero-grid{max-width:var(--dp-hero-w);margin-left:auto;margin-right:auto}
+  }
+
+  /* 主题页「值得记住」:星芒、引号、左边竖线、两句之间的 ✦ 细线都换成这个主题的颜色
+     (--theme-accent 由 dpTopicAccent() 写入;其他页面的「值得记住」不受影响) */
+  #dpage.topic-page .dp-keep .hd .ic{color:var(--theme-accent)}
+  #dpage.topic-page .dp-keep .q .mk{color:var(--theme-accent);opacity:.6}
+  #dpage.topic-page .dp-keep .q .bd{border-left-color:color-mix(in srgb,var(--theme-accent) 55%,transparent)}
+  #dpage.topic-page .dp-keep .sp .ln{background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--theme-accent) 40%,transparent),transparent)}
+  #dpage.topic-page .dp-keep .sp .st{color:var(--theme-accent)}
 </style>
 </head>
 <!-- legacy-off 直接写在标签上,不等 JS。
@@ -17206,7 +17224,7 @@ window.Guide = (function () {
         '<span class="lb">' + esc0(dpT("相位线", "Aspects")) + '</span>' +
         '<span class="tr" aria-hidden="true"><i></i></span>' +
         '<span class="st">' + esc0(dpT("开启", "On")) + '</span></button></div>' +
-        '<p class="note">' + esc0(dpT("行星落在星座与宫位的位置，构成了你独特的能量图谱。",
+        '<p class="note">' + esc0(dpT("行星落在星座与宫位的位置，构成了你独特的能量图谱",
           "Where each planet falls, by sign and house — the shape of your own sky.")) + '</p>' +
         '<div class="ov-table">' + ovRows + '</div></div></section>';
       heroLead =
@@ -17240,8 +17258,8 @@ window.Guide = (function () {
       body += '<div class="sky-air air-core"><span class="l" aria-hidden="true"></span>' +
         '<div class="sky-hd lead">' +
         '<h2>' + esc0(dpT("先认识你的四个核心", "Start with your four cornerstones")) +
-        '<span class="scr" aria-hidden="true">Your Core</span></h2>' +
-        '<div class="note">' + esc0(dpT("这四个位置，构成了你生命的基本轮廓。",
+        "</h2>" +
+        '<div class="note">' + esc0(dpT("这四个位置，构成了你生命的基本轮廓",
           "These four placements outline the basic shape of a life.")) + '</div></div>' +
         '<div class="sky-core">' +
         core.map(function (k) {
@@ -17359,8 +17377,8 @@ window.Guide = (function () {
       body += '<section class="sky-sec sky-air air-house">' +
         '<span class="l" aria-hidden="true"></span><div class="sky-hd">' +
         '<h2>' + esc0(dpT("你的十二个生命领域", "Your twelve fields of life")) +
-        '<span class="scr" aria-hidden="true">Twelve Houses</span></h2>' +
-        '<div class="note">' + esc0(dpT("十二宫位象徵人生不同的领域，落在其中的行星，就是那个领域里正在运作的能量。",
+        "</h2>" +
+        '<div class="note">' + esc0(dpT("十二宫位象徵人生不同的领域，落在其中的行星，就是那个领域里正在运作的能量",
           "The twelve houses mark the different areas a life is lived in. The planets inside them are the energies at work there.")) +
         '</div></div>' +
         /* 三组改成分页签:一次看一组,左右箭头与三个点也可以切换 */
@@ -17431,7 +17449,7 @@ window.Guide = (function () {
           '<span class="l" aria-hidden="true"></span><div class="asp-l"><div class="sky-hd">' +
           '<h2>' + esc0(dpT("星盘之间的对话", "Conversations inside your chart")) +
           '<span class="orn" aria-hidden="true"><b>✦</b><i></i></span></h2>' +
-          '<div class="note">' + esc0(dpT("行星之间的角度关系，揭示这些能量如何互动、流动，也展现你内在的矛盾与天赋。",
+          '<div class="note">' + esc0(dpT("行星之间的角度关系，揭示这些能量如何互动、流动，也展现你内在的矛盾与天赋",
             "Aspects are the angles between planets — how these energies meet and move, and where your tensions and gifts live.")) + '</div></div>' +
           '</div>' +
           /* 「查看全部」按钮搬进卡片底部(依设计图):一条细分隔线 + 置中的文字与 ⌄ */
