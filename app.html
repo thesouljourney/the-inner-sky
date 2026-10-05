@@ -3358,6 +3358,10 @@
   #dpage.thread-page .thread-bridge .pattern .tx,
   #dpage.thread-page .thread-bridge .pattern .lk{margin-top:0;color:#2c2d48;font-size:clamp(14px,1.55vw,16.5px);line-height:2}
   #dpage.thread-page .thread-bridge .pattern .q{font-size:clamp(17px,2vw,21px)}
+  /* 结论句:单独一行、稍微加粗,字级跟正文一样 */
+  #dpage.thread-page .thread-bridge .pattern .key{
+    margin-top:10px;font-weight:700;font-size:clamp(14.5px,1.6vw,17px);line-height:2;letter-spacing:.02em;color:#23264f
+  }
   /* 右上的花月缩小一点,贴在引子右边 */
   #dpage.thread-page .thread-bridge .moon-art{
     z-index:0;top:clamp(0px,1vw,16px);right:clamp(0px,2vw,30px);width:clamp(110px,15vw,200px);opacity:1;
@@ -13287,7 +13291,19 @@ window.Guide = (function () {
      没有「」的句子就原样当一段正文。 */
   function dpThreadPattern(text) {
     const parts = String(text).split(/(「[^」]+」)/).filter(function (x) { return x !== ""; });
-    if (parts.length < 2) return '<div class="pattern"><p class="tx">' + esc0(text) + "</p></div>";
+    if (parts.length < 2) {
+      /* 没有「」的句子:把最有力的结论句单独成行、稍微加粗(用户要求)。
+         结论句 = 最后一个冒号「：」之后的那一段;没有冒号就取最后一个「——」之后。
+         字一个都不改,只是切开排;切出来太短(< 6 字)或找不到就维持整段。 */
+      const t = String(text);
+      let cut = Math.max(t.lastIndexOf("："), t.lastIndexOf(":"));
+      let lead, key;
+      if (cut > 0) { lead = t.slice(0, cut + 1); key = t.slice(cut + 1); }
+      else if ((cut = t.lastIndexOf("——")) > 0) { lead = t.slice(0, cut + 2); key = t.slice(cut + 2); }
+      if (key && key.trim().length >= 6 && lead.trim().length >= 6)
+        return '<div class="pattern"><p class="tx">' + esc0(lead.trim()) + '</p><p class="key">' + esc0(key.trim()) + "</p></div>";
+      return '<div class="pattern"><p class="tx">' + esc0(text) + "</p></div>";
+    }
     let seenQ = false;
     return '<div class="pattern">' + parts.map(function (x) {
       if (x.charAt(0) === "「") { seenQ = true; return '<p class="q">' + esc0(x) + "</p>"; }
