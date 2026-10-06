@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script src="assets/zh-script.js"></script>
-<script src="assets/tips.js"></script>
 <title>Inner Sky · Know Yourself Through the Stars</title>
 <meta name="description" content="看见完整的自己。Inner Sky 用星盘陪你慢慢理解自己,不被定义、不被标签。">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1076,30 +1075,6 @@ document.querySelectorAll("a[data-app-hash]").forEach(function (a) {
     });
   }
 
-  // 第一次来的首页导览(assets/tips.js):一步一步介绍这一页,每一步有「下一步」与「跳过」,
-  // 会自动捲到那一块。登录前后各一套;走完或跳过就不再出现
-  if (window.Tips) window.Tips.tour(loggedIn ? {
-    id: "land-tour",
-    steps: [
-      { sel: ".hero-copy .btn-primary", text: "从这里开始：开启你的星空，先读你的生命蓝图，认识最初的自己" },
-      { sel: ".here .here-grid", text: "在这里，你可以读懂自己的星盘、看见人生的脉络，也可以留下每一天的记录" },
-      { sel: "#sky .sky-copy .btn-primary", text: "我的星空：你完整的星盘都在这里，可以慢慢看每一颗星落在哪里" },
-      { sel: "#chapterGrid .planet-chapter", text: "九个主题，点任一颗星球进入那个主题的解读；读过的星球会亮起来" },
-      { sel: ".thread-band .btn-primary", text: "属于我的生命脉络：把九个主题串成一条线，看见现在的你从哪里来" },
-      { sel: ".guide-card .btn-primary", text: "我的内在指南：每天选一个心情、写几句话，慢慢长出属于你的指引" },
-      { sel: ".rec-card .rec-list", text: "我的星空记录：你写下的感受和想问自己的问题，都收在这里" },
-      { sel: "#favs .card-hd", text: "我的收藏：阅读时让你有感觉的句子，收藏后都会出现在这里" }
-    ]
-  } : {
-    id: "land-tour-guest",
-    steps: [
-      { sel: ".hero-copy .btn-primary", text: "第一次来？点「开启我的星空」注册，填好出生资料，就能开始了" },
-      { sel: ".here .here-grid", text: "在这里，你可以读懂自己的星盘、看见人生的脉络，也可以留下每一天的记录" },
-      { sel: "#chapterGrid .planet-chapter", text: "九个主题，每一个都是理解自己的入口；注册后点星球就能读到属于你的解读" },
-      { sel: ".thread-band .btn-primary", text: "属于我的生命脉络：把九个主题串成一条线，看见现在的你从哪里来" },
-      { sel: ".hero-copy .btn-primary", text: "准备好了，就从这里开启你的星空" }
-    ]
-  });
 
   // 未登录:Mobile 用「菜单」提供公开入口(Desktop 由 CSS 隐藏)
   if (!loggedIn) wireDropdown(document.getElementById("navMenu"), document.getElementById("navMenuBtn"));
@@ -1134,5 +1109,6 @@ document.querySelectorAll("a[data-app-hash]").forEach(function (a) {
 })();
 </script>
 <script src="assets/inner-sky-chart.js?v=6"></script>
+<script src="assets/landing-tour.js"></script>
 </body>
 </html>
