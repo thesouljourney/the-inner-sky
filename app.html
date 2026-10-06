@@ -14508,6 +14508,46 @@ window.Guide = (function () {
     return saveTipEl;
   }
 
+  /* 划词收藏的第二种来源:没有标 data-saveable、但同样属于解读内容的区块。
+     标题、按钮、免责声明、页底标语都不在这张清单里,所以不会被收藏。
+     来源(哪一页)沿用同一页正文的 data-source;段落取最近的那个小标题,
+     这样在「我的收藏」里看得到它来自哪一页、哪一段,也能点回去。 */
+  const DP_FAV_ZONES = [
+    ".tp-peek .pv", ".tp-peek .ch-keys",                       // 主题页:引子、重点
+    ".tp-reflect .bd",                                         // 主题页:留给你的思考 / 试试看
+    ".dp-keep .bd",                                            // 值得记住
+    ".dp-reflect .bd", ".dp-reflect .rf-bd", ".dp-reflect .rf-q", // 留给你的思考 / 试试看(其他页)
+    ".thread-ch .ch-peek .pv", ".thread-ch .ch-peek .ch-keys", // 生命脉络:每章引子、重点
+    ".thread-chapters .ch-card .pv", ".thread-chapters .ch-card .ch-keys", // 从这里开始:卡片
+    ".ch-reader .bd", ".ch-reader .clue", ".ch-slot .bd", ".ch-slot .clue", // 从这里开始:展开的解读、线索
+    ".thread-bridge .insight",                                 // 一个小小的洞察
+    "#cpPanel .hd", "#cpPanel .bd", "#cpPanel .ci", "#cpPanel .tx", "#cpPanel .rp p", // 内在指南:给现在的你
+    ".cp-lines .cp-line"                                       // 内在指南:想留给自己的几句话
+  ].join(",");
+  function dpFavZoneCtx(host) {
+    if (!host || !host.closest) return null;
+    const zone = host.closest(DP_FAV_ZONES);
+    const pg = document.getElementById("dpage");
+    if (!zone || !pg || !pg.contains(zone)) return null;
+    const txt = function (el) { return el ? String(el.textContent || "").replace(/\s+/g, " ").trim() : ""; };
+    const ref = pg.querySelector("[data-saveable][data-source]");
+    let source = ref ? ref.getAttribute("data-source") || "" : "";
+    let sourceType = ref ? ref.getAttribute("data-source-type") || "" : "";
+    if (pg.classList.contains("compass-page")) { source = dpT("我的内在指南", "Inner Guide"); sourceType = "inner_guide"; }
+    if (!source) source = txt(pg.querySelector(".dp-title"));
+    let section = "", c;
+    if ((c = zone.closest(".tp-reflect"))) section = txt(c.querySelector(".tt"));
+    else if ((c = zone.closest(".dp-reflect"))) section = txt(c.querySelector(".rt"));
+    else if (zone.closest(".dp-keep")) section = dpT("值得记住", "Worth Keeping");
+    else if ((c = zone.closest(".tp-sec"))) section = txt(c.querySelector(".tp-h"));
+    else if ((c = zone.closest(".ch-item"))) section = txt(c.querySelector(".ch-card .t"));
+    else if ((c = zone.closest(".thread-ch"))) section = txt(c.querySelector(".dp-h"));
+    else if (zone.closest(".thread-bridge")) section = dpT("一个小小的洞察", "A small insight");
+    else if (zone.closest("#cpPanel")) section = dpT("给现在的你", "For you, right now");
+    else if (zone.closest(".cp-lines")) section = dpT("想留给自己的几句话", "Worth Keeping");
+    return { source: source, sourceType: sourceType, section: section };
+  }
+
   document.addEventListener("selectionchange", function () {
     // 交给浏览器完成选择动作后再判断,避免拖拽途中闪烁
     clearTimeout(document._dpSelT);
@@ -14519,16 +14559,18 @@ window.Guide = (function () {
       const node = sel.anchorNode;
       const host = node && (node.nodeType === 1 ? node : node.parentElement);
       const box = host && host.closest ? host.closest("[data-saveable]") : null;
-      if (!box) { hideSaveTip(); return; }   // 非正文内容不可收藏
+      // 正文以外、但同样是解读内容的区块(引子、重点、值得记住、留给你的思考…)也能收藏
+      const ctx = box ? null : dpFavZoneCtx(host);
+      if (!box && !ctx) { hideSaveTip(); return; }   // 标题、按钮、页底标语等不可收藏
       const rect = sel.getRangeAt(0).getBoundingClientRect();
       if (!rect || !rect.width) { hideSaveTip(); return; }
       pendingSel = {
         // 繁体模式下画面是繁体,存回简体(资料一律简体,同一句不会因切换简繁变两笔)
         text: (window.ZhScript ? window.ZhScript.toS(text) : text).slice(0, 600),
-        source: box.getAttribute("data-source") || "",
-        sourceType: box.getAttribute("data-source-type") || "",
-        section: box.getAttribute("data-section") || "",
-        title: box.getAttribute("data-section") || "",
+        source: box ? box.getAttribute("data-source") || "" : ctx.source,
+        sourceType: box ? box.getAttribute("data-source-type") || "" : ctx.sourceType,
+        section: box ? box.getAttribute("data-section") || "" : ctx.section,
+        title: box ? box.getAttribute("data-section") || "" : ctx.section,
         route: location.hash || ""
       };
       const tip = ensureSaveTip();
