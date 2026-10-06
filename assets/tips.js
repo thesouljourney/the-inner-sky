@@ -24,16 +24,16 @@
 
   var css = document.createElement("style");
   css.textContent =
-    ".is-tip{position:fixed;z-index:9000;max-width:min(260px,calc(100vw - 32px));box-sizing:border-box;" +
+    ".is-tip{position:fixed;z-index:9000;max-width:min(260px,calc(100vw - 32px));box-sizing:border-box;text-align:center;" +
     "padding:12px 14px 10px;border-radius:14px;background:#fffdf9;border:1px solid rgba(201,178,140,.55);" +
     "box-shadow:0 14px 34px -10px rgba(40,34,90,.28);color:#2f3142;" +
     "font-family:\"Noto Sans SC\",\"PingFang SC\",\"Helvetica Neue\",Arial,sans-serif;" +
     "opacity:0;transform:translateY(4px);transition:opacity .25s ease,transform .25s ease;pointer-events:auto}" +
     ".is-tip.on{opacity:1;transform:none}" +
-    ".is-tip .k{display:flex;align-items:center;gap:6px;margin:0 0 4px;font-size:11.5px;letter-spacing:.12em;color:#a07d4e}" +
+    ".is-tip .k{display:flex;align-items:center;justify-content:center;gap:6px;margin:0 0 4px;font-size:11.5px;letter-spacing:.12em;color:#a07d4e}" +
     ".is-tip .k i{font-style:normal;font-size:10px}" +
-    ".is-tip p{margin:0;font-size:13px;line-height:1.75;letter-spacing:.01em;text-wrap:pretty}" +
-    ".is-tip button{display:block;margin:8px 0 0 auto;padding:4px 12px;border:0;border-radius:999px;cursor:pointer;" +
+    ".is-tip p{margin:0;max-width:none;text-align:center;font-size:13px;line-height:1.75;letter-spacing:.01em;text-wrap:pretty}" +
+    ".is-tip button{display:block;margin:10px auto 0;padding:4px 12px;border:0;border-radius:999px;cursor:pointer;" +
     "background:linear-gradient(135deg,#c9c0e2,#f4d8d5);color:#4e4673;font:inherit;font-size:12px;letter-spacing:.06em}" +
     ".is-tip .ar{position:absolute;width:12px;height:12px;background:#fffdf9;transform:rotate(45deg);" +
     "border:1px solid rgba(201,178,140,.55)}" +
