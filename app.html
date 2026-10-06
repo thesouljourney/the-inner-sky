@@ -7106,7 +7106,14 @@
   #dpage.records-page .rc-del h3{margin:0;font-family:var(--dp-serif);font-size:18px;color:#23264f}
   #dpage.records-page .rc-del p{margin:8px 0 0;font-size:13px;color:#6f6a7e}
   @media(max-width:767px){
-    #dpage.records-page .dp-body::before{background-size:auto 1300px;top:-140px}
+    /* 手机:底图固定 1300px 高,记录一多下面就只剩底色(用户反馈)。
+       接一层由原图最下方云层做成的柔焦云雾(records-bg-tail,上下镜像所以能无缝重复),
+       从原图下缘开始一路铺到页底。比例跟原图相同(1300 / 1672)。 */
+    #dpage.records-page .dp-body::before{
+      top:-140px;
+      background:url(assets/atmos/records-bg.webp) center top / auto 1300px no-repeat,
+        url(assets/atmos/records-bg-tail.webp) center 1300px / auto 312.6px repeat-y
+    }
     #dpage.records-page .rc-item{padding-left:20px}
     #dpage.records-page .rc-card{padding:2px 14px}
     #dpage.records-page .rc-main{font-size:13.5px}
