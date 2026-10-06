@@ -31,7 +31,7 @@
     { sel: ".guide-card", title: "留下属于你的记录",
       body: "在「我的内在指南」写下今天的自己\n写过的感受会收进「我的星空记录」，喜欢的句子也可以收藏起来",
       also: [".rec-card", "#favs"] },
-    { sel: ".hero-copy", title: "从这里开始",
+    { sel: ".hero-copy .btn-primary", pill: true, title: "从这里开始",
       body: "这里不是替你定义人生，而是陪你一点一点看见自己\n不需要按照顺序，从现在最想知道的地方开始就好",
       last: true }
   ];
