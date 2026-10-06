@@ -7107,11 +7107,14 @@
   #dpage.records-page .rc-del p{margin:8px 0 0;font-size:13px;color:#6f6a7e}
   @media(max-width:767px){
     /* 手机:底图固定 1300px 高,记录一多下面就只剩底色(用户反馈)。
-       接一层由原图最下方云层做成的柔焦云雾(records-bg-tail,上下镜像所以能无缝重复),
+       接一层由原图最下方云层做成的柔焦云雾(records-bg-tail,上下镜像所以能无缝重复;
+       图本身已经跟页面底色混过,只留约 38% 的云,很淡),
        从原图下缘开始一路铺到页底。比例跟原图相同(1300 / 1672)。 */
     #dpage.records-page .dp-body::before{
       top:-140px;
-      background:url(assets/atmos/records-bg.webp) center top / auto 1300px no-repeat,
+      /* 最上层:原图最下面 320px 慢慢淡进底色,淡到跟下面的云雾同一个浓度,接缝就不会是一条线 */
+      background:linear-gradient(180deg,rgba(248,238,232,0),rgba(248,238,232,.62)) center 980px / 100% 320px no-repeat,
+        url(assets/atmos/records-bg.webp) center top / auto 1300px no-repeat,
         url(assets/atmos/records-bg-tail.webp) center 1300px / auto 312.6px repeat-y
     }
     #dpage.records-page .rc-item{padding-left:20px}
