@@ -18,21 +18,21 @@
   var KEY = "inner_sky_tour_v1";
 
   var STEPS = [
-    { sel: ".hero-copy", title: "欢迎来到 The Inner Sky",
-      body: "从这里开始，认识属于你的生命蓝图。" },
+    { sel: ".hero-copy .btn-primary", pill: true, title: "欢迎来到 The Inner Sky",
+      body: "从这里开始，认识属于你的生命蓝图" },
     { sel: ".here .wrap", title: "在这里，你可以",
-      body: "读懂自己的星盘、探索人生主题，也留下每天的感受与问题。" },
+      body: "读懂自己的星盘、探索人生主题，也留下每天的感受与问题" },
     { sel: "#sky .sky-card", title: "我的星空",
-      body: "你的完整星盘都在这里。\n每一颗星，都藏着认识自己的线索。" },
+      body: "你的完整星盘都在这里\n每一颗星，都藏着认识自己的线索" },
     { sel: "#chapters .wrap", title: "九个主题",
-      body: "点一颗星星，进入不同的人生主题。\n读过的星星，会慢慢亮起来。" },
+      body: "点一颗星星，进入不同的人生主题\n读过的星星，会慢慢亮起来" },
     { sel: ".thread-band .thread-in", title: "属于我的生命脉络",
-      body: "当你读过更多主题，\n它们会慢慢连成属于你的故事。" },
+      body: "当你读过更多主题，\n它们会慢慢连成属于你的故事" },
     { sel: ".guide-card", title: "留下属于你的记录",
-      body: "在「我的内在指南」写下今天的自己。\n写过的感受会收进「我的星空记录」，喜欢的句子也可以收藏起来。",
+      body: "在「我的内在指南」写下今天的自己\n写过的感受会收进「我的星空记录」，喜欢的句子也可以收藏起来",
       also: [".rec-card", "#favs"] },
-    { sel: ".hero-copy", title: "从这里开始",
-      body: "这里不是替你定义人生，而是陪你一点一点看见自己。\n不需要按照顺序，从现在最想知道的地方开始就好。",
+    { sel: ".hero-copy .btn-primary", pill: true, title: "从这里开始",
+      body: "这里不是替你定义人生，而是陪你一点一点看见自己\n不需要按照顺序，从现在最想知道的地方开始就好",
       last: true }
   ];
 
@@ -42,6 +42,8 @@
     ".tour-hl{outline:1.5px solid rgba(214,186,132,.85);outline-offset:10px;border-radius:22px;",
     "box-shadow:0 0 0 10px rgba(255,248,232,.16),0 0 46px 12px rgba(214,186,132,.28);",
     "transition:outline-color .4s ease,box-shadow .4s ease}",
+    /* 胶囊按钮(第一步的「开启我的星空」):框跟着按钮的圆角,贴近一点 */
+    ".tour-hl.tour-pill{border-radius:999px;outline-offset:6px;box-shadow:0 0 0 6px rgba(255,248,232,.14),0 0 30px 8px rgba(214,186,132,.35)}",
     /* 导览说明卡 */
     ".tour-card{position:fixed;z-index:9100;left:50%;bottom:20px;transform:translate(-50%,12px);",
     "width:min(380px,calc(100vw - 32px));box-sizing:border-box;padding:18px 20px 16px;border-radius:20px;",
@@ -116,7 +118,7 @@
   function $(s) { return document.querySelector(s); }
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
 
-  function clearHl() { hl.forEach(function (el) { el.classList.remove("tour-hl"); }); hl = []; }
+  function clearHl() { hl.forEach(function (el) { el.classList.remove("tour-hl", "tour-pill"); }); hl = []; }
 
   /* 捲到这一步的区块:放得下就置中,太高就让顶端停在导航列下面一点 */
   function scrollTo(el) {
@@ -124,6 +126,8 @@
     var cardH = card ? card.offsetHeight + 40 : 220;
     var room = vh - cardH;
     var y = window.scrollY + r.top - (r.height < room - 40 ? Math.max(24, (room - r.height) / 2) : 24);
+    // 在第一屏里的东西(Hero 的按钮)直接回到页首,不要把标题捲掉
+    if (window.scrollY + r.bottom < room) y = 0;
     window.scrollTo({ top: Math.max(0, y), behavior: reduce ? "auto" : "smooth" });
   }
 
@@ -161,7 +165,7 @@
     clearHl();
     [s.sel].concat(s.also || []).forEach(function (q) {
       var e = $(q);
-      if (e) { e.classList.add("tour-hl"); hl.push(e); }
+      if (e) { e.classList.add("tour-hl"); if (s.pill) e.classList.add("tour-pill"); hl.push(e); }
     });
     render();
     if (el) scrollTo(el);
