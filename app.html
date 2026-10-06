@@ -37,6 +37,7 @@
 </script>
 <!-- 简 / 繁 显示切换(与首页共用);要在字体与样式之前,繁体模式才能先藏起页面不闪简体 -->
 <script src="assets/zh-script.js"></script>
+<script src="assets/tips.js"></script>
 <!-- 解读详情页字体:与 Landing(index.html)同一套 -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -7502,6 +7503,19 @@
     #dpage.topic-page .dp-return .say::before,
     #dpage.topic-page .dp-return .say::after{font-size:9px;margin:0 8px}
   }
+  /* 密码栏右边的眼睛:点一下看得见自己打的字,再点一下收回 */
+  .sky-auth .pw-box{position:relative}
+  .sky-auth .sky-auth-card .pw-box input{width:100%;box-sizing:border-box;padding-right:46px}
+  .sky-auth .pw-eye{
+    position:absolute;top:50%;right:6px;transform:translateY(-50%);width:36px;height:36px;padding:0;border:0;border-radius:10px;
+    display:flex;align-items:center;justify-content:center;background:none;cursor:pointer;color:rgba(249,246,242,.55)
+  }
+  .sky-auth .pw-eye:hover{color:rgba(249,246,242,.85)}
+  .sky-auth .pw-eye:focus-visible{outline:1px solid rgba(170,160,213,.75)}
+  .sky-auth .pw-eye svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+  .sky-auth .pw-eye .cl{display:none}
+  .sky-auth .pw-eye[aria-pressed="true"] .op{display:none}
+  .sky-auth .pw-eye[aria-pressed="true"] .cl{display:block}
 </style>
 </head>
 <!-- legacy-off 直接写在标签上,不等 JS。
@@ -7660,7 +7674,7 @@
     <div class="sky-auth-sub" data-i18n="authSub">登录后，继续探索属于你的内在宇宙✨</div>
     <div class="auth-form">
     <div class="field" id="authEmailField"><label data-i18n="email">邮箱</label><input id="authEmail" type="email" autocomplete="email" placeholder="you@example.com"></div>
-    <div class="field" id="authPwField" style="margin-top:10px"><label id="authPwLabel" data-i18n="password">密码</label><input id="authPw" type="password" autocomplete="current-password" data-i18n-ph="pwPh" placeholder="至少 6 位"></div>
+    <div class="field" id="authPwField" style="margin-top:10px"><label id="authPwLabel" data-i18n="password">密码</label><div class="pw-box"><input id="authPw" type="password" autocomplete="current-password" data-i18n-ph="pwPh" placeholder="至少 6 位"><button type="button" class="pw-eye" id="authPwEye" aria-label="显示密码" aria-pressed="false"><svg class="op" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><svg class="cl" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3l18 18"/><path d="M10.6 5.1A10.7 10.7 0 0 1 12 5c6.4 0 10 7 10 7a17.6 17.6 0 0 1-3.2 4.1M6.6 6.6C3.8 8.4 2 12 2 12s3.6 7 10 7c1.9 0 3.5-.6 4.9-1.4"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg></button></div></div>
     <!-- User ID:仅注册时显示,存进 Supabase user_metadata.display_name,不影响登录逻辑 -->
     <div class="field" id="authIdField" style="margin-top:10px;display:none"><label data-i18n="userId">用户名</label><input id="authUserId" type="text" autocomplete="nickname" data-i18n-ph="userIdPh" placeholder="别人会看到的名字"></div>
     <div id="authMsg" style="min-height:18px;font-size:12px;color:var(--fire);margin:10px 0 4px"></div>
@@ -18529,6 +18543,22 @@ window.Guide = (function () {
       $("authEmail").focus();
     });
     $("authPw").addEventListener("keydown", function (e) { if (e.key === "Enter") $("authLogin").click(); });
+    // 密码旁的眼睛:切换「看得见 / 看不见」,焦点留在输入框里方便继续打字
+    $("authPwEye").addEventListener("click", function () {
+      const pw = $("authPw"), on = pw.type === "password";
+      pw.type = on ? "text" : "password";
+      this.setAttribute("aria-pressed", on ? "true" : "false");
+      this.setAttribute("aria-label", on ? "隐藏密码" : "显示密码");
+      pw.focus();
+    });
+    // 送出前收回成看不见,浏览器的密码管理员才认得出这是密码栏
+    ["authLogin", "authSignup"].forEach(function (id) {
+      $(id).addEventListener("click", function () {
+        $("authPw").type = "password";
+        $("authPwEye").setAttribute("aria-pressed", "false");
+        $("authPwEye").setAttribute("aria-label", "显示密码");
+      }, true);
+    });
     $("authEmail").addEventListener("keydown", function (e) {
       if (e.key !== "Enter") return;
       // forgot 状态下 Enter 是「寄出」,其余情况维持原本的「登入 / 注册」
@@ -18681,6 +18711,16 @@ window.Guide = (function () {
   else init();
 })();
 
+</script>
+<script>
+/* 第一次进到各页的小提示(assets/tips.js):每一页先点哪里。每一则只出现一次 */
+if (window.Tips) window.Tips.add([
+  { id: "rd-tabs", sel: "#dpage.reading-page .dp-detail .dp-tabs", text: "点上面的标签切换章节，一章一章慢慢读" },
+  { id: "rd-save", sel: "#dpage.reading-page .dp-detail .rd-save", text: "看到有感觉的句子，点「收藏语句」留下来，之后在「我的收藏」都找得到" },
+  { id: "tp-open", sel: "#dpage.topic-page .tp-open", text: "点「继续读这一段」，展开这一段完整的解读" },
+  { id: "map-card", sel: "#dpage.thread-page .thread-chapters .ch-card", text: "点任一张卡片，展开这一章的线索与解读" },
+  { id: "cp-mood", sel: "#dpage.compass-page .cp-moods", text: "从这里开始：选一个最接近你此刻的心情，再写下几句话" }
+]);
 </script>
 </body>
 </html>
