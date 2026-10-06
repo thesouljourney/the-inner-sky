@@ -3494,7 +3494,7 @@
      收起(或改开别张)时 .on 被拿掉,按钮才回来 */
   #dpage.thread-page .thread-chapters .ch-card.on .go{display:none}
   #dpage.thread-page .thread-chapters .ch-card .go{
-    display:inline-flex;align-items:center;margin-top:16px;min-height:36px;padding:0 18px;
+    display:inline-flex;align-items:center;margin-top:16px;min-height:36px;padding:0 18px;cursor:pointer;
     border:1px solid rgba(196,152,72,.55);border-radius:999px;background:rgba(255,253,249,.6);
     font-family:var(--dp-serif);font-size:13px;letter-spacing:.1em;color:#3b3f78
   }
@@ -7523,6 +7523,14 @@
   .sky-auth .pw-eye .cl{display:none}
   .sky-auth .pw-eye[aria-pressed="true"] .op{display:none}
   .sky-auth .pw-eye[aria-pressed="true"] .cl{display:block}
+  /* #/map「从这里开始」:卡片不再是按钮 —— 引子与重点可以选字;只有「沿着这条线索继续」可以点 */
+  #dpage.thread-page .ch-card{cursor:default}
+  #dpage.thread-page .thread-chapters .ch-card .go:focus{outline:none}
+  #dpage.thread-page .thread-chapters .ch-card .go:focus-visible{outline:2px solid rgba(196,152,72,.7);outline-offset:2px}
+  @media(hover:hover){
+    #dpage.thread-page .ch-card:hover{transform:none}
+    #dpage.thread-page .thread-chapters .ch-card .go:hover{background:#fffdf9;border-color:rgba(196,152,72,.85)}
+  }
 </style>
 </head>
 <!-- legacy-off 直接写在标签上,不等 JS。
@@ -13672,18 +13680,19 @@ window.Guide = (function () {
            桌机上这一格是 display:none,内容改放整排卡片下方那一个共用阅读区。
            两边共用同一个 box,原文不会在 DOM 里存两份、图也不会载两次。 */
         // 外层 .ch-item 才是「卡片」:摘要按钮与展开的详细解读都在同一张卡里面
-        return '<div class="ch-item"><button type="button" class="ch-card" data-ch="' + i + '"' +
-          ' aria-expanded="false" aria-controls="chReader">' +
+        // 卡片本身不是按钮(引子与重点可以选字、收藏);只有「沿着这条线索继续」是按钮
+        return '<div class="ch-item"><div class="ch-card" data-ch="' + i + '">' +
           '<span class="no">' + ("0" + (i + 1)).slice(-2) + "</span>" +
           '<span class="gl" aria-hidden="true">' + THREAD_NODE[i % THREAD_NODE.length] + "</span>" +
           '<b class="t">' + esc0(st.title) + "</b>" +
           (d.preview ? '<span class="pv">' + esc0(d.preview) + "</span>" : "") +
           (d.q ? '<span class="qz">' + esc0(d.q) + "</span>" : "") +
           dpKeysHtml(d.keys.slice(0, 2)) +
-          '<span class="go">' + dpT("沿着这条线索继续 →", "Follow this one →") + "</span>" +
+          '<button type="button" class="go" aria-expanded="false" aria-controls="chReader">' +
+          dpT("沿着这条线索继续 →", "Follow this one →") + "</button>" +
           '<span class="ch-src" hidden>' + dpParaRich(st.body) + "</span>" +
           '<span class="art s' + (i % 3 + 1) + '" aria-hidden="true"></span>' +
-          "</button>" +
+          "</div>" +
           '<div class="ch-slot" id="chSlot' + i + '" aria-live="polite"></div></div>';
       }).join("") + "</div>" +
       '<div class="ch-reader" id="chReader" aria-live="polite"></div></div>';
@@ -18132,7 +18141,8 @@ window.Guide = (function () {
         const reader = host.querySelector("#chReader");
         const cards = Array.prototype.slice.call(host.querySelectorAll(".ch-card"));
         const slots = Array.prototype.slice.call(host.querySelectorAll(".ch-slot"));
-        if (!reader || !cards.length) return;
+        const gos = cards.map(function (c) { return c.querySelector(".go"); });
+        if (!reader || !cards.length || gos.indexOf(null) >= 0) return;
         const mq = window.matchMedia ? window.matchMedia("(max-width:767px)") : null;
         const inline = function () { return !!(mq && mq.matches && slots.length === cards.length); };
         const hostFor = function (i) { return inline() ? slots[i] : reader; };
@@ -18143,7 +18153,7 @@ window.Guide = (function () {
         const close = function () {
           if (cur < 0) return;
           const el = hostFor(cur);
-          cards[cur].setAttribute("aria-expanded", "false");
+          gos[cur].setAttribute("aria-expanded", "false");
           cards[cur].classList.remove("on");
           cur = -1;
           grow(el, false);
@@ -18157,7 +18167,7 @@ window.Guide = (function () {
           if (box.parentNode === el) return;
           [reader].concat(slots).forEach(function (n) { if (n !== el) clear(n); });
           el.appendChild(box);
-          cards[cur].setAttribute("aria-controls", el.id);
+          gos[cur].setAttribute("aria-controls", el.id);
           el.classList.add("on");
           el.style.maxHeight = "none";
         };
@@ -18232,9 +18242,10 @@ window.Guide = (function () {
              见 CSS 的 .ch-card.on .go),再平滑卷回这张卡的顶端 ——
              卡顶停在视窗上方约 96px,不贴着浏览器顶,也不会停在页面下方或下一张卡。
              卡片在展开区的上面,展开区收合不影响它的位置,所以当下量的就是终点。 */
-          box.querySelector(".ch-shut").addEventListener("click", function () {
+          box.querySelector(".ch-shut").addEventListener("click", function (e) {
             close();
-            card.focus({ preventScroll: true });
+            // 只有用键盘收起时才把焦点交回按钮(滑鼠 / 手指点的不移焦点,不会冒出对焦框)
+            if (e.detail === 0) gos[i].focus({ preventScroll: true });
             const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion:reduce)").matches;
             window.scrollTo({
               top: Math.max(0, window.scrollY + card.getBoundingClientRect().top - 96),
@@ -18242,10 +18253,10 @@ window.Guide = (function () {
             });
           });
           mount.appendChild(box);
-          cards.forEach(function (c) { c.classList.remove("on"); c.setAttribute("aria-expanded", "false"); });
+          cards.forEach(function (c, k) { c.classList.remove("on"); gos[k].setAttribute("aria-expanded", "false"); });
           card.classList.add("on");
-          card.setAttribute("aria-expanded", "true");
-          card.setAttribute("aria-controls", mount.id);
+          gos[i].setAttribute("aria-expanded", "true");
+          gos[i].setAttribute("aria-controls", mount.id);
           cur = i;
           grow(mount, true);
           /* 用户:点「沿着这条线索继续」之后,画面带到这张卡的开头,从头开始读
@@ -18260,8 +18271,8 @@ window.Guide = (function () {
             });
           });
         };
-        cards.forEach(function (card, i) {
-          card.addEventListener("click", function () {
+        gos.forEach(function (go, i) {
+          go.addEventListener("click", function () {
             if (cur === i) close(); else open(i);
           });
         });
@@ -18767,7 +18778,7 @@ if (window.Tips) window.Tips.add([
   { id: "rd-tabs", sel: "#dpage.reading-page .dp-detail .dp-tabs", text: "点上面的标签切换章节，一章一章慢慢读" },
   { id: "rd-save", sel: "#dpage.reading-page .dp-detail .rd-save", text: "看到有感觉的句子，点「收藏语句」留下来，之后在「我的收藏」都找得到" },
   { id: "tp-open", sel: "#dpage.topic-page .tp-open", text: "点「继续读这一段」，展开这一段完整的解读" },
-  { id: "map-card", sel: "#dpage.thread-page .thread-chapters .ch-card", text: "点任一张卡片，展开这一章的线索与解读" },
+  { id: "map-card", sel: "#dpage.thread-page .thread-chapters .ch-card .go", text: "点「沿着这条线索继续」，展开这一章的线索与解读" },
   { id: "cp-mood", sel: "#dpage.compass-page .cp-moods", text: "从这里开始：选一个最接近你此刻的心情，再写下几句话" }
 ]);
 </script>
