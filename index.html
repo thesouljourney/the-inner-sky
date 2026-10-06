@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script src="assets/zh-script.js"></script>
+<script src="assets/tips.js"></script>
 <title>Inner Sky · Know Yourself Through the Stars</title>
 <meta name="description" content="看见完整的自己。Inner Sky 用星盘陪你慢慢理解自己,不被定义、不被标签。">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1074,6 +1075,15 @@ document.querySelectorAll("a[data-app-hash]").forEach(function (a) {
       if (ev.key === "Escape") { wrap.classList.remove("open"); btn.setAttribute("aria-expanded", "false"); }
     });
   }
+
+  // 第一次来的小提示(assets/tips.js):告诉人「先点哪里」。
+  // 未登录:指「开启我的星空」(点了会先到注册 / 登录)
+  if (window.Tips) window.Tips.add(loggedIn ? [
+    { id: "land-start", sel: ".hero-copy .btn-primary", text: "从这里开始：先读你的生命蓝图，认识最初的自己" },
+    { id: "land-topics", sel: "#chapters .planet-chapter", text: "点任一颗星球，进入那个主题的解读；读过的星球会亮起来" }
+  ] : [
+    { id: "land-guest", sel: ".hero-copy .btn-primary", text: "第一次来？点这里注册，填好出生资料，就能开启你的星空" }
+  ]);
 
   // 未登录:Mobile 用「菜单」提供公开入口(Desktop 由 CSS 隐藏)
   if (!loggedIn) wireDropdown(document.getElementById("navMenu"), document.getElementById("navMenuBtn"));
