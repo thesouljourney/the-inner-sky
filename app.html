@@ -37,6 +37,7 @@
 </script>
 <!-- 简 / 繁 显示切换(与首页共用);要在字体与样式之前,繁体模式才能先藏起页面不闪简体 -->
 <script src="assets/zh-script.js"></script>
+<script src="assets/zh-punct.js"></script>
 <script src="assets/tips.js"></script>
 <!-- 解读详情页字体:与 Landing(index.html)同一套 -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -7534,6 +7535,17 @@
     #dpage.thread-page .ch-card:hover{transform:none}
     #dpage.thread-page .thread-chapters .ch-card .go:hover{background:#fffdf9;border-color:rgba(196,152,72,.85)}
   }
+  /* 主题页底纹(手机):原本是 position:fixed + inset:0,刚好等于视窗高。
+     手机浏览器的网址列 / 工具列收起、或上下回弹时,视窗会瞬间变高,
+     这层跟不上就露出上下两条米白底(用户反馈)。
+     改成上下各多铺 25vh(用 lvh = 工具列收起后的最大视窗高度),怎么滑都盖得住;
+     图仍然是 cover、置中,只是多出来的部分落在画面外 */
+  @media(max-width:767px){
+    #dpage.topic-page::before{
+      inset:auto 0;top:-25vh;height:150vh;height:calc(100lvh + 50vh);
+      background-position:center center
+    }
+  }
 </style>
 </head>
 <!-- legacy-off 直接写在标签上,不等 JS。
@@ -7601,7 +7613,7 @@
         <button class="btn" id="saveBtn" data-i18n="save" style="width:auto;padding:9px 20px;font-size:13.5px">保存并绘制</button>
         <button class="btn ghost" id="clearBtn" data-i18n="clear" style="width:auto;padding:9px 16px;font-size:13.5px">清空</button>
       </div>
-      <p class="hint" data-i18n="formHint">资料安全存放在你的云端账号,只有你能看到。时区依出生地点与出生当天的历史规则自动判定。</p>
+      <p class="hint" data-i18n="formHint">资料安全存放在你的云端账号，只有你能看到。时区依出生地点与出生当天的历史规则自动判定。</p>
       </div>
     </div>
   </aside>
@@ -7610,8 +7622,8 @@
     <div class="empty" id="emptyState">
       <!-- 初始空盘:只有黄道十二宫的盘面,从白羊(第一宫)开始,行星留空 -->
       <svg class="wheel" id="emptyWheel" viewBox="-22 -22 644 644" aria-label="空白星盘" style="max-width:420px;width:min(70vw,420px)"></svg>
-      <div data-i18n="emptyMain">左侧填写出生信息,给它起个名字</div>
-      <div class="hint" data-i18n="emptyHint">每张盘以名字管理,可随时切换对照学习</div>
+      <div data-i18n="emptyMain">左侧填写出生信息，给它起个名字</div>
+      <div class="hint" data-i18n="emptyHint">每张盘以名字管理，可随时切换对照学习</div>
     </div>
     <div id="chartView" style="display:none">
       <div class="toolbar">
@@ -7666,7 +7678,7 @@
           <span>人生探索地图</span>
           <span id="qaArrow" style="font-size:14px;color:var(--muted)">∨</span>
         </h3>
-        <div id="qaHint" style="font-size:12px;color:var(--muted);margin:-4px 0 12px;line-height:1.7;display:none">六个领域,三十个问题。想弄懂自己哪一部分,就从那里开始。</div>
+        <div id="qaHint" style="font-size:12px;color:var(--muted);margin:-4px 0 12px;line-height:1.7;display:none">六个领域，三十个问题。想弄懂自己哪一部分，就从那里开始。</div>
         <div id="qaGrid" style="display:none"></div>
       </div>
 
@@ -7697,8 +7709,8 @@
     <div class="field" id="authIdField" style="margin-top:10px;display:none"><label data-i18n="userId">用户名</label><input id="authUserId" type="text" autocomplete="nickname" data-i18n-ph="userIdPh" placeholder="别人会看到的名字"></div>
     <div id="authMsg" style="min-height:18px;font-size:12px;color:var(--fire);margin:10px 0 4px"></div>
     <button class="btn-main" id="authLogin" data-i18n="login">登 录</button>
-    <button class="btn-alt" id="authSignup" data-i18n="signup">没有账号?注 册</button>
-    <a class="sky-auth-back" href="#" id="authForgotLink" style="margin-top:14px" data-i18n="forgotPw">忘记密码?</a>
+    <button class="btn-alt" id="authSignup" data-i18n="signup">没有账号？注 册</button>
+    <a class="sky-auth-back" href="#" id="authForgotLink" style="margin-top:14px" data-i18n="forgotPw">忘记密码？</a>
     </div>
     <div class="sky-auth-loading"><span class="ring"></span><span class="tx">正在进入你的星空…</span></div>
     <a class="sky-auth-back" href="index.html">← 回到首页</a>
@@ -8185,7 +8197,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     }, function (e) {
       clearTimeout(timer);
       if (e && e.name === "AbortError") {
-        const t = new Error(ms && ms > NET_TIMEOUT ? "生成超时,请再试一次" : "网络请求超时");
+        const t = new Error(ms && ms > NET_TIMEOUT ? "生成超时，请再试一次" : "网络请求超时");
         t.timeout = true;
         throw t;
       }
@@ -8518,7 +8530,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     docTitle:         ["Know Yourself Through the Stars · 看见完整的自己", "Know Yourself Through the Stars · See yourself, whole"],
     logout:           ["退出", "Sign out"],
     myFavs:           ["我的收藏", "Saved"],
-    favEmpty:         ["读到有共鸣的句子时,点一下段落旁的星号,它就会留在这里。",
+    favEmpty:         ["读到有共鸣的句子时，点一下段落旁的星号，它就会留在这里。",
                        "When a line lands, tap the star beside it. It stays here."],
     saveIt:           ["收藏这一段", "Save this"],
     remove:           ["移除", "Remove"],
@@ -8526,7 +8538,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     /* —— 侧栏 / 表单 —— */
     charts:           ["星盘", "Charts"],
     newChart:         ["新建星盘", "New chart"],
-    editChart:        ["编辑:", "Editing: "],
+    editChart:        ["编辑：", "Editing: "],
     collapse:         ["收起", "Hide"],
     expand:           ["展开", "Show"],
     fName:            ["名字", "Name"],
@@ -8536,8 +8548,8 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     fPlacePh:         ["输入出生地点", "Type your birthplace"],
     fPlaceTypeFirst:  ["先输入出生地点", "Type your birthplace first"],
     fPlaceLoading:    ["正在载入全球地点资料…", "Loading worldwide place data…"],
-    fPlaceLoadFail:   ["地点资料载入失败,请重试", "Could not load place data — please retry"],
-    fPlaceNone:       ["找不到这个地点,换个写法试试(城市 / 州属都可以)",
+    fPlaceLoadFail:   ["地点资料载入失败，请重试", "Could not load place data — please retry"],
+    fPlaceNone:       ["找不到这个地点，换个写法试试(城市 / 州属都可以)",
                        "No match — try another spelling (city or state both work)"],
     alertPlace:       ["我们需要更准确的出生地点才能生成你的星盘 —— 请从搜索结果里选一个城市。",
                        "We need a more precise birthplace to draw your chart — please pick a city from the search results."],
@@ -8547,9 +8559,9 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     fLon:             ["经度 °(东+西−)", "Longitude ° (E+ / W−)"],
     save:             ["保存并绘制", "Save & draw"],
     clear:            ["清空", "Clear"],
-    formHint:         ["资料安全存放在你的云端账号,只有你能看到。时区依出生地点与出生当天的历史规则自动判定。",
+    formHint:         ["资料安全存放在你的云端账号，只有你能看到。时区依出生地点与出生当天的历史规则自动判定。",
                        "This stays in your own account, visible only to you. The time zone is resolved from your birthplace and the rules in force on that date."],
-    noCharts:         ["还没有星盘,在下方新建一张。", "Nothing here yet. Start one below."],
+    noCharts:         ["还没有星盘，在下方新建一张。", "Nothing here yet. Start one below."],
     edit:             ["编辑", "Edit"],
     del:              ["删除", "Delete"],
     confirmDel:       ["确认删除", "Confirm"],
@@ -8558,8 +8570,8 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     alertLat:         ["纬度需在 -89.9 ~ 89.9 之间", "Latitude must be between -89.9 and 89.9."],
 
     /* —— 空状态 —— */
-    emptyMain:        ["左侧填写出生信息,给它起个名字", "Add a birth date, a time, a place. And a name to keep it under."],
-    emptyHint:        ["每张盘以名字管理,可随时切换对照学习", "You can keep as many as you like and move between them."],
+    emptyMain:        ["左侧填写出生信息，给它起个名字", "Add a birth date, a time, a place. And a name to keep it under."],
+    emptyHint:        ["每张盘以名字管理，可随时切换对照学习", "You can keep as many as you like and move between them."],
 
     /* —— 盘面 / 表格 —— */
     positions:        ["行星位置", "Planet positions"],
@@ -8577,9 +8589,9 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     aspectsHere:      ["本盘相位", "Aspects in this chart"],
     noAspects:        ["无主要相位", "No major aspects"],
     trigger:          ["触发判定", "Activation"],
-    erisOn:           ["与个人行星存在 2° 内紧密相位(%s),此点在你盘中被激活,值得纳入解读。",
+    erisOn:           ["与个人行星存在 2° 内紧密相位(%s)，此点在你盘中被激活，值得纳入解读。",
                        "Within 2° of a personal planet (%s) — this point is active in your chart and worth reading."],
-    erisOff:          ["未与个人行星形成 2° 内紧密相位:默认仅作背景,不必强行解读。",
+    erisOff:          ["未与个人行星形成 2° 内紧密相位：默认仅作背景，不必强行解读。",
                        "No contact within 2° of a personal planet — treat it as background only."],
 
     /* —— 主题 / 音乐 —— */
@@ -8604,7 +8616,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     innerMap:         ["你 的 内 在 地 图", "Your inner map"],
     whereToStart:     ["可 以 着 手 的 事", "Somewhere to begin"],
     worthKeeping:     ["值 得 记 住 的 话", "Worth coming back to"],
-    tryThis:          ["\u2192 试试看:", "\u2192 If you feel like trying something:"],
+    tryThis:          ["\u2192 试试看：", "\u2192 If you feel like trying something:"],
     readMore:         ["展开阅读 \u2228", "Keep reading \u2228"],
     keepReading:      ["继续查看", "Keep reading"],
     foldUp:           ["收起", "Close"],
@@ -8613,17 +8625,17 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     collapseUp:       ["收起 \u25B2", "Close \u25B2"],
     genBlueprint:     ["正在为你整理这份生命蓝图…", "Taking a while with this one."],
     regenerating:     ["正在重新整理…", "Going back to it."],
-    firstTimeHint:    ["第一次需要 1–2 分钟,之后打开就是秒开", "A minute or two the first time. After that it’s already here."],
+    firstTimeHint:    ["第一次需要 1–2 分钟，之后打开就是秒开", "A minute or two the first time. After that it’s already here."],
     exploringTopic:   ["正在为你探索「%s」…", "Sitting with %s for a moment."],
-    longChapterHint:  ["这一章比较长,约需 1–2 分钟", "This one runs long. A minute or two."],
+    longChapterHint:  ["这一章比较长，约需 1–2 分钟", "This one runs long. A minute or two."],
     weavingMap:       ["正在把你的理解连成一张地图…", "Drawing the threads together."],
     aboutOneMin:      ["约需 1–2 分钟", "A minute or two."],
     failed:           ["内容暂时无法完成。", "That didn’t come through. "],
     tryAgain:         ["点此再试一次", "Try once more"],
-    diagnosis:        ["诊断:", "Diagnosis: "],
+    diagnosis:        ["诊断：", "Diagnosis: "],
     probe:            [" · 探测 ", " · probe "],
     noService:        ["尚未连接解读服务。", "Not connected yet."],
-    mapNeedMore:      ["读完九个主题后,这里会把所有理解收束成一条线(目前 %s/9)",
+    mapNeedMore:      ["读完九个主题后，这里会把所有理解收束成一条线(目前 %s/9)",
                        "Once all nine chapters are read, they meet here. %s of 9 so far."],
     mapReady:         ["九个主题都读完了。把它们连接到你的人生。", "All nine are read. Time to draw them together."],
     mapBtn:           ["生成属于我的生命脉络", "Draw them together"],
@@ -8636,7 +8648,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
 
     /* —— 英文解读的生成入口(不自动呼叫 AI)—— */
     enNotYet:         ["这份内容尚未有英文版本。", "There’s no English version of this one yet."],
-    enNotYetHint:     ["英文版本会以英文重新书写,不是翻译;中文版本会完整保留,不会被覆盖。",
+    enNotYetHint:     ["英文版本会以英文重新书写，不是翻译；中文版本会完整保留，不会被覆盖。",
                        "It gets written in English rather than translated across. Whatever’s already here stays as it is."],
     enGenerate:       ["生成英文版本", "Write it in English"],
     zhNotYet:         ["这份内容尚未有中文版本。", "This reading has no Chinese version yet."],
@@ -8654,23 +8666,23 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     password:         ["密码", "Password"],
     pwPh:             ["至少 6 位", "At least 6 characters"],
     login:            ["登 录", "Sign in"],
-    signup:           ["没有账号?注 册", "No account? Sign up"],
+    signup:           ["没有账号？注 册", "No account? Sign up"],
     loggingIn:        ["登录中…", "Signing in…"],
     signingUp:        ["注册中…", "Creating account…"],
     authNeed:         ["请输入邮箱与至少 6 位密码", "An email and a password of at least six characters."],
-    signupOk:         ["注册成功!请到邮箱点击确认链接,然后回来登录", "You’re in. Confirm through the link in your inbox, then come back and sign in."],
+    signupOk:         ["注册成功！请到邮箱点击确认链接，然后回来登录", "You’re in. Confirm through the link in your inbox, then come back and sign in."],
     confirmOk:        ["邮箱已确认。请用刚才注册的邮箱与密码登入。",
                        "Email confirmed. Sign in with the address and password you just registered."],
-    confirmExpired:   ["这个确认连结已经过期,或者已经用过了。请直接在下面登入;登入不成功就重新注册一次,会再寄一封新的。",
+    confirmExpired:   ["这个确认连结已经过期，或者已经用过了。请直接在下面登入；登入不成功就重新注册一次，会再寄一封新的。",
                        "That confirmation link has expired or was already used. Try signing in below; if that fails, sign up again for a fresh link."],
     confirmFail:      ["确认没有成功。", "Confirmation didn’t go through."],
-    forgotPw:         ["忘记密码?", "Forgot your password?"],
+    forgotPw:         ["忘记密码？", "Forgot your password?"],
     pwTooShort:       ["密码至少 6 位", "Use at least six characters."],
     emailNeed:        ["请先输入邮箱", "Enter your email address first."],
     sendReset:        ["寄出重设连结", "Send reset link"],
     sendingReset:     ["正在寄出…", "Sending…"],
     // 刻意不说「这个邮箱不存在」:否则任何人都能拿这里当帐号查询工具
-    resetSent:        ["如果这个邮箱注册过,重设连结已经寄出了。请到信箱查收(记得看看垃圾邮件)。",
+    resetSent:        ["如果这个邮箱注册过，重设连结已经寄出了。请到信箱查收(记得看看垃圾邮件)。",
                        "If that address is registered, a reset link is on its way. Check your inbox — and your spam folder."],
     resetReady:       ["请设定一组新密码。", "Choose a new password."],
     newPw:            ["新密码", "New password"],
@@ -8680,14 +8692,14 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
 
     /* —— 诊断 —— */
     dgNoKey:          ["服务端还没有设置 AI 密钥(ANTHROPIC_API_KEY)", "The server has no AI key set (ANTHROPIC_API_KEY)"],
-    dgFnVer:          ["函数版本:", "Function version: "],
-    dg401:            ["身份验证没通过:请到 Supabase → Edge Functions → read-chart → Details,把 Verify JWT 关掉后重新部署",
+    dgFnVer:          ["函数版本：", "Function version: "],
+    dg401:            ["身份验证没通过：请到 Supabase → Edge Functions → read-chart → Details，把 Verify JWT 关掉后重新部署",
                        "Auth failed: in Supabase → Edge Functions → read-chart → Details, turn off Verify JWT and redeploy"],
-    dg404:            ["找不到这个函数:确认函数名是 read-chart 且已部署", "Function not found: check that read-chart is deployed under that name"],
-    dg0:              ["连不上服务器:检查网络,或函数地址是否正确", "Cannot reach the server: check your connection and the function URL"],
-    dg502:            ["AI 服务返回错误:多半是密钥无效或账户额度不足", "The AI service returned an error — usually an invalid key or no remaining credit"],
-    dg504:            ["生成超时:内容太长,稍后重试通常可成功", "Timed out: the content is long — retrying usually works"],
-    dgParse:          ["AI 回答格式异常,再试一次通常可解决", "The reply came back malformed — trying again usually fixes it"],
+    dg404:            ["找不到这个函数：确认函数名是 read-chart 且已部署", "Function not found: check that read-chart is deployed under that name"],
+    dg0:              ["连不上服务器：检查网络，或函数地址是否正确", "Cannot reach the server: check your connection and the function URL"],
+    dg502:            ["AI 服务返回错误：多半是密钥无效或账户额度不足", "The AI service returned an error — usually an invalid key or no remaining credit"],
+    dg504:            ["生成超时：内容太长，稍后重试通常可成功", "Timed out: the content is long — retrying usually works"],
+    dgParse:          ["AI 回答格式异常，再试一次通常可解决", "The reply came back malformed — trying again usually fixes it"],
     dgUnknown:        ["未知错误", "Unknown error"],
     syncFail:         ["云同步失败", "Cloud sync failed"],
     delFail:          ["云删除失败", "Cloud delete failed"]
@@ -8696,31 +8708,31 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   /* —— 九个主题的显示文案(仅 UI;服务端主题定义不变)—— */
   const TOPIC_TEXT = {
     self:    { name:["个人","Being You"], sub:["你是谁，你如何成为自己","what you're like when nothing's being asked of you"],
-               teaser:["别人眼中的你,和你自己知道的你,\n中间那段距离,才是真正的你。",
+               teaser:["别人眼中的你，和你自己知道的你，\n中间那段距离，才是真正的你。",
                        "There's the you other people meet,\nand the you that you know from the inside.\nSome days there's quite a distance between them."] },
     emotion: { name:["情感模式","Falling For Someone"], sub:["你如何靠近一个人","what shifts in you when you get close"],
-               teaser:["喜欢一个人的时候,你会变成另一个版本的自己。\n那个版本,你未必喜欢。",
+               teaser:["喜欢一个人的时候，你会变成另一个版本的自己。\n那个版本，你未必喜欢。",
                        "There are moments in closeness\nwhen you become someone slightly different."] },
     career:  { name:["事业","Your Working Life"], sub:["什么样的工作让你真正发挥","what makes the effort feel worth it"],
-               teaser:["有些累是值得的,有些累是空的。\n差别不在做什么,而在怎么做。",
+               teaser:["有些累是值得的，有些累是空的。\n差别不在做什么，而在怎么做。",
                        "Some days leave you tired and glad.\nOthers just leave you tired.\nUsually it has less to do with the work itself."] },
     family:  { name:["家庭","Where You Come From"], sub:["你从怎样的关系里长大","parents, siblings, the house you grew up in"],
-               teaser:["你以为早就走出来了,\n但有些反应还是会自动发生。",
+               teaser:["你以为早就走出来了，\n但有些反应还是会自动发生。",
                        "Some reactions seem to arrive\nbefore you've decided anything."] },
     love:    { name:["感情","Staying Together"], sub:["一段关系如何走得长久","how love works over years, not weeks"],
-               teaser:["让你心动的,和让你安稳的,\n常常不是同一种人。",
+               teaser:["让你心动的，和让你安稳的，\n常常不是同一种人。",
                        "The person who moves you\nand the person you can settle beside\naren't always the same person."] },
     partner: { name:["心动与吸引","The People You Keep Meeting"], sub:["什么样的人会让你真正心动","who tends to find their way to you"],
-               teaser:["你反复遇到的那一类人,\n其实一直在提醒你同一件事。",
+               teaser:["你反复遇到的那一类人，\n其实一直在提醒你同一件事。",
                        "Certain people keep turning up in your life,\nin different forms."] },
     wealth:  { name:["金钱","Money"], sub:["你和钱的关系","how it comes in, how it goes"],
-               teaser:["钱怎么进来,和钱怎么留下,\n是两件不同的事。",
+               teaser:["钱怎么进来，和钱怎么留下，\n是两件不同的事。",
                        "How money arrives\nand how it stays\nturn out to be two separate questions."] },
     study:   { name:["学习方式","How You Learn"], sub:["你是怎么真正学会一件事的","what makes something finally click"],
-               teaser:["同样一堂课,有人听懂,有人做懂。\n你是哪一种?",
+               teaser:["同样一堂课，有人听懂，有人做懂。\n你是哪一种？",
                        "Some people learn by listening.\nOthers only really learn once they've tried it."] },
     body:    { name:["身心状态","Rest and Energy"], sub:["压力怎么来，力气怎么回来","where the tiredness actually comes from"],
-               teaser:["什么都没做,却已经很累。\n消耗常常发生在看不见的地方。",
+               teaser:["什么都没做，却已经很累。\n消耗常常发生在看不见的地方。",
                        "Some days end tired without much to show for it.\nThe tiredness is real.\nIt just came from somewhere quieter."] }
   };
 
@@ -8894,23 +8906,23 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   // ---------- 九个主题(仅 UI 文案;写作规则与资料调用都在服务端) ----------
   const TOPICS9 = [
     { id: "self",    icon: "\u2B50",       name: "个人",     sub: "你是谁，你如何成为自己",
-      teaser: "别人眼中的你,和你自己知道的你,\n中间那段距离,才是真正的你。" },
+      teaser: "别人眼中的你，和你自己知道的你，\n中间那段距离，才是真正的你。" },
     { id: "emotion", icon: "\u2764\uFE0F", name: "情感模式", sub: "你如何靠近一个人",
-      teaser: "喜欢一个人的时候,你会变成另一个版本的自己。\n那个版本,你未必喜欢。" },
+      teaser: "喜欢一个人的时候，你会变成另一个版本的自己。\n那个版本，你未必喜欢。" },
     { id: "career",  icon: "\uD83D\uDCBC", name: "事业",     sub: "什么样的工作让你真正发挥",
-      teaser: "有些累是值得的,有些累是空的。\n差别不在做什么,而在怎么做。" },
+      teaser: "有些累是值得的，有些累是空的。\n差别不在做什么，而在怎么做。" },
     { id: "family",  icon: "\uD83C\uDFE1", name: "家庭",     sub: "你从怎样的关系里长大",
-      teaser: "你以为早就走出来了,\n但有些反应还是会自动发生。" },
+      teaser: "你以为早就走出来了，\n但有些反应还是会自动发生。" },
     { id: "love",    icon: "\uD83D\uDC8D", name: "感情",     sub: "一段关系如何走得长久",
-      teaser: "让你心动的,和让你安稳的,\n常常不是同一种人。" },
+      teaser: "让你心动的，和让你安稳的，\n常常不是同一种人。" },
     { id: "partner", icon: "\uD83D\uDC64", name: "心动与吸引", sub: "什么样的人会让你真正心动",
-      teaser: "你反复遇到的那一类人,\n其实一直在提醒你同一件事。" },
+      teaser: "你反复遇到的那一类人，\n其实一直在提醒你同一件事。" },
     { id: "wealth",  icon: "\uD83D\uDCB0", name: "金钱",     sub: "你和钱的关系",
-      teaser: "钱怎么进来,和钱怎么留下,\n是两件不同的事。" },
+      teaser: "钱怎么进来，和钱怎么留下，\n是两件不同的事。" },
     { id: "study",   icon: "\uD83C\uDF93", name: "学习方式",     sub: "你是怎么真正学会一件事的",
-      teaser: "同样一堂课,有人听懂,有人做懂。\n你是哪一种?" },
+      teaser: "同样一堂课，有人听懂，有人做懂。\n你是哪一种？" },
     { id: "body",    icon: "\uD83C\uDF19", name: "身心状态", sub: "压力怎么来，力气怎么回来",
-      teaser: "什么都没做,却已经很累。\n消耗常常发生在看不见的地方。" }
+      teaser: "什么都没做，却已经很累。\n消耗常常发生在看不见的地方。" }
   ];
   function findTopic(id) { return TOPICS9.find(x => x.id === id) || null; }
 
@@ -14140,10 +14152,10 @@ window.Guide = (function () {
         markTopicRead(tid);
         ensureTopicPreviews(c, tid, saved);
       }
-      else if (topicBusy) body = dpLoading(dpT("正在为你整理这一章,大约需要一分钟…", "Preparing this chapter for you — about a minute…"), true);
+      else if (topicBusy) body = dpLoading(dpT("正在为你整理这一章，大约需要一分钟…", "Preparing this chapter for you — about a minute…"), true);
       else if (topicErrs[tid]) body = dpError(topicErrs[tid], "dpRetryT");
       else if (window.I18N.isEN()) body = '<div class="dp-card">' + missingLangHtml("dpGenT") + "</div>";
-      else body = dpLoading(dpT("正在为你整理这一章,大约需要一分钟…", "Preparing…"), true);
+      else body = dpLoading(dpT("正在为你整理这一章，大约需要一分钟…", "Preparing…"), true);
     }
     // 底部「上一个 / 1 of 9 / 下一个」主题导航已整组移除(含其 wrapper 与留白)
     const foot = dpReturnFoot();
@@ -14202,7 +14214,7 @@ window.Guide = (function () {
     if (c && curResult) r = window.Reading.reviveReading(c[window.Reading.LK("reading")]);
     if (!c || !curResult) body = dpNeedChart();
     else if (!r) {
-      if (autoGenBusy) body = dpLoading(dpT("正在为你整理生命蓝图,大约需要一分钟…", "Preparing your blueprint — about a minute…"), true);
+      if (autoGenBusy) body = dpLoading(dpT("正在为你整理生命蓝图，大约需要一分钟…", "Preparing your blueprint — about a minute…"), true);
       else body = '<div class="dp-card dp-loading"><span class="g">✹</span>' +
         dpT("你的生命蓝图还没有生成。", "Your blueprint hasn’t been created yet.") +
         '<br><button class="dp-cta" style="margin-top:16px" id="dpGenB">' + dpT("现在生成", "Generate now") + "</button></div>";
@@ -15854,9 +15866,9 @@ window.Guide = (function () {
             return window.Cloud.refresh()
               .then(function () {
                 const t2 = cpLiveSession();
-                if (!t2) throw new Error("http 401 · 会话已过期,请重新登入");
+                if (!t2) throw new Error("http 401 · 会话已过期，请重新登入");
                 return send(t2.token, 2);
-              }, function () { throw new Error("http 401 · 会话已过期,请重新登入"); });
+              }, function () { throw new Error("http 401 · 会话已过期，请重新登入"); });
           }
           if (!x.o) {
             rec.note = "non-json-" + x.r.status;
@@ -15890,7 +15902,7 @@ window.Guide = (function () {
       if (!sess) {
         return Promise.reject(new Error(
           "Live Compass generation requires an authenticated Supabase session." +
-          "(需要登入中的 session 才会送出;不会改用 anon key 顶替)"));
+          "(需要登入中的 session 才会送出；不会改用 anon key 顶替)"));
       }
       return send(sess.token, 1);
     };
@@ -15910,7 +15922,7 @@ window.Guide = (function () {
     const vm = cpPvBuild();
     if (!vm) return bail(caseId === "CURRENT"
       ? "还没有你自己的星盘可以用(curResult 是空的)—— 先回 #/my-sky 等星盘算好再回来"
-      : "这张盘算不出结果:" + (cpPvError || "unknown"));
+      : "这张盘算不出结果：" + (cpPvError || "unknown"));
     let transport;
     if (cpPvMode === "recorded") {
       if (!RC || RC.CASES.indexOf(caseId) < 0) {
@@ -15957,7 +15969,7 @@ window.Guide = (function () {
     const reqVer = (g && g.meta && g.meta.promptVersion) || null;
     const srvVer = (cpPvLastServer && cpPvLastServer.promptVersion) || null;
     L.push("requestedPromptVersion  " + (reqVer || "(尚未生成)"));
-    L.push("serverPromptVersion     " + (srvVer || (cpPvMode === "live" ? "(没有回应)" : "(不适用:非 live)")));
+    L.push("serverPromptVersion     " + (srvVer || (cpPvMode === "live" ? "(没有回应)" : "(不适用：非 live)")));
     if (reqVer && srvVer && reqVer !== srvVer) L.push("⚠ PROMPT VERSION MISMATCH");
     L.push("contract        input " + (G ? G.INPUT_CONTRACT_VERSION : "?") +
            "   output " + (G ? G.OUTPUT_SCHEMA_VERSION : "?") +
@@ -16078,7 +16090,7 @@ window.Guide = (function () {
       L.push("-- attempt 2 --");
       L.push("  validation " + (g.status === "ok" ? "PASS" : "FAIL"));
       L.push("  accepted   " + (g.copies ? Object.keys(g.copies).join(", ") : "(无)"));
-      L.push("  注:这是【内容】重试。HTTP 401 续期属于传输层,两者不共用额度。");
+      L.push("  注：这是【内容】重试。HTTP 401 续期属于传输层，两者不共用额度。");
     }
     return L.join("\n");
   }
@@ -16137,7 +16149,7 @@ window.Guide = (function () {
         '<div class="cp-warn">' + esc0(cpPvMode === "live"
           ? dpT("DEV ONLY · 按下按钮才会真的呼叫一次 API。切换测试盘、重画页面都不会自动呼叫。",
                 "DEV ONLY · one real API call per button press. Switching cases never calls it.")
-          : dpT("DEV ONLY · 这是已录制的 Claude 生成结果,不是这次打出去的 API 回应。",
+          : dpT("DEV ONLY · 这是已录制的 Claude 生成结果，不是这次打出去的 API 回应。",
                 "DEV ONLY · recorded Claude output, not a live API response.")) + "</div>") +
       '<div class="bar-row"><label class="cp-devtog"><input type="checkbox" id="cpPvDev"' +
       (cpPvShowDev ? " checked" : "") + ">" +
@@ -16289,7 +16301,7 @@ window.Guide = (function () {
   function cpPvGridHtml() {
     if (cpPvError) {
       return '<p class="cp-pv-err" style="font-size:13px;color:#8a3b3b">' +
-        esc0(dpT("原型载入失败:", "Prototype failed to load: ") + cpPvError) + "</p>";
+        esc0(dpT("原型载入失败：", "Prototype failed to load: ") + cpPvError) + "</p>";
     }
     if (!cpPvReady) {
       return '<p style="font-size:13px;color:var(--dp-mut)">' +
@@ -17166,7 +17178,7 @@ window.Guide = (function () {
             '<button class="save-badge' + (confirming ? " confirm" : "") + '" data-fav-rm="' + k + '">' +
             '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8">' +
             '<path d="M6 4h12v16l-6-4-6 4V4z"></path></svg>' +
-            '<span>' + (confirming ? dpT("确定取消?", "Confirm remove?") : dpT("已收藏", "Saved")) + '</span>' +
+            '<span>' + (confirming ? dpT("确定取消？", "Confirm remove?") : dpT("已收藏", "Saved")) + '</span>' +
             '</button>' + (confirming ? '</span>' : '') + '</div></div>';
         }).join("") + '</div>' : "") +
         '<div class="dp-card dp-loading fav-nomatch" hidden><span class="g">✦</span>' +
@@ -17318,7 +17330,7 @@ window.Guide = (function () {
       '<div class="dp-card">' +
       '<div class="dp-sec-label">' + dpT("出生资料", "YOUR BIRTH DATA") + '</div>' +
       '<div class="dp-prose" style="margin-bottom:22px">' +
-      dpT("这些资料只用来计算你的星盘。出生时间会决定上升与宫位,请尽量填写准确。",
+      dpT("这些资料只用来计算你的星盘。出生时间会决定上升与宫位，请尽量填写准确。",
           "These details are used only to calculate your chart. Birth time determines your rising sign and houses.") +
       '</div>' +
       '<div class="dp-form">' +
@@ -17340,7 +17352,7 @@ window.Guide = (function () {
       '" style="margin-bottom:8px">' +
       '<select id="obCity"><option value="">' + esc0(dpT("先输入出生地点", "Type your birthplace first")) + '</option></select>' +
       '<span class="hint" id="obPlaceInfo">' +
-      dpT("城市或州属都可以搜,中英文皆可(柔佛 / Johor)。选好之后我们会自动取得经纬度与当时的时区。",
+      dpT("城市或州属都可以搜，中英文皆可(柔佛 / Johor)。选好之后我们会自动取得经纬度与当时的时区。",
           "Search by city or state, in English or Chinese (Johor / 柔佛). Once you pick a place we resolve its coordinates and the time zone in force that day.") +
       '</span></div>' +
       '<div class="dp-form-msg" id="obMsg"></div>' +
@@ -17385,7 +17397,7 @@ window.Guide = (function () {
           ensurePlaces()
             .then(function () { obRefresh(obSearch.value); if (!obPicked) obInfo.textContent = ""; })
             .catch(function () {
-              obInfo.textContent = dpT("地点资料载入失败,请检查网络后重试。",
+              obInfo.textContent = dpT("地点资料载入失败，请检查网络后重试。",
                                        "Could not load place data. Check your connection and try again.");
             });
           return;
@@ -17436,7 +17448,7 @@ window.Guide = (function () {
       try {
         stampBirthUtc(c);
       } catch (e) {
-        msg.textContent = dpT("这个出生时间在当地的时区规则下无法解析,请再确认一次。",
+        msg.textContent = dpT("这个出生时间在当地的时区规则下无法解析，请再确认一次。",
                               "That local time can’t be resolved in this place’s time zone. Please double-check it.");
         return;
       }
