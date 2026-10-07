@@ -133,7 +133,7 @@
   .sky-auth-brand{font-family:"Cormorant Garamond",Georgia,serif;font-weight:300;font-size:16px;letter-spacing:.42em;
     color:rgba(249,246,242,.72);text-align:center;margin-bottom:22px}
   .sky-auth-brand .s{color:#e8d3a2}
-  .sky-auth-title{font-family:"LXGW WenKai Screen","Noto Serif SC",Georgia,serif;font-weight:500;font-size:22px;letter-spacing:.06em;
+  .sky-auth-title{font-family:"Noto Serif SC",Georgia,serif;font-weight:500;font-size:22px;letter-spacing:.06em;
     color:#f9f6f2;text-align:center;margin-bottom:8px}
   .sky-auth-sub{font-size:12.5px;color:rgba(249,246,242,.56);text-align:center;margin-bottom:26px;line-height:1.9;font-weight:300}
   .sky-auth-card .field label{color:rgba(249,246,242,.6);font-size:11.5px;letter-spacing:.1em}
@@ -407,6 +407,7 @@
     --dp-grad:linear-gradient(135deg,#8176ad 0%,#e9b9b6 100%);
     --dp-serif:"LXGW WenKai Screen","Noto Serif SC",Georgia,serif;
     --font-serif-sc:"LXGW WenKai Screen","Noto Serif SC",Georgia,serif;
+    --dp-song:"Noto Serif SC",Georgia,serif;   /* 原本的宋体:hero、按钮、引言用这个(用户要求) */
     --dp-sans:"Noto Sans SC","Helvetica Neue",Arial,sans-serif;
     --dp-display:"Cormorant Garamond",Georgia,serif;
     /* 阅读宽度:外层容器较宽(空间感),正文栏另外限制(行长仍然好读)。
@@ -7580,6 +7581,13 @@
       margin-right:max(clamp(-60px,-4vw,-30px), calc((100% - 1180px) / 2))
     }
   }
+  /* 用户:内页其他地方用霞鹜文楷,但 hero、按钮、引言换回原本的宋体。
+     这些地方原本都是 font-family:var(--dp-serif),所以只要在这些元素上把
+     --dp-serif 换成 --dp-song(Noto Serif SC),它们与里面的字就一起换回去 */
+  #dpage .dp-hero,
+  #dpage button, #dpage .dp-cta, #dpage a.dp-link,
+  #dpage .dp-quote, #dpage .tp-intro, #dpage p.pq, #dpage .dp-keep .q,
+  #dpage .dp-return .say, #dpage .dp-wait-q, #dpage blockquote{--dp-serif:var(--dp-song)}
 </style>
 </head>
 <!-- legacy-off 直接写在标签上,不等 JS。
