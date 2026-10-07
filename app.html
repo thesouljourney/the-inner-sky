@@ -7548,6 +7548,25 @@
     #dpage.thread-page .ch-card:hover{transform:none}
     #dpage.thread-page .thread-chapters .ch-card .go:hover{background:#fffdf9;border-color:rgba(196,152,72,.85)}
   }
+  /* 用户:每一页的 header 缩放时要跟 footer 一样,跟着卡片一起缩。
+     原本顶栏(logo / 返回 / 账号)贴着 hero 两侧(左右 6vw、最多 120px),标题另用一组
+     阶梯宽度;页尾与正文则是「--dp-wide 置中 + 左右 clamp(18px,4vw,48px)」。
+     现在 hero 本身不留左右内距,顶栏与标题区都套用页尾那一套,三者左右边界一致。
+     「我的星空」手机版 hero 是另一套直式版型(置中、底图拱门),手机上不套用 */
+  #dpage:not(.sky-page) .dp-hero{padding-left:0;padding-right:0}
+  #dpage:not(.sky-page) .dp-hero > .dp-topbar,
+  #dpage:not(.sky-page) .dp-hero > .dp-hero-grid{
+    box-sizing:border-box;max-width:var(--dp-wide);margin-left:auto;margin-right:auto;
+    padding-left:clamp(18px,4vw,48px);padding-right:clamp(18px,4vw,48px)
+  }
+  @media(min-width:768px){
+    #dpage.sky-page .dp-hero{padding-left:0;padding-right:0}
+    #dpage.sky-page .dp-hero > .dp-topbar,
+    #dpage.sky-page .dp-hero > .dp-hero-grid{
+      box-sizing:border-box;max-width:var(--dp-wide);margin-left:auto;margin-right:auto;
+      padding-left:clamp(18px,4vw,48px);padding-right:clamp(18px,4vw,48px)
+    }
+  }
 </style>
 </head>
 <!-- legacy-off 直接写在标签上,不等 JS。
