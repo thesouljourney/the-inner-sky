@@ -4465,17 +4465,19 @@
   /* 用户:卡片要跟背景图一起滚 —— 底图不再 position:fixed 钉在视窗上,
      改挂在正文(.dp-body)后面、横跨整个视窗宽,跟着内容一起卷动。
      图本身只有一屏高:先放原图(高 = max(视窗宽 × 1.25, 视窗高),比例跟原图 4:5 一样),
-     图的最下面 320px 淡进底色,再接每个主题自己的柔焦云雾(<主题>-tail.webp,
-     由原图最下方的云层做成、上下镜像,可以无缝重复)一路铺到页底。
+     图的最下面 480px 轻轻淡进底色(只淡到 42%,不压太深),
+     接一段过渡(<主题>-bridge.webp:云的浓度从 58% 慢慢降到 32%,高 = 原图 × 0.48),,再接每个主题自己的柔焦云雾(<主题>-tail.webp,
+     由原图最下方的云层做成、上下镜像,可以无缝重复;只留约 32% 的云,很淡)一路铺到页底。
      云雾图高 = 原图高 × 0.24。整层仍然是 --tp-bg-a 的浓度。 */
   #dpage.topic-page .dp-body::before{
     --tp-h:max(125vw, 100svh);
     content:"";position:absolute;z-index:-1;pointer-events:none;
     top:0;bottom:0;left:calc(50% - 50vw);width:100vw;
     background:
-      linear-gradient(180deg,rgba(247,243,239,0),rgba(247,243,239,.4)) center calc(var(--tp-h) - 320px) / 100% 320px no-repeat,
+      linear-gradient(180deg,rgba(247,243,239,0),rgba(247,243,239,.42)) center calc(var(--tp-h) - 480px) / 100% 480px no-repeat,
       var(--tp-bg,none) center top / auto var(--tp-h) no-repeat,
-      var(--tp-bg-tail,none) center var(--tp-h) / auto calc(var(--tp-h) * .24) repeat-y;
+      var(--tp-bg-bridge,none) center var(--tp-h) / auto calc(var(--tp-h) * .48) no-repeat,
+      var(--tp-bg-tail,none) center calc(var(--tp-h) * 1.48) / auto calc(var(--tp-h) * .24) repeat-y;
     opacity:calc(var(--tp-bg-on,0) * var(--tp-bg-a,.5))
   }
   #dpage.topic-page .dp-body{isolation:isolate}
@@ -13924,7 +13926,8 @@ window.Guide = (function () {
     if (on) {
       host.style.setProperty("--tp-bg", 'url("' + TOPIC_BG_DIR + tid + '.webp")');
       host.style.setProperty("--tp-bg-tail", 'url("' + TOPIC_BG_DIR + tid + '-tail.webp")');
-    } else { host.style.removeProperty("--tp-bg"); host.style.removeProperty("--tp-bg-tail"); }
+      host.style.setProperty("--tp-bg-bridge", 'url("' + TOPIC_BG_DIR + tid + '-bridge.webp")');
+    } else { ["--tp-bg", "--tp-bg-tail", "--tp-bg-bridge"].forEach(function (k) { host.style.removeProperty(k); }); }
   }
   /* 开场引言金框的颜色。描边 / 引号直接吃 --tp-accent 这个变数就够,
      但四角那个十字饰记是一张 data-URI 的 SVG —— 颜色是烧在 SVG 字串
