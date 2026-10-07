@@ -6787,6 +6787,30 @@
     border:1px solid rgba(170,160,213,.4);border-radius:20px;padding:11px 22px;
     box-shadow:0 10px 30px rgba(9,18,46,.3);opacity:0;pointer-events:none;transition:opacity .3s}
   #dpToast.on{opacity:1}
+  /* 付费说明浮窗(目前只在 #/checkout-test 用到):挂在 body 上,不受 #dpage 重绘影响 */
+  .pw-overlay{position:fixed;inset:0;z-index:96;display:none;align-items:center;justify-content:center;padding:20px;
+    background:rgba(9,18,46,.46);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
+  .pw-overlay.on{display:flex}
+  .pw-modal{position:relative;width:min(100%,380px);max-height:calc(100vh - 40px);overflow:auto;text-align:center;
+    padding:32px 26px 24px;border-radius:24px;background:linear-gradient(180deg,#fffcf6,#fbf5ec);
+    border:1px solid rgba(201,178,140,.4);box-shadow:0 24px 60px rgba(9,18,46,.3);animation:dpPop .2s ease-out;
+    font-family:"Noto Sans SC","Helvetica Neue",Arial,sans-serif;color:#22233a}
+  .pw-star{display:block;font-size:20px;color:#c49a6c;line-height:1}
+  .pw-modal h3{margin:12px 0 18px;font-family:"LXGW WenKai Screen","Noto Serif SC",Georgia,serif;font-weight:700;
+    font-size:22px;letter-spacing:.1em;color:#23264f}
+  .pw-prod{font-family:"LXGW WenKai Screen","Noto Serif SC",Georgia,serif;font-size:15px;letter-spacing:.04em;color:#4d4b62}
+  .pw-price{margin:10px 0 4px;font-family:"Cormorant Garamond",Georgia,serif;font-size:34px;font-weight:500;color:#23264f}
+  .pw-price small{font-size:14px;letter-spacing:.12em;color:#77778a}
+  .pw-desc{margin:0 0 18px;font-size:13px;line-height:1.8;color:#77778a}
+  .pw-msg{margin:0 0 12px;font-size:12.5px;line-height:1.7;color:#b0534e}
+  .pw-msg:empty{display:none}
+  .pw-go{display:flex;align-items:center;justify-content:center;width:100%;min-height:48px;border:0;border-radius:999px;
+    cursor:pointer;background:#23264f;color:#fff;font-family:"LXGW WenKai Screen","Noto Serif SC",Georgia,serif;
+    font-size:15.5px;letter-spacing:.12em;box-shadow:0 10px 26px rgba(35,38,79,.25)}
+  .pw-later{margin-top:8px;width:100%;min-height:42px;border:0;background:none;cursor:pointer;
+    font-family:inherit;font-size:13px;letter-spacing:.08em;color:#77778a}
+  .pw-go:disabled,.pw-later:disabled{opacity:.6;cursor:default}
+  .pw-go:focus-visible,.pw-later:focus-visible{outline:2px solid #e8d3a2;outline-offset:2px}
   /* 收藏页:句子星空 —— 用户给的参考图那种版式:顶上一条搜索 + 排序的
      小工具条,底下每一句收藏各自一张独立卡片(不再挤在同一张大卡里),
      卡片左上角一个大引号、来源换成一颗色块小标签、右下角书签图示
@@ -8542,6 +8566,40 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     });
   }
 
+  /* ── Stripe Checkout(目前只有 Sandbox)────────────────────────
+     前端只拿使用者自己的 Supabase access_token 去换一个 Checkout 网址;
+     Stripe 的任何金钥都只存在 Edge Function 的 Secrets 里,这里一把都没有。
+     令牌过期(401)→ 续期一次再试;还是 401 → 交给上层要求重新登入。 */
+  const CHECKOUT_FUNC_URL = SUPABASE_URL + "/functions/v1/create-checkout-session";
+  function needLoginErr() {
+    const e = new Error("会话已过期，请重新登录");
+    e.needLogin = true;
+    return e;
+  }
+  function createCheckout(retried) {
+    if (!session || !session.access_token) return Promise.reject(needLoginErr());
+    return netFetch(CHECKOUT_FUNC_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": "Bearer " + session.access_token },
+      body: "{}"
+    }).then(function (r) {
+      if (r.status === 401) {
+        if (retried) throw needLoginErr();
+        return refresh().then(function () { return createCheckout(true); }, function (e) {
+          // 令牌被拒 / 根本没有 refresh_token → 只能重新登入;断网之类的就照原样报错
+          throw (!e || e.hard || !session || !session.refresh_token) ? needLoginErr() : e;
+        });
+      }
+      return r.json().catch(function () { return {}; }).then(function (d) {
+        if (!r.ok) throw new Error((d && d.error) || ("HTTP " + r.status));
+        const url = d && typeof d.url === "string" ? d.url : "";
+        // 只跳去 Stripe 自己的 Checkout 网域,回来的若不是就不跳
+        if (!/^https:\/\/checkout\.stripe\.com\//.test(url)) throw new Error("没有拿到付款页面网址");
+        return url;
+      });
+    });
+  }
+
   window.Cloud = {
     hasSession: function () { return !!session; },
     // 跨日 → 需要重新登入(不是因为闲置多久,而是「登入有效至当天结束」)
@@ -8556,7 +8614,8 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     requestPasswordReset: requestPasswordReset, adoptSession: adoptSession, updatePassword: updatePassword,
     loadCharts: loadCharts, insertChart: insertChart, updateChart: updateChart, deleteChart: deleteChart,
     loadPrefs: loadPrefs, savePrefs: savePrefs, uuid: uuid,
-    migrateLegacy: migrateLegacy
+    migrateLegacy: migrateLegacy,
+    createCheckout: function () { return createCheckout(false); }
   };
 })();
 </script>
@@ -12611,6 +12670,8 @@ window.Guide = (function () {
     if ((m = h.match(/^#\/records\/(note|answer)$/))) return { k: "records", f: m[1] };
     if (h === "#/onboarding") return { k: "onboarding" };
     if (h === "#/settings") return { k: "settings" };
+    /* Stripe Sandbox 测试入口:不在任何导航里,只有直接打网址才会进来 */
+    if (h === "#/checkout-test") return { k: "checkouttest" };
     if (h === "#/login") return { k: "login" };
     return null;
   }
@@ -12729,6 +12790,8 @@ window.Guide = (function () {
     if (curRoute.k === "onboarding") return true;
     // 设置只处理 Profile 显示名称,与星盘资料无关,不需要先有星盘
     if (curRoute.k === "settings") return true;
+    // 付款测试入口只需要登入(要拿当前使用者的令牌),跟星盘资料无关
+    if (curRoute.k === "checkouttest") return true;
     // 只有「资料库确认这个帐号从来没有建立过星盘」才允许进入建立页面。
     // 去 onboarding 之前先把原本想去的地方记下来,填完资料能自己走回去。
     if (!hasCompleteBirthProfile()) {
@@ -12767,6 +12830,8 @@ window.Guide = (function () {
     if (!chartsSettled) { applyRoute(); return; }
     // 从 Header 登入 / 注册进来的:回到落地页最顶部(有完整资料才算走完流程)
     if (returnToLanding && hasCompleteBirthProfile()) { location.href = LANDING_URL; return; }
+    // 付款测试入口只需要登入,没有出生资料也不必先去填
+    if (!hasCompleteBirthProfile() && location.hash === "#/checkout-test") { applyRoute(); return; }
     if (!hasCompleteBirthProfile()) {
       // 去填资料之前先记住原本要去的地方,填完才走得回去。
       // (routeGuard 那条路径本来就有记,这里以前漏了,使用者填完只会掉到 #/reading。)
@@ -12849,6 +12914,7 @@ window.Guide = (function () {
     else if (r.k === "records") renderRecordsPage();
     else if (r.k === "onboarding") renderOnboardingPage();
     else if (r.k === "settings") renderSettingsPage();
+    else if (r.k === "checkouttest") renderCheckoutTestPage();
   }
   /* ============================================================
      页面渲染会用到的模块级常数与状态
@@ -12868,6 +12934,19 @@ window.Guide = (function () {
   let readingKeepTop = null;    // 换章标签点击时章节卡在视窗里的位置,重绘后原地放回
   let favFilter = "all", favSortNew = true, favConfirmKey = null, favSearch = "";
   let saveTipEl = null, toastEl = null, pendingSel = null;
+  /* 从 Stripe Checkout 回来时网址上带的结果(?checkout=success|cancel&session_id=...)。
+     读进记忆体之后就从网址上拿掉 —— 重新整理不会再跳一次提示。 */
+  const checkoutReturn = (function () {
+    const q = new URLSearchParams(location.search || "");
+    const st = q.get("checkout");
+    if (st !== "success" && st !== "cancel") return null;
+    const sid = q.get("session_id") || "";
+    q.delete("checkout"); q.delete("session_id");
+    const rest = q.toString();
+    try { history.replaceState(null, "", location.pathname + (rest ? "?" + rest : "") + location.hash); } catch (e) { }
+    return { status: st, sessionId: /^cs_[A-Za-z0-9_]+$/.test(sid) ? sid : "" };
+  })();
+  let paywallEl = null, paywallBusy = false, paywallReturnFocus = null;
 
 
   /* ↓ 以下几组常数原本写在下面的渲染函式旁边,但 render*Page 在冷启动那一刻就会用到它们,
@@ -17305,6 +17384,109 @@ window.Guide = (function () {
      · Email / Password = 登入凭证,不在这里、也不会因此改变
      · Birth Data / Natal Chart = 建立后锁定,Username 修改不触发任何重新计算
      ============================================================ */
+  /* ============================================================
+     Stripe Sandbox 测试入口(#/checkout-test)
+     ------------------------------------------------------------
+     第一轮只验证一件事:当前登入的使用者付完款之后,
+     purchases.user_id 记下来的是他自己的 UUID。
+     · 不拦截任何正式主题、不解锁任何内容
+     · 前端只送自己的 Supabase access_token,金钥全在 Edge Function 里
+     ============================================================ */
+  function renderCheckoutTestPage() {
+    if (!window.Cloud.hasSession()) { requireLogin("none"); return; }
+    let status = "";
+    if (checkoutReturn && checkoutReturn.status === "success") {
+      status = '<div class="dp-note"><span class="ic" aria-hidden="true">✦</span><span>' +
+        "测试付款已完成。Stripe 会通知后台写入 purchases，几秒后就能在 Supabase 看到这一笔。" +
+        (checkoutReturn.sessionId ? "<br>Checkout Session：<code>" + esc0(checkoutReturn.sessionId) + "</code>" : "") +
+        "</span></div>";
+    } else if (checkoutReturn && checkoutReturn.status === "cancel") {
+      status = '<div class="dp-note"><span class="ic" aria-hidden="true">✦</span><span>' +
+        "这次没有付款，什么都没有被扣。" + "</span></div>";
+    }
+    const body =
+      '<div class="dp-card">' +
+      '<div class="dp-sec-label">SANDBOX</div>' +
+      '<div class="dp-form">' +
+      status +
+      '<div class="dp-field"><label>当前登录用户 UUID</label>' +
+      '<input type="text" readonly value="' + esc0(window.Cloud.userId() || "") + '">' +
+      '<span class="hint">付款完成后，purchases.user_id 应该和这一串一样。</span></div>' +
+      '<div class="dp-note"><span class="ic" aria-hidden="true">✦</span><span>' +
+      "这是 Stripe Sandbox 测试入口，请使用 Stripe 的测试卡（例如 4242 4242 4242 4242）。这里不会解锁任何内容。" +
+      '</span></div>' +
+      '<button class="dp-cta" id="ckOpen" style="justify-self:start">打开付费说明</button>' +
+      '</div></div>';
+    dpScaffold({
+      chip: "Sandbox",
+      title: "付款测试",
+      sub: "只用来确认付款能对上你的账号",
+      body: body, foot: "",
+      backLabel: dpT("返回", "Back"), backHref: LANDING_URL, seed: 61
+    });
+    const b = document.getElementById("ckOpen");
+    if (b) b.addEventListener("click", function () { openPaywall(b); });
+  }
+
+  function openPaywall(opener) {
+    paywallReturnFocus = opener || document.activeElement;
+    if (!paywallEl) {
+      paywallEl = document.createElement("div");
+      paywallEl.className = "pw-overlay";
+      paywallEl.innerHTML =
+        '<div class="pw-modal" role="dialog" aria-modal="true" aria-labelledby="pwTitle">' +
+        '<span class="pw-star" aria-hidden="true">✦</span>' +
+        '<h3 id="pwTitle">继续阅读属于你的故事</h3>' +
+        '<div class="pw-prod">The Inner Sky｜完整星空解读</div>' +
+        '<div class="pw-price">S$24.90 <small>SGD</small></div>' +
+        '<p class="pw-desc">一次性解锁完整主题阅读</p>' +
+        '<p class="pw-msg" id="pwMsg" role="alert"></p>' +
+        '<button type="button" class="pw-go" id="pwGo">解锁完整星空</button>' +
+        '<button type="button" class="pw-later" id="pwLater">暂时不要</button>' +
+        '</div>';
+      document.body.appendChild(paywallEl);
+      paywallEl.addEventListener("click", function (ev) { if (ev.target === paywallEl) closePaywall(); });
+      paywallEl.querySelector("#pwLater").addEventListener("click", closePaywall);
+      paywallEl.querySelector("#pwGo").addEventListener("click", startCheckout);
+      document.addEventListener("keydown", function (ev) {
+        if (ev.key === "Escape" && paywallEl && paywallEl.classList.contains("on")) closePaywall();
+      });
+    }
+    setPaywallBusy(false);
+    paywallEl.querySelector("#pwMsg").textContent = "";
+    paywallEl.classList.add("on");
+    paywallEl.querySelector("#pwGo").focus();
+  }
+  function closePaywall() {
+    if (!paywallEl || paywallBusy) return;   // 正在建立付款页面时不让它半途关掉
+    paywallEl.classList.remove("on");
+    if (paywallReturnFocus && paywallReturnFocus.focus) { try { paywallReturnFocus.focus(); } catch (e) { } }
+  }
+  function setPaywallBusy(on) {
+    paywallBusy = on;
+    const go = paywallEl.querySelector("#pwGo"), later = paywallEl.querySelector("#pwLater");
+    go.disabled = on; later.disabled = on;
+    go.textContent = on ? "正在前往付款页…" : "解锁完整星空";
+  }
+  function startCheckout() {
+    if (paywallBusy) return;   // 连点不会建立两个 Checkout Session
+    setPaywallBusy(true);
+    paywallEl.querySelector("#pwMsg").textContent = "";
+    window.Cloud.createCheckout().then(function (url) {
+      // 成功就整页跳去 Stripe,按钮维持 busy,不让人再点一次
+      window.location.href = url;
+    }).catch(function (e) {
+      setPaywallBusy(false);
+      if (e && e.needLogin) {
+        closePaywall();
+        requireLogin("none");   // 登入完成后会回到 #/checkout-test
+        return;
+      }
+      paywallEl.querySelector("#pwMsg").textContent =
+        "暂时无法打开付款页面，请稍后再试。" + (e && e.message ? "（" + e.message + "）" : "");
+    });
+  }
+
   function renderSettingsPage() {
     if (!window.Cloud.hasSession()) { requireLogin("none"); return; }
     const cur = window.Cloud.nick() || "";
