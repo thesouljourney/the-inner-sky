@@ -7535,6 +7535,17 @@
     #dpage.thread-page .ch-card:hover{transform:none}
     #dpage.thread-page .thread-chapters .ch-card .go:hover{background:#fffdf9;border-color:rgba(196,152,72,.85)}
   }
+  /* 主题页底纹(手机):原本是 position:fixed + inset:0,刚好等于视窗高。
+     手机浏览器的网址列 / 工具列收起、或上下回弹时,视窗会瞬间变高,
+     这层跟不上就露出上下两条米白底(用户反馈)。
+     改成上下各多铺 25vh(用 lvh = 工具列收起后的最大视窗高度),怎么滑都盖得住;
+     图仍然是 cover、置中,只是多出来的部分落在画面外 */
+  @media(max-width:767px){
+    #dpage.topic-page::before{
+      inset:auto 0;top:-25vh;height:150vh;height:calc(100lvh + 50vh);
+      background-position:center center
+    }
+  }
 </style>
 </head>
 <!-- legacy-off 直接写在标签上,不等 JS。
