@@ -7585,6 +7585,14 @@
   #dpage button, #dpage .dp-cta, #dpage a.dp-link,
   #dpage .dp-quote, #dpage .tp-intro, #dpage p.pq, #dpage .dp-keep .q,
   #dpage .dp-return .say, #dpage .dp-wait-q, #dpage blockquote{--dp-serif:var(--dp-song)}
+  /* 主题页:最上面的开场引言与「值得记住」宋体太细,电脑上看不清楚(用户反馈)。
+     字体不变(思源宋体),字重提到 500、字号略放大、颜色用最深的墨色 */
+  #dpage.topic-page .tp-intro p{font-weight:500;font-size:clamp(15.5px,1.2vw,17.5px);color:#1d1f36}
+  #dpage.topic-page .dp-keep .q .bd{font-weight:500;font-size:16px;color:#1d1f36}
+  @media(max-width:520px){#dpage.topic-page .dp-keep .q .bd{font-size:15px}}
+  /* 生命脉络:跟主题页同样处理 —— 最上面的开场引言与「值得记住」加粗到 500、颜色最深 */
+  #dpage.thread-page .thread-open .dp-quote{font-weight:500;color:#1d1f36}
+  #dpage.thread-page .dp-keep .q .bd{font-weight:500;font-size:clamp(16px,1.75vw,18.5px);color:#1d1f36}
 </style>
 </head>
 <!-- legacy-off 直接写在标签上,不等 JS。
