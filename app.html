@@ -36,6 +36,9 @@
 })();
 </script>
 <!-- 简 / 繁 显示切换(与首页共用);要在字体与样式之前,繁体模式才能先藏起页面不闪简体 -->
+<!-- 宋体的地方改用霞鹜文楷 Screen(LXGW WenKai Screen,OFL 授权,只放简体字形那套;
+     按 unicode-range 分片,浏览器只下载页面上用到的字) -->
+<link rel="stylesheet" href="assets/fonts/lxgw-wenkai-screen/lxgwwenkaigbscreen.css">
 <script src="assets/zh-script.js"></script>
 <script src="assets/zh-punct.js"></script>
 <script src="assets/tips.js"></script>
@@ -130,7 +133,7 @@
   .sky-auth-brand{font-family:"Cormorant Garamond",Georgia,serif;font-weight:300;font-size:16px;letter-spacing:.42em;
     color:rgba(249,246,242,.72);text-align:center;margin-bottom:22px}
   .sky-auth-brand .s{color:#e8d3a2}
-  .sky-auth-title{font-family:"Noto Serif SC",Georgia,serif;font-weight:500;font-size:22px;letter-spacing:.06em;
+  .sky-auth-title{font-family:"LXGW WenKai Screen","Noto Serif SC",Georgia,serif;font-weight:500;font-size:22px;letter-spacing:.06em;
     color:#f9f6f2;text-align:center;margin-bottom:8px}
   .sky-auth-sub{font-size:12.5px;color:rgba(249,246,242,.56);text-align:center;margin-bottom:26px;line-height:1.9;font-weight:300}
   .sky-auth-card .field label{color:rgba(249,246,242,.6);font-size:11.5px;letter-spacing:.1em}
@@ -402,7 +405,8 @@
     --dp-lav:#aaa0d5; --dp-pink:#ebc4c3; --dp-gold:#e8d3a2;
     --dp-ink:#22233a; --dp-light:#f9f6f2; --dp-mut:#77778a; --dp-line:#f0e8e3;
     --dp-grad:linear-gradient(135deg,#8176ad 0%,#e9b9b6 100%);
-    --dp-serif:"Noto Serif SC",Georgia,serif;
+    --dp-serif:"LXGW WenKai Screen","Noto Serif SC",Georgia,serif;
+    --font-serif-sc:"LXGW WenKai Screen","Noto Serif SC",Georgia,serif;
     --dp-sans:"Noto Sans SC","Helvetica Neue",Arial,sans-serif;
     --dp-display:"Cormorant Garamond",Georgia,serif;
     /* 阅读宽度:外层容器较宽(空间感),正文栏另外限制(行长仍然好读)。
