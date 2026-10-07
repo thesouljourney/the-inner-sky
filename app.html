@@ -4466,14 +4466,14 @@
      改挂在正文(.dp-body)后面、横跨整个视窗宽,跟着内容一起卷动。
      图本身只有一屏高:先放原图(高 = max(视窗宽 × 1.25, 视窗高),比例跟原图 4:5 一样),
      图的最下面 320px 淡进底色,再接每个主题自己的柔焦云雾(<主题>-tail.webp,
-     由原图最下方的云层做成、上下镜像,可以无缝重复)一路铺到页底。
+     由原图最下方的云层做成、上下镜像,可以无缝重复;只留约 32% 的云,很淡)一路铺到页底。
      云雾图高 = 原图高 × 0.24。整层仍然是 --tp-bg-a 的浓度。 */
   #dpage.topic-page .dp-body::before{
     --tp-h:max(125vw, 100svh);
     content:"";position:absolute;z-index:-1;pointer-events:none;
     top:0;bottom:0;left:calc(50% - 50vw);width:100vw;
     background:
-      linear-gradient(180deg,rgba(247,243,239,0),rgba(247,243,239,.4)) center calc(var(--tp-h) - 320px) / 100% 320px no-repeat,
+      linear-gradient(180deg,rgba(247,243,239,0),rgba(247,243,239,.68)) center calc(var(--tp-h) - 320px) / 100% 320px no-repeat,
       var(--tp-bg,none) center top / auto var(--tp-h) no-repeat,
       var(--tp-bg-tail,none) center var(--tp-h) / auto calc(var(--tp-h) * .24) repeat-y;
     opacity:calc(var(--tp-bg-on,0) * var(--tp-bg-a,.5))
