@@ -36,6 +36,9 @@
 })();
 </script>
 <!-- 简 / 繁 显示切换(与首页共用);要在字体与样式之前,繁体模式才能先藏起页面不闪简体 -->
+<!-- 宋体的地方改用霞鹜文楷 Screen(LXGW WenKai Screen,OFL 授权,只放简体字形那套;
+     按 unicode-range 分片,浏览器只下载页面上用到的字) -->
+<link rel="stylesheet" href="assets/fonts/lxgw-wenkai-screen/lxgwwenkaigbscreen.css">
 <script src="assets/zh-script.js"></script>
 <script src="assets/zh-punct.js"></script>
 <script src="assets/tips.js"></script>
@@ -130,7 +133,7 @@
   .sky-auth-brand{font-family:"Cormorant Garamond",Georgia,serif;font-weight:300;font-size:16px;letter-spacing:.42em;
     color:rgba(249,246,242,.72);text-align:center;margin-bottom:22px}
   .sky-auth-brand .s{color:#e8d3a2}
-  .sky-auth-title{font-family:"Noto Serif SC",Georgia,serif;font-weight:500;font-size:22px;letter-spacing:.06em;
+  .sky-auth-title{font-family:"LXGW WenKai Screen","Noto Serif SC",Georgia,serif;font-weight:500;font-size:22px;letter-spacing:.06em;
     color:#f9f6f2;text-align:center;margin-bottom:8px}
   .sky-auth-sub{font-size:12.5px;color:rgba(249,246,242,.56);text-align:center;margin-bottom:26px;line-height:1.9;font-weight:300}
   .sky-auth-card .field label{color:rgba(249,246,242,.6);font-size:11.5px;letter-spacing:.1em}
@@ -402,7 +405,8 @@
     --dp-lav:#aaa0d5; --dp-pink:#ebc4c3; --dp-gold:#e8d3a2;
     --dp-ink:#22233a; --dp-light:#f9f6f2; --dp-mut:#77778a; --dp-line:#f0e8e3;
     --dp-grad:linear-gradient(135deg,#8176ad 0%,#e9b9b6 100%);
-    --dp-serif:"Noto Serif SC",Georgia,serif;
+    --dp-serif:"LXGW WenKai Screen","Noto Serif SC",Georgia,serif;
+    --font-serif-sc:"LXGW WenKai Screen","Noto Serif SC",Georgia,serif;
     --dp-sans:"Noto Sans SC","Helvetica Neue",Arial,sans-serif;
     --dp-display:"Cormorant Garamond",Georgia,serif;
     /* 阅读宽度:外层容器较宽(空间感),正文栏另外限制(行长仍然好读)。
@@ -7547,6 +7551,34 @@
   @media(hover:hover){
     #dpage.thread-page .ch-card:hover{transform:none}
     #dpage.thread-page .thread-chapters .ch-card .go:hover{background:#fffdf9;border-color:rgba(196,152,72,.85)}
+  }
+  /* 用户:每一页的 header 缩放时要跟 footer 一样,跟着卡片一起缩。
+     原本顶栏(logo / 返回 / 账号)贴着 hero 两侧(左右 6vw、最多 120px),标题另用一组
+     阶梯宽度;页尾与正文则是「--dp-wide 置中 + 左右 clamp(18px,4vw,48px)」。
+     现在 hero 本身不留左右内距,顶栏与标题区都套用页尾那一套,三者左右边界一致。
+     「我的星空」手机版 hero 是另一套直式版型(置中、底图拱门),手机上不套用 */
+  #dpage:not(.sky-page) .dp-hero{padding-left:0;padding-right:0}
+  #dpage:not(.sky-page) .dp-hero > .dp-topbar,
+  #dpage:not(.sky-page) .dp-hero > .dp-hero-grid{
+    box-sizing:border-box;max-width:var(--dp-wide);margin-left:auto;margin-right:auto;
+    padding-left:clamp(18px,4vw,48px);padding-right:clamp(18px,4vw,48px)
+  }
+  @media(min-width:768px){
+    #dpage.sky-page .dp-hero{padding-left:0;padding-right:0}
+    #dpage.sky-page .dp-hero > .dp-topbar,
+    #dpage.sky-page .dp-hero > .dp-hero-grid{
+      box-sizing:border-box;max-width:var(--dp-wide);margin-left:auto;margin-right:auto;
+      padding-left:clamp(18px,4vw,48px);padding-right:clamp(18px,4vw,48px)
+    }
+  }
+  /* 「我的星空」最后那张湖景卡片:宽度上限 1180px,原本左右各往外伸 30–60px;
+     内容栏比 1180px 宽的萤幕上,卡片被限宽后只剩左边往外伸,整张靠左(用户反馈)。
+     改成:内容栏够宽就置中;不够宽才照原本往两侧伸出去 */
+  @media(min-width:768px){
+    #dpage.sky-page .sky-close{
+      margin-left:max(clamp(-60px,-4vw,-30px), calc((100% - 1180px) / 2));
+      margin-right:max(clamp(-60px,-4vw,-30px), calc((100% - 1180px) / 2))
+    }
   }
 </style>
 </head>
@@ -16673,11 +16705,24 @@ window.Guide = (function () {
       cpBindDirections();
       const now = host.querySelector('.cp-ent[data-dir="' + k + '"]');
       if (fromClose && now) {
-        now.focus({ preventScroll: true });
+        // 只有用键盘收起时才把焦点交回按钮,滑鼠 / 手指点的不会冒出对焦框
+        if (fromClose === "kb") now.focus({ preventScroll: true });
         const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion:reduce)").matches;
         window.scrollTo({
           top: Math.max(0, window.scrollY + now.getBoundingClientRect().top - 96),
           behavior: reduce ? "auto" : "smooth"
+        });
+      } else if (compassDirOpen && document.getElementById("cpPanel")) {
+        /* 用户:跟其他展开区一样,点开之后画面带到这一段的开头,从头读起
+           (解读面板的顶端停在视窗上方约 96px) */
+        const panel = document.getElementById("cpPanel");
+        if (before !== null && now) window.scrollBy(0, now.getBoundingClientRect().top - before);
+        requestAnimationFrame(function () {
+          const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion:reduce)").matches;
+          window.scrollTo({
+            top: Math.max(0, window.scrollY + panel.getBoundingClientRect().top - 96),
+            behavior: reduce ? "auto" : "smooth"
+          });
         });
       } else if (before !== null && now) {
         window.scrollBy(0, now.getBoundingClientRect().top - before);
@@ -16688,7 +16733,7 @@ window.Guide = (function () {
         b0.addEventListener("click", function () { cpSelect(b0.getAttribute("data-dir")); });
       });
       const cl = document.getElementById("cpPanelClose");
-      if (cl) cl.addEventListener("click", function () { cpSelect(compassDirOpen, true); });
+      if (cl) cl.addEventListener("click", function (e) { cpSelect(compassDirOpen, e.detail === 0 ? "kb" : true); });
       /* 「为什么这适合我？」一直展开,不是点开才有的收合区块(桌机与手机
          现在共用同一套直排版型)。用 .open 属性做,不是硬改 CSS 去对抗
          浏览器原生收合的内部渲染(那一层在 Chrome 是靠 content-visibility
@@ -16740,6 +16785,15 @@ window.Guide = (function () {
         compassOpen = (compassOpen === id) ? "" : id;
         compassDelAsk = "";
         compassRepaint();
+        // 展开时如果这则的开头已经捲到画面上方看不到,带回开头(约视窗上方 96px)从头读
+        if (compassOpen === id) requestAnimationFrame(function () {
+          const card = document.querySelector('#dpage .cp-sky-card[data-entry="' + id + '"]');
+          if (!card) return;
+          const top = card.getBoundingClientRect().top;
+          if (top >= 80) return;
+          const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion:reduce)").matches;
+          window.scrollTo({ top: Math.max(0, window.scrollY + top - 96), behavior: reduce ? "auto" : "smooth" });
+        });
       });
     });
     host.querySelectorAll(".cp-del").forEach(function (b3) {
