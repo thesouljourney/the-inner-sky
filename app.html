@@ -7567,6 +7567,15 @@
       padding-left:clamp(18px,4vw,48px);padding-right:clamp(18px,4vw,48px)
     }
   }
+  /* 「我的星空」最后那张湖景卡片:宽度上限 1180px,原本左右各往外伸 30–60px;
+     内容栏比 1180px 宽的萤幕上,卡片被限宽后只剩左边往外伸,整张靠左(用户反馈)。
+     改成:内容栏够宽就置中;不够宽才照原本往两侧伸出去 */
+  @media(min-width:768px){
+    #dpage.sky-page .sky-close{
+      margin-left:max(clamp(-60px,-4vw,-30px), calc((100% - 1180px) / 2));
+      margin-right:max(clamp(-60px,-4vw,-30px), calc((100% - 1180px) / 2))
+    }
+  }
 </style>
 </head>
 <!-- legacy-off 直接写在标签上,不等 JS。
