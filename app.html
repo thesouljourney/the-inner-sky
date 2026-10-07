@@ -16705,11 +16705,24 @@ window.Guide = (function () {
       cpBindDirections();
       const now = host.querySelector('.cp-ent[data-dir="' + k + '"]');
       if (fromClose && now) {
-        now.focus({ preventScroll: true });
+        // 只有用键盘收起时才把焦点交回按钮,滑鼠 / 手指点的不会冒出对焦框
+        if (fromClose === "kb") now.focus({ preventScroll: true });
         const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion:reduce)").matches;
         window.scrollTo({
           top: Math.max(0, window.scrollY + now.getBoundingClientRect().top - 96),
           behavior: reduce ? "auto" : "smooth"
+        });
+      } else if (compassDirOpen && document.getElementById("cpPanel")) {
+        /* 用户:跟其他展开区一样,点开之后画面带到这一段的开头,从头读起
+           (解读面板的顶端停在视窗上方约 96px) */
+        const panel = document.getElementById("cpPanel");
+        if (before !== null && now) window.scrollBy(0, now.getBoundingClientRect().top - before);
+        requestAnimationFrame(function () {
+          const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion:reduce)").matches;
+          window.scrollTo({
+            top: Math.max(0, window.scrollY + panel.getBoundingClientRect().top - 96),
+            behavior: reduce ? "auto" : "smooth"
+          });
         });
       } else if (before !== null && now) {
         window.scrollBy(0, now.getBoundingClientRect().top - before);
@@ -16720,7 +16733,7 @@ window.Guide = (function () {
         b0.addEventListener("click", function () { cpSelect(b0.getAttribute("data-dir")); });
       });
       const cl = document.getElementById("cpPanelClose");
-      if (cl) cl.addEventListener("click", function () { cpSelect(compassDirOpen, true); });
+      if (cl) cl.addEventListener("click", function (e) { cpSelect(compassDirOpen, e.detail === 0 ? "kb" : true); });
       /* 「为什么这适合我？」一直展开,不是点开才有的收合区块(桌机与手机
          现在共用同一套直排版型)。用 .open 属性做,不是硬改 CSS 去对抗
          浏览器原生收合的内部渲染(那一层在 Chrome 是靠 content-visibility
@@ -16772,6 +16785,15 @@ window.Guide = (function () {
         compassOpen = (compassOpen === id) ? "" : id;
         compassDelAsk = "";
         compassRepaint();
+        // 展开时如果这则的开头已经捲到画面上方看不到,带回开头(约视窗上方 96px)从头读
+        if (compassOpen === id) requestAnimationFrame(function () {
+          const card = document.querySelector('#dpage .cp-sky-card[data-entry="' + id + '"]');
+          if (!card) return;
+          const top = card.getBoundingClientRect().top;
+          if (top >= 80) return;
+          const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion:reduce)").matches;
+          window.scrollTo({ top: Math.max(0, window.scrollY + top - 96), behavior: reduce ? "auto" : "smooth" });
+        });
       });
     });
     host.querySelectorAll(".cp-del").forEach(function (b3) {
