@@ -36,9 +36,6 @@
 })();
 </script>
 <!-- 简 / 繁 显示切换(与首页共用);要在字体与样式之前,繁体模式才能先藏起页面不闪简体 -->
-<!-- 宋体的地方改用霞鹜文楷 Screen(LXGW WenKai Screen,OFL 授权,只放简体字形那套;
-     按 unicode-range 分片,浏览器只下载页面上用到的字) -->
-<link rel="stylesheet" href="assets/fonts/lxgw-wenkai-screen/lxgwwenkaigbscreen.css">
 <script src="assets/zh-script.js"></script>
 <script src="assets/zh-punct.js"></script>
 <script src="assets/tips.js"></script>
@@ -405,8 +402,8 @@
     --dp-lav:#aaa0d5; --dp-pink:#ebc4c3; --dp-gold:#e8d3a2;
     --dp-ink:#22233a; --dp-light:#f9f6f2; --dp-mut:#77778a; --dp-line:#f0e8e3;
     --dp-grad:linear-gradient(135deg,#8176ad 0%,#e9b9b6 100%);
-    --dp-serif:"LXGW WenKai Screen","Noto Serif SC",Georgia,serif;
-    --font-serif-sc:"LXGW WenKai Screen","Noto Serif SC",Georgia,serif;
+    --dp-serif:"Noto Serif SC",Georgia,serif;
+    --font-serif-sc:"Noto Serif SC",Georgia,serif;
     --dp-song:"Noto Serif SC",Georgia,serif;   /* 原本的宋体:hero、按钮、引言用这个(用户要求) */
     --dp-sans:"Noto Sans SC","Helvetica Neue",Arial,sans-serif;
     --dp-display:"Cormorant Garamond",Georgia,serif;
@@ -619,7 +616,7 @@
   #dpage .dp-sec .dp-prose{font-size:15px;line-height:2.25}
   #dpage .dp-sec .dp-prose p{margin:0 0 18px}
   #dpage .dp-sec .dp-prose p:last-child{margin-bottom:0}
-  #dpage h3.dp-h{font-family:var(--dp-serif);font-weight:500;font-size:clamp(16px,1.8vw,20px);margin:0;color:var(--dp-ink)}
+  #dpage h3.dp-h{font-family:var(--dp-serif);font-weight:600;font-size:clamp(16px,1.8vw,20px);margin:0;color:var(--dp-ink)}
   #dpage .dp-h-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
   #dpage .dp-prose{font-size:14.5px;line-height:2.15;color:var(--dp-ink);font-weight:300}
   /* 容器加宽之后,正文一行仍然维持好读的长度(标题 / Divider / 图表 / 卡片不受限) */
@@ -647,7 +644,7 @@
   }
   #dpage .dp-keep .hd{display:flex;align-items:center;gap:11px;margin-bottom:clamp(18px,2.4vw,28px)}
   #dpage .dp-keep .hd .ic{flex:none;font-size:12px;color:var(--dp-lav)}
-  #dpage .dp-keep .hd .tx{font-family:var(--dp-serif);font-weight:500;font-size:14.5px;letter-spacing:.3em;color:var(--dp-ink)}
+  #dpage .dp-keep .hd .tx{font-family:var(--dp-serif);font-weight:600;font-size:14.5px;letter-spacing:.3em;color:var(--dp-ink)}
   #dpage .dp-keep .q{display:grid;grid-template-columns:auto minmax(0,1fr);gap:clamp(12px,1.6vw,20px);align-items:start}
   #dpage .dp-keep .q .mk{
     font-family:var(--dp-display);font-size:clamp(26px,3vw,38px);line-height:.9;color:var(--dp-lav);opacity:.45;
@@ -670,7 +667,7 @@
   #dpage .dp-reflect .eb .ic{flex:none;font-size:11px;color:var(--dp-lav)}
   #dpage .dp-reflect .eb .tx{font-family:var(--dp-sans);font-size:10.5px;letter-spacing:.3em;color:#8d86ab}
   #dpage .dp-reflect h3.rt{
-    font-family:var(--dp-serif);font-weight:500;font-size:clamp(20px,2.3vw,28px);line-height:1.5;
+    font-family:var(--dp-serif);font-weight:600;font-size:clamp(20px,2.3vw,28px);line-height:1.5;
     margin:0;color:var(--dp-ink)
   }
   #dpage .dp-reflect .rule{width:30px;height:1px;background:var(--dp-lav);opacity:.75;margin:14px 0 19px}
@@ -698,7 +695,7 @@
   #dpage .dp-rich .lb{color:#7a6fa8}
   #dpage .dp-rich p.qt{
     border-left:1px dashed rgba(170,160,213,.75);padding-left:16px;margin-left:2px;
-    font-family:var(--dp-serif)
+    font-family:var(--dp-serif);font-weight:500
   }
 
   /* ——「从这里开始」:进入正文前的 opening block —— */
@@ -706,7 +703,7 @@
   #dpage .dp-start-hd{display:flex;align-items:center;gap:14px;margin-bottom:14px}
   #dpage .dp-start-hd .ic{flex:none;font-size:13px;color:var(--dp-lav)}
   #dpage .dp-start-hd .tx{
-    flex:none;font-family:var(--dp-serif);font-weight:500;
+    flex:none;font-family:var(--dp-serif);font-weight:600;
     font-size:clamp(16px,1.7vw,19.5px);letter-spacing:.28em;color:var(--dp-ink)
   }
   #dpage .dp-start-hd .ln{flex:1;height:1px;background:linear-gradient(90deg,rgba(129,118,173,.32),rgba(129,118,173,.06) 76%,transparent)}
@@ -735,7 +732,7 @@
   }
   #dpage .dp-step .ct{border-left:1px solid var(--dp-line);padding-left:clamp(16px,2.2vw,28px)}
   #dpage .dp-step .ct b.t{
-    display:block;font-family:var(--dp-serif);font-weight:500;
+    display:block;font-family:var(--dp-serif);font-weight:600;
     font-size:clamp(16px,1.8vw,19.5px);line-height:1.7;color:var(--dp-ink);margin-bottom:12px
   }
   #dpage .dp-step .ct .bd{font-size:14px;line-height:2.1;color:var(--dp-ink);font-weight:300;max-width:var(--dp-text)}
@@ -756,7 +753,7 @@
   #dpage .dp-tabs button.on{color:var(--dp-ink);border-bottom-color:var(--dp-lav);font-weight:500}
   #dpage .dp-cards4{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px}
   #dpage .dp-cards4 .c4{border:1px solid var(--dp-line);border-radius:18px;background:var(--dp-cloud);padding:18px}
-  #dpage .dp-cards4 .c4 b{display:block;font-family:var(--dp-serif);font-weight:500;font-size:14.5px;margin-bottom:8px}
+  #dpage .dp-cards4 .c4 b{display:block;font-family:var(--dp-serif);font-weight:600;font-size:14.5px;margin-bottom:8px}
   #dpage .dp-cards4 .c4 div{font-size:13px;line-height:1.95;color:var(--dp-mut);font-weight:300}
   /* ------------------------------------------------------------
      连续阅读导航:一章读完之后的「上一个标题 / 下一个标题」出口
@@ -774,7 +771,7 @@
   }
   #dpage .dp-chnav .lb{font-size:11.5px;letter-spacing:.16em;color:var(--dp-mut);font-weight:400}
   #dpage .dp-chnav .tt{
-    font-family:var(--dp-serif);font-size:14px;line-height:1.62;font-weight:500;color:var(--dp-ink);
+    font-family:var(--dp-serif);font-size:14px;line-height:1.62;font-weight:600;color:var(--dp-ink);
     display:-webkit-box;-webkit-line-clamp:2;line-clamp:2;-webkit-box-orient:vertical;overflow:hidden
   }
   #dpage .dp-chnav .nx{text-align:right}
@@ -791,7 +788,7 @@
   #dpage .dp-big3 .b3{display:flex;gap:12px;align-items:center;border:1px solid var(--dp-line);border-radius:18px;background:var(--dp-cloud);padding:14px 16px}
   #dpage .dp-big3 .b3 .ic{width:38px;height:38px;border-radius:50%;background:rgba(170,160,213,.18);display:flex;align-items:center;justify-content:center;color:#6a5fa0;flex:none}
   #dpage .dp-big3 .b3 small{display:block;font-size:11.5px;color:var(--dp-mut);letter-spacing:.08em}
-  #dpage .dp-big3 .b3 b{font-family:var(--dp-serif);font-weight:500;font-size:16px}
+  #dpage .dp-big3 .b3 b{font-family:var(--dp-serif);font-weight:600;font-size:16px}
   /* 星盘 section:左盘右读数(Desktop),Mobile 自然纵向流 */
   #dpage .dp-chart-wrap{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(20px,3vw,40px);align-items:center}
   #dpage .dp-wheel{width:100%;max-width:420px;height:auto;display:block;margin:0 auto;overflow:visible}
@@ -807,13 +804,13 @@
   #dpage .isky2 .isky2-tip{pointer-events:none;background:rgba(252,249,246,.92);backdrop-filter:blur(10px);
     border:1px solid rgba(170,160,213,.28);border-radius:14px;padding:10px 16px;text-align:center;
     box-shadow:0 10px 28px rgba(34,35,58,.08)}
-  #dpage .isky2 .isky2-tip .t{font-family:var(--dp-serif);font-size:14px;color:var(--dp-ink)}
+  #dpage .isky2 .isky2-tip .t{font-family:var(--dp-serif);font-weight:500;font-size:14px;color:var(--dp-ink)}
   #dpage .isky2 .isky2-tip .b{margin-top:3px;font-size:12px;color:var(--dp-mut)}
   #dpage .isky2 .isky2-sign{pointer-events:auto;width:min(360px,86%);background:rgba(252,249,246,.95);
     backdrop-filter:blur(12px);border:1px solid rgba(170,160,213,.28);
     border-radius:18px;padding:16px 18px;box-shadow:0 16px 44px rgba(34,35,58,.1);text-align:left}
   #dpage .isky2 .isky2-sign .row{display:flex;align-items:center;justify-content:space-between;gap:12px}
-  #dpage .isky2 .isky2-sign .ttl{display:flex;align-items:center;gap:10px;font-family:var(--dp-serif);font-size:16px;color:var(--dp-ink)}
+  #dpage .isky2 .isky2-sign .ttl{display:flex;align-items:center;gap:10px;font-family:var(--dp-serif);font-weight:500;font-size:16px;color:var(--dp-ink)}
   #dpage .isky2 .isky2-sign .thumb{width:30px;height:30px;border-radius:50%;background-size:cover;background-position:center;flex:none}
   #dpage .isky2 .isky2-sign .x{border:none;background:transparent;color:#9a94b3;font-size:15px;cursor:pointer;line-height:1}
   #dpage .isky2 .isky2-sign .meta{margin:10px 0 8px;font-size:12px;letter-spacing:.06em;color:#8a7b52}
@@ -829,7 +826,7 @@
     background:rgba(170,160,213,.16);color:#6a5fa0}
   #dpage .dp-place .row.sm .gl{width:28px;height:28px}
   #dpage .dp-place .nm{font-size:11.5px;color:var(--dp-mut);letter-spacing:.08em;display:block}
-  #dpage .dp-place .vl{font-family:var(--dp-serif);font-size:16px;font-weight:500;color:var(--dp-ink)}
+  #dpage .dp-place .vl{font-family:var(--dp-serif);font-size:16px;font-weight:600;color:var(--dp-ink)}
   #dpage .dp-place .row.sm .vl{font-size:14.5px}
   #dpage .dp-place .rx{margin-left:auto;font-size:11px;color:#b4645a;flex:none}
   #dpage .dp-tier{font-size:11px;letter-spacing:.2em;color:var(--dp-mut);margin:16px 0 8px}
@@ -844,7 +841,7 @@
   #dpage .dp-axes{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px}
   #dpage .dp-axes .ax{border:1px solid var(--dp-line);border-radius:16px;background:var(--dp-cloud);padding:14px 16px;text-align:center}
   #dpage .dp-axes .ax small{display:block;font-size:11px;letter-spacing:.16em;color:var(--dp-mut);margin-bottom:5px}
-  #dpage .dp-axes .ax b{font-family:var(--dp-serif);font-weight:500;font-size:15.5px}
+  #dpage .dp-axes .ax b{font-family:var(--dp-serif);font-weight:600;font-size:15.5px}
   #dpage table.dp-tbl{width:100%;border-collapse:collapse;font-size:14px;min-width:460px}
   #dpage table.dp-tbl th{font-size:11px;letter-spacing:.14em;color:var(--dp-mut);font-weight:400;text-align:left;
     padding:0 10px 10px;border-bottom:1px solid var(--dp-line)}
@@ -1070,7 +1067,7 @@
   /* 上升 / 天顶没有行星符号,改用两个字母的小徽记,与行星符号同一个圆 */
   #dpage .sky-card .hd .gl.tx{font-family:var(--dp-sans);font-size:10px;letter-spacing:.04em;font-weight:500}
   #dpage .sky-card .hd .lb{font-size:11.5px;letter-spacing:.2em;color:var(--dp-mut)}
-  #dpage .sky-card .sign{font-family:var(--dp-serif);font-weight:500;font-size:clamp(25px,3vw,33px);color:var(--dp-ink);line-height:1.28}
+  #dpage .sky-card .sign{font-family:var(--dp-serif);font-weight:600;font-size:clamp(25px,3vw,33px);color:var(--dp-ink);line-height:1.28}
   /* 星座的英文名:比中文小很多,只是把层次撑开,不是另一行标题 */
   #dpage .sky-card .lat{
     font-family:var(--dp-display);font-size:14px;letter-spacing:.16em;color:#9b9078;
@@ -1078,7 +1075,7 @@
   }
   #dpage .sky-card .hs{font-size:12.5px;color:var(--dp-mut);margin-top:9px;font-variant-numeric:tabular-nums}
   #dpage .sky-card .rule{width:26px;height:1px;background:rgba(184,166,120,.6);margin:clamp(15px,2vw,20px) 0 clamp(12px,1.6vw,16px)}
-  #dpage .sky-card .ttl{font-family:var(--dp-serif);font-size:16.5px;color:var(--dp-ink);margin-top:auto}
+  #dpage .sky-card .ttl{font-family:var(--dp-serif);font-weight:500;font-size:16.5px;color:var(--dp-ink);margin-top:auto}
   #dpage .sky-card .sub{font-size:13px;line-height:1.9;color:var(--dp-mut);margin-top:4px}
   @media(hover:hover){
     #dpage .sky-card:hover{transform:translateY(-3px);border-color:rgba(184,166,120,.45);box-shadow:0 18px 52px rgba(9,18,46,.1)}
@@ -1989,7 +1986,7 @@
     border:1px solid rgba(201,178,140,.26);
     box-shadow:0 1px 2px rgba(80,60,40,.02),0 10px 26px rgba(80,60,40,.04)
   }
-  #dpage .sky-houses .sky-house .bg{font-family:var(--dp-serif);font-size:15px;letter-spacing:.16em;color:#b08a55}
+  #dpage .sky-houses .sky-house .bg{font-family:var(--dp-serif);font-weight:500;font-size:15px;letter-spacing:.16em;color:#b08a55}
   #dpage .sky-houses .sky-house .top i.dash{width:22px;margin-top:9px}
   #dpage .sky-houses .sky-house .top{justify-content:flex-start}
   #dpage .sky-houses .sky-house .top .mk{margin-left:auto}
@@ -2121,7 +2118,7 @@
   #dpage.thread-page .thread-vow .b{
     display:flex;flex-direction:row;flex-wrap:wrap;justify-content:center;align-items:baseline;
     column-gap:.9em;row-gap:0;
-    font-family:var(--dp-serif);font-weight:400;line-height:1.7;
+    font-family:var(--dp-serif);font-weight:500;line-height:1.7;
     letter-spacing:.12em;margin-top:clamp(20px,2.4vw,30px)
   }
   #dpage.thread-page .thread-vow .b1{
@@ -2923,7 +2920,7 @@
     #dpage.thread-page .dp-reflect .bd{font-size:16px;line-height:2.05}
     /* 最后那个问题是这一段的视觉重心 */
     #dpage.thread-page .thread-close .dp-reflect .bd p:first-child{
-      font-family:var(--dp-serif);font-size:19px;line-height:1.9;color:#22233a
+      font-family:var(--dp-serif);font-weight:500;font-size:19px;line-height:1.9;color:#22233a
     }
     #dpage.thread-page .thread-close .post{margin-top:26px}
 
@@ -3071,7 +3068,7 @@
   }
   #dpage.thread-page .thread-trail > .thread-ch:nth-of-type(even) > .ch-mark{padding-left:clamp(8px,1.6vw,20px)}
   #dpage.thread-page .thread-trail > .thread-ch .ch-mark .no{
-    font-family:var(--dp-serif);font-size:clamp(19px,2vw,24px);letter-spacing:.06em;color:#3b3f78
+    font-family:var(--dp-serif);font-weight:500;font-size:clamp(19px,2vw,24px);letter-spacing:.06em;color:#3b3f78
   }
   #dpage.thread-page .thread-trail > .thread-ch .ch-mark .nd{
     width:auto;height:auto;border:0;background:none;color:rgba(196,152,72,.9)
@@ -3304,12 +3301,12 @@
     font-size:clamp(14px,1.6vw,16px);line-height:2.05;color:rgba(58,56,82,.72)
   }
   #dpage.thread-page .thread-bridge .pat-hd{
-    margin:clamp(34px,4.4vw,52px) auto 0;font-family:var(--dp-serif);
+    margin:clamp(34px,4.4vw,52px) auto 0;font-family:var(--dp-serif);font-weight:500;
     font-size:clamp(13px,1.4vw,14.5px);letter-spacing:.14em;color:#8a7351
   }
   #dpage.thread-page .thread-bridge .pat-hd span{color:rgba(196,152,72,.95)}
   #dpage.thread-page .thread-bridge .pattern{max-width:min(100%,30em);margin:clamp(18px,2.4vw,26px) auto 0}
-  #dpage.thread-page .thread-bridge .pattern p{margin:0;font-family:var(--dp-serif);font-weight:400}
+  #dpage.thread-page .thread-bridge .pattern p{margin:0;font-family:var(--dp-serif);font-weight:500}
   #dpage.thread-page .thread-bridge .pattern .lk{
     font-size:clamp(14.5px,1.6vw,16.5px);line-height:2;color:#4a4a66;margin-top:14px
   }
@@ -3328,11 +3325,11 @@
     box-shadow:0 0 34px rgba(186,176,232,.26),0 10px 26px rgba(96,86,150,.06)
   }
   #dpage.thread-page .thread-bridge .insight .lb{
-    display:block;margin-bottom:12px;font-family:var(--dp-serif);font-size:12.5px;letter-spacing:.2em;color:#8a7351
+    display:block;margin-bottom:12px;font-family:var(--dp-serif);font-weight:500;font-size:13px;letter-spacing:.2em;color:#8a7351
   }
   #dpage.thread-page .thread-bridge .insight .lb span{color:rgba(196,152,72,.95)}
   #dpage.thread-page .thread-bridge .insight p{
-    margin:0;font-family:var(--dp-serif);font-size:clamp(14.5px,1.6vw,16px);line-height:2;color:#2c2d48
+    margin:0;font-family:var(--dp-serif);font-weight:500;font-size:clamp(14.5px,1.6vw,16px);line-height:2;color:#2c2d48
   }
   #dpage.thread-page .thread-bridge .insight p + p{margin-top:8px}
 
@@ -3469,7 +3466,7 @@
   #dpage.thread-page .thread-chapters .ch-card .art.s2{background-image:url(assets/life/thread/step-2-window.webp)}
   #dpage.thread-page .thread-chapters .ch-card .art.s3{background-image:url(assets/life/thread/step-3-armillary.webp)}
   #dpage.thread-page .thread-chapters .ch-card .no{
-    font-family:var(--dp-serif);color:#3b3f78;font-size:clamp(18px,2vw,22px)
+    font-family:var(--dp-serif);font-weight:500;color:#3b3f78;font-size:clamp(18px,2vw,22px)
   }
   #dpage.thread-page .thread-chapters .ch-card .gl{
     display:block;width:20px;height:20px;margin:8px 0 4px;
@@ -3738,7 +3735,7 @@
      YOU 那行英文小标)本来就是靠细体加宽字距撑出高级感,这里跟着
      同一套语言,不是另外新增一种字体。 */
   #dpage.reading-page .dp-sec-label-line .zh{
-    flex:none;font-family:var(--dp-serif);font-weight:400;font-size:clamp(16px,1.6vw,19px);
+    flex:none;font-family:var(--dp-serif);font-weight:500;font-size:clamp(16px,1.6vw,19px);
     color:var(--dp-ink);letter-spacing:.12em
   }
   #dpage.reading-page .dp-sec-label-line .ln{flex:1;height:1px;background:rgba(154,106,52,.3)}
@@ -3862,7 +3859,7 @@
     font-size:clamp(20px,2.2vw,24px);line-height:1.45;letter-spacing:.06em;color:#1A2342
   }
   #dpage.reading-page .dp-forcard .gc > div{
-    font-family:var(--dp-serif);font-weight:500;font-size:clamp(14.5px,1.5vw,16px);line-height:2;letter-spacing:.03em;color:#2F3142
+    font-family:var(--dp-serif);font-weight:600;font-size:clamp(14.5px,1.5vw,16px);line-height:2;letter-spacing:.03em;color:#2F3142
   }
   /* 插画:不像贴上去的贴纸 —— 边缘用径向遮罩化进纸里,透明度 ~80% */
   #dpage.reading-page .dp-forcard .gc .gc-art{
@@ -3932,7 +3929,7 @@
   }
   #dpage.reading-page .rd-transit .s{
     margin:16px 0 0;font-family:var(--dp-serif);font-size:clamp(13.5px,1.4vw,15px);
-    line-height:2;letter-spacing:.05em;color:#34324d;font-weight:500;
+    line-height:2;letter-spacing:.05em;color:#34324d;font-weight:600;
     text-shadow:0 1px 8px rgba(255,250,244,.75)
   }
   /* ↓:半透明象牙小圆里的金色箭头(上方引线已拿掉),在深色星空上也看得清;按了卷到章节卡 */
@@ -4255,7 +4252,7 @@
   }
   #dpage.reading-page .dp-detail .rd-insight .hd{display:flex;align-items:center;gap:10px}
   #dpage.reading-page .dp-detail .rd-insight .hd i{font-style:normal;color:#c9a061;font-size:20px;line-height:1}
-  #dpage.reading-page .dp-detail .rd-insight .hd .zh{font-family:var(--dp-serif);font-size:12.5px;letter-spacing:.12em;color:#8a85a3}
+  #dpage.reading-page .dp-detail .rd-insight .hd .zh{font-family:var(--dp-serif);font-weight:500;font-size:13px;letter-spacing:.12em;color:#8a85a3}
   /* 句子用跟详细解读正文同一套:黑体 400、14–14.5px、行高 1.9(用户:原本太大) */
   #dpage.reading-page .dp-detail .rd-insight .bd{
     margin-top:10px;font-family:var(--dp-sans);font-weight:400;font-size:clamp(14px, 13.7px + .1vw, 14.5px);
@@ -4663,7 +4660,7 @@
      14.5px)——不是「稍微」贴近,是基本落在同一个区间里,读起来
      跟其他页面是同一件产品,不是另外做了一套更大的字号出来。 */
   #dpage.topic-page h3.tp-h{
-    flex:1;margin:0;font-family:var(--dp-serif);font-weight:500;
+    flex:1;margin:0;font-family:var(--dp-serif);font-weight:600;
     font-size:clamp(17px, 15.5px + .47vw, 20px);line-height:1.5;
     color:var(--title-color);letter-spacing:-.01em
   }
@@ -4959,7 +4956,7 @@
   /* —— D. 此刻的我 —— */
   #dpage.compass-page .cp-q{
     margin:clamp(26px,3.4vw,38px) auto 0;text-align:center;max-width:min(100%,28em);
-    font-family:var(--dp-serif);font-weight:400;
+    font-family:var(--dp-serif);font-weight:500;
     font-size:clamp(16px,1.8vw,18.5px);line-height:1.9;color:#33324a
   }
   #dpage.compass-page .cp-q2{margin-top:clamp(30px,3.8vw,44px)}
@@ -5021,7 +5018,7 @@
   }
   #dpage.compass-page .cp-ask-card .mk{font-size:12px;color:rgba(154,106,52,.5);line-height:1}
   #dpage.compass-page .cp-ask-card .qt{
-    margin:16px 0 0;font-family:var(--dp-serif);font-weight:400;
+    margin:16px 0 0;font-family:var(--dp-serif);font-weight:500;
     font-size:clamp(17px,2.1vw,22px);line-height:2;letter-spacing:.015em;color:var(--dp-ink)
   }
   #dpage.compass-page .cp-ask-card.skipped .cp-ta,
@@ -5245,7 +5242,7 @@
     text-transform:uppercase;color:rgba(119,119,138,.85)
   }
   #dpage.compass-page .cp-pv-card .zh{
-    display:block;margin-top:6px;font-family:var(--dp-serif);font-weight:500;
+    display:block;margin-top:6px;font-family:var(--dp-serif);font-weight:600;
     font-size:clamp(17px,1.9vw,20px);color:var(--dp-ink)
   }
   #dpage.compass-page .cp-pv-card .rule{
@@ -5253,7 +5250,7 @@
     background:linear-gradient(90deg,rgba(154,106,52,.5),rgba(154,140,205,.25))
   }
   #dpage.compass-page .cp-pv-card .ci{
-    margin:18px 0 0;font-family:var(--dp-serif);font-weight:500;
+    margin:18px 0 0;font-family:var(--dp-serif);font-weight:600;
     font-size:clamp(16px,1.8vw,18.5px);line-height:1.95;color:var(--dp-ink)
   }
   #dpage.compass-page .cp-pv-card .ex{
@@ -5496,7 +5493,7 @@
   /* 第二句:只是轻一点的同一段话,没有标签、没有图示,也不占位 */
   #dpage.compass-page .cp-panel .bd.sub{margin-top:10px;color:rgba(34,35,58,.72)}
   #dpage.compass-page .cp-panel .ci{
-    margin:14px 0 0;font-family:var(--dp-serif);font-weight:500;
+    margin:14px 0 0;font-family:var(--dp-serif);font-weight:600;
     font-size:clamp(15px,1.7vw,17px);line-height:1.95;color:var(--dp-ink)
   }
   #dpage.compass-page .cp-panel .tx{
@@ -5547,7 +5544,7 @@
   #dpage.compass-page .cp-line{
     margin:0;padding:clamp(20px,2.6vw,30px) 0;
     border-top:1px solid rgba(154,106,52,.14);
-    font-family:var(--dp-serif);font-weight:500;
+    font-family:var(--dp-serif);font-weight:600;
     font-size:clamp(16px,1.9vw,19px);line-height:1.95;color:var(--dp-ink)
   }
   #dpage.compass-page .cp-line:last-child{border-bottom:1px solid rgba(154,106,52,.14)}
@@ -6195,7 +6192,7 @@
   #dpage.compass-page .cp-keep-lead,
   #dpage.compass-page .cp-lines .cp-line{
     padding-top:0;padding-bottom:0;border:0;
-    font-family:var(--dp-serif);font-weight:500;font-size:15.5px;line-height:1.95;
+    font-family:var(--dp-serif);font-weight:600;font-size:15.5px;line-height:1.95;
     letter-spacing:.02em;color:var(--dp-ink)
   }
   #dpage.compass-page .cp-lines .cp-line:last-child{border-bottom:0}
@@ -6338,7 +6335,7 @@
   #dpage.compass-page .cp-lines > p{position:relative;z-index:1;margin:0;padding:0}
   #dpage.compass-page .cp-keep-lead,
   #dpage.compass-page .cp-lines .cp-line{
-    font-family:var(--dp-serif);font-weight:400;font-size:15px;line-height:1.85;
+    font-family:var(--dp-serif);font-weight:500;font-size:15px;line-height:1.85;
     letter-spacing:.03em;color:#26324A
   }
   /* 两段之间的 — ✦ —:放在第二段上方,跟标题下那条同一个样式 */
@@ -6408,7 +6405,7 @@
     background-position:left center,right center;background-repeat:no-repeat
   }
   #dpage.compass-page .cp-ask-card .qt{
-    margin:0 auto;max-width:22em;font-family:var(--dp-serif);font-weight:500;
+    margin:0 auto;max-width:22em;font-family:var(--dp-serif);font-weight:600;
     font-size:15.5px;line-height:1.9;letter-spacing:.03em;color:#2a2848
   }
   #dpage.compass-page .cp-ask-card .cp-ta{
@@ -6551,7 +6548,7 @@
     display:block;margin:0 auto 10px;font-size:15px;line-height:1;color:#c9a35c
   }
   #dpage.compass-page .cp-now .cp-note-card .cp-q2{
-    margin:0;font-family:var(--dp-serif);line-height:1.75;color:var(--dp-ink)
+    margin:0;font-family:var(--dp-serif);font-weight:500;line-height:1.75;color:var(--dp-ink)
   }
   #dpage.compass-page .cp-now .cp-note-card .cp-q2 b{
     display:block;font-weight:700;font-size:14.5px;letter-spacing:.06em
@@ -7122,7 +7119,7 @@
   #dpage.records-page .rc-b.danger{border:0;color:#c24a4a;background:#fde8e8}
   #dpage.records-page .rc-b:disabled{opacity:.6}
   #dpage.records-page .rc-del .ic{display:block;font-size:26px;margin:6px 0 10px}
-  #dpage.records-page .rc-del h3{margin:0;font-family:var(--dp-serif);font-size:18px;color:#23264f}
+  #dpage.records-page .rc-del h3{margin:0;font-family:var(--dp-serif);font-weight:600;font-size:18px;color:#23264f}
   #dpage.records-page .rc-del p{margin:8px 0 0;font-size:13px;color:#6f6a7e}
   @media(max-width:767px){
     /* 手机:底图固定 1300px 高,记录一多下面就只剩底色(用户反馈)。
@@ -7230,7 +7227,7 @@
   #dpage.records-page .rc-modal.rec .rc-mh h3{position:relative;z-index:1;font-size:21px;letter-spacing:.16em}
   #dpage.records-page .rc-modal.rec .rc-ms{width:14px;height:15px;margin:10px auto 10px;font-size:0;background:url("assets/records/rec-star.webp") center / contain no-repeat}
   #dpage.records-page .rc-modal.rec .rc-mmeta .rc-tag{padding:4px 16px;background:url("assets/records/rec-pill.webp") center / 100% 100% no-repeat;color:#9a6a2f}
-  #dpage.records-page .rc-modal.rec h4{display:flex;align-items:center;gap:8px;margin:20px 0 10px;font-family:var(--dp-serif);font-size:14.5px;letter-spacing:.06em}
+  #dpage.records-page .rc-modal.rec h4{display:flex;align-items:center;gap:8px;margin:20px 0 10px;font-family:var(--dp-serif);font-weight:600;font-size:14.5px;letter-spacing:.06em}
   #dpage.records-page .rc-modal.rec h4::before{content:"";flex:none;width:14px;height:15px;background:url("assets/records/rec-star.webp") center / contain no-repeat}
   #dpage.records-page .rc-modal.rec .rc-box{
     padding:16px 18px;border-radius:14px;font-family:var(--dp-sans);font-size:14px;
