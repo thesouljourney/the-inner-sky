@@ -4785,6 +4785,45 @@ function testCompassVersionUpgrade() {
 
 
 /* ---------- 今天想问自己的一个问题:题库(做法 C) ---------- */
+/* ============================================================
+   Stripe Sandbox 测试入口(#/checkout-test)
+   · 前端不能出现任何 Stripe / Supabase 的私密金钥
+   · 只送 Content-Type + 使用者自己的 Bearer token,body 是 {}
+   · 401 → 续期一次再试;只跳去 checkout.stripe.com
+   · 九个正式主题不被拦截:renderTopicPage 没有接 paywall
+   ============================================================ */
+function testCheckoutSandbox() {
+  const fs = require("fs"), path = require("path");
+  const root = path.join(__dirname, "..");
+  const html = fs.readFileSync(path.join(root, "app.html"), "utf8");
+  const idx = fs.readFileSync(path.join(root, "index.html"), "utf8");
+  const front = html + idx;
+  ["sk_test_", "sk_live_", "rk_test_", "rk_live_", "whsec_", "service_role", "SUPABASE_SERVICE_ROLE_KEY",
+   "STRIPE_SECRET_KEY", "STRIPE_WEBHOOK_SECRET"].forEach(function (k) {
+    checkEq("[pay] 前端没有 " + k, front.indexOf(k), -1);
+  });
+  checkEq("[pay] 呼叫 create-checkout-session",
+    html.indexOf('SUPABASE_URL + "/functions/v1/create-checkout-session"') >= 0, true);
+  const fnStart = html.indexOf("function createCheckout(retried)");
+  const fnSrc = html.slice(fnStart, html.indexOf("window.Cloud = {", fnStart));
+  checkEq("[pay] 只送 Content-Type 与使用者的 Bearer token",
+    /headers: \{ "Content-Type": "application\/json", "Authorization": "Bearer " \+ session\.access_token \}/.test(fnSrc), true);
+  checkEq("[pay] body 是 {}", fnSrc.indexOf('body: "{}"') >= 0, true);
+  checkEq("[pay] 401 续期一次再试", /r\.status === 401[\s\S]*refresh\(\)\.then\(function \(\) \{ return createCheckout\(true\); \}/.test(fnSrc), true);
+  checkEq("[pay] 第二次 401 要求重新登入", /if \(retried\) throw needLoginErr\(\)/.test(fnSrc), true);
+  checkEq("[pay] 只跳去 Stripe 的 Checkout 网域", fnSrc.indexOf("checkout\\.stripe\\.com") >= 0, true);
+  checkEq("[pay] #/checkout-test 路由存在", html.indexOf('if (h === "#/checkout-test") return { k: "checkouttest" };') >= 0, true);
+  const tp = html.slice(html.indexOf("function renderTopicPage(tid)"), html.indexOf("function renderQPage(qid)"));
+  checkEq("[pay] 九个正式主题没有接 paywall", /openPaywall|createCheckout/.test(tp), false);
+  checkEq("[pay] Landing 没有接付款", /checkout|paywall/i.test(idx), false);
+  ["继续阅读属于你的故事", "The Inner Sky｜完整星空解读", "S$24.90", "一次性解锁完整主题阅读", "解锁完整星空", "暂时不要"]
+    .forEach(function (t) { checkEq("[pay] paywall 文案:" + t, html.indexOf(t) >= 0, true); });
+  // checkoutReturn 在首次渲染时就会被读到:必须宣告在第一次 applyRoute() 之前
+  const firstRender = html.indexOf("\n  applyRoute();");
+  checkEq("[pay] checkoutReturn 宣告在首次渲染之前(不踩 TDZ)",
+    html.indexOf("const checkoutReturn =") > 0 && (firstRender < 0 || html.indexOf("const checkoutReturn =") < firstRender), true);
+}
+
 function testDailyQuestions() {
   const fs = require("fs");
   const Q = require(path.join(__dirname, "..", "assets", "compass-questions.js"));
@@ -5002,6 +5041,7 @@ function main() {
   testCompassZhOnlyLabels();
   testSelfNotes();
   testDailyQuestions();
+  testCheckoutSandbox();
   return Promise.all([genJobs, liveJobs, voiceJobs, v12Jobs, v13Jobs, v14Jobs]).then(function () { return testPlaces(); }).then(function () {
     console.log("\n对照来源:" + REF.reference);
     console.log("设置:" + JSON.stringify(REF.settings));
