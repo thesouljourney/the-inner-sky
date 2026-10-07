@@ -66,7 +66,7 @@
   var css = document.createElement("style");
   css.textContent =
     "html.zh-tw-pending body{visibility:hidden}" +
-    "html.zh-tw{--font-serif-sc:\"LXGW WenKai Screen\",\"Noto Serif TC\",\"Noto Serif SC\",\"Songti TC\",Georgia,serif;" +
+    "html.zh-tw{--font-serif-sc:\"Noto Serif TC\",\"Noto Serif SC\",\"Songti TC\",Georgia,serif;" +
     "--font-sans-sc:\"Noto Sans TC\",\"Noto Sans SC\",\"PingFang TC\",\"Helvetica Neue\",Arial,sans-serif}" +
     "html.zh-tw #dpage{--dp-serif:\"LXGW WenKai Screen\",\"Noto Serif TC\",\"Noto Serif SC\",Georgia,serif;" +
     "--dp-sans:\"Noto Sans TC\",\"Noto Sans SC\",\"Helvetica Neue\",Arial,sans-serif}";
