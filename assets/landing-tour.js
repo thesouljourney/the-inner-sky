@@ -90,6 +90,8 @@
     "font-size:19px;letter-spacing:.08em;color:#23264f}",
     ".tour-welcome h3 .g{color:#c9a061}",
     ".tour-welcome p{margin:0 0 20px;font-size:13px;line-height:1.85;color:#6a6680}",
+    ".tour-welcome h3.tw-gh{margin-bottom:10px}",
+    ".tour-welcome .tw-gp{margin:0 0 22px;font-size:13.5px;line-height:1.9;color:#5a5578}",
     ".tour-welcome .tc-bt{display:flex;flex-direction:column;align-items:stretch;gap:10px}",
     ".tour-welcome .tour-btn{min-height:42px;font-size:14px}",
     /* 顶栏的「✦ 网站导览」:跟旁边的简 / 繁、登入按钮同一套深蓝半透明底 */
@@ -226,8 +228,40 @@
     requestAnimationFrame(function () { veil.classList.add("on"); wel.classList.add("on"); });
   }
 
+  /* ---------- 还没登录:不导览,先请对方注册 ----------
+     导览介绍的都是登录后才用得到的东西,没登录时先把人带去注册 / 登入。
+     按「先看看」只在这一次浏览里不再出现(sessionStorage),下次来还会提醒;
+     这里不会把导览记成看过 —— 登录后第一次回到首页,导览欢迎卡才会出现。 */
+  var GKEY = "inner_sky_guest_hint_v1", guest = false;
+  function guestWelcome() {
+    try { if (sessionStorage.getItem(GKEY)) return; } catch (e) { }
+    var cta = document.getElementById("navCta");
+    var href = cta ? cta.getAttribute("href") : "app.html#/login";
+    veil = document.createElement("div");
+    veil.className = "tour-veil";
+    wel = document.createElement("div");
+    wel.className = "tour-welcome";
+    wel.setAttribute("role", "dialog");
+    wel.setAttribute("aria-labelledby", "tourWelT");
+    wel.innerHTML =
+      '<div class="tw-st" aria-hidden="true">✦</div>' +
+      '<h3 id="tourWelT" class="tw-gh">第一次来到这里吗？<span class="g">✦</span></h3>' +
+      '<p class="tw-gp">先注册，填好出生资料<br>就能开启属于你的星空</p>' +
+      '<div class="tc-bt"><a class="tour-btn pri tw-go" href="' + esc(href) + '">注册 / 登入</a>' +
+      '<button type="button" class="tour-btn sec tw-no">先看看</button></div>';
+    document.body.appendChild(veil);
+    document.body.appendChild(wel);
+    var no = function () { try { sessionStorage.setItem(GKEY, "1"); } catch (e) { } closeWelcome(); };
+    wel.querySelector(".tw-no").addEventListener("click", no);
+    veil.addEventListener("click", no);
+    requestAnimationFrame(function () { veil.classList.add("on"); wel.classList.add("on"); });
+  }
+
   document.addEventListener("keydown", function (e) {
-    if (wel && e.key === "Escape") { remember(); closeWelcome(); return; }
+    if (wel && e.key === "Escape") {
+      if (guest) { try { sessionStorage.setItem(GKEY, "1"); } catch (x) { } } else remember();
+      closeWelcome(); return;
+    }
     if (cur < 0) return;
     if (e.key === "Escape") end();
     else if (e.key === "ArrowRight" && cur < STEPS.length - 1) go(cur + 1);
@@ -261,6 +295,10 @@
   }
 
   function boot() {
+    // 登录与否由首页自己的脚本决定(已登录时会把「注册 / 登入」藏起来)
+    var cta = document.getElementById("navCta");
+    guest = !!(cta && !cta.hidden);
+    if (guest) { setTimeout(function () { if (!wel) guestWelcome(); }, 1200); return; }
     navButton();
     if (!wasSeen()) setTimeout(function () { if (cur < 0 && !wel) welcome(); }, 1200);
   }
