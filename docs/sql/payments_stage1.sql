@@ -39,20 +39,20 @@ create table if not exists public.billing_test_users (
 
 alter table public.billing_settings   enable row level security;
 alter table public.billing_test_users enable row level security;
-revoke all on public.billing_settings, public.billing_test_users from anon, authenticated;
+revoke all on public.billing_settings, public.billing_test_users from public, anon, authenticated;
 
 -- ---------------------------------------------------------------
 -- 2. 基础函数
 -- ---------------------------------------------------------------
 -- 九个付费主题的唯一权威清单（与 app.html TOPICS9 / read-chart TOPIC_SPEC 相同）
 create or replace function public.canonical_topic_ids()
-returns text[] language sql immutable as $$
+returns text[] language sql immutable set search_path = public, pg_temp as $$
   select array['self','emotion','career','family','love','partner','wealth','study','body']::text[]
 $$;
 
 -- 一组 topic 是否刚好 n 个、不重复、全部合法
 create or replace function public._valid_topic_set(p text[], n int)
-returns boolean language sql immutable as $$
+returns boolean language sql immutable set search_path = public, pg_temp as $$
   select p is not null
      and coalesce(array_length(p, 1), 0) = n
      and (select count(distinct x) from unnest(p) x) = n
@@ -61,7 +61,7 @@ $$;
 
 -- 这个账号是否适用付费强制（后台用）
 create or replace function public.enforcement_applies(p_user uuid)
-returns boolean language sql stable security definer set search_path = public as $$
+returns boolean language sql stable security definer set search_path = public, pg_temp as $$
   select case
     when p_user is null then false
     when (select enforcement_mode from billing_settings where id) = 'all' then true
@@ -71,7 +71,7 @@ $$;
 
 -- 同一个用户的所有付费变更都排队执行
 create or replace function public._lock_user(p_user uuid)
-returns void language sql as $$
+returns void language sql set search_path = public, pg_temp as $$
   select pg_advisory_xact_lock(hashtextextended('billing:' || p_user::text, 0))
 $$;
 
@@ -112,7 +112,8 @@ alter table public.checkout_orders enable row level security;
 drop policy if exists "checkout orders read own" on public.checkout_orders;
 create policy "checkout orders read own" on public.checkout_orders
   for select to authenticated using (auth.uid() = user_id);
-revoke insert, update, delete on public.checkout_orders from anon, authenticated;
+revoke all on public.checkout_orders from public, anon, authenticated;
+grant select on public.checkout_orders to authenticated;
 
 create table if not exists public.billing_customers (
   user_id            uuid not null,
@@ -122,7 +123,7 @@ create table if not exists public.billing_customers (
   primary key (user_id, environment)
 );
 alter table public.billing_customers enable row level security;
-revoke all on public.billing_customers from anon, authenticated;
+revoke all on public.billing_customers from public, anon, authenticated;
 
 -- ---------------------------------------------------------------
 -- 4. 现有付费表补栏位（全部 nullable，旧资料不受影响）
@@ -161,7 +162,7 @@ drop policy if exists charts_delete_own on public.charts;
 -- 被锁的栏位不报错，而是【原样还原】—— 前端每次 PATCH 整个 data 来保存阅读，
 -- 报错会让阅读、收藏一起存不进去。
 create or replace function public.charts_birth_lock()
-returns trigger language plpgsql as $$
+returns trigger language plpgsql set search_path = public, pg_temp as $$
 declare
   core    text[] := array['date','time','unknownTime','lat','lon'];
   derived text[] := array['tzId','utc','utcOffsetMinutes','dst'];
@@ -202,7 +203,7 @@ create trigger charts_birth_lock_trg before update on public.charts
 -- 6. Inner Tools：到期后只能看、删，不能新增、编辑
 -- ---------------------------------------------------------------
 create or replace function public.inner_tools_write_allowed()
-returns boolean language sql stable security definer set search_path = public as $$
+returns boolean language sql stable security definer set search_path = public, pg_temp as $$
   select not public.enforcement_applies(auth.uid())
       or coalesce((select inner_tools_until from entitlements where user_id = auth.uid()) > now(), false)
 $$;
@@ -231,7 +232,7 @@ create policy "compass result update own" on public.compass_results
 -- 续费和 6M 同时发生时，6M 起点会跟着衔接订阅的 paid_through 往后移。
 -- 只会往后，不会缩短。
 create or replace function public.recompute_inner_tools(p_user uuid)
-returns timestamptz language plpgsql security definer set search_path = public as $$
+returns timestamptz language plpgsql security definer set search_path = public, pg_temp as $$
 declare
   e        entitlements%rowtype;
   sub_end  timestamptz;
@@ -257,7 +258,7 @@ end $$;
 
 -- 6M 期间的结束时间（没有 6M 就是 null）
 create or replace function public.inner_tools_6m_end(p_user uuid)
-returns timestamptz language sql stable security definer set search_path = public as $$
+returns timestamptz language sql stable security definer set search_path = public, pg_temp as $$
   select greatest(e.inner_tools_6m_granted_at,
                   coalesce((select paid_through from subscriptions
                              where stripe_subscription_id = e.inner_tools_6m_after_sub),
@@ -274,7 +275,7 @@ $$;
 -- 失败一律 raise 'checkout:<代码>'，由 Edge Function 转成 HTTP 回应。
 create or replace function public.reserve_checkout_order(
   p_user uuid, p_env text, p_plan text, p_topic_ids text[], p_inner_tools_6m boolean)
-returns jsonb language plpgsql security definer set search_path = public as $$
+returns jsonb language plpgsql security definer set search_path = public, pg_temp as $$
 declare
   cat      text;
   lim      int;
@@ -381,7 +382,7 @@ end $$;
 -- Stripe session 建好之后：只有订单还是 creating 才能变成 open。
 -- 回传 false = 这段时间被新的请求取代了，Edge Function 必须 expire 自己刚建的 session。
 create or replace function public.activate_checkout_order(p_order uuid, p_session text)
-returns boolean language plpgsql security definer set search_path = public as $$
+returns boolean language plpgsql security definer set search_path = public, pg_temp as $$
 begin
   update checkout_orders
      set status = 'open', stripe_checkout_session_id = p_session, updated_at = now()
@@ -389,16 +390,17 @@ begin
   return found;
 end $$;
 
--- 建立失败 / 非同步付款失败
+-- 建立失败（Stripe session 还没建立）/ 非同步付款失败。
+-- 刻意不接受 open：open 的 session 在 Stripe 上还能付款，必须先 expire（mark_session_expired）。
 create or replace function public.fail_checkout_order(p_order uuid)
-returns void language sql security definer set search_path = public as $$
+returns void language sql security definer set search_path = public, pg_temp as $$
   update checkout_orders set status = 'failed', updated_at = now()
-   where id = p_order and status in ('creating', 'open', 'processing')
+   where id = p_order and status in ('creating', 'processing')
 $$;
 
 -- Stripe 确认 session 已失效（我们主动 expire 成功，或 checkout.session.expired 事件）
 create or replace function public.mark_session_expired(p_session text)
-returns void language sql security definer set search_path = public as $$
+returns void language sql security definer set search_path = public, pg_temp as $$
   update checkout_orders
      set status = case when status = 'superseded' then 'superseded' else 'expired' end,
          expire_confirmed_at = coalesce(expire_confirmed_at, now()),
@@ -407,15 +409,41 @@ returns void language sql security definer set search_path = public as $$
      and status in ('creating', 'open', 'superseded')
 $$;
 
--- checkout 已完成但付款还没确认（PayNow）
+-- checkout 已完成但付款还没确认（PayNow）。
+-- 被取代的旧单也可能走到这一步：那么同类别还开着的新单一律作废，回传给呼叫端去 expire ——
+-- 付款确认中的那一笔仍然可能成功，不能同时让另一张也能付款。
+drop function if exists public.mark_order_processing(uuid, text);
 create or replace function public.mark_order_processing(p_order uuid, p_session text)
-returns void language sql security definer set search_path = public as $$
+returns jsonb language plpgsql security definer set search_path = public, pg_temp as $$
+declare
+  o     checkout_orders%rowtype;
+  stale text[] := '{}';
+begin
+  select * into o from checkout_orders where id = p_order;
+  if not found then raise exception 'processing:order_not_found'; end if;
+  perform _lock_user(o.user_id);
+  select * into o from checkout_orders where id = p_order for update;
+  if o.status not in ('creating', 'open', 'superseded') then
+    return jsonb_build_object('result', 'ignored', 'status', o.status, 'expire_sessions', '[]'::jsonb);
+  end if;
+
+  select coalesce(array_agg(stripe_checkout_session_id) filter (where stripe_checkout_session_id is not null), '{}')
+    into stale
+    from checkout_orders
+   where user_id = o.user_id and category = o.category and environment = o.environment
+     and id <> o.id and status in ('creating', 'open');
+  update checkout_orders
+     set status = 'superseded', superseded_by = o.id, superseded_at = now(), updated_at = now()
+   where user_id = o.user_id and category = o.category and environment = o.environment
+     and id <> o.id and status in ('creating', 'open');
+
   update checkout_orders
      set status = 'processing',
          stripe_checkout_session_id = coalesce(stripe_checkout_session_id, p_session),
          updated_at = now()
-   where id = p_order and status in ('creating', 'open', 'superseded')
-$$;
+   where id = o.id;
+  return jsonb_build_object('result', 'processing', 'expire_sessions', to_jsonb(stale));
+end $$;
 
 -- ---------------------------------------------------------------
 -- 9. 套用付款（stripe-webhook 调用；create-checkout-session 遇到旧单已付款时也会调用）
@@ -427,7 +455,7 @@ create or replace function public.apply_checkout_payment(
   p_order uuid, p_session text, p_user uuid, p_env text,
   p_payment_intent text, p_subscription text, p_price_id text,
   p_amount bigint, p_currency text, p_price_ok boolean)
-returns jsonb language plpgsql security definer set search_path = public as $$
+returns jsonb language plpgsql security definer set search_path = public, pg_temp as $$
 declare
   o          checkout_orders%rowtype;
   e          entitlements%rowtype;
@@ -547,7 +575,7 @@ end $$;
 create or replace function public.record_legacy_payment(
   p_session text, p_user uuid, p_env text, p_plan text, p_price_id text,
   p_amount bigint, p_currency text, p_subscription text)
-returns void language sql security definer set search_path = public as $$
+returns void language sql security definer set search_path = public, pg_temp as $$
   insert into purchases (user_id, stripe_session_id, stripe_subscription_id, price_id, plan_code,
                          amount_total, currency, payment_status, environment, entitlement_status)
   values (p_user, p_session, p_subscription, p_price_id, p_plan,
@@ -563,7 +591,7 @@ $$;
 create or replace function public.upsert_subscription(
   p_user uuid, p_env text, p_customer text, p_sub text, p_price text, p_status text,
   p_period_start timestamptz, p_period_end timestamptz, p_cancel_at_period_end boolean)
-returns jsonb language plpgsql security definer set search_path = public as $$
+returns jsonb language plpgsql security definer set search_path = public, pg_temp as $$
 declare s subscriptions%rowtype;
 begin
   perform _lock_user(p_user);
@@ -593,7 +621,7 @@ end $$;
 create or replace function public.record_invoice_paid(
   p_user uuid, p_env text, p_sub text, p_invoice text, p_price text,
   p_amount bigint, p_currency text, p_period_end timestamptz, p_is_renewal boolean)
-returns jsonb language plpgsql security definer set search_path = public as $$
+returns jsonb language plpgsql security definer set search_path = public, pg_temp as $$
 declare s subscriptions%rowtype;
 begin
   perform _lock_user(p_user);
@@ -624,7 +652,7 @@ end $$;
 -- ---------------------------------------------------------------
 -- 回传：unauthenticated / not_enforced / ok / denied / invalid
 create or replace function public.paid_access(p_user uuid, p_kind text, p_tid text)
-returns text language sql stable security definer set search_path = public as $$
+returns text language sql stable security definer set search_path = public, pg_temp as $$
   select case
     when p_user is null then 'unauthenticated'
     when not enforcement_applies(p_user) then 'not_enforced'
@@ -643,7 +671,7 @@ $$;
 
 -- 回传：unauthenticated / not_enforced / ok / expired
 create or replace function public.inner_tools_access(p_user uuid)
-returns text language sql stable security definer set search_path = public as $$
+returns text language sql stable security definer set search_path = public, pg_temp as $$
   select case
     when p_user is null then 'unauthenticated'
     when not enforcement_applies(p_user) then 'not_enforced'
