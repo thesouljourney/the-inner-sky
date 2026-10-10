@@ -40,7 +40,7 @@ expect_seed() {  # $1 = 说明，$2 = 预期讯息，$3 ids，$4 expected，$5 �
   pass=$((pass+1))
 }
 accounts_before=$(sq 'select count(*) from auth.users')
-expect_seed "文件原样（还没填入）→ 回滚" "还没填入" "" 9
+expect_seed "文件原样（占位文字，还没填入）→ 回滚" "还没填入" "" 9
 expect_seed "格式错误 → 回滚" "不是 user_id" "$A,'abc'" 2
 expect_seed "人数不符 → 回滚" "预期 9" "$A" 9
 expect_seed "重复 user_id → 回滚" "重复" "$A,$A" 2
@@ -59,5 +59,22 @@ expect_seed "重跑 → 不重复写入" "完成：1 个" "$A" 1
 [ "$(sq 'select (select count(*) from purchases where user_id is not null) + (select count(*) from entitlements) + (select count(*) from subscriptions) + (select count(*) from billing_test_users)')" = 0 ] || { echo "FAIL seed: 不应建立购买、权限或测试名单"; exit 1; }
 sq "update early_access_users set scopes = array['topics'] where user_id = $A" >/dev/null
 expect_seed "已在名单但范围不是预设 → 回滚" "写入后核对失败" "$A" 1 1
+pass=$((pass+4))
+
+# 模拟正式资料：9 个 Early User 都有星盘，另外 4 个测试账号没有星盘（user_id 为测试用，不是真实账号）
+sq "delete from early_access_users; delete from charts; delete from auth.users where id <> all (array[$A,$B]::uuid[])" >/dev/null
+ids=""
+for i in 1 2 3 4 5 6 7 8 9; do
+  u="eeeeeeee-0000-4000-8000-00000000000$i"
+  sq "insert into auth.users values ('$u'); insert into charts (id, user_id, data) values (gen_random_uuid(), '$u', '{}')" >/dev/null
+  ids="$ids${ids:+,}'$u'"
+done
+for i in 1 2 3 4; do sq "insert into auth.users values ('dddddddd-0000-4000-8000-00000000000$i')" >/dev/null; done
+expect_seed "正式资料模拟：9 个 → 写入" "完成：9 个 Early User 已在名单中" "$ids" 9
+[ "$(sq "select count(*) from early_access_users where scopes = array['topics','life_thread','inner_tools'] and note like 'Early User%'")" = 9 ] || { echo "FAIL seed: 应写入 9 个"; exit 1; }
+[ "$(sq "select count(*) from early_access_users e where not exists (select 1 from charts c where c.user_id = e.user_id)")" = 0 ] || { echo "FAIL seed: 没有星盘的账号被加入"; exit 1; }
+[ "$(sq "select count(*) from auth.users where id::text like 'dddddddd%'")" = 4 ] || { echo "FAIL seed: 测试账号被删除"; exit 1; }
+expect_seed "正式资料模拟：重跑 → 不重复" "完成：9 个" "$ids" 9
+[ "$(sq 'select count(*) from early_access_users')" = 9 ] || { echo "FAIL seed: 重跑后不是 9 个"; exit 1; }
 pass=$((pass+4))
 echo "SQL 测试全部通过：$pass 项"

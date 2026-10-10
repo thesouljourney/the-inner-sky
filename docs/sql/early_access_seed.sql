@@ -32,6 +32,7 @@ begin;
 do $$
 declare
   -- 你确认的 9 个 Early User（一行一个，保留单引号与逗号）
+  -- 真实 user_id 不要提交到 Git：只在 SQL Editor 里填入
   ids_text text[] := array[
     '<user_id 1>',
     '<user_id 2>',
