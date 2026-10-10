@@ -6811,6 +6811,14 @@
     font-family:inherit;font-size:13px;letter-spacing:.08em;color:#77778a}
   .pw-go:disabled,.pw-later:disabled{opacity:.6;cursor:default}
   .pw-go:focus-visible,.pw-later:focus-visible{outline:2px solid #e8d3a2;outline-offset:2px}
+  /* #/checkout-test 的选项：盖掉 .dp-field 里 label / input 的表单样式 */
+  #dpage .dp-field label.ck-opt,#dpage label.ck-opt{display:flex;align-items:center;gap:10px;padding:7px 0;
+    font-size:14px;letter-spacing:0;color:var(--dp-ink);cursor:pointer;text-align:left}
+  #dpage .dp-field .ck-opt input,#dpage .ck-opt input{width:auto;min-height:0;margin:0;padding:0;flex:none;
+    border:0;border-radius:0;box-shadow:none;background:none;accent-color:#23264f}
+  #dpage .ck-price{margin-left:auto;padding-left:12px;font-size:13px;color:var(--dp-mut);white-space:nowrap}
+  #dpage #ckReload{background:none;border:0;padding:0;font-size:13px;color:var(--dp-lav);text-decoration:underline;cursor:pointer}
+  #dpage .ck-state{display:grid;gap:6px;padding:12px 14px;border-radius:12px;background:var(--dp-blush);font-size:13px;line-height:1.7;color:var(--dp-ink);word-break:break-word}
   /* 收藏页:句子星空 —— 用户给的参考图那种版式:顶上一条搜索 + 排序的
      小工具条,底下每一句收藏各自一张独立卡片(不再挤在同一张大卡里),
      卡片左上角一个大引号、来源换成一颗色块小标签、右下角书签图示
@@ -8576,22 +8584,28 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     e.needLogin = true;
     return e;
   }
-  function createCheckout(retried) {
+  /* body 只有三个栏位：plan / topic_ids / include_inner_tools_6m。
+     方案能不能买、topic 合不合法、价格多少，一律由服务器决定。 */
+  function createCheckout(body, retried) {
     if (!session || !session.access_token) return Promise.reject(needLoginErr());
     return netFetch(CHECKOUT_FUNC_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json", "Authorization": "Bearer " + session.access_token },
-      body: "{}"
+      body: JSON.stringify(body || {})
     }).then(function (r) {
       if (r.status === 401) {
         if (retried) throw needLoginErr();
-        return refresh().then(function () { return createCheckout(true); }, function (e) {
+        return refresh().then(function () { return createCheckout(body, true); }, function (e) {
           // 令牌被拒 / 根本没有 refresh_token → 只能重新登入;断网之类的就照原样报错
           throw (!e || e.hard || !session || !session.refresh_token) ? needLoginErr() : e;
         });
       }
       return r.json().catch(function () { return {}; }).then(function (d) {
-        if (!r.ok) throw new Error((d && d.error) || ("HTTP " + r.status));
+        if (!r.ok) {
+          const err = new Error((d && d.error) || ("HTTP " + r.status));
+          err.code = (d && d.code) || "";
+          throw err;
+        }
         const url = d && typeof d.url === "string" ? d.url : "";
         // 只跳去 Stripe 自己的 Checkout 网域,回来的若不是就不跳
         if (!/^https:\/\/checkout\.stripe\.com\//.test(url)) throw new Error("没有拿到付款页面网址");
@@ -8615,7 +8629,19 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     loadCharts: loadCharts, insertChart: insertChart, updateChart: updateChart, deleteChart: deleteChart,
     loadPrefs: loadPrefs, savePrefs: savePrefs, uuid: uuid,
     migrateLegacy: migrateLegacy,
-    createCheckout: function () { return createCheckout(false); }
+    createCheckout: function (body) { return createCheckout(body, false); },
+    /* 付费状态（只读，全部经 RLS 只看得到自己的）。前端绝不写入这几张表。 */
+    billingState: function () {
+      return Promise.all([
+        rest("entitlements?select=topic_limit,life_thread_access,inner_tools_until"),
+        rest("entitlement_topics?select=topic_id&order=topic_id"),
+        rest("subscriptions?select=stripe_subscription_id,status,paid_through,current_period_end,cancel_at_period_end,cancel_requested_at&order=created_at.desc"),
+        rest("checkout_orders?select=plan_code,status,topic_ids,inner_tools_6m,created_at&order=created_at.desc&limit=5")
+      ]).then(function (r) {
+        return { entitlement: r[0][0] || null, topics: r[1].map(function (x) { return x.topic_id; }),
+                 subscriptions: r[2], orders: r[3] };
+      });
+    }
   };
 })();
 </script>
@@ -12947,6 +12973,8 @@ window.Guide = (function () {
     return { status: st, sessionId: /^cs_[A-Za-z0-9_]+$/.test(sid) ? sid : "" };
   })();
   let paywallEl = null, paywallBusy = false, paywallReturnFocus = null;
+  // #/checkout-test 的选择与状态（在首次渲染前宣告，避免 TDZ）
+  let ckPlan = "topics_3", ckTopics = [], ckSixm = false, ckState = null, ckStateErr = "", ckLoading = false;
 
 
   /* ↓ 以下几组常数原本写在下面的渲染函式旁边,但 render*Page 在冷启动那一刻就会用到它们,
@@ -17385,47 +17413,166 @@ window.Guide = (function () {
      · Birth Data / Natal Chart = 建立后锁定,Username 修改不触发任何重新计算
      ============================================================ */
   /* ============================================================
-     Stripe Sandbox 测试入口(#/checkout-test)
+     Stripe Sandbox 测试入口(#/checkout-test)—— 内部开发页，不在任何导航里
      ------------------------------------------------------------
-     第一轮只验证一件事:当前登入的使用者付完款之后,
-     purchases.user_id 记下来的是他自己的 UUID。
-     · 不拦截任何正式主题、不解锁任何内容
-     · 前端只送自己的 Supabase access_token,金钥全在 Edge Function 里
+     · 选方案 / 选 topic → create-checkout-session → Stripe Sandbox
+     · 下方的状态全部经 RLS 只读，前端不能修改任何权限
+     · 方案能不能买、topic 合不合法、价格多少，一律由服务器决定；
+       这里的价格只是显示用，Price ID 不在前端
      ============================================================ */
+  function ckPlanList() {
+    return [
+      { id: "topics_3", label: "3 Topics", price: "S$6.88" },
+      { id: "topics_6", label: "6 Topics", price: "S$11.88" },
+      { id: "complete", label: "Complete（9 个主题 + 生命脉络）", price: "S$16.88" },
+      { id: "topic_upgrade", label: "升级（3→6 选 3 个新主题，或 6→Complete）", price: "S$5" },
+      { id: "complete_upgrade", label: "3 Topics → Complete", price: "S$10" },
+      { id: "inner_tools_monthly", label: "Inner Tools 每月订阅", price: "S$0.99 / 月" }
+    ];
+  }
+  // 这次需要选几个新 topic（只是体验上的提示，服务器会再验证）
+  function ckNeed(limit) {
+    if (ckPlan === "topics_3") return 3;
+    if (ckPlan === "topics_6") return 6;
+    if (ckPlan === "topic_upgrade" && limit === 3) return 3;
+    return 0;
+  }
+  function ckErrorText(e) {
+    const CK_ERRORS = {
+      payments_not_enabled: "这个账号目前不在 Sandbox 测试名单里，还不能购买。",
+      invalid_topics: "主题选择不正确：数量不对、重复，或不是正式主题。",
+      unexpected_topics: "这个方案不需要选主题。",
+      use_upgrade: "你已经拥有主题了，请改用升级方案。",
+      already_complete: "你已经拥有 Complete，不需要再升级。",
+      topic_already_owned: "升级不能包含已经拥有的主题。",
+      upgrade_not_available: "目前的方案没有这个升级选项。",
+      addon_not_allowed: "Inner Tools 6 个月只能在第一次直接购买 Complete 时加购。",
+      inner_tools_6m_active: "Inner Tools 6 个月还在有效期内，到期后才能订阅每月方案。",
+      subscription_exists: "你已经有每月订阅了；要恢复或管理，请之后使用订阅管理页面。",
+      payment_processing: "上一笔付款还在确认中（例如 PayNow），请稍后再试。",
+      previous_payment_completed: "上一笔付款已经完成，请重新整理页面后再选择。",
+      superseded: "已有另一个付款页面正在建立，请重新整理后再试。",
+      invalid_plan: "方案不正确。"
+    };
+    const c = e && e.code;
+    if (c && CK_ERRORS[c]) return CK_ERRORS[c];
+    return "暂时无法打开付款页面，请稍后再试。" + (e && e.message ? "（" + e.message + "）" : "");
+  }
+  function ckDate(v) { return v ? String(v).replace("T", " ").slice(0, 16) : "—"; }
+
   function renderCheckoutTestPage() {
     if (!window.Cloud.hasSession()) { requireLogin("none"); return; }
     let status = "";
     if (checkoutReturn && checkoutReturn.status === "success") {
       status = '<div class="dp-note"><span class="ic" aria-hidden="true">✦</span><span>' +
-        "测试付款已完成。Stripe 会通知后台写入 purchases，几秒后就能在 Supabase 看到这一笔。" +
+        "付款已送出。Stripe 通知后台之后，下面的状态会更新（PayNow 可能需要多等一会儿）。" +
         (checkoutReturn.sessionId ? "<br>Checkout Session：<code>" + esc0(checkoutReturn.sessionId) + "</code>" : "") +
         "</span></div>";
     } else if (checkoutReturn && checkoutReturn.status === "cancel") {
       status = '<div class="dp-note"><span class="ic" aria-hidden="true">✦</span><span>' +
         "这次没有付款，什么都没有被扣。" + "</span></div>";
     }
+    const st = ckState;
+    const ent = (st && st.entitlement) || { topic_limit: 0, life_thread_access: false, inner_tools_until: null };
+    const owned = (st && st.topics) || [];
+    const limit = Number(ent.topic_limit || 0);
+    const topics = (window.Reading && window.Reading.TOPICS9) || [];
+    const tName = function (id) { const t = topics.find(function (x) { return x.id === id; }); return t ? t.name : id; };
+    const need = ckNeed(limit);
+
+    const stateHtml = !st
+      ? '<p class="hint" id="ckStateMsg">' + esc0(ckStateErr || "正在读取目前的购买状态…") + '</p>'
+      : '<div class="ck-state">' +
+        '<div><b>topic_limit</b>：' + limit + '</div>' +
+        '<div><b>拥有的主题</b>：' + (owned.length ? esc0(owned.map(tName).join("、")) + "（" + owned.length + "）" : "无") + '</div>' +
+        '<div><b>生命脉络</b>：' + (ent.life_thread_access ? "已开通" : "未开通") + '</div>' +
+        '<div><b>Inner Tools 到期</b>：' + esc0(ckDate(ent.inner_tools_until)) + '</div>' +
+        '<div><b>订阅</b>：' + (st.subscriptions.length ? st.subscriptions.map(function (x) {
+          return esc0(x.status + (x.cancel_at_period_end ? "（期末取消）" : "") + " · 已付至 " + ckDate(x.paid_through));
+        }).join("<br>") : "无") + '</div>' +
+        '<div><b>最近订单</b>：' + (st.orders.length ? st.orders.map(function (o) {
+          return esc0(o.plan_code + " · " + o.status + (o.topic_ids ? " · " + o.topic_ids.join(",") : "") + (o.inner_tools_6m ? " · +6M" : ""));
+        }).join("<br>") : "无") + '</div>' +
+        '</div>';
+
+    const plans = ckPlanList().map(function (p) {
+      return '<label class="ck-opt"><input type="radio" name="ckPlan" value="' + p.id + '"' + (ckPlan === p.id ? " checked" : "") + '> ' +
+        esc0(p.label) + ' <span class="ck-price">' + esc0(p.price) + '</span></label>';
+    }).join("");
+    const topicBoxes = need ? topics.map(function (t) {
+      const isOwned = owned.indexOf(t.id) >= 0;
+      return '<label class="ck-opt"><input type="checkbox" data-ck-topic="' + t.id + '"' +
+        (isOwned ? " checked disabled" : (ckTopics.indexOf(t.id) >= 0 ? " checked" : "")) + '> ' +
+        esc0(t.name) + (isOwned ? '（已拥有）' : '') + '</label>';
+    }).join("") : "";
+
     const body =
       '<div class="dp-card">' +
       '<div class="dp-sec-label">SANDBOX</div>' +
       '<div class="dp-form">' +
       status +
       '<div class="dp-field"><label>当前登录用户 UUID</label>' +
-      '<input type="text" readonly value="' + esc0(window.Cloud.userId() || "") + '">' +
-      '<span class="hint">付款完成后，purchases.user_id 应该和这一串一样。</span></div>' +
+      '<input type="text" readonly value="' + esc0(window.Cloud.userId() || "") + '"></div>' +
+      '<div class="dp-field"><label>目前的购买状态（只读）</label>' + stateHtml +
+      '<button type="button" class="dp-link" id="ckReload" style="justify-self:start;margin-top:6px">重新读取状态</button></div>' +
+      '<div class="dp-field"><label>选择方案</label>' + plans + '</div>' +
+      (ckPlan === "complete" && limit === 0
+        ? '<label class="ck-opt"><input type="checkbox" id="ckSixm"' + (ckSixm ? " checked" : "") + '> 加购 Inner Tools 6 个月 <span class="ck-price">+S$2.88</span></label>'
+        : "") +
+      (need ? '<div class="dp-field"><label>选择 ' + need + ' 个' + (limit ? "新" : "") + '主题（已选 <span id="ckCount">' +
+        ckTopics.length + '</span>）</label>' + topicBoxes + '</div>' : "") +
       '<div class="dp-note"><span class="ic" aria-hidden="true">✦</span><span>' +
-      "这是 Stripe Sandbox 测试入口，请使用 Stripe 的测试卡（例如 4242 4242 4242 4242）。这里不会解锁任何内容。" +
+      "Stripe Sandbox：请使用测试卡（例如 4242 4242 4242 4242）或 Sandbox 的 PayNow。不会产生真实付款。" +
       '</span></div>' +
-      '<button class="dp-cta" id="ckOpen" style="justify-self:start">打开付费说明</button>' +
+      '<button class="dp-cta" id="ckOpen" style="justify-self:start">继续</button>' +
       '</div></div>';
     dpScaffold({
       chip: "Sandbox",
       title: "付款测试",
-      sub: "只用来确认付款能对上你的账号",
+      sub: "内部测试页：模拟所有购买路径",
       body: body, foot: "",
       backLabel: dpT("返回", "Back"), backHref: LANDING_URL, seed: 61
     });
+
+    document.querySelectorAll('#dpage input[name="ckPlan"]').forEach(function (r) {
+      r.addEventListener("change", function () { ckPlan = r.value; ckTopics = []; ckSixm = false; renderCheckoutTestPage(); });
+    });
+    const sx = document.getElementById("ckSixm");
+    if (sx) sx.addEventListener("change", function () { ckSixm = sx.checked; });
+    document.querySelectorAll("#dpage input[data-ck-topic]").forEach(function (c) {
+      c.addEventListener("change", function () {
+        const id = c.getAttribute("data-ck-topic");
+        ckTopics = ckTopics.filter(function (x) { return x !== id; });
+        if (c.checked) ckTopics.push(id);
+        const n = document.getElementById("ckCount");
+        if (n) n.textContent = String(ckTopics.length);
+      });
+    });
     const b = document.getElementById("ckOpen");
     if (b) b.addEventListener("click", function () { openPaywall(b); });
+    const rl = document.getElementById("ckReload");
+    if (rl) rl.addEventListener("click", function () { ckState = null; ckStateErr = ""; renderCheckoutTestPage(); });
+
+    if (!st && !ckLoading) {
+      ckLoading = true;
+      window.Cloud.billingState().then(function (x) {
+        ckLoading = false; ckState = x; ckStateErr = "";
+        if (curRoute && curRoute.k === "checkouttest") renderCheckoutTestPage();
+      }).catch(function (e) {
+        ckLoading = false; ckStateErr = "读取购买状态失败：" + ((e && e.message) || e);
+        const m = document.getElementById("ckStateMsg");
+        if (m) m.textContent = ckStateErr;
+      });
+    }
+  }
+
+  // 目前选好的请求内容（只有这三个栏位会送到服务器）
+  function ckRequest() {
+    const limit = Number((ckState && ckState.entitlement && ckState.entitlement.topic_limit) || 0);
+    const req = { plan: ckPlan };
+    if (ckNeed(limit)) req.topic_ids = ckTopics.slice();
+    if (ckPlan === "complete" && ckSixm) req.include_inner_tools_6m = true;
+    return req;
   }
 
   function openPaywall(opener) {
@@ -17437,11 +17584,11 @@ window.Guide = (function () {
         '<div class="pw-modal" role="dialog" aria-modal="true" aria-labelledby="pwTitle">' +
         '<span class="pw-star" aria-hidden="true">✦</span>' +
         '<h3 id="pwTitle">继续阅读属于你的故事</h3>' +
-        '<div class="pw-prod">The Inner Sky｜完整星空解读</div>' +
-        '<div class="pw-price">S$24.90 <small>SGD</small></div>' +
-        '<p class="pw-desc">一次性解锁完整主题阅读</p>' +
+        '<div class="pw-prod" id="pwProd"></div>' +
+        '<div class="pw-price" id="pwPrice"></div>' +
+        '<p class="pw-desc" id="pwDesc"></p>' +
         '<p class="pw-msg" id="pwMsg" role="alert"></p>' +
-        '<button type="button" class="pw-go" id="pwGo">解锁完整星空</button>' +
+        '<button type="button" class="pw-go" id="pwGo">前往付款</button>' +
         '<button type="button" class="pw-later" id="pwLater">暂时不要</button>' +
         '</div>';
       document.body.appendChild(paywallEl);
@@ -17452,6 +17599,13 @@ window.Guide = (function () {
         if (ev.key === "Escape" && paywallEl && paywallEl.classList.contains("on")) closePaywall();
       });
     }
+    const p = ckPlanList().find(function (x) { return x.id === ckPlan; }) || ckPlanList()[0];
+    const req = ckRequest();
+    paywallEl.querySelector("#pwProd").textContent = "The Inner Sky｜" + p.label;
+    paywallEl.querySelector("#pwPrice").textContent = req.include_inner_tools_6m ? "S$19.76" : p.price;
+    paywallEl.querySelector("#pwDesc").textContent =
+      req.topic_ids ? "选择的主题：" + req.topic_ids.join("、") :
+      req.include_inner_tools_6m ? "Complete S$16.88 + Inner Tools 6 个月 S$2.88" : "";
     setPaywallBusy(false);
     paywallEl.querySelector("#pwMsg").textContent = "";
     paywallEl.classList.add("on");
@@ -17466,13 +17620,13 @@ window.Guide = (function () {
     paywallBusy = on;
     const go = paywallEl.querySelector("#pwGo"), later = paywallEl.querySelector("#pwLater");
     go.disabled = on; later.disabled = on;
-    go.textContent = on ? "正在前往付款页…" : "解锁完整星空";
+    go.textContent = on ? "正在前往付款页…" : "前往付款";
   }
   function startCheckout() {
-    if (paywallBusy) return;   // 连点不会建立两个 Checkout Session
+    if (paywallBusy) return;   // 体验上防连点；真正防重复付款的是服务器与资料库
     setPaywallBusy(true);
     paywallEl.querySelector("#pwMsg").textContent = "";
-    window.Cloud.createCheckout().then(function (url) {
+    window.Cloud.createCheckout(ckRequest()).then(function (url) {
       // 成功就整页跳去 Stripe,按钮维持 busy,不让人再点一次
       window.location.href = url;
     }).catch(function (e) {
@@ -17482,8 +17636,7 @@ window.Guide = (function () {
         requireLogin("none");   // 登入完成后会回到 #/checkout-test
         return;
       }
-      paywallEl.querySelector("#pwMsg").textContent =
-        "暂时无法打开付款页面，请稍后再试。" + (e && e.message ? "（" + e.message + "）" : "");
+      paywallEl.querySelector("#pwMsg").textContent = ckErrorText(e);
     });
   }
 

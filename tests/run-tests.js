@@ -4792,6 +4792,7 @@ function testCompassVersionUpgrade() {
    · 401 → 续期一次再试;只跳去 checkout.stripe.com
    · 九个正式主题不被拦截:renderTopicPage 没有接 paywall
    ============================================================ */
+function firstRenderAt(html) { return html.indexOf("\n  applyRoute();"); }
 function testCheckoutSandbox() {
   const fs = require("fs"), path = require("path");
   const root = path.join(__dirname, "..");
@@ -4804,22 +4805,44 @@ function testCheckoutSandbox() {
   });
   checkEq("[pay] 呼叫 create-checkout-session",
     html.indexOf('SUPABASE_URL + "/functions/v1/create-checkout-session"') >= 0, true);
-  const fnStart = html.indexOf("function createCheckout(retried)");
+  const fnStart = html.indexOf("function createCheckout(body, retried)");
   const fnSrc = html.slice(fnStart, html.indexOf("window.Cloud = {", fnStart));
   checkEq("[pay] 只送 Content-Type 与使用者的 Bearer token",
     /headers: \{ "Content-Type": "application\/json", "Authorization": "Bearer " \+ session\.access_token \}/.test(fnSrc), true);
-  checkEq("[pay] body 是 {}", fnSrc.indexOf('body: "{}"') >= 0, true);
-  checkEq("[pay] 401 续期一次再试", /r\.status === 401[\s\S]*refresh\(\)\.then\(function \(\) \{ return createCheckout\(true\); \}/.test(fnSrc), true);
+  checkEq("[pay] body 只是前端选择的内容（JSON）", fnSrc.indexOf("body: JSON.stringify(body || {})") >= 0, true);
+  checkEq("[pay] 401 续期一次再试", /r\.status === 401[\s\S]*refresh\(\)\.then\(function \(\) \{ return createCheckout\(body, true\); \}/.test(fnSrc), true);
+  // 测试页只送 plan / topic_ids / include_inner_tools_6m —— 没有价格、没有 Price ID
+  const req = html.slice(html.indexOf("function ckRequest()"), html.indexOf("function openPaywall(opener)"));
+  checkEq("[pay] 请求只含 plan / topic_ids / include_inner_tools_6m",
+    (req.match(/req\.[a-z_0-9]+ =/g) || []).sort().join(","), "req.include_inner_tools_6m =,req.topic_ids =");
+  checkEq("[pay] 前端没有 Stripe Price ID", /price_[A-Za-z0-9]{8,}/.test(front), false);
+  checkEq("[pay] 前端不写入付费表", /rest\("(entitlements|entitlement_topics|subscriptions|checkout_orders|purchases)[^"]*", \{ *method/.test(html), false);
   checkEq("[pay] 第二次 401 要求重新登入", /if \(retried\) throw needLoginErr\(\)/.test(fnSrc), true);
   checkEq("[pay] 只跳去 Stripe 的 Checkout 网域", fnSrc.indexOf("checkout\\.stripe\\.com") >= 0, true);
   checkEq("[pay] #/checkout-test 路由存在", html.indexOf('if (h === "#/checkout-test") return { k: "checkouttest" };') >= 0, true);
   const tp = html.slice(html.indexOf("function renderTopicPage(tid)"), html.indexOf("function renderQPage(qid)"));
   checkEq("[pay] 九个正式主题没有接 paywall", /openPaywall|createCheckout/.test(tp), false);
   checkEq("[pay] Landing 没有接付款", /checkout|paywall/i.test(idx), false);
-  ["继续阅读属于你的故事", "The Inner Sky｜完整星空解读", "S$24.90", "一次性解锁完整主题阅读", "解锁完整星空", "暂时不要"]
-    .forEach(function (t) { checkEq("[pay] paywall 文案:" + t, html.indexOf(t) >= 0, true); });
+  ["继续阅读属于你的故事", "S$6.88", "S$11.88", "S$16.88", "S$19.76", "S$0.99 / 月", "暂时不要"]
+    .forEach(function (t) { checkEq("[pay] 测试页文案:" + t, html.indexOf(t) >= 0, true); });
+  checkEq("[pay] 测试页状态宣告在首次渲染之前(不踩 TDZ)",
+    html.indexOf("let ckPlan =") > 0 && (firstRenderAt(html) < 0 || html.indexOf("let ckPlan =") < firstRenderAt(html)), true);
+  // Edge Function 原始码（docs/edge）：只用 Sandbox 设定判断、固定 API 版本、单文件
+  const co = fs.readFileSync(path.join(root, "docs", "edge", "create-checkout-session.ts"), "utf8");
+  const wh = fs.readFileSync(path.join(root, "docs", "edge", "stripe-webhook.ts"), "utf8");
+  [["create-checkout-session", co], ["stripe-webhook", wh]].forEach(function (x) {
+    checkEq("[pay] " + x[0] + " 固定 Stripe API 版本", x[1].indexOf('const STRIPE_API_VERSION = "2026-07-29.dahlia";') >= 0, true);
+    checkEq("[pay] " + x[0] + " 金钥必须与 PAYMENTS_ENV 一致", x[1].indexOf('startsWith(PAY_ENV === "live" ? "sk_live_" : "sk_test_")') >= 0, true);
+    checkEq("[pay] " + x[0] + " 是单文件（不 import）", /^\s*import\s/m.test(x[1]), false);
+    checkEq("[pay] " + x[0] + " 没有写死金钥", /sk_(test|live)_[A-Za-z0-9]{6,}|whsec_[A-Za-z0-9]{6,}|price_[A-Za-z0-9]{8,}/.test(x[1]), false);
+  });
+  checkEq("[pay] checkout：一次性付款 Card + PayNow，Monthly 只用 Card",
+    co.indexOf('payment_method_types: isSub ? ["card"] : ["card", "paynow"]') >= 0, true);
+  checkEq("[pay] checkout：Idempotency-Key = 订单 id", co.indexOf('"checkout-" + order.order_id') >= 0, true);
+  checkEq("[pay] webhook：核对 livemode", wh.indexOf("Boolean(event.livemode) !== (PAY_ENV === \"live\")") >= 0, true);
+  checkEq("[pay] webhook：不删除、不作废发票", /\/invoices\/[^"]*(void|delete)|"DELETE"/.test(wh), false);
   // checkoutReturn 在首次渲染时就会被读到:必须宣告在第一次 applyRoute() 之前
-  const firstRender = html.indexOf("\n  applyRoute();");
+  const firstRender = firstRenderAt(html);
   checkEq("[pay] checkoutReturn 宣告在首次渲染之前(不踩 TDZ)",
     html.indexOf("const checkoutReturn =") > 0 && (firstRender < 0 || html.indexOf("const checkoutReturn =") < firstRender), true);
 }
