@@ -13775,7 +13775,7 @@ window.Guide = (function () {
       '<span class="moon-art" aria-hidden="true"></span>' +
       '<div class="br-main"><span class="br-rule" aria-hidden="true"></span>' +
       '<p class="lead">' +
-      dpT("有些事情已经过去了，<br>但它们留下的方式，可能比你想象中更深。",
+      dpT("有些事情已经过去了，<br>但它们留下的方式，可能比你想象中更深",
           "Some of it is over,<br>but the way it stayed may run deeper than you think.") + "</p>" +
       (lines.length
         ? '<div class="br-div" aria-hidden="true"><i></i><b>✦</b><i></i></div>' +
@@ -13792,6 +13792,8 @@ window.Guide = (function () {
      其余的字维持一般正文(不加粗)。原文一个字都不改,只是切开来排;
      没有「」的句子就原样当一段正文。 */
   function dpThreadPattern(text) {
+    // 用户:结尾的句号不显示(只拿掉最后一个「。」;问号、叹号保留,资料本身不改)
+    text = String(text).replace(/。+\s*$/, "");
     const parts = String(text).split(/(「[^」]+」)/).filter(function (x) { return x !== ""; });
     if (parts.length < 2) {
       /* 没有「」的句子:把最有力的结论句单独成行、稍微加粗(用户要求)。
