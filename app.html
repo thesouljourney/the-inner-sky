@@ -8636,10 +8636,13 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
         rest("entitlements?select=topic_limit,life_thread_access,inner_tools_until"),
         rest("entitlement_topics?select=topic_id&order=topic_id"),
         rest("subscriptions?select=stripe_subscription_id,status,paid_through,current_period_end,cancel_at_period_end,cancel_requested_at&order=created_at.desc"),
-        rest("checkout_orders?select=plan_code,status,topic_ids,inner_tools_6m,created_at&order=created_at.desc&limit=5")
+        rest("checkout_orders?select=plan_code,status,topic_ids,inner_tools_6m,created_at&order=created_at.desc&limit=5"),
+        rest("early_access_users?select=scopes")
       ]).then(function (r) {
         return { entitlement: r[0][0] || null, topics: r[1].map(function (x) { return x.topic_id; }),
-                 subscriptions: r[2], orders: r[3] };
+                 subscriptions: r[2], orders: r[3],
+                 // 早期体验用户的免费范围（不是体验用户就是 null）
+                 earlyScopes: r[4][0] ? (r[4][0].scopes || []) : null };
       });
     }
   };
@@ -17440,6 +17443,7 @@ window.Guide = (function () {
   function ckErrorText(e) {
     const CK_ERRORS = {
       payments_not_enabled: "这个账号目前不在 Sandbox 测试名单里，还不能购买。",
+      early_access: "早期体验用户：你的主题阅读、生命脉络及 Inner Tools 权限已开放，无需购买。",
       invalid_topics: "主题选择不正确：数量不对、重复，或不是正式主题。",
       unexpected_topics: "这个方案不需要选主题。",
       use_upgrade: "你已经拥有主题了，请改用升级方案。",
@@ -17459,6 +17463,12 @@ window.Guide = (function () {
     return "暂时无法打开付款页面，请稍后再试。" + (e && e.message ? "（" + e.message + "）" : "");
   }
   function ckDate(v) { return v ? String(v).replace("T", " ").slice(0, 16) : "—"; }
+  // 早期体验用户已经免费拥有的方案（只影响显示；服务器与资料库会再挡一次）
+  function ckEarlyCovers(scopes, planId) {
+    if (!scopes) return false;
+    if (planId === "inner_tools_monthly") return scopes.indexOf("inner_tools") >= 0;
+    return scopes.indexOf("topics") >= 0 && scopes.indexOf("life_thread") >= 0;
+  }
 
   function renderCheckoutTestPage() {
     if (!window.Cloud.hasSession()) { requireLogin("none"); return; }
@@ -17483,6 +17493,7 @@ window.Guide = (function () {
     const stateHtml = !st
       ? '<p class="hint" id="ckStateMsg">' + esc0(ckStateErr || "正在读取目前的购买状态…") + '</p>'
       : '<div class="ck-state">' +
+        (st.earlyScopes ? '<div><b>早期体验范围</b>：' + esc0(st.earlyScopes.join(", ")) + '（不经过购买）</div>' : "") +
         '<div><b>topic_limit</b>：' + limit + '</div>' +
         '<div><b>拥有的主题</b>：' + (owned.length ? esc0(owned.map(tName).join("、")) + "（" + owned.length + "）" : "无") + '</div>' +
         '<div><b>生命脉络</b>：' + (ent.life_thread_access ? "已开通" : "未开通") + '</div>' +
@@ -17495,7 +17506,17 @@ window.Guide = (function () {
         }).join("<br>") : "无") + '</div>' +
         '</div>';
 
-    const plans = ckPlanList().map(function (p) {
+    const early = st ? st.earlyScopes : null;
+    const buyable = ckPlanList().filter(function (p) { return !ckEarlyCovers(early, p.id); });
+    if (st && buyable.length && !buyable.some(function (p) { return p.id === ckPlan; })) ckPlan = buyable[0].id;
+    const earlyParts = early ? [["topics", "主题阅读"], ["life_thread", "生命脉络"], ["inner_tools", "Inner Tools"]]
+      .filter(function (x) { return early.indexOf(x[0]) >= 0; }).map(function (x) { return x[1]; }) : [];
+    const earlyNote = earlyParts.length
+      ? '<div class="dp-note"><span class="ic" aria-hidden="true">✦</span><span>' +
+        esc0("早期体验用户：你的" + (earlyParts.length > 1 ? earlyParts.slice(0, -1).join("、") + "及" + earlyParts[earlyParts.length - 1] : earlyParts[0]) +
+             "权限已开放，无需购买。") + '</span></div>'
+      : "";
+    const plans = buyable.map(function (p) {
       return '<label class="ck-opt"><input type="radio" name="ckPlan" value="' + p.id + '"' + (ckPlan === p.id ? " checked" : "") + '> ' +
         esc0(p.label) + ' <span class="ck-price">' + esc0(p.price) + '</span></label>';
     }).join("");
@@ -17515,8 +17536,9 @@ window.Guide = (function () {
       '<input type="text" readonly value="' + esc0(window.Cloud.userId() || "") + '"></div>' +
       '<div class="dp-field"><label>目前的购买状态（只读）</label>' + stateHtml +
       '<button type="button" class="dp-link" id="ckReload" style="justify-self:start;margin-top:6px">重新读取状态</button></div>' +
-      '<div class="dp-field"><label>选择方案</label>' + plans + '</div>' +
-      (ckPlan === "complete" && limit === 0
+      earlyNote +
+      (!st || buyable.length ? '<div class="dp-field"><label>选择方案</label>' + plans + '</div>' : "") +
+      (st && !buyable.length ? "" : (ckPlan === "complete" && limit === 0
         ? '<label class="ck-opt"><input type="checkbox" id="ckSixm"' + (ckSixm ? " checked" : "") + '> 加购 Inner Tools 6 个月 <span class="ck-price">+S$2.88</span></label>'
         : "") +
       (need ? '<div class="dp-field"><label>选择 ' + need + ' 个' + (limit ? "新" : "") + '主题（已选 <span id="ckCount">' +
@@ -17524,7 +17546,7 @@ window.Guide = (function () {
       '<div class="dp-note"><span class="ic" aria-hidden="true">✦</span><span>' +
       "Stripe Sandbox：请使用测试卡（例如 4242 4242 4242 4242）或 Sandbox 的 PayNow。不会产生真实付款。" +
       '</span></div>' +
-      '<button class="dp-cta" id="ckOpen" style="justify-self:start">继续</button>' +
+      '<button class="dp-cta" id="ckOpen" style="justify-self:start">继续</button>') +
       '</div></div>';
     dpScaffold({
       chip: "Sandbox",

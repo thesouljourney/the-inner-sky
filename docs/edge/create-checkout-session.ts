@@ -127,6 +127,7 @@ function pricesFor(order: Any): string[] {
 const ERROR_STATUS: Record<string, number> = {
   "checkout:invalid_plan": 400, "checkout:invalid_topics": 400, "checkout:unexpected_topics": 400,
   "checkout:addon_not_allowed": 400, "checkout:bad_environment": 500, "checkout:unauthenticated": 401,
+  "checkout:early_access": 403,
 };
 
 // ── 主流程 ──────────────────────────────────────────────────────
@@ -163,15 +164,20 @@ export async function handler(req: Request): Promise<Response> {
     } catch (_e) { return fail(503, "auth_unavailable"); }
     if (!user || !user.id) return fail(401, "invalid_session", "Invalid or expired user session");
 
-    // 2. 只有适用付费强制的账号（Sandbox 期间 = billing_test_users）能建立 checkout
-    const enf = await rpc("enforcement_applies", { p_user: user.id });
-    if (!enf.ok) return fail(503, "db_unavailable");
-    if (enf.data !== true) return fail(403, "payments_not_enabled", "这个账号目前还不能购买");
-
-    // 3. 请求内容（只接受这三个栏位；topic 由资料库再验证一次）
+    // 2. 请求内容（只接受这三个栏位；topic 由资料库再验证一次）
     const body = await req.json().catch(() => null);
     if (!body || typeof body !== "object") return fail(400, "invalid_body");
     const plan = typeof body.plan === "string" ? body.plan : "";
+
+    // 3. 早期体验用户已经拥有这个类别的权限 → 不进入付款流程（资料库下单时还会再挡一次）
+    const early = await rpc("early_access_covers_plan", { p_user: user.id, p_plan: plan });
+    if (!early.ok) return fail(503, "db_unavailable");
+    if (early.data === true) return fail(403, "early_access", "早期体验用户无需购买");
+
+    // 只有适用付费强制的账号（Sandbox 期间 = billing_test_users）能建立 checkout
+    const enf = await rpc("enforcement_applies", { p_user: user.id });
+    if (!enf.ok) return fail(503, "db_unavailable");
+    if (enf.data !== true) return fail(403, "payments_not_enabled", "这个账号目前还不能购买");
     let topicIds: string[] | null = null;
     if (body.topic_ids !== undefined && body.topic_ids !== null) {
       if (!Array.isArray(body.topic_ids) || body.topic_ids.length > 9 ||

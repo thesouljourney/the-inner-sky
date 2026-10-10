@@ -4841,6 +4841,14 @@ function testCheckoutSandbox() {
   checkEq("[pay] checkout：Idempotency-Key = 订单 id", co.indexOf('"checkout-" + order.order_id') >= 0, true);
   checkEq("[pay] webhook：核对 livemode", wh.indexOf("Boolean(event.livemode) !== (PAY_ENV === \"live\")") >= 0, true);
   checkEq("[pay] webhook：不删除、不作废发票", /\/invoices\/[^"]*(void|delete)|"DELETE"/.test(wh), false);
+  // Stage 1b 早期体验用户
+  checkEq("[pay] 早期体验用户：错误码 early_access 有说明",
+    html.indexOf('early_access: "早期体验用户：你的主题阅读、生命脉络及 Inner Tools 权限已开放，无需购买。"') >= 0, true);
+  checkEq("[pay] 不承诺「未来功能终身免费」", /终身免费|未来功能.{0,6}免费/.test(html), false);
+  checkEq("[pay] 读取 early_access_users 的范围", html.indexOf('rest("early_access_users?select=scopes")') >= 0, true);
+  checkEq("[pay] checkout：先挡早期体验用户，再判断付费强制",
+    co.indexOf('rpc("early_access_covers_plan"') > 0 && co.indexOf('rpc("early_access_covers_plan"') < co.indexOf('rpc("enforcement_applies"'), true);
+  checkEq("[pay] checkout：资料库的 early_access 回 403", co.indexOf('"checkout:early_access": 403') >= 0, true);
   // checkoutReturn 在首次渲染时就会被读到:必须宣告在第一次 applyRoute() 之前
   const firstRender = firstRenderAt(html);
   checkEq("[pay] checkoutReturn 宣告在首次渲染之前(不踩 TDZ)",

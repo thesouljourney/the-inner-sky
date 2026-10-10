@@ -45,6 +45,7 @@ export async function createDb() {
   const pool = new pg.Pool({ database: name, max: 4 });
   await pool.query(fs.readFileSync(path.join(ROOT, "tests/sql/00_mock_supabase.sql"), "utf8"));
   await pool.query(fs.readFileSync(path.join(ROOT, "docs/sql/payments_stage1.sql"), "utf8"));
+  await pool.query(fs.readFileSync(path.join(ROOT, "docs/sql/payments_stage1b.sql"), "utf8"));
   await pool.query(`insert into auth.users values ('${USERS.C}') on conflict do nothing`);
   return {
     pool,
@@ -59,7 +60,8 @@ export async function createDb() {
 }
 export async function resetDb(pool) {
   await pool.query(`truncate public.purchases, public.checkout_orders, public.entitlement_topics,
-    public.entitlements, public.subscriptions, public.billing_customers, public.billing_test_users cascade`);
+    public.entitlements, public.subscriptions, public.billing_customers, public.billing_test_users, public.early_access_users cascade`);
+  await pool.query(`update public.billing_settings set enforcement_mode = 'test_accounts'`);
 }
 
 // 极简 PostgREST：只实作 Edge Function 用得到的那几种

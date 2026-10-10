@@ -181,6 +181,57 @@ await scenario("C10 Monthly", async () => {
   ok(Object.values(stripe.sessions).filter((s) => s.status === "open").length === 2, "C10 Monthly 与 topic 的 checkout 互不取代");
 });
 
+await scenario("C11 早期体验用户不进入付款流程", async () => {
+  for (const mode of ["test_accounts", "all"]) {
+    await fresh([]);
+    await pool.query(`update public.billing_settings set enforcement_mode = '${mode}'`);
+    await pool.query("insert into public.early_access_users (user_id) values ($1)", [USERS.B]);
+    for (const body of [{ plan: "complete" }, { plan: "topics_3", topic_ids: ["self", "love", "body"] },
+                        { plan: "complete", include_inner_tools_6m: true }, { plan: "inner_tools_monthly" }]) {
+      const r = await buy("tokB", body);
+      ok(r.status === 403 && r.body.code === "early_access" && !r.body.url, `C11 ${mode}：体验用户 ${body.plan} → 403 early_access`, r);
+    }
+    ok(Object.keys(stripe.calls).length === 0, `C11 ${mode}：完全不呼叫 Stripe（不建 Customer、不建 session）`, stripe.calls);
+    ok((await q("select * from public.checkout_orders")).length === 0, `C11 ${mode}：不建立订单`);
+    ok((await q("select * from public.billing_customers")).length === 0, `C11 ${mode}：不建立 billing_customers`);
+  }
+  // 前一道检查被略过（或名单在途中才加入）→ 资料库下单时一样挡下
+  await fresh([]);
+  await pool.query("update public.billing_settings set enforcement_mode = 'all'");
+  const orig = globalThis.fetch;
+  globalThis.fetch = async (url, init) => {
+    if (String(url).includes("/rpc/early_access_covers_plan")) {
+      await pool.query("insert into public.early_access_users (user_id) values ($1) on conflict do nothing", [USERS.B]);
+      return new Response("false", { status: 200, headers: { "content-type": "application/json" } });
+    }
+    return orig(url, init);
+  };
+  const rr = await buy("tokB", { plan: "complete" });
+  globalThis.fetch = orig;
+  ok(rr.status === 403 && rr.body.code === "early_access" && !rr.body.url, "C11 资料库下单时再挡一次 → 403 early_access", rr);
+  ok(!stripe.calls.some((c) => c.path.includes("checkout/sessions") && c.method === "POST" && !c.path.includes("expire")), "C11 没有建立 Stripe session");
+  // 只有部分范围：没涵盖的仍然照常付费
+  await fresh([]);
+  await pool.query("update public.billing_settings set enforcement_mode = 'all'");
+  await pool.query("insert into public.early_access_users (user_id, scopes) values ($1, array['topics','life_thread'])", [USERS.B]);
+  ok((await buy("tokB", { plan: "complete" })).body.code === "early_access", "C11 部分范围：已涵盖的 Complete → 拒绝");
+  const r = await buy("tokB", { plan: "inner_tools_monthly" });
+  ok(r.status === 200 && r.body.url, "C11 部分范围：没涵盖的 Monthly 可以付费", r);
+});
+
+await scenario("C12 enforcement_mode = all：新用户必须付费", async () => {
+  await fresh([]);
+  await pool.query("update public.billing_settings set enforcement_mode = 'all'");
+  await pool.query("insert into public.early_access_users (user_id) values ($1)", [USERS.B]);
+  const r = await buy("tokA", { plan: "complete" });
+  ok(r.status === 200 && r.body.url, "C12 不在测试名单的新用户也能建立 checkout", r);
+  ok((await one("select count(*)::int n from public.checkout_orders where user_id=$1", [USERS.A])).n === 1, "C12 新用户订单已建立");
+  const access = await one(`select public.paid_access($1,'topic','self') a, public.paid_access($2,'topic','self') b,
+                                   public.inner_tools_access($1) ia, public.inner_tools_access($2) ib`, [USERS.A, USERS.B]);
+  ok(access.a === "denied" && access.ia === "expired", "C12 新用户付款前：主题 denied、Inner Tools expired", access);
+  ok(access.b === "early_access" && access.ib === "early_access", "C12 体验用户：主题与 Inner Tools 开放", access);
+});
+
 // ═══════════════ stripe-webhook ═══════════════
 await scenario("W1 签名与环境", async () => {
   await fresh();
