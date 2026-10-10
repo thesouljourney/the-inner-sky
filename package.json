@@ -7,7 +7,9 @@
     "test": "node tests/run-tests.js",
     "gen:ephem": "node tools/gen-ephem-minor.js",
     "gen:places": "node tools/gen-places.js",
-    "gen:reference": "python3 tools/gen-reference.py"
+    "gen:reference": "python3 tools/gen-reference.py",
+    "test:sql": "bash tests/sql/run.sh",
+    "test:edge": "node tests/edge/run.mjs"
   },
   "devDependencies": {
     "all-the-cities": "^3.1.0",
@@ -15,6 +17,7 @@
     "cities-with-1000": "^1.0.4",
     "city-timezones": "^1.3.4",
     "i18n-iso-countries": "^7.14.0",
+    "pg": "^8.23.1",
     "tz-lookup": "^6.1.25"
   }
 }
