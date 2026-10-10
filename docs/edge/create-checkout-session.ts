@@ -16,6 +16,7 @@
 //   STRIPE_PRICE_3_TOPICS, STRIPE_PRICE_6_TOPICS, STRIPE_PRICE_COMPLETE,
 //   STRIPE_PRICE_INNER_TOOLS_6M, STRIPE_PRICE_INNER_TOOLS_MONTHLY,
 //   STRIPE_PRICE_TOPIC_UPGRADE, STRIPE_PRICE_COMPLETE_UPGRADE,
+//   （每个 Price 应有的金额见下方 PRICE_RULES；建立付款页前会向 Stripe 核对）
 //   SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY（后三个由 Supabase 自动提供）
 
 const STRIPE_API_VERSION = "2026-07-29.dahlia";
@@ -124,6 +125,42 @@ function pricesFor(order: Any): string[] {
   return out;
 }
 
+// ── 每个 Price 应有的金额（SGD，单位：分）───────────────────────────
+// Price ID 只放在 Supabase Secrets；这里只记「应该收多少」。建立付款页之前向 Stripe 核对，
+// Secret 指到旧价格、币别不对、一次性 / 订阅类型不对，或 Price 已停用 → 不建立付款页。
+const PRICE_RULES: Record<string, { amount: number; monthly: boolean }> = {
+  STRIPE_PRICE_3_TOPICS:            { amount: 688,  monthly: false },  // 3 Topics          S$6.88
+  STRIPE_PRICE_6_TOPICS:            { amount: 1288, monthly: false },  // 6 Topics          S$12.88
+  STRIPE_PRICE_COMPLETE:            { amount: 1688, monthly: false },  // Complete          S$16.88
+  STRIPE_PRICE_TOPIC_UPGRADE:       { amount: 600,  monthly: false },  // 3→6、6→Complete   S$6.00
+  STRIPE_PRICE_COMPLETE_UPGRADE:    { amount: 1100, monthly: false },  // 3→Complete        S$11.00
+  STRIPE_PRICE_INNER_TOOLS_6M:      { amount: 288,  monthly: false },  // 6 个月（只限 0→Complete 加购）S$2.88
+  STRIPE_PRICE_INNER_TOOLS_MONTHLY: { amount: 199,  monthly: true  },  // 每月自动续费      S$1.99
+};
+const verifiedPrices = new Map<string, number>();   // price id → 核对成功的时间（只记成功）
+const PRICE_CACHE_MS = 10 * 60 * 1000;
+// 回传 null = 全部正确；否则回传出问题的 Secret 名称与原因（只写进 log，不给前端）
+async function verifyPrices(ids: string[]): Promise<string | null> {
+  for (const id of ids) {
+    const name = Object.keys(PRICE_RULES).find((n) => env(n) === id);
+    if (!name) return `price ${id} 不属于任何 Secret`;
+    const t = verifiedPrices.get(id);
+    if (t && Date.now() - t < PRICE_CACHE_MS) continue;
+    const r = await stripe("GET", "/prices/" + encodeURIComponent(id));
+    if (!r.ok) return r.network || r.status >= 500 ? "unavailable" : `${name}：Stripe 找不到这个 Price`;
+    const p = r.body ?? {};
+    const rule = PRICE_RULES[name];
+    const typeOk = rule.monthly
+      ? p.type === "recurring" && p.recurring?.interval === "month" && Number(p.recurring?.interval_count ?? 1) === 1
+      : p.type === "one_time";
+    if (!p.active || p.currency !== "sgd" || p.unit_amount !== rule.amount || !typeOk) {
+      return `${name}：Stripe 上是 ${p.currency} ${p.unit_amount}（${p.type}${p.active ? "" : "，已停用"}），应为 sgd ${rule.amount}（${rule.monthly ? "每月订阅" : "一次性"}）`;
+    }
+    verifiedPrices.set(id, Date.now());
+  }
+  return null;
+}
+
 const ERROR_STATUS: Record<string, number> = {
   "checkout:invalid_plan": 400, "checkout:invalid_topics": 400, "checkout:unexpected_topics": 400,
   "checkout:addon_not_allowed": 400, "checkout:bad_environment": 500, "checkout:unauthenticated": 401,
@@ -206,6 +243,15 @@ export async function handler(req: Request): Promise<Response> {
       return fail(503, "db_unavailable");
     }
     const order = rsv.data;
+
+    // 5b. 核对这笔订单要用的 Price：金额、币别、类型都必须和 PRICE_RULES 一致
+    const priceProblem = await verifyPrices(pricesFor(order));
+    if (priceProblem) {
+      await rpc("fail_checkout_order", { p_order: order.order_id });
+      if (priceProblem === "unavailable") return fail(503, "stripe_unavailable", "暂时无法连线到付款服务，请稍后再试");
+      console.error("create-checkout-session: price misconfigured", priceProblem);
+      return fail(500, "price_config_error", "付款设定有误，暂时无法购买");
+    }
 
     // 6. 旧 session 一律 expire；无法确认就不建立新的
     const toExpire = new Set<string>(order.expire_sessions || []);

@@ -17423,15 +17423,24 @@ window.Guide = (function () {
      · 方案能不能买、topic 合不合法、价格多少，一律由服务器决定；
        这里的价格只是显示用，Price ID 不在前端
      ============================================================ */
-  function ckPlanList() {
-    return [
-      { id: "topics_3", label: "3 Topics", price: "S$6.88" },
-      { id: "topics_6", label: "6 Topics", price: "S$11.88" },
-      { id: "complete", label: "Complete（9 个主题 + 生命脉络）", price: "S$16.88" },
-      { id: "topic_upgrade", label: "升级（3→6 选 3 个新主题，或 6→Complete）", price: "S$5" },
-      { id: "complete_upgrade", label: "3 Topics → Complete", price: "S$10" },
-      { id: "inner_tools_monthly", label: "Inner Tools 每月订阅", price: "S$0.99 / 月" }
-    ];
+  // 依目前拥有的主题数，只列出可以购买的方案（服务器与资料库会再验证一次）
+  //   0 → 3 Topics / 6 Topics / Complete；3 → 3→6、3→Complete；6 → 6→Complete；9 → 不再列主题方案
+  //   Complete 一律包含「属于你的生命脉络」；Inner Tools 每月订阅任何阶段都可以单独订
+  function ckPlanList(limit) {
+    const lim = Number(limit || 0);
+    const list = [];
+    if (lim === 0) {
+      list.push({ id: "topics_3", label: "3 Topics", price: "S$6.88" });
+      list.push({ id: "topics_6", label: "6 Topics", price: "S$12.88" });
+      list.push({ id: "complete", label: "Complete（9 个主题 + 生命脉络）", price: "S$16.88" });
+    } else if (lim === 3) {
+      list.push({ id: "topic_upgrade", label: "3 → 6 Topics（再选 3 个新主题）", price: "S$6.00" });
+      list.push({ id: "complete_upgrade", label: "3 Topics → Complete（补齐 9 个主题 + 生命脉络）", price: "S$11.00" });
+    } else if (lim === 6) {
+      list.push({ id: "topic_upgrade", label: "6 Topics → Complete（补齐 9 个主题 + 生命脉络）", price: "S$6.00" });
+    }
+    list.push({ id: "inner_tools_monthly", label: "Inner Tools 每月订阅（自动续费）", price: "S$1.99 / 月" });
+    return list;
   }
   // 这次需要选几个新 topic（只是体验上的提示，服务器会再验证）
   function ckNeed(limit) {
@@ -17456,7 +17465,8 @@ window.Guide = (function () {
       payment_processing: "上一笔付款还在确认中（例如 PayNow），请稍后再试。",
       previous_payment_completed: "上一笔付款已经完成，请重新整理页面后再选择。",
       superseded: "已有另一个付款页面正在建立，请重新整理后再试。",
-      invalid_plan: "方案不正确。"
+      invalid_plan: "方案不正确。",
+      price_config_error: "付款设定有误（价格与 Stripe 不符），暂时无法购买，没有产生任何付款。"
     };
     const c = e && e.code;
     if (c && CK_ERRORS[c]) return CK_ERRORS[c];
@@ -17488,7 +17498,7 @@ window.Guide = (function () {
     const limit = Number(ent.topic_limit || 0);
     const topics = (window.Reading && window.Reading.TOPICS9) || [];
     const tName = function (id) { const t = topics.find(function (x) { return x.id === id; }); return t ? t.name : id; };
-    const need = ckNeed(limit);
+    let need = ckNeed(limit);
 
     const stateHtml = !st
       ? '<p class="hint" id="ckStateMsg">' + esc0(ckStateErr || "正在读取目前的购买状态…") + '</p>'
@@ -17507,8 +17517,10 @@ window.Guide = (function () {
         '</div>';
 
     const early = st ? st.earlyScopes : null;
-    const buyable = ckPlanList().filter(function (p) { return !ckEarlyCovers(early, p.id); });
-    if (st && buyable.length && !buyable.some(function (p) { return p.id === ckPlan; })) ckPlan = buyable[0].id;
+    const buyable = ckPlanList(limit).filter(function (p) { return !ckEarlyCovers(early, p.id); });
+    if (st && buyable.length && !buyable.some(function (p) { return p.id === ckPlan; })) {
+      ckPlan = buyable[0].id; ckTopics = []; ckSixm = false; need = ckNeed(limit);
+    }
     const earlyParts = early ? [["topics", "主题阅读"], ["life_thread", "生命脉络"], ["inner_tools", "Inner Tools"]]
       .filter(function (x) { return early.indexOf(x[0]) >= 0; }).map(function (x) { return x[1]; }) : [];
     const earlyNote = earlyParts.length
@@ -17621,7 +17633,8 @@ window.Guide = (function () {
         if (ev.key === "Escape" && paywallEl && paywallEl.classList.contains("on")) closePaywall();
       });
     }
-    const p = ckPlanList().find(function (x) { return x.id === ckPlan; }) || ckPlanList()[0];
+    const lim = Number((ckState && ckState.entitlement && ckState.entitlement.topic_limit) || 0);
+    const p = ckPlanList(lim).find(function (x) { return x.id === ckPlan; }) || ckPlanList(lim)[0];
     const req = ckRequest();
     paywallEl.querySelector("#pwProd").textContent = "The Inner Sky｜" + p.label;
     paywallEl.querySelector("#pwPrice").textContent = req.include_inner_tools_6m ? "S$19.76" : p.price;

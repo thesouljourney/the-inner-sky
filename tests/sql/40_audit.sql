@@ -99,9 +99,9 @@ rollback;
 begin;
 insert into entitlements (user_id, inner_tools_until) values (:A, now() + interval '400 days');
 select upsert_subscription(:A,'test','cus','sub_x','p','active', now(), now()+interval '30 days', false);
-select record_invoice_paid(:A,'test','sub_x','in_x','p',99,'sgd', now()+interval '30 days', false);
+select record_invoice_paid(:A,'test','sub_x','in_x','p',199,'sgd', now()+interval '30 days', false);
 select pg_temp.ok((select inner_tools_until from entitlements) > now() + interval '399 days', '旧的较晚期限不会被缩短');
-select pg_temp.fails($$select record_invoice_paid('aaaaaaaa-0000-4000-8000-000000000001','test','sub_missing','in_y','p',99,'sgd',now(),true)$$, 'subscription_not_found', '没有同步过的订阅 → 报错让 webhook 重试');
+select pg_temp.fails($$select record_invoice_paid('aaaaaaaa-0000-4000-8000-000000000001','test','sub_missing','in_y','p',199,'sgd',now(),true)$$, 'subscription_not_found', '没有同步过的订阅 → 报错让 webhook 重试');
 rollback;
 begin;  -- 6M 只能发放一次
 update entitlements set inner_tools_6m_granted_at = now() where user_id = :A;
