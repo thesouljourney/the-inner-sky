@@ -22,9 +22,23 @@ export const TOKENS = { tokA: USERS.A, tokB: USERS.B, tokC: USERS.C };
 export const PRICES = {
   STRIPE_PRICE_3_TOPICS: "price_test_t3", STRIPE_PRICE_6_TOPICS: "price_test_t6",
   STRIPE_PRICE_COMPLETE: "price_test_complete", STRIPE_PRICE_INNER_TOOLS_6M: "price_test_6m",
-  STRIPE_PRICE_INNER_TOOLS_MONTHLY: "price_test_monthly", STRIPE_PRICE_TOPIC_UPGRADE: "price_test_up5",
-  STRIPE_PRICE_COMPLETE_UPGRADE: "price_test_up10",
+  STRIPE_PRICE_INNER_TOOLS_MONTHLY: "price_test_monthly", STRIPE_PRICE_TOPIC_UPGRADE: "price_test_up6",
+  STRIPE_PRICE_COMPLETE_UPGRADE: "price_test_up11",
 };
+
+// 假 Stripe 上每个 Price 的设定（与正式价格相同）
+export const PRICE_OBJECTS = {
+  [PRICES.STRIPE_PRICE_3_TOPICS]: 688, [PRICES.STRIPE_PRICE_6_TOPICS]: 1288,
+  [PRICES.STRIPE_PRICE_COMPLETE]: 1688, [PRICES.STRIPE_PRICE_INNER_TOOLS_6M]: 288,
+  [PRICES.STRIPE_PRICE_INNER_TOOLS_MONTHLY]: 199, [PRICES.STRIPE_PRICE_TOPIC_UPGRADE]: 600,
+  [PRICES.STRIPE_PRICE_COMPLETE_UPGRADE]: 1100,
+};
+function priceObject(id, amount) {
+  const monthly = id === PRICES.STRIPE_PRICE_INNER_TOOLS_MONTHLY;
+  return { id, object: "price", active: true, currency: "sgd", unit_amount: amount,
+           type: monthly ? "recurring" : "one_time",
+           recurring: monthly ? { interval: "month", interval_count: 1 } : null };
+}
 
 export function setEnv(overrides = {}) {
   Object.assign(process.env, {
@@ -134,6 +148,7 @@ const nid = (p) => `${p}_${(++seq).toString(36)}${crypto.randomBytes(3).toString
 export class FakeStripe {
   constructor() {
     this.customers = {}; this.sessions = {}; this.subs = {}; this.idem = {};
+    this.prices = Object.fromEntries(Object.entries(PRICE_OBJECTS).map(([id, a]) => [id, priceObject(id, a)]));
     this.calls = []; this.faults = []; this.hooks = {};
   }
   // 下一次符合的呼叫故意失败：kind = "network" | 状态码
@@ -161,6 +176,10 @@ export class FakeStripe {
       const id = nid("cus_test");
       this.customers[id] = { id, email: f.email, metadata: f.metadata || {} };
       return [200, this.customers[id]];
+    }
+    if ((m = /^\/prices\/([^/]+)$/.exec(p)) && method === "GET") {
+      const pr = this.prices[decodeURIComponent(m[1])];
+      return pr ? [200, pr] : [404, { error: { message: "No such price" } }];
     }
     if (method === "GET" && p === "/checkout/sessions") {
       const data = Object.values(this.sessions).filter((s) =>
@@ -201,8 +220,10 @@ export class FakeStripe {
     return [404, { error: { message: "fake stripe: unknown route " + method + " " + p } }];
   }
   // 测试辅助：让一张 session「完成」
-  complete(id, { paid = true, amount = 688, subscription = null } = {}) {
+  // amount 不给 → 按 line items 的 Price 金额加总（等于 Stripe 实际收取的金额）
+  complete(id, { paid = true, amount, subscription = null } = {}) {
     const s = this.sessions[id];
+    if (amount === undefined) amount = s.line_items.data.reduce((t, li) => t + (this.prices[li.price.id]?.unit_amount ?? 0) * li.quantity, 0);
     s.status = "complete"; s.payment_status = paid ? "paid" : "unpaid";
     s.amount_total = amount; s.payment_intent = s.mode === "payment" ? nid("pi_test") : null;
     s.subscription = subscription;

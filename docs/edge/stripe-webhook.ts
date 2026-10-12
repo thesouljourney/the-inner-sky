@@ -144,6 +144,22 @@ function expectedPrices(o: { category: string; from: number | null; to: number |
   if (o.sixm) out.push(env("STRIPE_PRICE_INNER_TOOLS_6M"));
   return out;
 }
+// 每个 Price 应收的金额（SGD，单位：分）—— 与 create-checkout-session 的 PRICE_RULES 相同
+const PRICE_AMOUNTS: Record<string, number> = {
+  STRIPE_PRICE_3_TOPICS: 688, STRIPE_PRICE_6_TOPICS: 1288, STRIPE_PRICE_COMPLETE: 1688,
+  STRIPE_PRICE_TOPIC_UPGRADE: 600, STRIPE_PRICE_COMPLETE_UPGRADE: 1100,
+  STRIPE_PRICE_INNER_TOOLS_6M: 288, STRIPE_PRICE_INNER_TOOLS_MONTHLY: 199,
+};
+// 实际收取的总额必须等于这些 Price 应收金额的总和（SGD）
+function sameAmount(s: Any, expected: string[]): boolean {
+  let total = 0;
+  for (const id of expected) {
+    const name = Object.keys(PRICE_AMOUNTS).find((n) => env(n) === id);
+    if (!name) return false;
+    total += PRICE_AMOUNTS[name];
+  }
+  return s?.currency === "sgd" && s?.amount_total === total;
+}
 function samePrices(lineItems: Any[], expected: string[]): boolean {
   const got = lineItems.map((li) => idOf(li?.price) ?? "").filter(Boolean).sort();
   const want = expected.slice().sort();
@@ -157,7 +173,8 @@ export async function handler(req: Request): Promise<Response> {
   const KEY = env("STRIPE_SECRET_KEY");
   const SECRET = env("STRIPE_WEBHOOK_SECRET");
   if (!["test", "live"].includes(PAY_ENV) || !SECRET || !env("SUPABASE_URL") || !env("SUPABASE_SERVICE_ROLE_KEY") ||
-      !KEY.startsWith(PAY_ENV === "live" ? "sk_live_" : "sk_test_")) {
+      !KEY.startsWith(PAY_ENV === "live" ? "sk_live_" : "sk_test_") ||
+      Object.keys(PRICE_AMOUNTS).some((n) => !env(n))) {
     console.error("stripe-webhook: server not configured");
     return reply(500, { error: "Server not configured" });
   }
@@ -244,7 +261,9 @@ async function onCheckout(type: string, sessionId: string, payEnv: string): Prom
     to: md.to_limit === "" || md.to_limit === undefined ? null : Number(md.to_limit),
     sixm: md.inner_tools_6m === "true",
   });
-  return await applyPayment(md.order_id, s, userId, payEnv, samePrices(s.line_items?.data ?? [], expected));
+  // Price 与实际收取金额都要对，才发放权限；不对 → paid_conflict（已付款，交人工处理，不静默发放）
+  const ok = samePrices(s.line_items?.data ?? [], expected) && sameAmount(s, expected);
+  return await applyPayment(md.order_id, s, userId, payEnv, ok);
 }
 
 async function applyPayment(orderId: string, s: Any, userId: string, payEnv: string, priceOk: boolean): Promise<Any> {

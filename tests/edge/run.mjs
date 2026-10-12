@@ -368,7 +368,7 @@ await scenario("W9 Monthly → Complete + 6M → 期末取消", async () => {
   await buy("tokA", { plan: "inner_tools_monthly" });
   const cus = Object.keys(stripe.customers)[0];
   const sub = stripe.createSubscription(USERS.A, cus, { periodEnd: Math.floor((Date.now() + 30 * DAY) / 1000) });
-  const ms = stripe.complete(lastSession().id, { paid: true, amount: 99, subscription: sub.id });
+  const ms = stripe.complete(lastSession().id, { paid: true, amount: 199, subscription: sub.id });
   const r1 = await send("checkout.session.completed", { id: ms.id });
   ok(r1.body.result === "subscription_recorded", "W9 Monthly checkout 记录", r1);
   const firstInv = { id: "in_test_1", billing_reason: "subscription_create", amount_paid: 99, currency: "sgd",
@@ -442,6 +442,131 @@ await scenario("W11 暂时性错误 → 500", async () => {
   ok(r.status === 500 && (await topicsOf(USERS.A)).length === 0, "W11 Stripe 连不上 → 500、不发放", r);
   const r2 = await send("checkout.session.completed", { id: s.id });
   ok(r2.status === 200 && (await topicsOf(USERS.A)).length === 9, "W11 Stripe 重送后成功", r2);
+});
+
+// ═══════════════ 最终价格 ═══════════════
+// 付款一笔：建立 → Stripe 按 Price 实际金额收款 → webhook
+async function pay(token, body) {
+  const r = await buy(token, body);
+  if (r.status !== 200) return { r };
+  const s = stripe.complete(lastSession().id, { paid: true });
+  const w = await send("checkout.session.completed", { id: s.id });
+  return { r, s, w, lines: s.line_items.data.map((x) => x.price.id), amount: s.amount_total };
+}
+const P = PRICES;
+
+await scenario("P1 每条购买路径的 Price 与实际金额", async () => {
+  // 0 → 3 → 6 → Complete：6.88 + 6.00 + 6.00 = 18.88
+  await fresh();
+  const a = await pay("tokA", { plan: "topics_3", topic_ids: ["self", "family", "body"] });
+  ok(a.lines.join() === P.STRIPE_PRICE_3_TOPICS && a.amount === 688 && a.w.body.result === "applied", "P1 3 Topics = S$6.88", a.w?.body);
+  const b = await pay("tokA", { plan: "topic_upgrade", topic_ids: ["love", "career", "wealth"] });
+  ok(b.lines.join() === P.STRIPE_PRICE_TOPIC_UPGRADE && b.amount === 600 && b.w.body.result === "applied", "P1 3→6 = S$6.00", b.w?.body);
+  ok((await topicsOf(USERS.A)).length === 6 && !(await ent(USERS.A)).life_thread_access, "P1 6 Topics 还没有生命脉络");
+  const dup = await buy("tokA", { plan: "topic_upgrade", topic_ids: ["emotion", "study", "self"] });
+  ok(dup.status === 400 && dup.body.code === "unexpected_topics", "P1 6→Complete 不需要（也不能）选主题", dup);
+  const c = await pay("tokA", { plan: "topic_upgrade" });
+  ok(c.lines.join() === P.STRIPE_PRICE_TOPIC_UPGRADE && c.amount === 600 && c.w.body.result === "applied", "P1 6→Complete = S$6.00", c.w?.body);
+  const e = await ent(USERS.A);
+  ok((await topicsOf(USERS.A)).length === 9 && e.topic_limit === 9 && e.life_thread_access, "P1 升级到 9 个主题 → 生命脉络同样开放");
+  const total = (await one("select sum(amount_total)::int t from public.purchases where user_id=$1", [USERS.A])).t;
+  ok(total === 1888, "P1 3→6→Complete 总支出 S$18.88", total);
+  const more = await buy("tokA", { plan: "complete" });
+  ok(more.status === 409 && more.body.code === "already_complete", "P1 已拥有全部主题不能再买", more);
+
+  // 0 → 3 → Complete：6.88 + 11.00 = 17.88
+  await fresh();
+  await pay("tokA", { plan: "topics_3", topic_ids: ["self", "family", "body"] });
+  const d = await pay("tokA", { plan: "complete_upgrade" });
+  ok(d.lines.join() === P.STRIPE_PRICE_COMPLETE_UPGRADE && d.amount === 1100 && d.w.body.result === "applied", "P1 3→Complete = S$11.00", d.w?.body);
+  ok((await ent(USERS.A)).life_thread_access && (await topicsOf(USERS.A)).length === 9, "P1 3→Complete 也有生命脉络");
+  ok((await one("select sum(amount_total)::int t from public.purchases where user_id=$1", [USERS.A])).t === 1788, "P1 3→Complete 总支出 S$17.88");
+
+  // 0 → 6 → Complete：12.88 + 6.00 = 18.88
+  await fresh();
+  const f = await pay("tokA", { plan: "topics_6", topic_ids: ["self", "family", "body", "love", "career", "wealth"] });
+  ok(f.lines.join() === P.STRIPE_PRICE_6_TOPICS && f.amount === 1288 && f.w.body.result === "applied", "P1 6 Topics = S$12.88", f.w?.body);
+  const no3 = await buy("tokA", { plan: "complete_upgrade" });
+  ok(no3.status === 409 && no3.body.code === "upgrade_not_available", "P1 6 Topics 不能用 3→Complete 的价格", no3);
+  await pay("tokA", { plan: "topic_upgrade" });
+  ok((await one("select sum(amount_total)::int t from public.purchases where user_id=$1", [USERS.A])).t === 1888, "P1 6→Complete 总支出 S$18.88");
+
+  // 直接 Complete：16.88；Complete + 6M：16.88 + 2.88 = 19.76（两个项目）
+  await fresh();
+  const g = await pay("tokA", { plan: "complete" });
+  ok(g.lines.join() === P.STRIPE_PRICE_COMPLETE && g.amount === 1688 && (await ent(USERS.A)).life_thread_access, "P1 Complete = S$16.88，含生命脉络", g.w?.body);
+  await fresh();
+  const h = await pay("tokA", { plan: "complete", include_inner_tools_6m: true });
+  ok(h.lines.join() === `${P.STRIPE_PRICE_COMPLETE},${P.STRIPE_PRICE_INNER_TOOLS_6M}` && h.amount === 1976 && h.w.body.result === "applied", "P1 Complete + 6M = S$19.76", h.w?.body);
+  // 6M 优惠只限 0 → Complete
+  await fresh();
+  await pay("tokA", { plan: "topics_3", topic_ids: ["self", "family", "body"] });
+  const x = await buy("tokA", { plan: "complete_upgrade", include_inner_tools_6m: true });
+  ok(x.status === 400 && x.body.code === "addon_not_allowed", "P1 升级路径不能加购 6M 优惠", x);
+  const m = await buy("tokA", { plan: "inner_tools_monthly" });
+  ok(m.status === 200 && lastSession()._form.line_items[0].price === P.STRIPE_PRICE_INNER_TOOLS_MONTHLY, "P1 其他路径可以单独订 Monthly（S$1.99）", m);
+});
+
+await scenario("P2 Price Secret 指到错的价格 → 不建立付款页", async () => {
+  const cases = [
+    ["6 Topics 还是旧价格 S$11.88", P.STRIPE_PRICE_6_TOPICS, { unit_amount: 1188 }, { plan: "topics_6", topic_ids: ["self", "family", "body", "love", "career", "wealth"] }],
+    ["币别不是 SGD", P.STRIPE_PRICE_3_TOPICS, { currency: "usd" }, { plan: "topics_3", topic_ids: ["self", "family", "body"] }],
+    ["Price 已停用", P.STRIPE_PRICE_COMPLETE, { active: false }, { plan: "complete" }],
+    ["Monthly 被设成一次性", P.STRIPE_PRICE_INNER_TOOLS_MONTHLY, { type: "one_time", recurring: null }, { plan: "inner_tools_monthly" }],
+    ["Monthly 还是旧价格 S$0.99", P.STRIPE_PRICE_INNER_TOOLS_MONTHLY, { unit_amount: 99 }, { plan: "inner_tools_monthly" }],
+    ["6M 加购价格不对", P.STRIPE_PRICE_INNER_TOOLS_6M, { unit_amount: 500 }, { plan: "complete", include_inner_tools_6m: true }],
+  ];
+  for (const [label, id, patch, body] of cases) {
+    await fresh();
+    // 每个案例用新的 Price ID，避免用到之前核对成功的快取
+    const fresh_id = id + "_" + Math.random().toString(36).slice(2, 8);
+    const name = Object.keys(P).find((k) => P[k] === id);
+    setEnv({ [name]: fresh_id });
+    stripe.prices[fresh_id] = { ...stripe.prices[id], id: fresh_id, ...patch };
+    const r = await buy("tokA", body);
+    ok(r.status === 500 && r.body.code === "price_config_error" && !r.body.url, `P2 ${label} → 500，不回传网址`, r);
+    ok(!stripe.calls.some((c) => c.method === "POST" && c.path === "/checkout/sessions"), `P2 ${label} → 没有建立 Stripe session`);
+    const o = await one("select status from public.checkout_orders order by created_at desc limit 1");
+    ok(o?.status === "failed", `P2 ${label} → 订单标记 failed`, o);
+    setEnv();
+  }
+  // 一个 Price 设错，不影响其他方案
+  await fresh();
+  const fresh_id = "price_test_t6_wrong";
+  setEnv({ STRIPE_PRICE_6_TOPICS: fresh_id });
+  stripe.prices[fresh_id] = { ...stripe.prices[P.STRIPE_PRICE_6_TOPICS], id: fresh_id, unit_amount: 1188 };
+  const ok3 = await buy("tokA", { plan: "topics_3", topic_ids: ["self", "family", "body"] });
+  ok(ok3.status === 200 && ok3.body.url, "P2 6 Topics 设错时，3 Topics 照常可以买", ok3);
+  setEnv();
+  // Stripe 暂时连不上 → 503，不建立付款页
+  await fresh();
+  const tmp = "price_test_complete_net";
+  setEnv({ STRIPE_PRICE_COMPLETE: tmp });
+  stripe.prices[tmp] = { ...stripe.prices[P.STRIPE_PRICE_COMPLETE], id: tmp };
+  stripe.failNext("GET", /^\/prices\//, "network");
+  const net = await buy("tokA", { plan: "complete" });
+  ok(net.status === 503 && net.body.code === "stripe_unavailable" && !net.body.url, "P2 核对价格时 Stripe 连不上 → 503", net);
+  setEnv();
+});
+
+await scenario("P3 实际收取金额不符 → 不发放权限", async () => {
+  for (const [label, patch] of [["金额少收", { amount: 1188 }], ["币别不对", { currency: "usd" }]]) {
+    await fresh();
+    await buy("tokA", { plan: "topics_6", topic_ids: ["self", "family", "body", "love", "career", "wealth"] });
+    const s = stripe.complete(lastSession().id, { paid: true, amount: patch.amount ?? 1288 });
+    if (patch.currency) s.currency = patch.currency;
+    const w = await send("checkout.session.completed", { id: s.id });
+    ok(w.status === 200 && w.body.result === "conflict", `P3 ${label} → paid_conflict`, w.body);
+    ok((await topicsOf(USERS.A)).length === 0, `P3 ${label} → 不发放任何主题`);
+    const o = await one("select status from public.checkout_orders order by created_at desc limit 1");
+    ok(o.status === "paid_conflict", `P3 ${label} → 订单 paid_conflict（交人工处理）`, o);
+  }
+  // webhook 缺 Price Secret → 500 让 Stripe 重送，不会误记成 conflict
+  await fresh();
+  setEnv({ STRIPE_PRICE_COMPLETE_UPGRADE: "" });
+  const r = await send("checkout.session.completed", { id: "cs_whatever" });
+  ok(r.status === 500, "P3 webhook 缺 Price Secret → 500（设定好后 Stripe 会重送）", r);
+  setEnv();
 });
 
 console.error = quiet.error; console.warn = quiet.warn;

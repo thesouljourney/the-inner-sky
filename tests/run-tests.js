@@ -4823,8 +4823,10 @@ function testCheckoutSandbox() {
   const tp = html.slice(html.indexOf("function renderTopicPage(tid)"), html.indexOf("function renderQPage(qid)"));
   checkEq("[pay] 九个正式主题没有接 paywall", /openPaywall|createCheckout/.test(tp), false);
   checkEq("[pay] Landing 没有接付款", /checkout|paywall/i.test(idx), false);
-  ["继续阅读属于你的故事", "S$6.88", "S$11.88", "S$16.88", "S$19.76", "S$0.99 / 月", "暂时不要"]
+  ["继续阅读属于你的故事", "S$6.88", "S$12.88", "S$16.88", "S$19.76", "S$1.99 / 月", "S$6.00", "S$11.00", "+S$2.88", "暂时不要"]
     .forEach(function (t) { checkEq("[pay] 测试页文案:" + t, html.indexOf(t) >= 0, true); });
+  ["S$11.88", "S$0.99", "\"S$5\"", "\"S$10\""]
+    .forEach(function (t) { checkEq("[pay] 测试页没有旧价格:" + t, html.indexOf(t) >= 0, false); });
   checkEq("[pay] 测试页状态宣告在首次渲染之前(不踩 TDZ)",
     html.indexOf("let ckPlan =") > 0 && (firstRenderAt(html) < 0 || html.indexOf("let ckPlan =") < firstRenderAt(html)), true);
   // Edge Function 原始码（docs/edge）：只用 Sandbox 设定判断、固定 API 版本、单文件
@@ -4848,6 +4850,19 @@ function testCheckoutSandbox() {
   checkEq("[pay] 读取 early_access_users 的范围", html.indexOf('rest("early_access_users?select=scopes")') >= 0, true);
   checkEq("[pay] checkout：先挡早期体验用户，再判断付费强制",
     co.indexOf('rpc("early_access_covers_plan"') > 0 && co.indexOf('rpc("early_access_covers_plan"') < co.indexOf('rpc("enforcement_applies"'), true);
+  // 最终价格（分）：两支函数的金额表必须一致，且与公布的价格相同
+  const FINAL = { STRIPE_PRICE_3_TOPICS: 688, STRIPE_PRICE_6_TOPICS: 1288, STRIPE_PRICE_COMPLETE: 1688,
+    STRIPE_PRICE_TOPIC_UPGRADE: 600, STRIPE_PRICE_COMPLETE_UPGRADE: 1100,
+    STRIPE_PRICE_INNER_TOOLS_6M: 288, STRIPE_PRICE_INNER_TOOLS_MONTHLY: 199 };
+  Object.keys(FINAL).forEach(function (k) {
+    checkEq("[pay] checkout 金额表 " + k, new RegExp(k + ":\\s*\\{ amount: " + FINAL[k] + ",").test(co), true);
+    checkEq("[pay] webhook 金额表 " + k, new RegExp(k + ": " + FINAL[k] + "[,\\s]").test(wh), true);
+  });
+  checkEq("[pay] checkout：只有 Monthly 是订阅价格", /STRIPE_PRICE_INNER_TOOLS_MONTHLY:\s*\{ amount: 199,\s*monthly: true/.test(co)
+    && (co.match(/monthly: true/g) || []).length === 1, true);
+  checkEq("[pay] checkout：建立付款页前核对 Price", co.indexOf("await verifyPrices(pricesFor(order))") > 0
+    && co.indexOf("await verifyPrices(pricesFor(order))") < co.indexOf('stripe("POST", "/checkout/sessions"'), true);
+  checkEq("[pay] webhook：Price 与金额都对才发放", wh.indexOf("samePrices(s.line_items?.data ?? [], expected) && sameAmount(s, expected)") >= 0, true);
   checkEq("[pay] checkout：资料库的 early_access 回 403", co.indexOf('"checkout:early_access": 403') >= 0, true);
   // checkoutReturn 在首次渲染时就会被读到:必须宣告在第一次 applyRoute() 之前
   const firstRender = firstRenderAt(html);

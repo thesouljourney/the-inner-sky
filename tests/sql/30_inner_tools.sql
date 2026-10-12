@@ -17,9 +17,9 @@ insert into billing_test_users values (:A);
 -- Monthly：checkout → 订阅同步 → 第一期 invoice.paid（paid_through = 现在 + 20 天）
 select reserve_checkout_order(:A,'test','inner_tools_monthly',null,false) as m \gset
 select activate_checkout_order(((:'m')::jsonb->>'order_id')::uuid, 'cs_m');
-select apply_checkout_payment(((:'m')::jsonb->>'order_id')::uuid,'cs_m',:A,'test','','sub_1','price_m',99,'sgd',true);
+select apply_checkout_payment(((:'m')::jsonb->>'order_id')::uuid,'cs_m',:A,'test','','sub_1','price_m',199,'sgd',true);
 select upsert_subscription(:A,'test','cus_1','sub_1','price_m','active', now()-interval '10 days', now()+interval '20 days', false);
-select record_invoice_paid(:A,'test','sub_1','in_1','price_m',99,'sgd', now()+interval '20 days', false);
+select record_invoice_paid(:A,'test','sub_1','in_1','price_m',199,'sgd', now()+interval '20 days', false);
 select pg_temp.ok(abs(extract(epoch from (select inner_tools_until from entitlements) - (now()+interval '20 days'))) < 5, 'Monthly：用到已付期限');
 select pg_temp.ok((select count(*) from purchases where stripe_invoice_id is not null) = 0, '第一期不重复记一笔');
 select pg_temp.fails($$select reserve_checkout_order('aaaaaaaa-0000-4000-8000-000000000001','test','inner_tools_monthly',null,false)$$, 'subscription_exists', '已有订阅不能再订');
@@ -38,10 +38,10 @@ select apply_checkout_payment(((:'c')::jsonb->>'order_id')::uuid,'cs_c6',:A,'tes
 select pg_temp.ok((:'d')::jsonb->>'result' = 'duplicate' and (:'d')::jsonb->>'cancel_subscription' = 'sub_1', '重送：不加 6 个月，但仍提醒要取消');
 select pg_temp.ok(abs(extract(epoch from (select inner_tools_until from entitlements) - (now()+interval '20 days'+interval '6 months'))) < 5, '重送后到期日不变');
 -- 取消失败，下一期还是续费了（期间 +30 天）
-select record_invoice_paid(:A,'test','sub_1','in_2','price_m',99,'sgd', now()+interval '50 days', true) as iv \gset
+select record_invoice_paid(:A,'test','sub_1','in_2','price_m',199,'sgd', now()+interval '50 days', true) as iv \gset
 select pg_temp.ok((select entitlement_status from purchases where stripe_invoice_id='in_2') = 'review', '取消后仍续费 → 标记 review，不静默');
 select pg_temp.ok(abs(extract(epoch from (select inner_tools_until from entitlements) - (now()+interval '50 days'+interval '6 months'))) < 5, '多付的那一期不浪费：6M 起点往后移');
-select record_invoice_paid(:A,'test','sub_1','in_2','price_m',99,'sgd', now()+interval '50 days', true);
+select record_invoice_paid(:A,'test','sub_1','in_2','price_m',199,'sgd', now()+interval '50 days', true);
 select pg_temp.ok((select count(*) from purchases where stripe_invoice_id='in_2') = 1, '同一张 invoice 只记一次');
 -- 取消终于生效
 select upsert_subscription(:A,'test','cus_1','sub_1','price_m','active', now(), now()+interval '50 days', true) as u2 \gset
