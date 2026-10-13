@@ -8519,18 +8519,32 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     return rest("charts?select=id,data&order=created_at.asc").then(rows =>
       rows.map(r => Object.assign({}, r.data, { id: r.id })));
   }
+  /* 星盘写入中的请求。read-chart 会到资料库核对「这张星盘是不是你的」,
+     所以送出解读请求之前要先等写入完成(例如刚填完出生资料就去生成生命蓝图)。 */
+  const pendingChartWrites = new Set();
+  function trackChartWrite(p) {
+    pendingChartWrites.add(p);
+    const done = function () { pendingChartWrites.delete(p); };
+    p.then(done, done);
+    return p;
+  }
+  function chartWritesSettled(maxMs) {
+    if (!pendingChartWrites.size) return Promise.resolve();
+    const all = Promise.all(Array.from(pendingChartWrites).map(function (p) { return p.catch(function () { }); }));
+    return Promise.race([all, new Promise(function (r) { setTimeout(r, maxMs || 8000); })]);
+  }
   function insertChart(c) {
     const id = c.id && /^[0-9a-f-]{36}$/.test(c.id) ? c.id : uuid();
     c.id = id;
     const data = Object.assign({}, c); delete data.id;
-    return rest("charts", { method: "POST", body: JSON.stringify({ id: id, data: data }) }).then(() => c);
+    return trackChartWrite(rest("charts", { method: "POST", body: JSON.stringify({ id: id, data: data }) }).then(() => c));
   }
   function updateChart(c) {
     const data = Object.assign({}, c); delete data.id;
-    return rest("charts?id=eq." + c.id, {
+    return trackChartWrite(rest("charts?id=eq." + c.id, {
       method: "PATCH",
       body: JSON.stringify({ data: data, updated_at: new Date().toISOString() })
-    });
+    }));
   }
   function deleteChart(id) {
     return rest("charts?id=eq." + id, { method: "DELETE" });
@@ -8627,6 +8641,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     updateUsername: updateUsername,
     requestPasswordReset: requestPasswordReset, adoptSession: adoptSession, updatePassword: updatePassword,
     loadCharts: loadCharts, insertChart: insertChart, updateChart: updateChart, deleteChart: deleteChart,
+    chartWritesSettled: chartWritesSettled,
     loadPrefs: loadPrefs, savePrefs: savePrefs, uuid: uuid,
     migrateLegacy: migrateLegacy,
     createCheckout: function (body) { return createCheckout(body, false); },
@@ -8830,6 +8845,8 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     dgFnVer:          ["函数版本：", "Function version: "],
     dg401:            ["身份验证没通过：请到 Supabase → Edge Functions → read-chart → Details，把 Verify JWT 关掉后重新部署",
                        "Auth failed: in Supabase → Edge Functions → read-chart → Details, turn off Verify JWT and redeploy"],
+    dgLogin:          ["登录已过期，请重新登录后再试一次", "Your session has expired — please sign in again and retry"],
+    dgChart:          ["这份请求和你账号里的星盘对不上，请重新整理页面再试", "This request doesn’t match the chart on your account — please refresh the page and try again"],
     dg404:            ["找不到这个函数：确认函数名是 read-chart 且已部署", "Function not found: check that read-chart is deployed under that name"],
     dg0:              ["连不上服务器：检查网络，或函数地址是否正确", "Cannot reach the server: check your connection and the function URL"],
     dg502:            ["AI 服务返回错误：多半是密钥无效或账户额度不足", "The AI service returned an error — usually an invalid key or no remaining credit"],
@@ -9235,6 +9252,11 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     };
   }
   function callFunc(payload, retried) {
+    // 服务端会核对「这张星盘是不是你的」:先等还在写入的星盘落库
+    const ready = (window.Cloud && window.Cloud.chartWritesSettled) ? window.Cloud.chartWritesSettled() : Promise.resolve();
+    return ready.then(function () { return sendFunc(payload, retried); });
+  }
+  function sendFunc(payload, retried) {
     const bearer = (window.Cloud && window.Cloud.token && window.Cloud.token()) || SUPABASE_ANON_KEY;
     return netFetch(SUPABASE_FUNC_URL, {
       method: "POST",
@@ -9243,12 +9265,14 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     }, GEN_TIMEOUT).then(function (r) {
       // 令牌过期:静默续期一次后重试(服务端 question 层已开启使用者验证)
       if (r.status === 401 && !retried && window.Cloud && window.Cloud.refresh)
-        return window.Cloud.refresh().then(function () { return callFunc(payload, true); });
+        return window.Cloud.refresh().then(function () { return sendFunc(payload, true); },
+          function () { const e = new Error("HTTP 401 · 登录已过期,请重新登录"); e.code = "login_required"; throw e; });
       return r.text().then(function (t) {
         if (!r.ok) {
-          let msg = "HTTP " + r.status;
-          try { const o = JSON.parse(t); msg += " · " + (o.error || "") + (o.detail ? " · " + o.detail : ""); } catch (e) { msg += " · " + t.slice(0, 160); }
-          throw new Error(msg);
+          let msg = "HTTP " + r.status, code = "";
+          try { const o = JSON.parse(t); code = o.code || ""; msg += " · " + (o.error || "") + (o.detail ? " · " + o.detail : ""); } catch (e) { msg += " · " + t.slice(0, 160); }
+          const err = new Error(msg); err.code = code;
+          throw err;
         }
         try { return JSON.parse(t); } catch (e) { throw new Error("返回不是 JSON:" + t.slice(0, 120)); }
       });
@@ -9262,7 +9286,8 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
       return fingerprint(seed).then(function (fp) {
         // lang 为额外参数;服务端只在 lang==="en" 时追加一句输出语言指示,
         // 其余 Prompt、九步定调、资料抽取完全不变。
-        return callFunc(Object.assign({ kind: kind, fingerprint: fp, chart: chart, lang: lang }, extra));
+        // fp_base:算指纹用的那一串。服务端用它核对开头是不是你自己的出生资料,再自己算一次指纹
+        return callFunc(Object.assign({ kind: kind, fingerprint: fp, fp_base: seed, chart: chart, lang: lang }, extra));
       }).then(function (d) {
         const raw = d.text || d.content || "";
         const parsed = parseFn(raw);
@@ -11560,7 +11585,10 @@ window.Guide = (function () {
           else if (o.function) detail = T("dgFnVer") + o.function;
         } catch (e) { }
         if (!hint) {
-          if (probe.status === 401 || /401/.test(msg)) hint = T("dg401");
+          if (err && err.code === "login_required") hint = T("dgLogin");
+          else if (err && /^(chart_|fp_base)/.test(err.code || "")) hint = T("dgChart");
+          else if (probe.status === 401) hint = T("dg401");
+          else if (/401/.test(msg)) hint = T("dgLogin");
           else if (probe.status === 404 || /404/.test(msg)) hint = T("dg404");
           else if (probe.status === 0) hint = T("dg0");
           else if (/502/.test(msg)) hint = T("dg502");

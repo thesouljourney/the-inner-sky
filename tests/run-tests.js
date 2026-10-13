@@ -1623,7 +1623,9 @@ function testCompassGenerationAsync(K) {
   checkEq("[gen] 生成端点是独立的 Edge Function", /compass-generate/.test(edge), true);
   checkEq("[gen] 生成端点拒绝星盘资料", /不接受星盘资料/.test(edge), true);
   checkEq("[gen] 生成端点自己再扫一次 payload", /blocked_by_scrub/.test(edge), true);
-  checkEq("[gen] 生成端点不写任何资料库", /rest\/v1|supabase/i.test(edge.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "")), false);
+  // 只呼叫 /auth/v1/user 验证登录;不读写任何资料表
+  checkEq("[gen] 生成端点不写任何资料库", /rest\/v1|SERVICE_ROLE/i.test(edge.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "")), false);
+  checkEq("[gen] 生成端点只用 /auth/v1/user 验证登录", /\/auth\/v1\/user/.test(edge), true);
   checkEq("[gen] 生成端点没有引用 MASTER_SYSTEM",
     /MASTER_SYSTEM/.test(edge.replace(/^\s*\/\/.*$/gm, "")), false);
 
@@ -1702,8 +1704,9 @@ function testCompassLivePath() {
   /* 5 · 沿用专案既有的 secret,而且【只】需要这一个 */
   checkEq("[live] 只用既有的 ANTHROPIC_API_KEY,没有改名",
     (edge.match(/Deno\.env\.get\("ANTHROPIC_API_KEY"\)/g) || []).length, 1);
-  checkEq("[live] 没有多要 SUPABASE_SERVICE_ROLE_KEY / SUPABASE_URL",
-    /SUPABASE_SERVICE_ROLE_KEY|Deno\.env\.get\("SUPABASE_URL"\)/.test(edge), false);
+  // 登录验证只需要 Supabase 自动提供的 SUPABASE_URL;不需要 service role key
+  checkEq("[live] 没有多要 SUPABASE_SERVICE_ROLE_KEY",
+    /SUPABASE_SERVICE_ROLE_KEY/.test(edge), false);
   /* 端点预设就指向本专案的 project ref,不必另外设定 */
   checkEq("[live] 端点预设由 CloudCfg 推导,不写死第二份网址",
     /window\.CloudCfg\.url \+ "\/functions\/v1\/compass-generate"/.test(html), true);
@@ -1746,10 +1749,25 @@ function testCompassLivePathAsync(K) {
     return RC.textFor(id || "C1", G.DEFAULT_PROMPT_VERSION);
   });
 
-  return shim.serveEdgeFunction(edgePath, { env: { ANTHROPIC_API_KEY: "test-only-not-a-real-key" } })
+  /* 登录验证:/auth/v1/user 只认 test-user-token(在 Anthropic stub 之上再包一层) */
+  const AUTH_STUB = "https://auth.stub.test";
+  const afterAnthropic = globalThis.fetch;
+  let claudeCalls = 0;
+  globalThis.fetch = function (url, init) {
+    const u = String(url);
+    if (u.indexOf(AUTH_STUB + "/auth/v1/user") === 0) {
+      const tok = String(((init && init.headers) || {}).Authorization || "").replace(/^Bearer /, "");
+      return Promise.resolve(new Response(tok === "test-user-token" ? '{"id":"u-1"}' : '{"msg":"bad jwt"}',
+        { status: tok === "test-user-token" ? 200 : 401 }));
+    }
+    if (u.indexOf("api.anthropic.com") >= 0) claudeCalls++;
+    return afterAnthropic(url, init);
+  };
+  return shim.serveEdgeFunction(edgePath, { env: { ANTHROPIC_API_KEY: "test-only-not-a-real-key", SUPABASE_URL: AUTH_STUB } })
     .then(function (srv) {
-      const post = (b) => fetch(srv.url, { method: "POST",
-        headers: { "content-type": "application/json" }, body: JSON.stringify(b) })
+      const post = (b, headers) => fetch(srv.url, { method: "POST",
+        headers: Object.assign({ "content-type": "application/json", "authorization": "Bearer test-user-token" }, headers || {}),
+        body: JSON.stringify(b) })
         .then(r => r.json().then(o => ({ http: r.status, o })));
       const inp = G.buildInput(PV.buildCase("C1"));
       const p = G.buildPrompt(inp);
@@ -1762,6 +1780,17 @@ function testCompassLivePathAsync(K) {
           checkEq("[live] health 回报自己是 compass-generate", /compass-generate/.test(h.o.function), true);
           checkEq("[live] health 只回报金钥有没有设,不回报金钥", h.o.anthropic_key_set, true);
           checkEq("[live] health 回传里不含金钥", /test-only-not-a-real-key/.test(JSON.stringify(h.o)), false);
+          // 没有登录凭证 → 401,而且完全没有呼叫模型
+          return post(good, { authorization: "" });
+        })
+        .then(function (r) {
+          checkEq("[live] 没有登录 → 401 login_required", r.http === 401 && r.o.code === "login_required", true);
+          checkEq("[live] 没有登录时完全没有呼叫模型", claudeCalls, 0);
+          return post(good, { authorization: "Bearer someone-else-forged" });
+        })
+        .then(function (r) {
+          checkEq("[live] 无效的登录凭证 → 401", r.http, 401);
+          checkEq("[live] 无效凭证时也没有呼叫模型", claudeCalls, 0);
           return post(good);
         })
         .then(function (r) {

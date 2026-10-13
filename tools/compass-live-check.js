@@ -16,7 +16,8 @@
                        金钥只存在于 server 端行程,不会出现在任何输出里。
 
      --url <URL>       打【已部署】的 Edge Function(正式路径)。
-                       需要 --anon <SUPABASE_ANON_KEY> 当 Authorization。
+                       需要 --anon <SUPABASE_ANON_KEY>,以及 --token <已登录使用者的 access token>
+                       (compass-generate v2 起只接受已登录使用者)。
 
    其他:
      --all             C1 通过之后,再跑 C4 / C6 / C10(预设只跑 C1)
@@ -42,13 +43,13 @@ function keyState() {
   return k ? "set (server-side env only)" : "not set";
 }
 
-function transportFor(endpoint, anon) {
+function transportFor(endpoint, anon, token) {
   return function (p) {
     const t0 = Date.now();
     return fetch(endpoint, {
       method: "POST",
       headers: Object.assign({ "Content-Type": "application/json" },
-        anon ? { Authorization: "Bearer " + anon, apikey: anon } : {}),
+        anon ? { apikey: anon } : {}, (token || anon) ? { Authorization: "Bearer " + (token || anon) } : {}),
       body: JSON.stringify({ input: p._input, system: p.system, user: p.user,
                              promptVersion: p.promptVersion })
     }).then(r => r.json().then(o => ({ o, http: r.status })))
@@ -66,7 +67,7 @@ function transportFor(endpoint, anon) {
 async function main() {
   const out = { mode: MODE, key: keyState(), promptVersion: G.DEFAULT_PROMPT_VERSION,
                 health: null, cases: [], totals: { requests: 0, retries: 0, latency: [] } };
-  let endpoint = val("--url"), anon = val("--anon"), server = null, restore = null;
+  let endpoint = val("--url"), anon = val("--anon"), token = val("--token"), server = null, restore = null;
 
   if (MODE !== "deployed") {
     const { serveEdgeFunction, stubAnthropic } = require(path.join(__dirname, "deno-shim.js"));
@@ -79,8 +80,18 @@ async function main() {
       let n = 0;
       restore = stubAnthropic(() => RC.textFor(CASES[Math.min(n++, CASES.length - 1)]));
     }
+    /* 本机跑:登录验证换成本地假的 /auth/v1/user(只认 local-check-token) */
+    const AUTH_STUB = "https://auth.local-check.test";
+    const beforeAuth = globalThis.fetch;
+    globalThis.fetch = function (url, init) {
+      if (String(url).indexOf(AUTH_STUB + "/auth/v1/user") === 0)
+        return Promise.resolve(new Response('{"id":"local-check"}', { status: 200 }));
+      return beforeAuth(url, init);
+    };
+    token = "local-check-token";
     server = await serveEdgeFunction(path.join(__dirname, "..", "docs", "edge", "compass-generate.ts"),
-      { env: { ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY || (MODE === "stub" ? "stub-key" : "") } });
+      { env: { ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY || (MODE === "stub" ? "stub-key" : ""),
+               SUPABASE_URL: AUTH_STUB } });
     endpoint = server.url;
   }
 
@@ -95,7 +106,7 @@ async function main() {
   /* ── 5/6 · C1 先跑,失败就停 ───────────────────────────── */
   for (const id of CASES) {
     const vm = PV.buildCase(id);
-    const tp = transportFor(endpoint, anon);
+    const tp = transportFor(endpoint, anon, token);
     /* live transport 需要 payload;与浏览器端同一个做法 */
     const wrapped = (p) => { p._input = G.buildInput(vm); return tp(p); };
     const t = Date.now();

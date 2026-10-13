@@ -1,5 +1,5 @@
 // ============================================================
-// INNER SKY · Edge Function  compass-generate  (compass-v1)
+// INNER SKY · Edge Function  compass-generate  (compass-v1 · v2:必须登录)
 // ------------------------------------------------------------
 // 「我的内在指南」的生成层。刻意【不】做成 read-chart 的第五种 kind。
 //
@@ -871,7 +871,23 @@ function json(obj: unknown, status = 200, cors: Record<string,string> = {}) {
   });
 }
 
-Deno.serve(async (req: Request) => {
+/* ── v2 · 登录验证 ─────────────────────────────────────────
+   只有已登录使用者可以呼叫(在任何验证、扫描与模型呼叫之前)。
+   SUPABASE_URL 由 Supabase 自动提供,不需要新增 Secret,也不需要 service role key。 */
+async function verifyUser(req: Request, sbUrl: string): Promise<string | null> {
+  const auth = req.headers.get("authorization") || "";
+  const tok = auth.replace(/^Bearer\s+/i, "").trim();
+  const apikey = req.headers.get("apikey") || "";
+  if (!tok || !sbUrl) return null;
+  try {
+    const r = await fetch(sbUrl + "/auth/v1/user", { headers: { apikey: apikey || tok, Authorization: "Bearer " + tok } });
+    if (!r.ok) return null;
+    const u = await r.json();
+    return u && u.id ? String(u.id) : null;
+  } catch (_e) { return null; }
+}
+
+async function handler(req: Request): Promise<Response> {
   const cors = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Headers": "authorization, apikey, content-type",
@@ -891,6 +907,8 @@ Deno.serve(async (req: Request) => {
     try { body = JSON.parse(await req.text()); } catch (_e) { body = {}; }
 
     if (!apiKey) return json({ error: "missing ANTHROPIC_API_KEY" }, 500, cors);
+    if (!(await verifyUser(req, Deno.env.get("SUPABASE_URL") ?? "")))
+      return json({ status: "generation_failed", error: "unauthorized", code: "login_required" }, 401, cors);
 
     const input = body.input;
     const system = String(body.system || "");
@@ -966,4 +984,6 @@ Deno.serve(async (req: Request) => {
   } catch (e) {
     return json({ status: "generation_failed", reason: "exception", detail: String(e) }, 500, cors);
   }
-});
+}
+
+Deno.serve(handler);
