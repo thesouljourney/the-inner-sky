@@ -9,7 +9,8 @@
     "gen:places": "node tools/gen-places.js",
     "gen:reference": "python3 tools/gen-reference.py",
     "test:sql": "bash tests/sql/run.sh",
-    "test:edge": "node tests/edge/run.mjs"
+    "test:edge": "node tests/edge/run.mjs",
+    "test:read-chart": "node tests/edge/readchart.mjs"
   },
   "devDependencies": {
     "all-the-cities": "^3.1.0",

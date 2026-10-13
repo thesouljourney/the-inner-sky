@@ -2088,17 +2088,103 @@ function parsePreviewJson(text:string, items:Any[]) {
   return out;
 }
 
-Deno.serve(async (req: Request) => {
+// ══════════════════════════════════════════════════════════
+//  v13 · 登录验证 + 星盘归属 + 服务端快取指纹
+//  ------------------------------------------------------------
+//  1. 每一种 kind 都必须是已登录使用者(生命蓝图 / 预览 / 探索题仍然免费,只是要登录)。
+//  2. 快取指纹由服务端自己算,不再相信前端送来的 fingerprint:
+//       · 星盘类(blueprint/topic/map/question):以这个使用者【自己的】出生资料
+//         (charts.data,出生资料锁保护)为开头,公式与前端 askServer 逐字相同,
+//         所以既有快取继续命中,不会多花一次模型费用。
+//       · preview:以送来的正文本身计算,公式与前端 previewSeed 逐字相同。
+//     → 读不到别人的快取,也无法把内容写进别人的快取。
+//  3. 生命脉络(map)的「九个主题都已生成」只对适用付费强制的账号执行
+//     (enforcement_applies;Sandbox 期间 = billing_test_users)。
+//  4. 以上检查全部发生在读取共享快取与呼叫模型之前。
+// ══════════════════════════════════════════════════════════
+const G = globalThis as Any;
+function env(name:string): string {
+  return (G.Deno?.env?.get?.(name) ?? G.process?.env?.[name] ?? "") as string;
+}
+const CANON_TOPICS = ["self","emotion","career","family","love","partner","wealth","study","body"];
+// 前端 askServer 的版本标签(必须与 app.html 相同)
+const FP_VER: Record<string,string> = { blueprint:"v11-bp", topic:"v10", map:"v10", question:"v10" };
+// 前端 previewSeed 的常数(必须与 app.html 的 PREVIEW_STYLE_ID / PREVIEW_VER 相同)
+const PREVIEW_SEED_STYLE = "preview-writing-1.0", PREVIEW_SEED_VER = 1;
+
+export async function sha256hex(str:string): Promise<string> {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map((b)=>b.toString(16).padStart(2,"0")).join("");
+}
+// 与前端 [c.date, c.time, c.lat.toFixed(4), c.lon.toFixed(4)].join("|") 逐字相同
+export function birthSeed(d:Any): string | null {
+  if (!d || typeof d.lat !== "number" || typeof d.lon !== "number" || !isFinite(d.lat) || !isFinite(d.lon)) return null;
+  return [d.date, d.time, d.lat.toFixed(4), d.lon.toFixed(4)].join("|");
+}
+export function previewSeedOf(items:Any[], lang:string): string {
+  return items.map((x:Any) => String(x && x.id) + "\u0001" + String((x && x.title) || "") + "\u0001" + String((x && x.body) || ""))
+    .join("\u0002") + "\u0003" + lang + "\u0003" + PREVIEW_SEED_STYLE + "\u0003v" + PREVIEW_SEED_VER;
+}
+const escRe = (s:string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+/* 星盘类请求的快取基底。前端送 fp_base(它自己拿去算指纹的那一串);
+   服务端核对:开头必须是这个使用者自己的出生资料,后面的结构必须对应这次的 kind / tid / qid / lang。
+   旧版前端没送 fp_base → 服务端自己用资料库里的出生资料组出来(map 用资料库里的主题清单)。 */
+export function chartCacheBase(seed:string, body:Any, kind:string, data:Any):
+    { ok:true; base:string; retry:boolean } | { ok:false; reason:string } {
+  const lang = String(body.lang||"") === "en" ? "en" : "zh";
+  const sub = kind === "topic" ? ":" + String(body.tid||"") : kind === "question" ? ":" + String(body.qid||"") : "";
+  const tail = "|" + kind + sub + "|" + FP_VER[kind] + (lang === "en" ? "|en-w2" : "");
+  const given = typeof body.fp_base === "string" ? body.fp_base : "";
+  if (!given) {
+    if (kind === "map") {
+      const tk = lang === "en" ? "topics_en" : "topics";
+      return { ok:true, base: seed + "|" + Object.keys((data && data[tk]) || {}).sort().join(",") + tail, retry:false };
+    }
+    return { ok:true, base: seed + tail, retry:false };
+  }
+  if (given.length > 600) return { ok:false, reason:"fp_base_too_long" };
+  const mid = kind === "map" ? "\\|[a-z_,]*" : "";
+  const re = new RegExp("^" + escRe(seed) + mid + escRe(tail) + "(\\|retry\\d{1,16})?$");
+  const m = re.exec(given);
+  if (!m) return { ok:false, reason: given.indexOf(seed + "|") === 0 ? "fp_base_mismatch" : "chart_mismatch" };
+  return { ok:true, base: given, retry: !!m[1] };
+}
+async function loadOwnChart(sbUrl:string, srk:string, uid:string): Promise<Any | undefined> {
+  // 一个账号只有一张星盘(charts_one_per_user)。undefined = 资料库读取失败;null = 没有星盘
+  try {
+    const r = await fetch(sbUrl + "/rest/v1/charts?user_id=eq." + encodeURIComponent(uid) + "&select=data&limit=1",
+      { headers:{ apikey:srk, Authorization:"Bearer "+srk } });
+    if (!r.ok) return undefined;
+    const rows = await r.json();
+    return Array.isArray(rows) && rows.length ? (rows[0].data || {}) : null;
+  } catch(_e) { return undefined; }
+}
+async function enforcementApplies(sbUrl:string, srk:string, uid:string): Promise<boolean | undefined> {
+  try {
+    const r = await fetch(sbUrl + "/rest/v1/rpc/enforcement_applies", { method:"POST",
+      headers:{ apikey:srk, Authorization:"Bearer "+srk, "Content-Type":"application/json" },
+      body: JSON.stringify({ p_user: uid }) });
+    if (!r.ok) return undefined;
+    return (await r.json()) === true;
+  } catch(_e) { return undefined; }
+}
+// 九个正式主题里,这张星盘已经生成了几个(中文或英文任一版本都算)
+export function generatedTopicCount(data:Any): number {
+  const z = (data && data.topics) || {}, e = (data && data.topics_en) || {};
+  return CANON_TOPICS.filter((t) => !!(z[t] || e[t])).length;
+}
+
+export async function handler(req: Request): Promise<Response> {
   const cors = { "Access-Control-Allow-Origin":"*", "Access-Control-Allow-Headers":"authorization, apikey, content-type", "Access-Control-Allow-Methods":"GET, POST, OPTIONS" };
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
 
-  const apiKey = Deno.env.get("ANTHROPIC_API_KEY") ?? "";
-  const sbUrl = Deno.env.get("SUPABASE_URL") ?? "";
-  const srk = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+  const apiKey = env("ANTHROPIC_API_KEY");
+  const sbUrl = env("SUPABASE_URL");
+  const srk = env("SUPABASE_SERVICE_ROLE_KEY");
   const dbHeaders = { apikey:srk, Authorization:"Bearer "+srk, "Content-Type":"application/json" };
 
   if (req.method === "GET")
-    return json({ ok:true, function:"read-chart v12 (narrative + exploration map + blueprint writing layer + reading previews)",
+    return json({ ok:true, function:"read-chart v13 (narrative + exploration map + blueprint writing layer + reading previews + login & chart ownership)",
       anthropic_key_set:apiKey.length>0, db_available:!!(sbUrl&&srk),
       topics:Object.keys(TOPIC_SPEC), explorationQuestions:Object.keys(QUESTION_SPEC).length,
       prompt_version:PROMPT_VERSION, blueprint_style_version:BLUEPRINT_STYLE_VERSION,
@@ -2109,16 +2195,45 @@ Deno.serve(async (req: Request) => {
     let body:Any = {};
     try { body = JSON.parse(await req.text()); } catch(_e) { body = {}; }
     const kind = String(body.kind||"");
-    const fp = String(body.fingerprint||"").replace(/[^\w-]/g,"").slice(0,128);
     const chart = body.chart;
 
     if (!apiKey) return json({ error:"missing ANTHROPIC_API_KEY — 请在 Edge Functions → Secrets 添加" }, 500, cors);
+    if (!sbUrl || !srk) return json({ error:"server_not_configured" }, 500, cors);
+    if (!["blueprint","topic","map","question","preview"].includes(kind))
+      return json({ error:"unknown kind: "+kind }, 400, cors);
+
+    // ★ v13:每一种内容都必须是已登录使用者 —— 在读快取、呼叫模型之前
+    const uid = await verifyUser(req, sbUrl);
+    if (!uid) return json({ error:"unauthorized:请先登录", code:"login_required" }, 401, cors);
 
     /* ── 阅读预览层 ────────────────────────────────────────────
-       只吃「已经生成好的正文」,不碰星盘、不跑九步定调、不写任何解读,
-       所以在星盘验证之前就先分流出去。 */
-    if (kind === "preview")
-      return await handlePreviewKind(body, fp, apiKey, sbUrl, srk, dbHeaders, cors);
+       只吃「已经生成好的正文」,不碰星盘、不跑九步定调、不写任何解读。
+       指纹由服务端用正文本身计算(与前端 previewSeed 相同)。 */
+    if (kind === "preview") {
+      const pItems = Array.isArray(body.items) ? body.items : [];
+      const pLang = String(body.lang||"") === "en" ? "en" : "zh";
+      const pfp = pItems.length ? await sha256hex(previewSeedOf(pItems, pLang)) : "";
+      return await handlePreviewKind(body, pfp, apiKey, sbUrl, srk, dbHeaders, cors);
+    }
+
+    // ★ v13:星盘必须是这个使用者自己的那一张
+    const own = await loadOwnChart(sbUrl, srk, uid);
+    if (own === undefined) return json({ error:"db_unavailable" }, 503, cors);
+    if (own === null) return json({ error:"找不到你的星盘,请重新整理页面", code:"chart_not_found" }, 403, cors);
+    const seed = birthSeed(own);
+    if (!seed) return json({ error:"星盘资料不完整", code:"chart_incomplete" }, 403, cors);
+    const cb = chartCacheBase(seed, body, kind, own);
+    if (!cb.ok) return json({ error:"星盘资料与账号不一致,请重新整理页面", code: cb.reason }, 403, cors);
+    const fp = await sha256hex(cb.base);
+
+    // ★ v13:生命脉络 —— 九个主题都生成后才能生成(只对适用付费强制的账号执行)
+    if (kind === "map") {
+      const enf = await enforcementApplies(sbUrl, srk, uid);
+      if (enf === undefined) return json({ error:"db_unavailable" }, 503, cors);
+      if (enf && generatedTopicCount(own) < CANON_TOPICS.length)
+        return json({ error:"读完九个主题后才能生成生命脉络", code:"life_thread_locked",
+                      generated: generatedTopicCount(own) }, 403, cors);
+    }
 
     if (!chart || !chart.planets || !chart.cusps || !chart.ang)
       return json({ error:"invalid payload:缺少星盘资料" }, 400, cors);
@@ -2145,8 +2260,7 @@ Deno.serve(async (req: Request) => {
       const dbMap = await loadDbConfigs(sbUrl, srk);          // 资料表覆写(读不到用内建)
       const rq = resolveQuestion(qid, dbMap);
       if (!rq) return json({ error:"unknown question: "+qid }, 400, cors);
-      const uid = await verifyUser(req, sbUrl);               // 必须是已登录使用者
-      if (!uid) return json({ error:"unauthorized:请先登录后再使用人生探索地图" }, 401, cors);
+      // 已在最前面验证过登录(uid)
       userMsg = questionMsg(ns, chart, qid, rq.spec, body.blueprint, body.topics, body.answered);
       qMeta = { qid, slug: rq.spec.slug, uid, configVersion: rq.configVersion };
     }
@@ -2164,7 +2278,7 @@ Deno.serve(async (req: Request) => {
     // 生命蓝图额外回传写作层版本:前端据此判断这份内容到底是不是新写法产出的
     const bpMeta = kind === "blueprint" ? { blueprint_style_version: BLUEPRINT_STYLE_VERSION } : {};
 
-    if (cacheFp && sbUrl && srk) {
+    if (cacheFp && sbUrl && srk && !cb.retry) {
       try {
         const q = await fetch(sbUrl+"/rest/v1/readings?fingerprint=eq."+cacheFp+"&select=analysis", { headers: dbHeaders });
         if (q.ok) { const rows = await q.json(); if (rows.length && rows[0].analysis)
@@ -2235,4 +2349,6 @@ Deno.serve(async (req: Request) => {
   } catch(e) {
     return json({ error:String(e) }, 500, cors);
   }
-});
+}
+
+if (G.Deno?.serve) G.Deno.serve(handler);
