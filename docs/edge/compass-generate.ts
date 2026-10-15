@@ -1,5 +1,5 @@
 // ============================================================
-// INNER SKY · Edge Function  compass-generate  (compass-v1 · v2:必须登录)
+// INNER SKY · Edge Function  compass-generate  (compass-v1 · v2:必须登录 · v3:Inner Tools 权限)
 // ------------------------------------------------------------
 // 「我的内在指南」的生成层。刻意【不】做成 read-chart 的第五种 kind。
 //
@@ -887,6 +887,26 @@ async function verifyUser(req: Request, sbUrl: string): Promise<string | null> {
   } catch (_e) { return null; }
 }
 
+/* ── v3 · Inner Tools 权限 ─────────────────────────────────
+   这一支的每一种生成(内在指南、星空小记、每日题库)都属于 Inner Tools。
+   登录之后、任何验证与模型呼叫之前,问资料库 inner_tools_access(只有 service_role 能呼叫):
+     ok / early_access / not_enforced → 继续;expired → 403 inner_tools_required;
+     读不到 → 503(fail closed,不放行、不呼叫模型)。
+   SUPABASE_SERVICE_ROLE_KEY 由 Supabase 自动提供(read-chart 也在用),不需要新增 Secret。 */
+async function innerToolsAccess(sbUrl: string, srk: string, uid: string): Promise<string | null> {
+  try {
+    const r = await fetch(sbUrl + "/rest/v1/rpc/inner_tools_access", {
+      method: "POST",
+      headers: { apikey: srk, Authorization: "Bearer " + srk, "Content-Type": "application/json" },
+      body: JSON.stringify({ p_user: uid })
+    });
+    if (!r.ok) return null;
+    const v = await r.json();
+    return typeof v === "string" ? v : null;
+  } catch (_e) { return null; }
+}
+const INNER_TOOLS_ALLOW = ["ok", "early_access", "not_enforced"];
+
 async function handler(req: Request): Promise<Response> {
   const cors = {
     "Access-Control-Allow-Origin": "*",
@@ -897,7 +917,7 @@ async function handler(req: Request): Promise<Response> {
 
   const apiKey = Deno.env.get("ANTHROPIC_API_KEY") ?? "";
   if (req.method === "GET")
-    return json({ ok: true, function: "compass-generate (" + Object.keys(SYSTEMS)
+    return json({ ok: true, version: "compass-generate v3 (login + inner tools access)", function: "compass-generate (" + Object.keys(SYSTEMS)
         .concat(Object.keys(SELF_NOTES_VERSIONS)).concat(Object.keys(QUESTIONS_VERSIONS)).join(" | ") + ")",
       anthropic_key_set: apiKey.length > 0, model: MODEL,
       note: "dev prototype · 不写资料库 · 只接受 human-mechanism contract" }, 200, cors);
@@ -907,8 +927,18 @@ async function handler(req: Request): Promise<Response> {
     try { body = JSON.parse(await req.text()); } catch (_e) { body = {}; }
 
     if (!apiKey) return json({ error: "missing ANTHROPIC_API_KEY" }, 500, cors);
-    if (!(await verifyUser(req, Deno.env.get("SUPABASE_URL") ?? "")))
+    const sbUrl = Deno.env.get("SUPABASE_URL") ?? "";
+    const uid = await verifyUser(req, sbUrl);
+    if (!uid)
       return json({ status: "generation_failed", error: "unauthorized", code: "login_required" }, 401, cors);
+    const srk = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+    if (!srk)
+      return json({ status: "generation_failed", error: "server_not_configured", code: "entitlement_unavailable" }, 503, cors);
+    const access = await innerToolsAccess(sbUrl, srk, uid);
+    if (access === "expired")
+      return json({ status: "generation_failed", error: "Inner Tools 尚未开通或已到期", code: "inner_tools_required" }, 403, cors);
+    if (access === null || INNER_TOOLS_ALLOW.indexOf(access) < 0)
+      return json({ status: "generation_failed", error: "暂时无法确认 Inner Tools 状态,请稍后再试", code: "entitlement_unavailable" }, 503, cors);
 
     const input = body.input;
     const system = String(body.system || "");

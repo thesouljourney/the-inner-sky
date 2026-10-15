@@ -705,7 +705,7 @@ function testCompassEvidence() {
     /window\.Compass\.setNatal\(curResult\)/.test(html), true);
   checkEq("[evi] 输入把三种来源的角色分好",
     /chart: natal,\s*\/\/ 主要证据/.test(html) &&
-    /themes: c\[K\("topics"\)\]/.test(html) &&
+    /themes: window\.Reading\.liveTopics\(c\[K\("topics"\)\]/.test(html) &&
     /_lifeThreadsCountsAsEvidence: false/.test(html), true);
   checkEq("[evi] 没有注册生成器时,行为与以前一样(回传 null)",
     /if \(!generator\) return null;/.test(html), true);
@@ -1623,8 +1623,14 @@ function testCompassGenerationAsync(K) {
   checkEq("[gen] 生成端点是独立的 Edge Function", /compass-generate/.test(edge), true);
   checkEq("[gen] 生成端点拒绝星盘资料", /不接受星盘资料/.test(edge), true);
   checkEq("[gen] 生成端点自己再扫一次 payload", /blocked_by_scrub/.test(edge), true);
-  // 只呼叫 /auth/v1/user 验证登录;不读写任何资料表
-  checkEq("[gen] 生成端点不写任何资料库", /rest\/v1|SERVICE_ROLE/i.test(edge.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "")), false);
+  // 只呼叫 /auth/v1/user 验证登录 + inner_tools_access 查权限;不读写任何资料表
+  const edgeCode = edge.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+  checkEq("[gen] 生成端点唯一碰到的资料库路径是 inner_tools_access(唯读权限查询)",
+    (edgeCode.match(/rest\/v1\/[a-z_\/]+/g) || []).join(","), "rest/v1/rpc/inner_tools_access");
+  checkEq("[gen] 生成端点不写任何资料表(没有 PATCH / DELETE / upsert)", /PATCH|DELETE|merge-duplicates/.test(edgeCode), false);
+  checkEq("[gen] Inner Tools 权限检查在模型呼叫之前",
+    edgeCode.indexOf("innerToolsAccess(sbUrl, srk, uid)") > 0 &&
+    edgeCode.indexOf("innerToolsAccess(sbUrl, srk, uid)") < edgeCode.indexOf("api.anthropic.com/v1/messages", edgeCode.indexOf("async function handler")), true);
   checkEq("[gen] 生成端点只用 /auth/v1/user 验证登录", /\/auth\/v1\/user/.test(edge), true);
   checkEq("[gen] 生成端点没有引用 MASTER_SYSTEM",
     /MASTER_SYSTEM/.test(edge.replace(/^\s*\/\/.*$/gm, "")), false);
@@ -1704,9 +1710,10 @@ function testCompassLivePath() {
   /* 5 · 沿用专案既有的 secret,而且【只】需要这一个 */
   checkEq("[live] 只用既有的 ANTHROPIC_API_KEY,没有改名",
     (edge.match(/Deno\.env\.get\("ANTHROPIC_API_KEY"\)/g) || []).length, 1);
-  // 登录验证只需要 Supabase 自动提供的 SUPABASE_URL;不需要 service role key
-  checkEq("[live] 没有多要 SUPABASE_SERVICE_ROLE_KEY",
-    /SUPABASE_SERVICE_ROLE_KEY/.test(edge), false);
+  // v3:Inner Tools 权限查询用 Supabase 自动提供的 SUPABASE_SERVICE_ROLE_KEY(与 read-chart 相同,不新增 Secret);
+  // 没有设定 → 503,不放行
+  checkEq("[live] service role key 只从环境读取,没设定就 503",
+    /const srk = Deno\.env\.get\("SUPABASE_SERVICE_ROLE_KEY"\) \?\? "";\s*if \(!srk\)\s*return json\([^;]*entitlement_unavailable[^;]*503/.test(edge), true);
   /* 端点预设就指向本专案的 project ref,不必另外设定 */
   checkEq("[live] 端点预设由 CloudCfg 推导,不写死第二份网址",
     /window\.CloudCfg\.url \+ "\/functions\/v1\/compass-generate"/.test(html), true);
@@ -1752,7 +1759,8 @@ function testCompassLivePathAsync(K) {
   /* 登录验证:/auth/v1/user 只认 test-user-token(在 Anthropic stub 之上再包一层) */
   const AUTH_STUB = "https://auth.stub.test";
   const afterAnthropic = globalThis.fetch;
-  let claudeCalls = 0;
+  let claudeCalls = 0, itState = "not_enforced";
+  const itCalls = [];
   globalThis.fetch = function (url, init) {
     const u = String(url);
     if (u.indexOf(AUTH_STUB + "/auth/v1/user") === 0) {
@@ -1760,10 +1768,19 @@ function testCompassLivePathAsync(K) {
       return Promise.resolve(new Response(tok === "test-user-token" ? '{"id":"u-1"}' : '{"msg":"bad jwt"}',
         { status: tok === "test-user-token" ? 200 : 401 }));
     }
+    /* Inner Tools 权限:只有 service role 能查;回传值由 itState 决定 */
+    if (u === AUTH_STUB + "/rest/v1/rpc/inner_tools_access") {
+      const h = (init && init.headers) || {};
+      itCalls.push({ body: JSON.parse(init.body), claudeBefore: claudeCalls, svc: h.Authorization === "Bearer service-test" });
+      if (h.Authorization !== "Bearer service-test") return Promise.resolve(new Response('{"message":"denied"}', { status: 401 }));
+      if (itState === "__down__") return Promise.resolve(new Response('{"message":"down"}', { status: 500 }));
+      return Promise.resolve(new Response(JSON.stringify(itState), { status: 200 }));
+    }
     if (u.indexOf("api.anthropic.com") >= 0) claudeCalls++;
     return afterAnthropic(url, init);
   };
-  return shim.serveEdgeFunction(edgePath, { env: { ANTHROPIC_API_KEY: "test-only-not-a-real-key", SUPABASE_URL: AUTH_STUB } })
+  return shim.serveEdgeFunction(edgePath, { env: { ANTHROPIC_API_KEY: "test-only-not-a-real-key", SUPABASE_URL: AUTH_STUB,
+                                                   SUPABASE_SERVICE_ROLE_KEY: "service-test" } })
     .then(function (srv) {
       const post = (b, headers) => fetch(srv.url, { method: "POST",
         headers: Object.assign({ "content-type": "application/json", "authorization": "Bearer test-user-token" }, headers || {}),
@@ -1791,6 +1808,40 @@ function testCompassLivePathAsync(K) {
         .then(function (r) {
           checkEq("[live] 无效的登录凭证 → 401", r.http, 401);
           checkEq("[live] 无效凭证时也没有呼叫模型", claudeCalls, 0);
+          checkEq("[live] 未登录时没有查询 Inner Tools 权限", itCalls.length, 0);
+          itState = "expired";
+          return post(good);
+        })
+        .then(function (r) {
+          // Inner Tools 未开通 / 已到期 → 403,模型完全没有被呼叫
+          checkEq("[live] Inner Tools 已到期 → 403 inner_tools_required", r.http === 403 && r.o.code === "inner_tools_required", true);
+          checkEq("[live] 到期时没有呼叫模型", claudeCalls, 0);
+          checkEq("[live] 以登录者自己的 user_id、service role 查询权限",
+            itCalls.length === 1 && itCalls[0].body.p_user === "u-1" && itCalls[0].svc === true, true);
+          itState = "__down__";
+          return post(good);
+        })
+        .then(function (r) {
+          checkEq("[live] 权限查询失败 → 503(fail closed)", r.http === 503 && r.o.code === "entitlement_unavailable", true);
+          checkEq("[live] 权限查询失败时没有呼叫模型", claudeCalls, 0);
+          itState = "maybe";
+          return post(good);
+        })
+        .then(function (r) {
+          checkEq("[live] 权限回传无法辨识 → 503", r.http === 503 && r.o.code === "entitlement_unavailable", true);
+          checkEq("[live] 无法辨识时没有呼叫模型", claudeCalls, 0);
+          itState = "early_access";
+          return post(Object.assign({}, good, { system: "x" }));
+        })
+        .then(function (r) {
+          checkEq("[live] Early User 通过权限检查(接着才验证 payload)", r.http === 400 && r.o.error === "prompt_mismatch", true);
+          itState = "ok";
+          return post(Object.assign({}, good, { system: "x" }));
+        })
+        .then(function (r) {
+          checkEq("[live] 有效的 Inner Tools 通过权限检查", r.http === 400 && r.o.error === "prompt_mismatch", true);
+          checkEq("[live] 权限检查本身不呼叫模型", claudeCalls, 0);
+          itState = "not_enforced";
           return post(good);
         })
         .then(function (r) {

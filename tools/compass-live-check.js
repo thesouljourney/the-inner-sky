@@ -80,18 +80,20 @@ async function main() {
       let n = 0;
       restore = stubAnthropic(() => RC.textFor(CASES[Math.min(n++, CASES.length - 1)]));
     }
-    /* 本机跑:登录验证换成本地假的 /auth/v1/user(只认 local-check-token) */
+    /* 本机跑:登录验证与 Inner Tools 权限都换成本地假的(只认 local-check-token;权限一律 not_enforced) */
     const AUTH_STUB = "https://auth.local-check.test";
     const beforeAuth = globalThis.fetch;
     globalThis.fetch = function (url, init) {
       if (String(url).indexOf(AUTH_STUB + "/auth/v1/user") === 0)
         return Promise.resolve(new Response('{"id":"local-check"}', { status: 200 }));
+      if (String(url) === AUTH_STUB + "/rest/v1/rpc/inner_tools_access")
+        return Promise.resolve(new Response('"not_enforced"', { status: 200 }));
       return beforeAuth(url, init);
     };
     token = "local-check-token";
     server = await serveEdgeFunction(path.join(__dirname, "..", "docs", "edge", "compass-generate.ts"),
       { env: { ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY || (MODE === "stub" ? "stub-key" : ""),
-               SUPABASE_URL: AUTH_STUB } });
+               SUPABASE_URL: AUTH_STUB, SUPABASE_SERVICE_ROLE_KEY: "local-check-service" } });
     endpoint = server.url;
   }
 
