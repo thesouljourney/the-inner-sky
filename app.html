@@ -8541,10 +8541,58 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   }
   function updateChart(c) {
     const data = Object.assign({}, c); delete data.id;
-    return trackChartWrite(rest("charts?id=eq." + c.id, {
+    return trackChartWrite(rest("charts?id=eq." + c.id + "&select=data", {
       method: "PATCH",
+      headers: { "Prefer": "return=representation" },
       body: JSON.stringify({ data: data, updated_at: new Date().toISOString() })
+    }).then(function (rows) {
+      // 资料库(资料保护 trigger)可能保留了这个分页不知道的内容 → 补回画面上,不必重新整理
+      const row = Array.isArray(rows) ? rows[0] : null;
+      if (row && row.data && adoptServerContent(c, row.data)) {
+        try { window.dispatchEvent(new CustomEvent("innersky:chart-merged", { detail: { id: c.id } })); } catch (e) { }
+      }
+      return rows;
     }));
+  }
+  /* 把资料库合并后的结果补进这个分页手上的星盘:补上这边没有的,并换上 savedAt 比较新的
+     (之后再改这一项时,带回去的才是最新的 savedAt)。收藏与墓碑以资料库合并后的结果为准。
+     回传是否有任何变化。 */
+  const CONTENT_GROUPS = ["topics", "topics_en", "qa", "qa_en"];
+  const CONTENT_SINGLES = ["reading", "reading_en", "lifemap", "lifemap_en"];
+  // 资料库那一份的 savedAt 比较新(这次写入被接受后盖的新时间,或别的分页写的较新版本)
+  function newerOnServer(s, l) {
+    return !!s && typeof s === "object" && typeof s.savedAt === "number" &&
+      !(l && typeof l === "object" && typeof l.savedAt === "number" && l.savedAt >= s.savedAt);
+  }
+  function sameContent(a, b) {   // 不看 savedAt
+    const strip = function (v) { if (!v || typeof v !== "object") return v; const o = Object.assign({}, v); delete o.savedAt; return o; };
+    return JSON.stringify(strip(a)) === JSON.stringify(strip(b));
+  }
+  /* 回传「画面上看得到的变化」:补上了这边没有的内容、换成别的分页写的不同内容、收藏清单变了。
+     只是换上资料库盖的新 savedAt / addedAt 不算(不重画,避免每次存档都重画页面)。 */
+  function adoptServerContent(c, srv) {
+    let visible = false;
+    function take(holder, k, sv) {
+      const lv = holder[k];
+      if (lv == null) { holder[k] = sv; visible = true; return; }
+      if (!newerOnServer(sv, lv)) return;
+      if (!sameContent(sv, lv)) visible = true;
+      holder[k] = sv;
+    }
+    CONTENT_GROUPS.forEach(function (g) {
+      const s = srv[g];
+      if (!s || typeof s !== "object") return;
+      if (!c[g] || typeof c[g] !== "object") c[g] = {};
+      Object.keys(s).forEach(function (k) { if (s[k] != null) take(c[g], k, s[k]); });
+    });
+    CONTENT_SINGLES.forEach(function (k) { if (srv[k] != null) take(c, k, srv[k]); });
+    if (Array.isArray(srv.favs)) {
+      const keys = function (list) { return (list || []).map(function (f) { return f && f.key; }).join("\u0001"); };
+      if (keys(srv.favs) !== keys(c.favs)) visible = true;
+      c.favs = srv.favs;
+    }
+    if (srv.favsRemoved && typeof srv.favsRemoved === "object") c.favsRemoved = srv.favsRemoved;
+    return visible;
   }
   function deleteChart(id) {
     return rest("charts?id=eq." + id, { method: "DELETE" });
@@ -8563,10 +8611,28 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     clearTimeout(prefsTimer);
     prefsTimer = setTimeout(function () {
       if (!session) return;
-      rest("prefs", {
+      rest("prefs?select=data", {
         method: "POST",
-        headers: { "Prefer": "resolution=merge-duplicates" },
+        headers: { "Prefer": "resolution=merge-duplicates,return=representation" },
         body: JSON.stringify({ user_id: session.user_id, data: prefsCache })
+      }).then(function (rows) {
+        // 资料库(资料保护 trigger)合并了别的装置的已读记录 → 补回这边
+        const d = Array.isArray(rows) && rows[0] && rows[0].data;
+        if (!d) return;
+        let changed = false;
+        if (d.readTopics && typeof d.readTopics === "object") {
+          const rt = Object.assign({}, prefsCache.readTopics || {});
+          Object.keys(d.readTopics).forEach(function (k) { if (d.readTopics[k] && !rt[k]) { rt[k] = true; changed = true; } });
+          prefsCache.readTopics = rt;
+        }
+        if (Array.isArray(d.readOrder)) {
+          const ro = (prefsCache.readOrder || []).slice();
+          d.readOrder.forEach(function (k) { if (ro.indexOf(k) < 0) { ro.push(k); changed = true; } });
+          prefsCache.readOrder = ro;
+        }
+        if (changed) {
+          try { window.dispatchEvent(new CustomEvent("innersky:prefs-merged", { detail: { readTopics: prefsCache.readTopics, readOrder: prefsCache.readOrder } })); } catch (e) { }
+        }
       }).catch(function (e) { console.warn("偏好同步失败", e); });
     }, 900);
   }
@@ -9505,6 +9571,10 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
   }
   // 单一一份内容(生命蓝图 / 生命脉络):过期就当作没有
   function liveEntry(v) { return isStale(v) ? undefined : v; }
+  /* 资料保护:一份内容目前的 savedAt(由资料库盖上的服务器时间;没有就是 0)。
+     改写 / 重新生成某一项时,把被取代那一份的 savedAt 带回去,资料库据此分辨
+     「根据最新版改的(接受)」与「旧分页的旧副本(保留资料库的)」—— 不使用装置时钟。 */
+  function baseSaved(v) { return (v && typeof v.savedAt === "number") ? v.savedAt : 0; }
   /* 生命脉络的唯一条件:九个正式主题的【中文版】已经生成几个。
      「已生成」= reviveTopic() 能还原出内容(版本 ≥ CONTENT_VER,且有 sections 或可解析的 raw)。
      与 read-chart 的 generatedTopicCount() 逐条相同;不看 readTopics、不看是否打开过。 */
@@ -9518,7 +9588,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     BLUEPRINT_VER: BLUEPRINT_VER, BLUEPRINT_STYLE_ID: BLUEPRINT_STYLE_ID,
     blueprintOutdated: blueprintOutdated, serverBlueprintStyle: serverBlueprintStyle,
     curLang: curLang, LK: LK,
-    liveTopics: liveTopics, liveEntry: liveEntry, generatedTopicCount: generatedTopicCount,
+    liveTopics: liveTopics, liveEntry: liveEntry, generatedTopicCount: generatedTopicCount, baseSaved: baseSaved,
     TOPICS9: TOPICS9, findTopic: findTopic, DOMAINS: DOMAINS, findQ: findQ,
     parseChapters: parseChapters, parseTopic: parseTopic,
     fetchReading: fetchReading, fetchTopic: fetchTopic, fetchMap: fetchMap, fetchQuestion: fetchQuestion,
@@ -10685,6 +10755,23 @@ window.Guide = (function () {
   function saveShow() {
     window.Cloud.savePrefs({ wheelShow: wheelShow, glyphMode: glyphMode });
   }
+  /* 资料保护:资料库合并了别的装置 / 分页写入的内容(已读记录、主题、收藏…)之后,
+     这个分页直接补上并重画,不需要使用者重新整理(见 Cloud.updateChart / savePrefs)。 */
+  window.addEventListener("innersky:prefs-merged", function (ev) {
+    const d = (ev && ev.detail) || {};
+    Object.keys(d.readTopics || {}).forEach(function (t) { if (d.readTopics[t]) readTopics[t] = true; });
+    (d.readOrder || []).forEach(function (t) { if (readTopics[t] && readOrder.indexOf(t) < 0) readOrder.push(t); });
+    saveProfileCache();
+    routeRefresh();
+  });
+  window.addEventListener("innersky:chart-merged", function (ev) {
+    const c = activeChart();
+    if (!c || !ev || !ev.detail || c.id !== ev.detail.id) return;
+    saveProfileCache();
+    renderTopics();
+    renderFavs();
+    routeRefresh();
+  });
 
 
   /* ============================================================
@@ -11649,10 +11736,21 @@ window.Guide = (function () {
     if (!c) return false;
     c.favs = c.favs || [];
     const i = c.favs.findIndex(function (f) { return f.key === k; });
-    if (i >= 0) c.favs.splice(i, 1);
+    /* 资料保护(见 docs/sql/data_protection.sql;不使用装置时钟):
+       · 新增:标记 fresh,由资料库盖上 addedAt(服务器时间)。
+       · 取消:墓碑写「被取消那一笔的 addedAt」—— 资料库会把 addedAt 不晚于墓碑的收藏滤掉,
+         所以旧分页救不回来,之后再收藏一次(新的 addedAt)又会出现。
+         还没拿到 addedAt 的新收藏写 -1,由资料库盖上当下时间。 */
+    if (i >= 0) {
+      const gone = c.favs.splice(i, 1)[0] || {};
+      c.favsRemoved = Object.assign({}, c.favsRemoved || {});
+      const prev = typeof c.favsRemoved[k] === "number" ? c.favsRemoved[k] : -1;
+      c.favsRemoved[k] = (typeof gone.addedAt === "number" && !gone.fresh) ? Math.max(prev, gone.addedAt) : -1;
+    }
     else c.favs.unshift(Object.assign({
       key: k,
       ts: new Date().toISOString().slice(0, 10),
+      fresh: true,
       uid: window.Cloud.userId() || ""      // 收藏永远跟着 User ID,不跟 Username
     }, payload));
     window.Cloud.updateChart(c).catch(function () { });
@@ -11818,6 +11916,7 @@ window.Guide = (function () {
     const job = needSrc
       ? window.Reading.fetchTopic(curResult, tid, fpSeed, window.Reading.liveEntry(c.reading), window.Reading.liveTopics(c.topics), c, "zh").then(function (zhData) {
           zhData.ver = window.Reading.CONTENT_VER;
+          zhData.savedAt = window.Reading.baseSaved((c.topics || {})[tid]);   // 资料保护:带回「我是根据哪一版改的」;资料库接受后会盖上新的服务器时间(见 docs/sql/data_protection.sql)
           if (window.Reading.guardWriteZh(c, "topic", tid, zhData)) {
             window.Cloud.updateChart(c).catch(function () { });
           }
@@ -11829,6 +11928,7 @@ window.Guide = (function () {
       if (!activeChart() || activeChart().id !== c.id) return;
       c[TK] = c[TK] || {};
       data.ver = window.Reading.CONTENT_VER;
+      data.savedAt = window.Reading.baseSaved(c[TK][tid]);   // 资料保护:带回「我是根据哪一版改的」;资料库接受后会盖上新的服务器时间(见 docs/sql/data_protection.sql)
       c[TK][tid] = data;
       window.Cloud.updateChart(c).catch(function (e) { console.warn("cloud", e); });
       renderTopics(); routeRefresh();
@@ -11931,6 +12031,7 @@ window.Guide = (function () {
       if (!activeChart() || activeChart().id !== c.id) return;
       c[QK] = c[QK] || {};
       data.ver = window.Reading.CONTENT_VER;
+      data.savedAt = window.Reading.baseSaved(c[QK][qid]);   // 资料保护:带回「我是根据哪一版改的」;资料库接受后会盖上新的服务器时间(见 docs/sql/data_protection.sql)
       c[QK][qid] = data;
       window.Cloud.updateChart(c).catch(function (e) { console.warn("cloud", e); });
       renderQA(); routeRefresh();
@@ -11994,6 +12095,7 @@ window.Guide = (function () {
     const jobM = needSrcM
       ? window.Reading.fetchMap(curResult, fpSeed, window.Reading.liveEntry(c.reading), window.Reading.liveTopics(c.topics), c, "zh").then(function (zhData) {
           zhData.ver = window.Reading.CONTENT_VER;
+          zhData.savedAt = window.Reading.baseSaved(c.lifemap);   // 资料保护:带回「我是根据哪一版改的」;资料库接受后会盖上新的服务器时间(见 docs/sql/data_protection.sql)
           if (window.Reading.guardWriteZh(c, "map", null, zhData)) {
             window.Cloud.updateChart(c).catch(function () { });
           }
@@ -12004,6 +12106,7 @@ window.Guide = (function () {
       mapBusy = false;
       if (!activeChart() || activeChart().id !== c.id) return;
       data.ver = window.Reading.CONTENT_VER;
+      data.savedAt = window.Reading.baseSaved(c[MK]);   // 资料保护:带回「我是根据哪一版改的」;资料库接受后会盖上新的服务器时间(见 docs/sql/data_protection.sql)
       c[MK] = data;
       window.Cloud.updateChart(c).catch(function (e) { console.warn("cloud", e); });
       renderMap();
@@ -12026,9 +12129,11 @@ window.Guide = (function () {
   const bpRefreshTried = {};
   /* 生命蓝图存档盖章。只有在服务端确实回报了新版写作层时才盖 bpVer,
      否则留空 —— 函式还没部署时不会被误判成「已经是新写法」。 */
-  function stampBlueprint(parsed) {
+  // prev:被取代的那一份(资料保护:带回它的 savedAt,资料库据此判断这是不是根据最新版改的)
+  function stampBlueprint(parsed, prev) {
     const o = Object.assign({ ts: new Date().toISOString().slice(0, 10),
       ver: window.Reading.CONTENT_VER }, parsed);
+    o.savedAt = window.Reading.baseSaved(prev);
     if (parsed && parsed.styleId === window.Reading.BLUEPRINT_STYLE_ID) o.bpVer = window.Reading.BLUEPRINT_VER;
     delete o.styleId;
     return o;
@@ -12065,7 +12170,7 @@ window.Guide = (function () {
     const zhJob = zhOld
       ? window.Reading.fetchReading(curResult, fpSeed, c, "zh").then(function (zhParsed) {
           if (!stillHere()) throw new Error("chart changed");
-          c.reading = stamp(zhParsed);
+          c.reading = stamp(zhParsed, c.reading);
           // 立刻落地:英文那一步万一失败,中文这一份也已经是新写法且已存好
           window.Cloud.updateChart(c).catch(function (e) { console.warn(T("syncFail"), e); });
           return true;
@@ -12077,7 +12182,7 @@ window.Guide = (function () {
         if (!isEN) return zhDone;                       // 中文介面:换完中文就结束
         return window.Reading.fetchReading(curResult, fpSeed, c, "en").then(function (enParsed) {
           if (!stillHere()) throw new Error("chart changed");
-          c.reading_en = stamp(enParsed);
+          c.reading_en = stamp(enParsed, c.reading_en);
           return true;
         });
       })
@@ -12100,6 +12205,7 @@ window.Guide = (function () {
     const revived = window.Reading.reviveReading(c[RK]);
     if (revived) {
       if (revived !== c[RK]) {          // 本地修复成功:回存,以后直接可用
+        revived.savedAt = window.Reading.baseSaved(c[RK]);
         c[RK] = revived;
         window.Cloud.updateChart(c).catch(function () { });
       }
@@ -12137,7 +12243,7 @@ window.Guide = (function () {
       const needSource = window.I18N.isEN() && !window.Reading.hasChinese(c, "blueprint");
       const job = needSource
         ? window.Reading.fetchReading(curResult, fpSeed, c, "zh").then(function (zhParsed) {
-            var zhVal = stampBlueprint(zhParsed);
+            var zhVal = stampBlueprint(zhParsed, c.reading);
             if (window.Reading.guardWriteZh(c, "blueprint", null, zhVal)) {
               window.Cloud.updateChart(c).catch(function () { });
             }
@@ -12148,7 +12254,7 @@ window.Guide = (function () {
         .then(function (parsed) {
           autoGenBusy = false;
           if (!activeChart() || activeChart().id !== c.id) return;
-          c[RK] = stampBlueprint(parsed);   // 含 raw 原文
+          c[RK] = stampBlueprint(parsed, c[RK]);   // 含 raw 原文
           window.Cloud.updateChart(c).catch(function (e) { console.warn(T("syncFail"), e); });
           renderReading();
         })

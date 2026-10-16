@@ -8,7 +8,7 @@ psql -q -c "create database $DB"
 trap 'psql -q -c "drop database if exists $DB" >/dev/null' EXIT
 psql -q -v ON_ERROR_STOP=1 -d "$DB" -f tests/sql/00_mock_supabase.sql
 # 跑两次：确认 migration 可以安全重跑
-for m in payments_stage1 payments_stage1b; do
+for m in payments_stage1 payments_stage1b data_protection; do
   psql -q -v ON_ERROR_STOP=1 -d "$DB" -f "docs/sql/$m.sql" >/dev/null 2>&1
   psql -q -v ON_ERROR_STOP=1 -d "$DB" -f "docs/sql/$m.sql" >/dev/null 2>&1
 done
@@ -76,5 +76,18 @@ expect_seed "正式资料模拟：9 个 → 写入" "完成：9 个 Early User �
 [ "$(sq "select count(*) from auth.users where id::text like 'dddddddd%'")" = 4 ] || { echo "FAIL seed: 测试账号被删除"; exit 1; }
 expect_seed "正式资料模拟：重跑 → 不重复" "完成：9 个" "$ids" 9
 [ "$(sq 'select count(*) from early_access_users')" = 9 ] || { echo "FAIL seed: 重跑后不是 9 个"; exit 1; }
+pass=$((pass+4))
+
+# 资料保护的回滚：移除 trigger 后资料还在、行为回到「最后写入为准」；再套用一次可以恢复
+trg() { sq "select count(*) from pg_trigger where tgname in ('charts_content_guard_trg','prefs_read_guard_trg')"; }
+[ "$(trg)" = 2 ] || { echo "FAIL rollback: 套用后应有 2 个 trigger"; exit 1; }
+sq "update charts set data = data || '{\"topics\":{\"self\":{\"ver\":10}}}' where user_id = 'eeeeeeee-0000-4000-8000-000000000001'" >/dev/null
+psql -q -v ON_ERROR_STOP=1 -d "$DB" -f docs/sql/data_protection_rollback.sql >/dev/null
+[ "$(trg)" = 0 ] || { echo "FAIL rollback: 回滚后还有 trigger"; exit 1; }
+[ "$(sq "select count(*) from pg_proc where proname in ('charts_content_guard','prefs_read_guard','_content_rank','_content_saved','_content_same','_content_merge','_content_not_older','_fav_added')")" = 0 ] || { echo "FAIL rollback: 函数没有移除"; exit 1; }
+[ "$(sq "select data->'topics' ? 'self' from charts where user_id = 'eeeeeeee-0000-4000-8000-000000000001'")" = t ] || { echo "FAIL rollback: 回滚动到了资料"; exit 1; }
+psql -q -v ON_ERROR_STOP=1 -d "$DB" -f docs/sql/data_protection.sql >/dev/null
+psql -q -v ON_ERROR_STOP=1 -d "$DB" -f docs/sql/data_protection.sql >/dev/null
+[ "$(trg)" = 2 ] || { echo "FAIL rollback: 重新套用（两次）后应有 2 个 trigger"; exit 1; }
 pass=$((pass+4))
 echo "SQL 测试全部通过：$pass 项"

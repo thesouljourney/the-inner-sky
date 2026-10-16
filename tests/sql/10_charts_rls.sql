@@ -18,7 +18,7 @@ update charts set data = data || '{"date":"2000-01-01","lat":40.7,"utc":"2000-01
 select pg_temp.ok((select data->>'date' from charts) = '1994-11-20', '改出生日期 → 被还原');
 select pg_temp.ok((select (data->>'lat')::float from charts) = 1.29, '改纬度 → 被还原');
 select pg_temp.ok((select data->>'utc' from charts) = '1994-11-20T00:30:00Z', '改已存在的 utc → 被还原');
-select pg_temp.ok((select data->'topics'->'self' from charts) = '{"x":1}', '阅读照常存入');
+select pg_temp.ok((select (data->'topics'->'self') - 'savedAt' from charts) = '{"x":1}', '阅读照常存入');   -- savedAt 由资料保护 trigger 盖上
 select pg_temp.ok((select data->>'nick' from charts) = 'A2', '显示名称可以改');
 select pg_temp.fails($$insert into charts (id, user_id, data) values (gen_random_uuid(), 'aaaaaaaa-0000-4000-8000-000000000001', '{"date":"2001-01-01"}')$$, 'charts_one_per_user', '第二张星盘 → 拒绝');
 delete from charts;
