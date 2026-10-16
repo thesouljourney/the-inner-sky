@@ -60,6 +60,8 @@ export async function createDb() {
   await pool.query(fs.readFileSync(path.join(ROOT, "tests/sql/00_mock_supabase.sql"), "utf8"));
   await pool.query(fs.readFileSync(path.join(ROOT, "docs/sql/payments_stage1.sql"), "utf8"));
   await pool.query(fs.readFileSync(path.join(ROOT, "docs/sql/payments_stage1b.sql"), "utf8"));
+  // 资料保护 trigger 也装上:付款流程在有 trigger 的资料库上一样要通过
+  await pool.query(fs.readFileSync(path.join(ROOT, "docs/sql/data_protection.sql"), "utf8"));
   await pool.query(`insert into auth.users values ('${USERS.C}') on conflict do nothing`);
   return {
     pool,
