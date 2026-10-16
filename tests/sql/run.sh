@@ -84,7 +84,7 @@ trg() { sq "select count(*) from pg_trigger where tgname in ('charts_content_gua
 sq "update charts set data = data || '{\"topics\":{\"self\":{\"ver\":10}}}' where user_id = 'eeeeeeee-0000-4000-8000-000000000001'" >/dev/null
 psql -q -v ON_ERROR_STOP=1 -d "$DB" -f docs/sql/data_protection_rollback.sql >/dev/null
 [ "$(trg)" = 0 ] || { echo "FAIL rollback: 回滚后还有 trigger"; exit 1; }
-[ "$(sq "select count(*) from pg_proc where proname in ('charts_content_guard','prefs_read_guard','_content_rank','_content_saved','_content_not_older','_fav_added')")" = 0 ] || { echo "FAIL rollback: 函数没有移除"; exit 1; }
+[ "$(sq "select count(*) from pg_proc where proname in ('charts_content_guard','prefs_read_guard','_content_rank','_content_saved','_content_same','_content_merge','_content_not_older','_fav_added')")" = 0 ] || { echo "FAIL rollback: 函数没有移除"; exit 1; }
 [ "$(sq "select data->'topics' ? 'self' from charts where user_id = 'eeeeeeee-0000-4000-8000-000000000001'")" = t ] || { echo "FAIL rollback: 回滚动到了资料"; exit 1; }
 psql -q -v ON_ERROR_STOP=1 -d "$DB" -f docs/sql/data_protection.sql >/dev/null
 psql -q -v ON_ERROR_STOP=1 -d "$DB" -f docs/sql/data_protection.sql >/dev/null

@@ -11,7 +11,9 @@ drop trigger if exists charts_content_guard_trg on public.charts;
 drop trigger if exists prefs_read_guard_trg on public.prefs;
 drop function if exists public.charts_content_guard();
 drop function if exists public.prefs_read_guard();
-drop function if exists public._content_not_older(jsonb, jsonb);
+drop function if exists public._content_not_older(jsonb, jsonb);   -- 旧版草稿用过的名称;不存在就跳过
+drop function if exists public._content_merge(jsonb, jsonb, numeric);
+drop function if exists public._content_same(jsonb, jsonb);
 drop function if exists public._content_saved(jsonb);
 drop function if exists public._content_rank(jsonb);
 drop function if exists public._fav_added(jsonb);

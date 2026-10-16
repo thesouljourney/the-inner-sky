@@ -15,15 +15,21 @@
 --   1. 已生成的内容不会因为「这次写入里没有它」而消失:
 --        topics / topics_en / qa / qa_en 的每一篇,以及 reading / reading_en / lifemap / lifemap_en。
 --      新写入没有这一项(或是 null)→ 保留资料库里原本那一份。
---   2. 同一项两边都有 → 比较「谁比较新」,保留比较新的那一份:
---        先比版本(ver,生命蓝图再加 bpVer);版本相同再比 savedAt(前端每次写入内容时盖上的毫秒时间)。
---      所以正常更新(重新生成、补上预览、生命蓝图升级)照常写入,
---      旧分页拿着较早的一份写回时(版本较旧,或同版本但 savedAt 较早)则保留资料库里较新的那份。
---      旧资料没有 savedAt → 当作 0;两边都没有 → 以新写入为准(与以前相同)。
+--   2. 同一项两边都有、内容不同 → 用版本与「服务器盖的时间」判断谁比较新:
+--        · 版本(ver,生命蓝图再加 bpVer)较高 → 接受新的;较低 → 保留原本的。
+--        · 版本相同 → 看 savedAt。savedAt 由【资料库】在每次接受内容变更时盖上(毫秒,服务器时钟),
+--          前端只是把「它手上那一份的 savedAt」原样带回来,当作「我是根据哪一版改的」。
+--          带回来的 savedAt 等于(或晚于)资料库现在这一份 → 是根据最新版改的 → 接受,并重新盖时间;
+--          比资料库这一份早 → 旧分页的旧副本 → 保留资料库的。
+--        · 完全不依赖装置时钟:装置时间不准也不会让新内容被拒绝、或让旧内容盖掉新内容。
+--        · 内容相同(只差 savedAt)→ 保留原本那份,不重新盖时间。
+--        · 旧资料没有 savedAt → 当作 0;两边都没有 → 以新写入为准(与以前相同),并盖上时间。
 --   3. 收藏(favs)以 key 合并:旧分页少带的收藏会被留下来。
---      主动取消收藏要留下墓碑 favsRemoved[key] = 取消的时间(毫秒),
---      收藏本身带 addedAt(毫秒);addedAt 不晚于墓碑的收藏不显示 → 取消之后不会被旧分页救回来,
---      之后再收藏一次(addedAt 比较新)又会出现。墓碑两边取较新的时间合并。
+--        · 新增收藏:前端标记 fresh = true,资料库盖上 addedAt(服务器时钟)并拿掉 fresh。
+--        · 取消收藏:前端在 favsRemoved[key] 写入「被取消的那一笔的 addedAt」
+--          (还没拿到 addedAt 的新收藏写 -1,由资料库盖上当下时间)。
+--          addedAt 不晚于墓碑的收藏不显示 → 取消之后旧分页救不回来;之后再收藏一次(新的 addedAt)会出现。
+--          墓碑两边取较大值合并,重送同一个取消不会改变结果(不依赖装置时钟)。
 --   4. 其他栏位(显示名称、宫位制…)维持「最后写入的为准」;出生资料仍由 charts_birth_lock 锁住。
 --
 -- prefs.data 的规则(前端从来不会主动删除偏好的任何一项)
@@ -44,18 +50,41 @@ returns numeric language sql immutable set search_path = public, pg_temp as $$
        + case when jsonb_typeof(v -> 'bpVer') = 'number' then (v ->> 'bpVer')::numeric else 0 end
 $$;
 
--- 前端写入内容时盖上的时间(毫秒);旧资料没有 → 0
+-- 内容的 savedAt(由资料库盖上的服务器时间,毫秒);旧资料没有 → 0
 create or replace function public._content_saved(v jsonb)
 returns numeric language sql immutable set search_path = public, pg_temp as $$
   select case when jsonb_typeof(v -> 'savedAt') = 'number' then (v ->> 'savedAt')::numeric else 0 end
 $$;
 
--- 新写入的这一份是否「不比资料库里的旧」:版本较高,或版本相同且 savedAt 不较早
-create or replace function public._content_not_older(n jsonb, o jsonb)
+-- 两份内容是否相同(不看 savedAt)
+create or replace function public._content_same(n jsonb, o jsonb)
 returns boolean language sql immutable set search_path = public, pg_temp as $$
-  select public._content_rank(n) > public._content_rank(o)
-      or (public._content_rank(n) = public._content_rank(o) and public._content_saved(n) >= public._content_saved(o))
+  select case when jsonb_typeof(n) = 'object' and jsonb_typeof(o) = 'object'
+              then (n - 'savedAt') = (o - 'savedAt') else n = o end
 $$;
+
+-- 一项内容的合并结果:n = 新写入的、o = 资料库原本的、now = 服务器时间(毫秒)。回传 null 表示两边都没有。
+create or replace function public._content_merge(n jsonb, o jsonb, now_ms numeric)
+returns jsonb language plpgsql immutable set search_path = public, pg_temp as $$
+declare
+  stamp numeric;
+begin
+  if n is null or jsonb_typeof(n) = 'null' then
+    return case when o is null or jsonb_typeof(o) = 'null' then null else o end;   -- 少带 / null:保留原本的
+  end if;
+  stamp := greatest(now_ms, public._content_saved(o) + 1);
+  if o is null or jsonb_typeof(o) = 'null' then
+    return case when jsonb_typeof(n) = 'object' then n || jsonb_build_object('savedAt', stamp) else n end;
+  end if;
+  if public._content_same(n, o) then
+    return o;                                                                       -- 内容没变:保留原本的时间
+  end if;
+  if public._content_rank(n) > public._content_rank(o)
+     or (public._content_rank(n) = public._content_rank(o) and public._content_saved(n) >= public._content_saved(o)) then
+    return case when jsonb_typeof(n) = 'object' then n || jsonb_build_object('savedAt', stamp) else n end;
+  end if;
+  return o;                                                                         -- 旧副本 / 降级:保留原本的
+end $$;
 
 -- 收藏的加入时间(毫秒);旧资料没有 addedAt → 0
 create or replace function public._fav_added(f jsonb)
@@ -66,15 +95,20 @@ $$;
 create or replace function public.charts_content_guard()
 returns trigger language plpgsql set search_path = public, pg_temp as $$
 declare
+  now_ms  numeric := floor(extract(epoch from clock_timestamp()) * 1000);
   grp     text;
+  src     text;
   k       text;
   o       jsonb;
   n       jsonb;
+  r       jsonb;
   merged  jsonb;
   tomb    jsonb;
+  v       numeric;
   favs    jsonb;
   f       jsonb;
-  seen    text[] := '{}';
+  best    jsonb;
+  seq     jsonb;
 begin
   if coalesce(auth.role(), '') not in ('anon', 'authenticated') then
     return new;
@@ -88,45 +122,50 @@ begin
 
   -- 1 / 2. 一组一组的内容(每个主题 / 每道探索题各算一项)
   foreach grp in array array['topics', 'topics_en', 'qa', 'qa_en'] loop
-    o := old.data -> grp;
-    continue when o is null or jsonb_typeof(o) <> 'object';
+    o := case when jsonb_typeof(old.data -> grp) = 'object' then old.data -> grp else '{}'::jsonb end;
     n := case when jsonb_typeof(new.data -> grp) = 'object' then new.data -> grp else '{}'::jsonb end;
-    merged := n;
-    for k in select jsonb_object_keys(o) loop
-      continue when jsonb_typeof(o -> k) = 'null';
-      if not (n ? k) or jsonb_typeof(n -> k) = 'null' or not public._content_not_older(n -> k, o -> k) then
-        merged := merged || jsonb_build_object(k, o -> k);
-      end if;
+    continue when o = '{}'::jsonb and n = '{}'::jsonb and not (new.data ? grp);
+    merged := '{}'::jsonb;
+    for k in select jsonb_object_keys(o) union select jsonb_object_keys(n) loop
+      r := public._content_merge(n -> k, o -> k, now_ms);
+      if r is not null then merged := merged || jsonb_build_object(k, r); end if;
     end loop;
     new.data := jsonb_set(new.data, array[grp], merged, true);
   end loop;
 
   -- 1 / 2. 单一一份的内容
   foreach grp in array array['reading', 'reading_en', 'lifemap', 'lifemap_en'] loop
-    o := old.data -> grp;
-    continue when o is null or jsonb_typeof(o) = 'null';
-    n := new.data -> grp;
-    if n is null or jsonb_typeof(n) = 'null' or not public._content_not_older(n, o) then
-      new.data := jsonb_set(new.data, array[grp], o, true);
+    r := public._content_merge(new.data -> grp, old.data -> grp, now_ms);
+    if r is not null then
+      new.data := jsonb_set(new.data, array[grp], r, true);
     end if;
   end loop;
 
-  -- 3. 收藏:墓碑合并(两边取较新的时间)→ 收藏以 key 合并 → 滤掉已经取消的
+  -- 3. 收藏:墓碑合并(取较大值;-1 = 由资料库盖上当下时间)→ 收藏以 key 合并 → 滤掉已经取消的
   tomb := case when jsonb_typeof(old.data -> 'favsRemoved') = 'object' then old.data -> 'favsRemoved' else '{}'::jsonb end;
   if jsonb_typeof(new.data -> 'favsRemoved') = 'object' then
     for k in select jsonb_object_keys(new.data -> 'favsRemoved') loop
-      if jsonb_typeof(new.data -> 'favsRemoved' -> k) = 'number'
-         and (not (tomb ? k) or jsonb_typeof(tomb -> k) <> 'number'
-              or (new.data -> 'favsRemoved' ->> k)::numeric > (tomb ->> k)::numeric) then
-        tomb := tomb || jsonb_build_object(k, new.data -> 'favsRemoved' -> k);
+      continue when jsonb_typeof(new.data -> 'favsRemoved' -> k) <> 'number';
+      v := (new.data -> 'favsRemoved' ->> k)::numeric;
+      if v < 0 then v := now_ms; end if;
+      if jsonb_typeof(tomb -> k) is distinct from 'number' or v > (tomb ->> k)::numeric then
+        tomb := tomb || jsonb_build_object(k, v);
       end if;
     end loop;
   end if;
-  if jsonb_typeof(old.data -> 'favs') = 'array' or jsonb_typeof(new.data -> 'favs') = 'array'
+  -- 收藏这次完全没变(大多数存档都是这样)→ 资料库原本那份本来就已经合并、过滤好了,不必重算
+  if (new.data -> 'favs') is not distinct from (old.data -> 'favs')
+     and (new.data -> 'favsRemoved' is null or (new.data -> 'favsRemoved') = (old.data -> 'favsRemoved')) then
+    if old.data ? 'favsRemoved' then
+      new.data := new.data || jsonb_build_object('favsRemoved', old.data -> 'favsRemoved');
+    end if;
+  elsif jsonb_typeof(old.data -> 'favs') = 'array' or jsonb_typeof(new.data -> 'favs') = 'array'
      or tomb <> '{}'::jsonb then
-    favs := '[]'::jsonb;
-    -- 新写入的顺序优先,再补上旧资料里有、新写入没有的
-    for f, grp in
+    -- 同一个 key 两边都有时取 addedAt 较新的那一笔(新收藏 fresh 由资料库盖上最新的时间),
+    -- 最后再用墓碑过滤;顺序以新写入为准,再补上旧资料里有、新写入没有的。
+    best := '{}'::jsonb;
+    seq := '[]'::jsonb;
+    for f, src in
       select s.x, s.src from (
         select t.x, 'new' as src, 0 as pass, t.i
           from jsonb_array_elements(case when jsonb_typeof(new.data -> 'favs') = 'array' then new.data -> 'favs' else '[]'::jsonb end)
@@ -140,15 +179,32 @@ begin
       k := f ->> 'key';
       if k is null then
         -- 没有 key 的旧格式无法比对:以新写入的为准;新写入根本没带 favs 时才沿用旧的
-        if grp = 'new' or jsonb_typeof(new.data -> 'favs') <> 'array' or new.data -> 'favs' is null then
-          favs := favs || jsonb_build_array(f);
+        if src = 'new' or jsonb_typeof(new.data -> 'favs') is distinct from 'array' then
+          seq := seq || jsonb_build_array(jsonb_build_object('item', f));
         end if;
         continue;
       end if;
-      continue when k = any (seen);
-      seen := seen || k;
-      continue when jsonb_typeof(tomb -> k) = 'number' and public._fav_added(f) <= (tomb ->> k)::numeric;
-      favs := favs || jsonb_build_array(f);
+      if src = 'new' and f -> 'fresh' = 'true'::jsonb then
+        -- 这次新增的收藏:由资料库盖上加入时间(一定晚于这个 key 的墓碑)
+        f := (f - 'fresh') || jsonb_build_object('addedAt',
+               greatest(now_ms, case when jsonb_typeof(tomb -> k) = 'number' then (tomb ->> k)::numeric + 1 else 0 end));
+      end if;
+      if not (best ? k) then
+        best := best || jsonb_build_object(k, f);
+        seq := seq || jsonb_build_array(jsonb_build_object('key', k));
+      elsif public._fav_added(f) > public._fav_added(best -> k) then
+        best := best || jsonb_build_object(k, f);
+      end if;
+    end loop;
+    favs := '[]'::jsonb;
+    for f in select x from jsonb_array_elements(seq) x loop
+      if f ? 'item' then
+        favs := favs || jsonb_build_array(f -> 'item');
+        continue;
+      end if;
+      k := f ->> 'key';
+      continue when jsonb_typeof(tomb -> k) = 'number' and public._fav_added(best -> k) <= (tomb ->> k)::numeric;
+      favs := favs || jsonb_build_array(best -> k);
     end loop;
     new.data := new.data || jsonb_build_object('favs', favs);
     if tomb <> '{}'::jsonb then
@@ -189,7 +245,9 @@ begin
   o := old.data -> 'readTopics';
   if jsonb_typeof(o) = 'object' then
     n := case when jsonb_typeof(new.data -> 'readTopics') = 'object' then new.data -> 'readTopics' else '{}'::jsonb end;
-    new.data := new.data || jsonb_build_object('readTopics', o || n);
+    -- 原本是 true 的一律保留 true(新写入就算带了 false 也不会把已读变回未读)
+    new.data := new.data || jsonb_build_object('readTopics',
+      n || coalesce((select jsonb_object_agg(e.key, e.value) from jsonb_each(o) e where e.value = 'true'::jsonb), '{}'::jsonb));
   end if;
 
   -- 阅读顺序:新写入的顺序为准,补上遗漏的

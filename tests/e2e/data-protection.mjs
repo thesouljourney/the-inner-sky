@@ -11,6 +11,10 @@ import { createRequire } from "node:module";
 import pg from "pg";
 
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), "../..");
+// APP_DIR:用另一份前端(例如目前线上 main 的 app.html)跑同一组情境 ——
+// 验证「资料库已经套用 migration、前端还是旧版」时一样安全(旧版前端没有 baseSaved / 新收藏写法,跳过那两组)
+const APP_DIR = process.env.APP_DIR ? path.resolve(process.env.APP_DIR) : ROOT;
+const LEGACY = APP_DIR !== ROOT;
 const require = createRequire(import.meta.url);
 function loadPlaywright() {
   for (const m of [process.env.PLAYWRIGHT_MODULE, "playwright", "/opt/node-tools/node_modules/playwright"].filter(Boolean)) {
@@ -69,8 +73,8 @@ const dbPrefs = async () => (await pool.query("select data from prefs where user
 
 // ── 静态网站 ─────────────────────────────────────────────────
 const server = http.createServer((req, res) => {
-  const p = path.join(ROOT, decodeURIComponent(new URL(req.url, "http://x").pathname));
-  if (!p.startsWith(ROOT) || !fs.existsSync(p) || fs.statSync(p).isDirectory()) { res.writeHead(404); return res.end(); }
+  const p = path.join(APP_DIR, decodeURIComponent(new URL(req.url, "http://x").pathname));
+  if (!p.startsWith(APP_DIR) || !fs.existsSync(p) || fs.statSync(p).isDirectory()) { res.writeHead(404); return res.end(); }
   const type = p.endsWith(".html") ? "text/html" : p.endsWith(".js") ? "text/javascript" : p.endsWith(".css") ? "text/css" : "application/octet-stream";
   res.writeHead(200, { "content-type": type + "; charset=utf-8" });
   fs.createReadStream(p).pipe(res);
@@ -138,11 +142,11 @@ for (const order of ["新分页先写", "旧分页先写"]) {
     const A = await openTab(), B = await openTab();
     ok(await snapshot(A) === 6 && await snapshot(B) === 6, `[${order}] 两个分页都先读到同一份 6 篇的版本`);
     const writeB = () => B.page.evaluate(async () => {           // B:生成另外 3 篇
-      ["wealth", "study", "body"].forEach((t, i) => { window.__mine.topics[t] = { ver: 10, savedAt: Date.now() + i, tagline: "新", sections: [{ title: "章", body: "新 " + t }] }; });
+      ["wealth", "study", "body"].forEach((t) => { window.__mine.topics[t] = { ver: 10, savedAt: 0, tagline: "新", sections: [{ title: "章", body: "新 " + t }] }; });
       await window.Cloud.updateChart(window.__mine);
     });
     const writeA = () => A.page.evaluate(async () => {           // A:拿着旧版本收藏一句话(整份写回)
-      window.__mine.favs = [{ key: "k1", text: "一句话", addedAt: Date.now() }];
+      window.__mine.favs = [{ key: "k1", text: "一句话", fresh: true }];
       await window.Cloud.updateChart(window.__mine);
     });
     if (order === "新分页先写") { await writeB(); await writeA(); } else { await writeA(); await writeB(); }
@@ -151,7 +155,9 @@ for (const order of ["新分页先写", "旧分页先写"]) {
     ok(Array.isArray(d.favs) && d.favs.length === 1 && d.favs[0].key === "k1", `[${order}] 旧分页的收藏照常存入`, d.favs);
     const aKeys = await A.page.evaluate(() => Object.keys(window.__mine.topics).length);
     const bFavs = await B.page.evaluate(() => (window.__mine.favs || []).length);
-    if (order === "新分页先写") ok(aKeys === 9, `[${order}] 旧分页存档后,画面上的资料自动补回 9 篇(不必重新整理)`, aKeys);
+    // 画面自动补回是新前端才有的功能(旧版前端只保证资料库里不遗失,画面要重新整理才看到)
+    if (LEGACY) { /* 跳过 */ }
+    else if (order === "新分页先写") ok(aKeys === 9, `[${order}] 旧分页存档后,画面上的资料自动补回 9 篇(不必重新整理)`, aKeys);
     else ok(bFavs === 1, `[${order}] 新分页存档后,也拿到了旧分页的收藏`, bFavs);
     ok(A.errors.length === 0 && B.errors.length === 0, `[${order}] 两个分页都没有 JavaScript 错误`, A.errors.concat(B.errors));
     await A.page.close(); await B.page.close();
@@ -183,12 +189,14 @@ for (const order of ["新分页先写", "旧分页先写"]) {
 }
 
 // ═══ 3. 正常的重新生成照常生效;旧分页的同版本旧副本盖不回去 ═══
-await scenario("REGEN", async () => {
+if (!LEGACY) await scenario("REGEN", async () => {
   await resetData(9);
   const A = await openTab(), B = await openTab();
   await snapshot(A); await snapshot(B);
   await B.page.evaluate(async () => {
-    window.__mine.topics.self = { ver: 10, savedAt: Date.now(), tagline: "重新生成", sections: [{ title: "章", body: "重新生成的正文" }] };
+    // 与前端相同:带回被取代那一份的 savedAt(baseSaved);装置时钟故意调成很久以前,证明不依赖时钟
+    Date.now = () => 1000;
+    window.__mine.topics.self = { ver: 10, savedAt: window.Reading.baseSaved(window.__mine.topics.self), tagline: "重新生成", sections: [{ title: "章", body: "重新生成的正文" }] };
     await window.Cloud.updateChart(window.__mine);
   });
   await A.page.evaluate(async () => { window.__mine.nick = "旧分页"; await window.Cloud.updateChart(window.__mine); });
@@ -198,11 +206,78 @@ await scenario("REGEN", async () => {
   await A.page.close(); await B.page.close();
 });
 
-// ═══ 4. 前端:收藏 / 取消收藏会留下 addedAt 与墓碑 ═══
-await scenario("FAV", async () => {
-  const html = fs.readFileSync(path.join(ROOT, "app.html"), "utf8");
-  ok(/c\.favsRemoved\[k\] = Date\.now\(\);/.test(html) && /addedAt: Date\.now\(\),/.test(html), "收藏带 addedAt、取消收藏留下墓碑");
-  ok((html.match(/savedAt = Date\.now\(\)/g) || []).length >= 9, "所有写入内容的地方都盖上 savedAt", (html.match(/savedAt = Date\.now\(\)/g) || []).length);
+// ═══ 4. 收藏:用真的收藏按钮(app.html 的 toggleFav),装置时钟故意不准;旧分页在每一步之后整份写回 ═══
+if (!LEGACY) await scenario("FAV", async () => {
+  await resetData(9);
+  const A = await openTab(), B = await openTab();
+  await snapshot(B);                                        // B 是一直没重新整理的旧分页
+  await A.page.evaluate(() => { Date.now = () => 1000; });  // A 的装置时钟落后很多
+  const click = () => A.page.evaluate(() => new Promise((r) => {
+    let b = document.getElementById("__favtest");
+    if (!b) {
+      b = document.createElement("button");
+      b.id = "__favtest";
+      b.setAttribute("data-fav", "k-test"); b.setAttribute("data-text", "测试句子");
+      b.setAttribute("data-source", "主题"); b.setAttribute("data-source-type", "theme_reading");
+      document.body.appendChild(b);
+    }
+    b.click();
+    setTimeout(r, 1500);
+  }));
+  const staleWrite = (nick) => B.page.evaluate(async (n) => { window.__mine.nick = n; await window.Cloud.updateChart(window.__mine); }, nick);
+  const favKeys = async () => ((await dbChart()).favs || []).map((f) => f.key);
+
+  await click();                                            // 收藏
+  let d = await dbChart();
+  const f1 = (d.favs || []).find((f) => f.key === "k-test");
+  ok(f1 && typeof f1.addedAt === "number" && f1.addedAt > 1e12 && !("fresh" in f1), "收藏:资料库盖上服务器时间的 addedAt(装置时钟不准也一样)", f1);
+  await staleWrite("旧分页 1");
+  ok((await favKeys()).includes("k-test"), "收藏之后,旧分页整份写回也吃不掉");
+
+  await click();                                            // 取消收藏(A 已经从资料库拿到 addedAt)
+  d = await dbChart();
+  ok(!(d.favs || []).some((f) => f.key === "k-test") && d.favsRemoved && d.favsRemoved["k-test"] === f1.addedAt,
+    "取消收藏:墓碑 = 被取消那一笔的 addedAt", d.favsRemoved);
+  await staleWrite("旧分页 2");
+  ok(!(await favKeys()).includes("k-test"), "取消之后,旧分页整份写回也救不回来");
+
+  await click();                                            // 再收藏一次
+  d = await dbChart();
+  const f2 = (d.favs || []).find((f) => f.key === "k-test");
+  ok(f2 && f2.addedAt > f1.addedAt, "再收藏:出现,而且 addedAt 晚于墓碑", f2);
+  await staleWrite("旧分页 3");
+  ok((await favKeys()).includes("k-test"), "再收藏之后,旧分页整份写回也吃不掉");
+  ok(A.errors.length === 0 && B.errors.length === 0, "收藏流程没有 JavaScript 错误", A.errors.concat(B.errors));
+  await A.page.close(); await B.page.close();
+});
+
+// ═══ 5. 真正同时进行的两个交易(资料列锁):第二个等第一个提交后,看到的是最新版本 ═══
+await scenario("CONCURRENT", async () => {
+  await resetData(6);
+  const s0 = await dbChart();
+  const begin = async () => {
+    const c = await pool.connect();
+    await c.query("begin");
+    await c.query("set local role authenticated");
+    await c.query("select set_config('request.jwt.claim.sub', $1, true), set_config('request.jwt.claim.role', 'authenticated', true)", [UID]);
+    return c;
+  };
+  for (const order of ["1→2", "2→1"]) {
+    await resetData(6);
+    const c1 = await begin(), c2 = await begin();
+    const d1 = JSON.parse(JSON.stringify(s0)); d1.topics.wealth = { ver: 10, savedAt: 0, sections: [{ body: "W" }] };
+    const d2 = JSON.parse(JSON.stringify(s0)); d2.topics.study = { ver: 10, savedAt: 0, sections: [{ body: "S" }] };
+    const [first, second, fd, sd] = order === "1→2" ? [c1, c2, d1, d2] : [c2, c1, d2, d1];
+    await first.query("update charts set data = $1 where id = $2", [fd, CHART_ID]);       // 先拿到资料列锁
+    const pending = second.query("update charts set data = $1 where id = $2", [sd, CHART_ID]);   // 会等第一个提交
+    await new Promise((r) => setTimeout(r, 300));
+    await first.query("commit");
+    await pending;
+    await second.query("commit");
+    first.release(); second.release();
+    const d = await dbChart();
+    ok(d.topics.wealth && d.topics.study && Object.keys(d.topics).length === 8, `[同时写入 ${order}] 两个交易各自新增的主题都留下`, Object.keys(d.topics));
+  }
 });
 
 await browser.close();
@@ -216,4 +291,4 @@ if (failures.length) {
   console.log(`资料保护端对端测试:通过 ${pass},失败 ${failures.length}`);
   process.exit(1);
 }
-console.log(`资料保护端对端测试全部通过:${pass} 项`);
+console.log(`资料保护端对端测试全部通过:${pass} 项` + (LEGACY ? `(前端:${APP_DIR})` : ""));
