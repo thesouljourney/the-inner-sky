@@ -1,6 +1,19 @@
 // ============================================================
-// INNER SKY · Edge Function  read-chart  (v12)
-// 变更(相对 v11):
+// INNER SKY · Edge Function  read-chart  (v14)
+// 变更(v14 相对 v13):服务端付费权限 + 生命脉络九主题条件
+//   1. topic / map:登录之后、查星盘 / 读快取 / 呼叫模型之前,先问资料库 paid_access。
+//        ok / early_access / not_enforced → 继续;denied → 403 paid_required;
+//        资料库或 RPC 读不到 → 503(fail closed,不放行、不呼叫模型)。
+//   2. 生命脉络(map):九个正式主题的【中文版】都已生成才可以生成 —— 对所有人执行
+//      (付费用户、Early Users、目前不适用付费强制的一般用户都一样)。
+//      「已生成」的判断与前端 reviveTopic() 逐条相同(版本 ≥ CONTENT_VER,
+//      且有 sections 或可以解析的 raw);英文版、旧版主题 id、过期内容都不算。
+//   3. blueprint / question / preview:维持免费(仍须登录),行为不变。
+//   ⚠ 未改动:Prompt、九步定调、TOPIC_SPEC、QUESTION_SPEC、快取键、模型、落库。
+//
+// (v13:登录验证、星盘归属、服务端快取指纹 —— 见下方 v13 区块)
+//
+// 变更(v12 相对 v11):
 //   ★ 本次唯一的改动:新增第五种内容 kind="preview"(阅读预览层)。
 //     1. 它【不生成任何解读】。输入是「已经生成好的正文」,输出只有
 //        preview(2–4 句的阅读入口)与 keyInsights(1–3 条洞察点)。
@@ -2098,8 +2111,7 @@ function parsePreviewJson(text:string, items:Any[]) {
 //         所以既有快取继续命中,不会多花一次模型费用。
 //       · preview:以送来的正文本身计算,公式与前端 previewSeed 逐字相同。
 //     → 读不到别人的快取,也无法把内容写进别人的快取。
-//  3. 生命脉络(map)的「九个主题都已生成」只对适用付费强制的账号执行
-//     (enforcement_applies;Sandbox 期间 = billing_test_users)。
+//  3. (v14 起)生命脉络(map)的「九个主题都已生成」对所有人执行,另加付费检查 paid_access。
 //  4. 以上检查全部发生在读取共享快取与呼叫模型之前。
 // ══════════════════════════════════════════════════════════
 const G = globalThis as Any;
@@ -2107,6 +2119,11 @@ function env(name:string): string {
   return (G.Deno?.env?.get?.(name) ?? G.process?.env?.[name] ?? "") as string;
 }
 const CANON_TOPICS = ["self","emotion","career","family","love","partner","wealth","study","body"];
+// 与 app.html 的 CONTENT_VER / LEGACY_TOPIC_IDS 相同(判断「已生成」要与前端逐条一致)
+const CONTENT_VER = 10;
+const LEGACY_TOPIC_IDS = ["personal","destined","sibling"];
+// 前端 isStale():没有内容,或版本低于 CONTENT_VER
+const isStaleEntry = (v:Any) => !v || (v.ver || 0) < CONTENT_VER;
 // 前端 askServer 的版本标签(必须与 app.html 相同)
 const FP_VER: Record<string,string> = { blueprint:"v11-bp", topic:"v10", map:"v10", question:"v10" };
 // 前端 previewSeed 的常数(必须与 app.html 的 PREVIEW_STYLE_ID / PREVIEW_VER 相同)
@@ -2138,7 +2155,7 @@ export function chartCacheBase(seed:string, body:Any, kind:string, data:Any):
   if (!given) {
     if (kind === "map") {
       const tk = lang === "en" ? "topics_en" : "topics";
-      return { ok:true, base: seed + "|" + Object.keys((data && data[tk]) || {}).sort().join(",") + tail, retry:false };
+      return { ok:true, base: seed + "|" + liveTopicKeys((data && data[tk]) || {}).join(",") + tail, retry:false };
     }
     return { ok:true, base: seed + tail, retry:false };
   }
@@ -2159,20 +2176,39 @@ async function loadOwnChart(sbUrl:string, srk:string, uid:string): Promise<Any |
     return Array.isArray(rows) && rows.length ? (rows[0].data || {}) : null;
   } catch(_e) { return undefined; }
 }
-async function enforcementApplies(sbUrl:string, srk:string, uid:string): Promise<boolean | undefined> {
+// 前端 liveTopics() 的 key:不是旧版主题 id、也不是过期内容(排序后用于生命脉络的快取键)
+export function liveTopicKeys(obj:Any): string[] {
+  return Object.keys(obj || {}).filter((k) => LEGACY_TOPIC_IDS.indexOf(k) < 0 && !isStaleEntry(obj[k])).sort();
+}
+// 与前端 reviveTopic() 判断「这一篇可以显示」的条件逐条相同
+export function topicGenerated(v:Any): boolean {
+  if (isStaleEntry(v)) return false;
+  if (v.sections && v.sections.length) return true;
+  if (v.raw) {
+    const m = String(v.raw).match(/\{[\s\S]*\}/);
+    if (!m) return false;
+    try { const o = JSON.parse(m[0]); return Array.isArray(o.sections) && o.sections.length > 0; }
+    catch(_e) { return false; }
+  }
+  return false;
+}
+// 九个正式主题里,这张星盘的【中文版】已经生成了几个(英文版、旧版 id、过期内容不算)
+export function generatedTopicCount(data:Any): number {
+  const z = (data && data.topics) || {};
+  return CANON_TOPICS.filter((t) => topicGenerated(z[t])).length;
+}
+// 付费权限(资料库 paid_access;只有 service_role 能呼叫)。undefined = 读不到 → 呼叫端必须 fail closed
+async function paidAccess(sbUrl:string, srk:string, uid:string, kind:string, tid:string|null): Promise<string | undefined> {
   try {
-    const r = await fetch(sbUrl + "/rest/v1/rpc/enforcement_applies", { method:"POST",
+    const r = await fetch(sbUrl + "/rest/v1/rpc/paid_access", { method:"POST",
       headers:{ apikey:srk, Authorization:"Bearer "+srk, "Content-Type":"application/json" },
-      body: JSON.stringify({ p_user: uid }) });
+      body: JSON.stringify({ p_user: uid, p_kind: kind, p_tid: tid }) });
     if (!r.ok) return undefined;
-    return (await r.json()) === true;
+    const v = await r.json();
+    return typeof v === "string" ? v : undefined;
   } catch(_e) { return undefined; }
 }
-// 九个正式主题里,这张星盘已经生成了几个(中文或英文任一版本都算)
-export function generatedTopicCount(data:Any): number {
-  const z = (data && data.topics) || {}, e = (data && data.topics_en) || {};
-  return CANON_TOPICS.filter((t) => !!(z[t] || e[t])).length;
-}
+const PAID_ALLOW = ["ok", "early_access", "not_enforced"];
 
 export async function handler(req: Request): Promise<Response> {
   const cors = { "Access-Control-Allow-Origin":"*", "Access-Control-Allow-Headers":"authorization, apikey, content-type", "Access-Control-Allow-Methods":"GET, POST, OPTIONS" };
@@ -2184,7 +2220,7 @@ export async function handler(req: Request): Promise<Response> {
   const dbHeaders = { apikey:srk, Authorization:"Bearer "+srk, "Content-Type":"application/json" };
 
   if (req.method === "GET")
-    return json({ ok:true, function:"read-chart v13 (narrative + exploration map + blueprint writing layer + reading previews + login & chart ownership)",
+    return json({ ok:true, function:"read-chart v14 (narrative + exploration map + blueprint writing layer + reading previews + login & chart ownership + paid access)",
       anthropic_key_set:apiKey.length>0, db_available:!!(sbUrl&&srk),
       topics:Object.keys(TOPIC_SPEC), explorationQuestions:Object.keys(QUESTION_SPEC).length,
       prompt_version:PROMPT_VERSION, blueprint_style_version:BLUEPRINT_STYLE_VERSION,
@@ -2216,6 +2252,18 @@ export async function handler(req: Request): Promise<Response> {
       return await handlePreviewKind(body, pfp, apiKey, sbUrl, srk, dbHeaders, cors);
     }
 
+    // ★ v14:付费权限 —— topic / map 在查星盘、读快取、呼叫模型之前检查;读不到一律 503
+    if (kind === "topic" || kind === "map") {
+      const tid = kind === "topic" ? String(body.tid||"") : null;
+      const pa = await paidAccess(sbUrl, srk, uid, kind, tid);
+      if (pa === undefined) return json({ error:"暂时无法确认购买状态,请稍后再试", code:"entitlement_unavailable" }, 503, cors);
+      if (pa === "denied")
+        return json({ error: kind === "map" ? "生命脉络需要 Complete 方案" : "这个主题尚未开通", code:"paid_required", kind, tid }, 403, cors);
+      if (pa === "invalid") return json({ error:"unknown topic: "+tid, code:"invalid_topic" }, 400, cors);
+      if (pa === "unauthenticated") return json({ error:"unauthorized:请先登录", code:"login_required" }, 401, cors);
+      if (PAID_ALLOW.indexOf(pa) < 0) return json({ error:"暂时无法确认购买状态,请稍后再试", code:"entitlement_unavailable" }, 503, cors);
+    }
+
     // ★ v13:星盘必须是这个使用者自己的那一张
     const own = await loadOwnChart(sbUrl, srk, uid);
     if (own === undefined) return json({ error:"db_unavailable" }, 503, cors);
@@ -2226,13 +2274,11 @@ export async function handler(req: Request): Promise<Response> {
     if (!cb.ok) return json({ error:"星盘资料与账号不一致,请重新整理页面", code: cb.reason }, 403, cors);
     const fp = await sha256hex(cb.base);
 
-    // ★ v13:生命脉络 —— 九个主题都生成后才能生成(只对适用付费强制的账号执行)
+    // ★ v14:生命脉络 —— 九个正式主题的中文版都已生成才能生成(所有人)
     if (kind === "map") {
-      const enf = await enforcementApplies(sbUrl, srk, uid);
-      if (enf === undefined) return json({ error:"db_unavailable" }, 503, cors);
-      if (enf && generatedTopicCount(own) < CANON_TOPICS.length)
-        return json({ error:"读完九个主题后才能生成生命脉络", code:"life_thread_locked",
-                      generated: generatedTopicCount(own) }, 403, cors);
+      const generated = generatedTopicCount(own);
+      if (generated < CANON_TOPICS.length)
+        return json({ error:"九个主题都生成后才能开启生命脉络", code:"life_thread_locked", generated }, 403, cors);
     }
 
     if (!chart || !chart.planets || !chart.cusps || !chart.ang)

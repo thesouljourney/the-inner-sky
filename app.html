@@ -8785,9 +8785,9 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     diagnosis:        ["诊断：", "Diagnosis: "],
     probe:            [" · 探测 ", " · probe "],
     noService:        ["尚未连接解读服务。", "Not connected yet."],
-    mapNeedMore:      ["读完九个主题后，这里会把所有理解收束成一条线(目前 %s/9)",
-                       "Once all nine chapters are read, they meet here. %s of 9 so far."],
-    mapReady:         ["九个主题都读完了。把它们连接到你的人生。", "All nine are read. Time to draw them together."],
+    mapNeedMore:      ["九个主题都完成后，这里会把所有理解收束成一条线(目前 %s/9)",
+                       "Once all nine chapters are complete, they meet here. %s of 9 so far."],
+    mapReady:         ["九个主题都完成了。把它们连接到你的人生。", "All nine are complete. Time to draw them together."],
     mapBtn:           ["生成属于我的生命脉络", "Draw them together"],
     mapBusy:          ["生成中…", "Working on it."],
 
@@ -8847,6 +8847,9 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
                        "Auth failed: in Supabase → Edge Functions → read-chart → Details, turn off Verify JWT and redeploy"],
     dgLogin:          ["登录已过期，请重新登录后再试一次", "Your session has expired — please sign in again and retry"],
     dgChart:          ["这份请求和你账号里的星盘对不上，请重新整理页面再试", "This request doesn’t match the chart on your account — please refresh the page and try again"],
+    dgPaid:           ["这一部分还没有开通。开通后就能生成，已经生成的内容不会受影响", "This part isn’t unlocked yet. Anything already generated stays as it is"],
+    dgThread:         ["九个主题都完成之后，才能开启生命脉络", "The Life Thread opens once all nine chapters are complete"],
+    dgEnt:            ["暂时无法确认购买状态，请稍后再试（这次没有产生任何生成）", "Couldn’t confirm your access right now — please try again shortly (nothing was generated)"],
     dg404:            ["找不到这个函数：确认函数名是 read-chart 且已部署", "Function not found: check that read-chart is deployed under that name"],
     dg0:              ["连不上服务器：检查网络，或函数地址是否正确", "Cannot reach the server: check your connection and the function URL"],
     dg502:            ["AI 服务返回错误：多半是密钥无效或账户额度不足", "The AI service returned an error — usually an invalid key or no remaining credit"],
@@ -9487,23 +9490,27 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     return null;
   }
   const LEGACY_TOPIC_IDS = ["personal", "destined", "sibling"];
-  function cleanupLegacy(c) {
-    let changed = false;
-    if (c.answers) { delete c.answers; changed = true; }
-    // CONTENT_VER 未变动 → 既有解读(ver === CONTENT_VER)一律保留,不会被清除
-    ["topics", "topics_en"].forEach(function (tk) {
-      if (!c[tk]) return;
-      LEGACY_TOPIC_IDS.forEach(function (k) { if (c[tk][k]) { delete c[tk][k]; changed = true; } });
-      Object.keys(c[tk]).forEach(function (k) { if (isStale(c[tk][k])) { delete c[tk][k]; changed = true; } });
+  /* 旧版主题 id、过期内容(ver < CONTENT_VER)以前会在载入星盘时被【删除并回存】。
+     现在一律不删、不回存:画面与送给服务端的资料改用下面的 liveTopics / liveEntry
+     「只看有效的那几篇」,效果与以前清掉之后相同,但资料库里的原始资料原封不动。
+     (这个函式保留名称给旧呼叫端用,永远不改动 c,也永远回传 false。) */
+  function cleanupLegacy(c) { return false; }
+  // 有效的主题 / 探索题:不是旧版 id、也不是过期内容(= 以前 cleanupLegacy 清完之后留下的那几篇)
+  function liveTopics(obj) {
+    const out = {};
+    Object.keys(obj || {}).forEach(function (k) {
+      if (LEGACY_TOPIC_IDS.indexOf(k) < 0 && !isStale(obj[k])) out[k] = obj[k];
     });
-    ["qa", "qa_en"].forEach(function (qk) {
-      if (!c[qk]) return;
-      Object.keys(c[qk]).forEach(function (k) { if (isStale(c[qk][k])) { delete c[qk][k]; changed = true; } });
-    });
-    ["lifemap", "lifemap_en", "reading", "reading_en"].forEach(function (rk) {
-      if (c[rk] && isStale(c[rk])) { delete c[rk]; changed = true; }
-    });
-    return changed;
+    return out;
+  }
+  // 单一一份内容(生命蓝图 / 生命脉络):过期就当作没有
+  function liveEntry(v) { return isStale(v) ? undefined : v; }
+  /* 生命脉络的唯一条件:九个正式主题的【中文版】已经生成几个。
+     「已生成」= reviveTopic() 能还原出内容(版本 ≥ CONTENT_VER,且有 sections 或可解析的 raw)。
+     与 read-chart 的 generatedTopicCount() 逐条相同;不看 readTopics、不看是否打开过。 */
+  function generatedTopicCount(c) {
+    const z = (c && c.topics) || {};
+    return TOPICS9.filter(function (t) { return !!reviveTopic(z[t.id]); }).length;
   }
 
   window.Reading = {
@@ -9511,6 +9518,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     BLUEPRINT_VER: BLUEPRINT_VER, BLUEPRINT_STYLE_ID: BLUEPRINT_STYLE_ID,
     blueprintOutdated: blueprintOutdated, serverBlueprintStyle: serverBlueprintStyle,
     curLang: curLang, LK: LK,
+    liveTopics: liveTopics, liveEntry: liveEntry, generatedTopicCount: generatedTopicCount,
     TOPICS9: TOPICS9, findTopic: findTopic, DOMAINS: DOMAINS, findQ: findQ,
     parseChapters: parseChapters, parseTopic: parseTopic,
     fetchReading: fetchReading, fetchTopic: fetchTopic, fetchMap: fetchMap, fetchQuestion: fetchQuestion,
@@ -9640,10 +9648,11 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
     return {
       evidence: {
         chart: natal,                 // 主要证据
-        themes: c[K("topics")] || {}  // 次级诠释证据
+        themes: window.Reading.liveTopics(c[K("topics")] || {})  // 次级诠释证据(旧版 / 过期内容不算)
       },
       context: {
-        lifeThreads: c[K("lifemap")] || null,   // 只当脉络
+        // 生命脉络只在九个主题都生成之后才算数(与 #/map 的开启条件相同)
+        lifeThreads: (window.Reading.generatedTopicCount(c) >= 9 && window.Reading.liveEntry(c[K("lifemap")])) || null,   // 只当脉络
         _lifeThreadsCountsAsEvidence: false     // 明写:永远不计为独立证据
       }
     };
@@ -10583,7 +10592,7 @@ window.Guide = (function () {
   function themeReadStatus() {
     const out = {};
     const c = activeChart();
-    const generated = (c && c[window.Reading.LK("topics")]) || {};
+    const generated = window.Reading.liveTopics((c && c[window.Reading.LK("topics")]) || {});
     themeIds().forEach(function (id) {
       if (readTopics[id] || generated[id]) out[id] = true;
     });
@@ -10971,9 +10980,9 @@ window.Guide = (function () {
       localStorage.setItem("inner_sky_read_order_v1", JSON.stringify(themeReadOrder()));
       // c 之前没有在这个函式里取过,整段会抛 ReferenceError,收藏快照永远写不出去
       var ac = activeChart();
-      localStorage.setItem("inner_sky_favs_v1", JSON.stringify(((ac && ac.favs) || []).slice(0, 4)));
+      localStorage.setItem("inner_sky_favs_v1", JSON.stringify(visibleFavs(ac).slice(0, 4)));
       // 快照只留前 4 句,落地页的「共收藏 N 句话」要另外记总数
-      localStorage.setItem("inner_sky_favs_n_v1", String(((ac && ac.favs) || []).length));
+      localStorage.setItem("inner_sky_favs_n_v1", String(visibleFavs(ac).length));
     } catch (e) { }
   }
 
@@ -11008,7 +11017,8 @@ window.Guide = (function () {
     } catch (e) { }
     try {
       var c = activeChart();
-      var lm = c && window.Reading.reviveTopic(c[window.Reading.LK("lifemap")]);
+      // 九个主题没有全部生成:落地页快取也不放生命脉络内容
+      var lm = c && threadUnlocked(c) ? window.Reading.reviveTopic(c[window.Reading.LK("lifemap")]) : null;
       if (lm && lm.sections && lm.sections.length) {
         // 存完整内容,落地页据此完整呈现(仍是同一份已生成的结果,不重新生成)
         var payload = JSON.stringify({
@@ -11562,7 +11572,7 @@ window.Guide = (function () {
     drawWheel();
     drawPosTable();
     curTopic = null; mapOpen = false; curDomain = null; curQ = null;
-    if (window.Reading.cleanupLegacy(c)) window.Cloud.updateChart(c).catch(function () { });
+    // 载入星盘时不再清理、也不回存任何资料(旧版 / 过期内容只在画面上忽略,见 Reading.liveTopics)
     renderReading();
     renderTopics();
   }
@@ -11587,6 +11597,9 @@ window.Guide = (function () {
         if (!hint) {
           if (err && err.code === "login_required") hint = T("dgLogin");
           else if (err && /^(chart_|fp_base)/.test(err.code || "")) hint = T("dgChart");
+          else if (err && err.code === "paid_required") hint = T("dgPaid");
+          else if (err && err.code === "life_thread_locked") hint = T("dgThread");
+          else if (err && err.code === "entitlement_unavailable") hint = T("dgEnt");
           else if (probe.status === 401) hint = T("dg401");
           else if (/401/.test(msg)) hint = T("dgLogin");
           else if (probe.status === 404 || /404/.test(msg)) hint = T("dg404");
@@ -11619,7 +11632,14 @@ window.Guide = (function () {
 
   // ── 收藏 ──────────────────────────────────────────────
   // 保存:文字、来源主题、来源章节、时间。存在 chart.favs,随既有云同步走。
-  function favList() { const c = activeChart(); return (c && c.favs) || []; }
+  /* 生命脉络还没开启(九个主题没有全部生成)时,来自生命脉络的收藏也先不显示。
+     收藏资料本身不动;九个主题完成后自动出现。 */
+  function visibleFavs(c) {
+    const all = (c && c.favs) || [];
+    if (!c || threadUnlocked(c)) return all;
+    return all.filter(function (f) { return f.sourceType !== "life_thread"; });
+  }
+  function favList() { return visibleFavs(activeChart()); }
   /* favKey 的格式维持不变,否则既有收藏会全部对不上(重复收藏 / 星号不亮)。
      来源改用另外一个稳定栏位 sourceType 区分,避免主题 Reading 与生命蓝图的资料混在一起。 */
   function favKey(src, title, text) { return src + "|" + title + "|" + String(text).slice(0, 40); }
@@ -11796,14 +11816,14 @@ window.Guide = (function () {
     // 英文以中文版为源本,缺中文时先补齐中文
     const needSrc = window.I18N.isEN() && !window.Reading.hasChinese(c, "topic", tid);
     const job = needSrc
-      ? window.Reading.fetchTopic(curResult, tid, fpSeed, c.reading, c.topics, c, "zh").then(function (zhData) {
+      ? window.Reading.fetchTopic(curResult, tid, fpSeed, window.Reading.liveEntry(c.reading), window.Reading.liveTopics(c.topics), c, "zh").then(function (zhData) {
           zhData.ver = window.Reading.CONTENT_VER;
           if (window.Reading.guardWriteZh(c, "topic", tid, zhData)) {
             window.Cloud.updateChart(c).catch(function () { });
           }
-          return window.Reading.fetchTopic(curResult, tid, fpSeed, c[window.Reading.LK("reading")], c[TK], c, "en");
+          return window.Reading.fetchTopic(curResult, tid, fpSeed, window.Reading.liveEntry(c[window.Reading.LK("reading")]), window.Reading.liveTopics(c[TK]), c, "en");
         })
-      : window.Reading.fetchTopic(curResult, tid, fpSeed, c[window.Reading.LK("reading")], c[TK], c);
+      : window.Reading.fetchTopic(curResult, tid, fpSeed, window.Reading.liveEntry(c[window.Reading.LK("reading")]), window.Reading.liveTopics(c[TK]), c);
     job.then(function (data) {
       topicBusy = false;
       if (!activeChart() || activeChart().id !== c.id) return;
@@ -11905,7 +11925,8 @@ window.Guide = (function () {
     qaBusy = true; qaErrs[qid] = null;
     routeRefresh();
     const fpSeed = [c.date, c.time, c.lat.toFixed(4), c.lon.toFixed(4)].join("|");
-    window.Reading.fetchQuestion(curResult, qid, fpSeed, c[window.Reading.LK("reading")], c[window.Reading.LK("topics")], c[QK], c).then(function (data) {
+    window.Reading.fetchQuestion(curResult, qid, fpSeed, window.Reading.liveEntry(c[window.Reading.LK("reading")]),
+      window.Reading.liveTopics(c[window.Reading.LK("topics")]), window.Reading.liveTopics(c[QK]), c).then(function (data) {
       qaBusy = false;
       if (!activeChart() || activeChart().id !== c.id) return;
       c[QK] = c[QK] || {};
@@ -11921,17 +11942,22 @@ window.Guide = (function () {
     });
   }
 
-  // 属于我的生命脉络:读完九个主题才开启
+  // 属于我的生命脉络:九个正式主题都生成之后才开启(查看已保存的与生成新的都一样)
   const THREAD_GATE = 9;
-  /* 生命脉络的开启条件 = 九个主题读了几个,与落地页星球同一份状态 */
-  function threadReadCount() { return themeReadCount(); }
+  /* 生命脉络的开启条件 = 九个正式主题的中文版已经生成几个(Reading.generatedTopicCount)。
+     不看 readTopics、不看使用者是否打开过主题页;与 read-chart v14 的服务端判断相同。
+     ⚠ 这只是画面上的门:lifemap 存在使用者自己的 charts 资料里,技术上仍能直接用 API 读到。
+       服务端真正挡住的是「生成新的生命脉络」(read-chart 会再检查一次九主题与付费权限)。 */
+  function threadReadCount() { return window.Reading.generatedTopicCount(activeChart()); }
+  function threadUnlocked(c) { return !!c && window.Reading.generatedTopicCount(c) >= THREAD_GATE; }
 
   function renderMap() {
     const c = activeChart(), panel = $("mapPanel"), body = $("mapBody");
     if (!c || !curResult) { panel.style.display = "none"; return; }
-    const readCount = Object.keys(c[window.Reading.LK("topics")] || {}).length;
+    const readCount = window.Reading.generatedTopicCount(c);
     panel.style.display = "";
-    const saved = window.Reading.reviveTopic(c[window.Reading.LK("lifemap")]);
+    // 九个主题没有全部生成:已保存的生命脉络也不显示
+    const saved = threadUnlocked(c) ? window.Reading.reviveTopic(c[window.Reading.LK("lifemap")]) : null;
     const head = $("mapHint");
     body.innerHTML = "";   // 内容一律在独立页面呈现(#/map)
     if (saved) {
@@ -11942,7 +11968,7 @@ window.Guide = (function () {
       head.textContent = T("failed");
       $("mapBtn").textContent = T("tryAgain");
       $("mapBtn").style.display = "";
-    } else if (readCount < THREAD_GATE) {
+    } else if (!threadUnlocked(c)) {
       head.textContent = T("mapNeedMore", readCount);
       $("mapBtn").style.display = "none";
     } else {
@@ -11955,21 +11981,25 @@ window.Guide = (function () {
     const c = activeChart();
     if (!c || !curResult || mapBusy) return;
     const MK = window.Reading.LK("lifemap"), TK2 = window.Reading.LK("topics");
+    // 九个主题没有全部生成:不显示已保存的,也不送出生成请求
+    if (!threadUnlocked(c)) { renderMap(); routeRefresh(); return; }
     const saved = window.Reading.reviveTopic(c[MK]);
-    if (saved) { location.hash = "#/map"; return; }   // 已生成 → 开独立页面
+    if (saved) { location.hash = "#/map"; return; }   // 已生成 → 开独立页面(不重新生成、不呼叫 AI)
     mapBusy = true; mapErr = null;
     renderMap(); routeRefresh();
-    const fpSeed = [c.date, c.time, c.lat.toFixed(4), c.lon.toFixed(4), Object.keys(c[TK2] || {}).sort().join(",")].join("|");
+    // 只送有效的主题(旧版 id / 过期内容不算;与以前清理之后的内容相同,快取键因此不变)
+    const liveT = window.Reading.liveTopics(c[TK2]);
+    const fpSeed = [c.date, c.time, c.lat.toFixed(4), c.lon.toFixed(4), Object.keys(liveT).sort().join(",")].join("|");
     const needSrcM = window.I18N.isEN() && !window.Reading.hasChinese(c, "map");
     const jobM = needSrcM
-      ? window.Reading.fetchMap(curResult, fpSeed, c.reading, c.topics, c, "zh").then(function (zhData) {
+      ? window.Reading.fetchMap(curResult, fpSeed, window.Reading.liveEntry(c.reading), window.Reading.liveTopics(c.topics), c, "zh").then(function (zhData) {
           zhData.ver = window.Reading.CONTENT_VER;
           if (window.Reading.guardWriteZh(c, "map", null, zhData)) {
             window.Cloud.updateChart(c).catch(function () { });
           }
-          return window.Reading.fetchMap(curResult, fpSeed, c[window.Reading.LK("reading")], c[TK2], c, "en");
+          return window.Reading.fetchMap(curResult, fpSeed, window.Reading.liveEntry(c[window.Reading.LK("reading")]), liveT, c, "en");
         })
-      : window.Reading.fetchMap(curResult, fpSeed, c[window.Reading.LK("reading")], c[TK2], c);
+      : window.Reading.fetchMap(curResult, fpSeed, window.Reading.liveEntry(c[window.Reading.LK("reading")]), liveT, c);
     jobM.then(function (data) {
       mapBusy = false;
       if (!activeChart() || activeChart().id !== c.id) return;
@@ -16065,7 +16095,10 @@ window.Guide = (function () {
           if (x.o.status !== "ok" || typeof x.o.text !== "string") {
             /* 闸道层的错误只有 message(例如 JWT 无效),也要原样带出来 */
             rec.note = String(x.o.reason || x.o.error || x.o.message || ("http " + x.r.status));
-            throw new Error("http " + x.r.status + " · " + rec.note);
+            const err = new Error("http " + x.r.status + " · " + rec.note);
+            // Inner Tools 未开通 / 已到期、或暂时无法确认:服务端在呼叫模型之前就挡下,没有产生费用
+            if (x.o.code) err.code = x.o.code;
+            throw err;
           }
           rec.note = "ok";
           rec.model = x.o.model || null;
@@ -17324,7 +17357,7 @@ window.Guide = (function () {
   function renderFavoritesPage() {
     const c = activeChart();
     let body = "";
-    const list = (c && c.favs) ? c.favs.slice() : [];
+    const list = visibleFavs(c).slice();
 
     if (!c) body = dpNeedChart();
     else if (!list.length) {
@@ -18497,8 +18530,9 @@ window.Guide = (function () {
     let body, foot = "";
     if (!c || !curResult) body = dpNeedChart();
     else {
-      const saved = window.Reading.reviveTopic(c[window.Reading.LK("lifemap")]);
       const done = threadReadCount();
+      // 九个主题没有全部生成:即使已经存着生命脉络也不显示(资料保留,完成后自动恢复)
+      const saved = threadUnlocked(c) ? window.Reading.reviveTopic(c[window.Reading.LK("lifemap")]) : null;
       if (saved) {
         body = dpThreadHtml(saved, dpT("属于我的生命脉络", "The Pattern of Your Life"), mapTab, "life_thread");
         // 只有这一页:手机版换一组文案;文字不带句号(用户要求)
@@ -18506,24 +18540,25 @@ window.Guide = (function () {
                                              "You are not here for answers —\nyou are here to see yourself again") });
         ensureThreadPreviews(c, saved);
       }
-      else if (mapBusy) body = dpLoading(dpT("正在把九个主题收束成一条线…", "Drawing the nine together…"), true);
-      else if (mapErr) body = dpError(mapErr, "dpRetryM");
-      else if (done < THREAD_GATE) {
-        // 还没读完九个主题:安静地显示进度,不催促
+      else if (!threadUnlocked(c)) {
+        // 九个主题还没有全部生成:安静地显示进度,不催促
         body = '<div class="dp-card"><div class="dp-read" style="text-align:center;padding:34px 12px">' +
           '<div class="dp-thread-gate">' +
           Array.from({ length: THREAD_GATE }, function (_, i) {
             return '<span class="pip' + (i < done ? " on" : "") + '"></span>';
           }).join("") + "</div>" +
           '<div class="dp-prose" style="margin-top:20px">' +
-          esc0(dpT("九个主题都读完之后，这里会把它们收束成一条线。",
-                   "Once all nine chapters are read, they meet here.")) + "</div>" +
+          esc0(dpT("九个主题都完成之后，这里会把它们收束成一条线。",
+                   "Once all nine chapters are complete, they meet here.")) + "</div>" +
           '<div style="font-size:12.5px;letter-spacing:.14em;color:var(--dp-mut);margin-top:10px">' +
           esc0(done + " / " + THREAD_GATE) + "</div>" +
           '<a class="dp-cta" style="margin-top:22px" href="' + LANDING_TOPICS + '">' +
           esc0(dpT("继续阅读主题", "Keep reading")) + "</a></div></div>";
-      } else {
-        // 九个都读完了:可以生成
+      }
+      else if (mapBusy) body = dpLoading(dpT("正在把九个主题收束成一条线…", "Drawing the nine together…"), true);
+      else if (mapErr) body = dpError(mapErr, "dpRetryM");
+      else {
+        // 九个都生成了:可以生成
         body = '<div class="dp-card"><div class="dp-read" style="text-align:center;padding:34px 12px">' +
           '<div class="dp-thread-gate">' +
           Array.from({ length: THREAD_GATE }, function () { return '<span class="pip on"></span>'; }).join("") + "</div>" +

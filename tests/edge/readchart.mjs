@@ -1,4 +1,4 @@
-// read-chart v13 本机测试:登录验证、星盘归属、服务端快取指纹、生命脉络条件
+// read-chart v14 本机测试:登录验证、星盘归属、服务端快取指纹、付费权限、生命脉络九主题条件
 // · Supabase(auth / charts / readings / rpc)与 Anthropic 都是记忆体里的假服务 —— 不打真 API、不花钱
 // · 前端的指纹算法直接从 app.html 取出来执行,确认服务端算出来的指纹与前端逐字相同
 // 用法:node tests/edge/readchart.mjs
@@ -28,7 +28,7 @@ const baseSrc = grab(/const sub = extra\.tid[^\n]*\n[\s\S]*?const base = [^\n]*\
 vm.runInContext("this.clientBase = function (fpSeed, kind, extra, lang) {\n" + baseSrc + "\nreturn base; };", ctx);
 // 前端组 fpSeed 的写法(主题 / 生命蓝图 / 探索题 与 生命脉络)
 ok(/const fpSeed = \[c\.date, c\.time, c\.lat\.toFixed\(4\), c\.lon\.toFixed\(4\)\]\.join\("\|"\);/.test(html), "[fp] 前端 fpSeed 写法未变(服务端依此计算)");
-ok(/const fpSeed = \[c\.date, c\.time, c\.lat\.toFixed\(4\), c\.lon\.toFixed\(4\), Object\.keys\(c\[TK2\] \|\| \{\}\)\.sort\(\)\.join\(","\)\]\.join\("\|"\);/.test(html), "[fp] 前端生命脉络 fpSeed 写法未变");
+ok(/const liveT = window\.Reading\.liveTopics\(c\[TK2\]\);\n\s*const fpSeed = \[c\.date, c\.time, c\.lat\.toFixed\(4\), c\.lon\.toFixed\(4\), Object\.keys\(liveT\)\.sort\(\)\.join\(","\)\]\.join\("\|"\);/.test(html), "[fp] 前端生命脉络 fpSeed = 有效主题的 key(与以前清理之后相同)");
 ok(/fp_base: seed/.test(html), "[fp] 前端把 fp_base 送给服务端");
 const clientSeed = (c) => [c.date, c.time, c.lat.toFixed(4), c.lon.toFixed(4)].join("|");
 const clientMapSeed = (c, tk) => [c.date, c.time, c.lat.toFixed(4), c.lon.toFixed(4), Object.keys(c[tk] || {}).sort().join(",")].join("|");
@@ -41,7 +41,9 @@ const chartPayload = (shift = 0) => ({
   planets: KEYS.map((k, i) => ({ key: k, lon: (shift + i * 37 + 11) % 360, house: (i % 12) + 1, retro: false, speed: 1 })),
   extras: [],
 });
-const topicsOf = (n) => Object.fromEntries(["self", "emotion", "career", "family", "love", "partner", "wealth", "study", "body"].slice(0, n).map((t) => [t, { tagline: "t" }]));
+const T9 = ["self", "emotion", "career", "family", "love", "partner", "wealth", "study", "body"];
+const goodTopic = () => ({ ver: 10, tagline: "t", sections: [{ title: "t", body: "正文" }] });
+const topicsOf = (n) => Object.fromEntries(T9.slice(0, n).map((t) => [t, goodTopic()]));
 const USERS = {
   tokA: { id: "aaaaaaaa-0000-4000-8000-000000000001", chart: { date: "1994-11-20", time: "08:30", lat: 1.29, lon: 103.85, topics: topicsOf(5) } },
   tokB: { id: "bbbbbbbb-0000-4000-8000-000000000002", chart: { date: "1990-05-05", time: "23:59", lat: -33.8688, lon: 151.20925, topics: topicsOf(9) } },
@@ -51,8 +53,9 @@ const USERS = {
 
 // ── 假服务 ─────────────────────────────────────────────────────────
 let S;
-function reset({ enforced = [], dbDown = false } = {}) {
-  S = { readings: {}, reads: [], writes: [], claude: 0, explore: [], enforced: new Set(enforced), dbDown, chartLookups: 0 };
+function reset({ enforced = [], dbDown = false, paid = {} } = {}) {
+  S = { readings: {}, reads: [], writes: [], claude: 0, explore: [], enforced: new Set(enforced), dbDown, chartLookups: 0,
+        paid, paidCalls: [], paidDown: false };
 }
 const sha = (s) => RC.sha256hex(s);
 const res = (status, body) => new Response(typeof body === "string" ? body : JSON.stringify(body), { status });
@@ -78,6 +81,13 @@ globalThis.fetch = async (url, init = {}) => {
     S.chartLookups++;
     const usr = Object.values(USERS).find((x) => x.id === decodeURIComponent(m[1]));
     return res(200, usr && usr.chart ? [{ data: usr.chart }] : []);
+  }
+  if (u === SB + "/rest/v1/rpc/paid_access") {
+    const b = JSON.parse(init.body);
+    S.paidCalls.push({ ...b, chartLookupsBefore: S.chartLookups, readsBefore: S.reads.length, claudeBefore: S.claude });
+    if (S.paidDown) return res(500, { message: "rpc down" });
+    const v = S.paid[b.p_user + "|" + b.p_kind + "|" + (b.p_tid || "")] ?? S.paid[b.p_user + "|" + b.p_kind] ?? S.paid[b.p_user] ?? "not_enforced";
+    return res(200, JSON.stringify(v));   // PostgREST:纯量函式回传 JSON 字串
   }
   if (u === SB + "/rest/v1/rpc/enforcement_applies" && S.rpcDown) return res(500, { message: "rpc down" });
   if (u === SB + "/rest/v1/rpc/enforcement_applies") return res(200, S.enforced.has(JSON.parse(init.body).p_user));
@@ -224,28 +234,128 @@ await scenario("RETRY", async () => {
   ok(S.writes.length === 1 && S.writes[0] === q.fp && S.readings[plain.fp] === '{"bad":"parse failed earlier"}', "[retry] 写进 retry 自己的键(与原本相同)", S.writes);
 });
 
-// ═══════════════ 6. 生命脉络:九个主题条件只对测试账号执行 ═══════════════
-await scenario("MAP", async () => {
-  reset({ enforced: [USERS.tokA.id, USERS.tokB.id] });
-  const a = await call("tokA", (await clientReq("tokA", "map")).body);       // 测试账号,只生成 5 个
-  ok(a.status === 403 && a.body.code === "life_thread_locked" && a.body.generated === 5, "[map] 测试账号未满 9 个主题 → 403", a);
-  ok(S.reads.length === 0 && S.claude === 0, "[map] 被挡下时没有读快取、没有呼叫模型");
-  const b = await call("tokB", (await clientReq("tokB", "map")).body);       // 测试账号,9 个都生成了
-  ok(b.status === 200 && b.body.valid === true, "[map] 测试账号 9 个主题都生成 → 可以生成", b);
-  // 不在测试名单(含 Early Users,Sandbox 期间)→ 维持原本行为
-  reset({ enforced: [] });
-  const e = await call("tokE", (await clientReq("tokE", "map")).body);
-  ok(e.status === 200, "[map] 不在测试名单(Early User)→ 照旧可以生成", e);
-  // 英文版主题也算数
-  ok(RC.generatedTopicCount({ topics: topicsOf(4), topics_en: topicsOf(9) }) === 9, "[map] 中文或英文任一版本生成过都算");
-  ok(RC.generatedTopicCount({ topics: Object.assign(topicsOf(8), { extra: {} }) }) === 8, "[map] 非正式主题不算数");
-  // 查不到是否适用付费强制 → 503,不放行、不呼叫模型
-  reset({ enforced: [] }); S.rpcDown = true;
-  const f = await call("tokE", (await clientReq("tokE", "map")).body);
-  ok(f.status === 503 && S.claude === 0 && S.reads.length === 0, "[map] 无法确认是否适用 → 503,不读快取、不呼叫模型", f);
+// ═══════════════ 6. 付费权限:topic / map 在查星盘、读快取、呼叫模型之前检查 ═══════════════
+await scenario("PAID", async () => {
+  const A = USERS.tokA.id, B = USERS.tokB.id;
+  // 未购买的主题 → 403 paid_required;完全没有查星盘、读快取、呼叫模型
+  reset({ paid: { [A + "|topic|career"]: "denied" } });
+  const d = await call("tokA", (await clientReq("tokA", "topic", { tid: "career" })).body);
+  ok(d.status === 403 && d.body.code === "paid_required" && d.body.tid === "career", "[paid] 未购买的主题 → 403 paid_required", d);
+  ok(S.chartLookups === 0 && S.reads.length === 0 && S.writes.length === 0 && S.claude === 0, "[paid] 被挡下时没有查星盘、读写快取、呼叫模型",
+    { charts: S.chartLookups, reads: S.reads.length, claude: S.claude });
+  ok(S.paidCalls.length === 1 && S.paidCalls[0].p_user === A && S.paidCalls[0].p_kind === "topic" && S.paidCalls[0].p_tid === "career",
+    "[paid] 以登录者自己的 user_id 查询(不相信前端)", S.paidCalls);
+  // 即使共享快取里已经有这份内容,也拿不到
+  reset({ paid: { [A + "|topic|career"]: "denied" } });
+  const q = await clientReq("tokA", "topic", { tid: "career" });
+  S.readings[q.fp] = '{"cached":"someone generated it"}';
+  const d2 = await call("tokA", q.body);
+  ok(d2.status === 403 && !/someone generated/.test(JSON.stringify(d2.body)) && S.reads.length === 0, "[paid] 快取里已有内容也不会被读出", d2);
+  // 已购买 / Early User / 不适用付费强制 → 照常(快取命中不呼叫模型)
+  for (const v of ["ok", "early_access", "not_enforced"]) {
+    reset({ paid: { [A + "|topic|career"]: v } });
+    const qq = await clientReq("tokA", "topic", { tid: "career" });
+    S.readings[qq.fp] = '{"cached":"old"}';
+    const r = await call("tokA", qq.body);
+    ok(r.status === 200 && r.body.cached === true && S.claude === 0, `[paid] paid_access = ${v} → 照常取得`, r);
+    ok(S.paidCalls[0].chartLookupsBefore === 0 && S.paidCalls[0].readsBefore === 0, `[paid] ${v}:付费检查发生在查星盘与读快取之前`, S.paidCalls[0]);
+  }
+  // 不合法的主题 → 400;资料库读不到 / 回传无法辨识 → 503(fail closed)
+  reset({ paid: { [A + "|topic|xyz"]: "invalid" } });
+  const inv = await call("tokA", (await clientReq("tokA", "topic", { tid: "xyz" })).body);
+  ok(inv.status === 400 && inv.body.code === "invalid_topic" && S.claude === 0, "[paid] 不合法的主题 → 400", inv);
+  for (const [label, setup] of [["RPC 失败", () => { S.paidDown = true; }], ["回传无法辨识", () => { S.paid[A] = "maybe"; }]]) {
+    reset(); setup();
+    const r = await call("tokA", (await clientReq("tokA", "topic", { tid: "self" })).body);
+    ok(r.status === 503 && r.body.code === "entitlement_unavailable" && S.claude === 0 && S.reads.length === 0 && S.chartLookups === 0,
+      `[paid] ${label} → 503,不放行、不读快取、不呼叫模型`, r);
+  }
+  // 生命脉络:没有 Complete → 403 paid_required(就算九个主题都生成了)
+  reset({ paid: { [B + "|map"]: "denied" } });
+  const m = await call("tokB", (await clientReq("tokB", "map")).body);
+  ok(m.status === 403 && m.body.code === "paid_required" && m.body.kind === "map" && S.claude === 0 && S.chartLookups === 0, "[paid] 生命脉络没有 Complete → 403", m);
+  ok(S.paidCalls[0].p_kind === "map" && S.paidCalls[0].p_tid === null, "[paid] 生命脉络以 p_kind = map 查询", S.paidCalls);
+  reset(); S.paidDown = true;
+  const m2 = await call("tokB", (await clientReq("tokB", "map")).body);
+  ok(m2.status === 503 && S.claude === 0, "[paid] 生命脉络:资料库读不到 → 503", m2);
+  // 生命蓝图 / 探索题 / 预览:免费(只要登录),不查付费
+  reset({ paid: { [A]: "denied" } });
+  for (const [kind, extra] of [["blueprint", {}], ["question", { qid: "q05" }]]) {
+    const r = await call("tokA", (await clientReq("tokA", kind, extra)).body);
+    ok(r.status === 200 && r.body.valid === true, `[paid] ${kind} 免费:不检查付费`, r);
+  }
+  await call("tokA", { kind: "preview", lang: "zh", items: [{ id: "s1", body: "这是一段已经生成好的正文,长度要超过四十个字才会送去产生预览,所以这里刻意多写几句,确保一定超过那个门槛,不会被过滤掉。" }] });
+  ok(S.paidCalls.length === 0, "[paid] 生命蓝图 / 探索题 / 预览完全没有呼叫 paid_access", S.paidCalls);
 });
 
-// ═══════════════ 7. 探索题照常落库(指纹不变)═══════════════
+// ═══════════════ 7. 生命脉络:九个正式中文主题都生成 —— 对所有人 ═══════════════
+await scenario("MAP", async () => {
+  // Early User / 一般用户(not_enforced 或 early_access)一样要九个主题
+  for (const v of ["not_enforced", "early_access", "ok"]) {
+    reset({ paid: { [USERS.tokE.id]: v, [USERS.tokB.id]: v } });
+    const e = await call("tokE", (await clientReq("tokE", "map")).body);      // 只生成 3 个
+    ok(e.status === 403 && e.body.code === "life_thread_locked" && e.body.generated === 3, `[map] ${v}:未满 9 个主题 → 403`, e);
+    ok(S.reads.length === 0 && S.claude === 0, `[map] ${v}:被挡下时没有读快取、没有呼叫模型`);
+    const b = await call("tokB", (await clientReq("tokB", "map")).body);      // 9 个都生成了
+    ok(b.status === 200 && b.body.valid === true, `[map] ${v}:9 个主题都生成 → 可以生成`, b);
+  }
+  // 「已生成」的判断(与前端 reviveTopic 相同)
+  const GT = RC.generatedTopicCount;
+  ok(GT({ topics: topicsOf(4), topics_en: topicsOf(9) }) === 4, "[map] 英文版主题不算数");
+  ok(GT({ topics: Object.assign(topicsOf(8), { extra: goodTopic(), personal: goodTopic() }) }) === 8, "[map] 非正式 / 旧版主题 id 不算数");
+  const t9 = topicsOf(9);
+  ok(GT({ topics: Object.assign({}, t9, { body: { ver: 9, sections: [{ body: "x" }] } }) }) === 8, "[map] 版本过期的主题不算数");
+  ok(GT({ topics: Object.assign({}, t9, { body: { sections: [{ body: "x" }] } }) }) === 8, "[map] 没有版本的旧资料不算数");
+  ok(GT({ topics: Object.assign({}, t9, { body: { ver: 10, sections: [] } }) }) === 8, "[map] 没有段落的主题不算数");
+  ok(GT({ topics: Object.assign({}, t9, { body: { ver: 10, raw: '前言 {"sections":[{"title":"a","body":"b"}]} 尾' } }) }) === 9, "[map] 只有可解析的 raw 也算生成");
+  ok(GT({ topics: Object.assign({}, t9, { body: { ver: 10, raw: "{ 坏掉的 JSON" } }) }) === 8, "[map] raw 无法解析不算数");
+  ok(GT({ topics: Object.assign({}, t9, { body: "字串" }) }) === 8 && GT(null) === 0 && GT({}) === 0, "[map] 格式不对 / 空资料不算数");
+  // 服务端只看资料库里的主题;前端送来的 topics 再多也没用
+  reset();
+  const e2 = await call("tokE", Object.assign((await clientReq("tokE", "map")).body, { topics: topicsOf(9) }));
+  ok(e2.status === 403 && e2.body.code === "life_thread_locked", "[map] 前端送来的 topics 不能代替资料库里的主题", e2);
+  // 旧版前端(没送 fp_base)的生命脉络快取键:只算有效主题(与前端 liveTopics 相同)
+  const c = { date: "1994-11-20", time: "08:30", lat: 1.29, lon: 103.85, topics: Object.assign(topicsOf(9), { personal: goodTopic(), wealth: { ver: 3 } }) };
+  const lb = RC.chartCacheBase(RC.birthSeed(c), { lang: "zh" }, "map", c);
+  ok(lb.ok && lb.base.indexOf("|body,career,emotion,family,love,partner,self,study|map|v10") > 0, "[map] 旧版快取键只算有效主题", lb);
+});
+
+// ═══════════════ 8. 前端与服务端的「已生成」判断逐条相同 ═══════════════
+await scenario("SAME", async () => {
+  const src = [
+    grab(/const CONTENT_VER = \d+;/, "CONTENT_VER"),
+    grab(/function isStale\(saved\) \{[^\n]*\}/, "isStale()"),
+    grab(/function parseTopic\(txt\) \{[\s\S]*?\n  \}/, "parseTopic()"),
+    grab(/function reviveTopic\(saved\) \{[\s\S]*?\n  \}/, "reviveTopic()"),
+    grab(/const LEGACY_TOPIC_IDS = \[[^\]]*\];/, "LEGACY_TOPIC_IDS"),
+    grab(/function liveTopics\(obj\) \{[\s\S]*?\n  \}/, "liveTopics()"),
+    grab(/function generatedTopicCount\(c\) \{[\s\S]*?\n  \}/, "generatedTopicCount()"),
+  ].join("\n");
+  const fx = vm.createContext({ JSON, String, Array, Object, TOPICS9: T9.map((id) => ({ id })) });
+  vm.runInContext(src + "\nthis.gtc = generatedTopicCount; this.live = liveTopics;", fx);
+  const t9 = topicsOf(9);
+  const cases = [
+    {}, { topics: t9 }, { topics: topicsOf(7) }, { topics: t9, topics_en: t9 },
+    { topics: Object.assign({}, t9, { body: { ver: 9, sections: [{ body: "x" }] } }) },
+    { topics: Object.assign({}, t9, { body: { sections: [{ body: "x" }] } }) },
+    { topics: Object.assign({}, t9, { body: { ver: 10, sections: [] } }) },
+    { topics: Object.assign({}, t9, { body: { ver: 10, raw: '{"sections":[{"title":"a","body":"b"}]}' } }) },
+    { topics: Object.assign({}, t9, { body: { ver: 10, raw: '{"sections":[]}' } }) },
+    { topics: Object.assign({}, t9, { body: { ver: 10, raw: "坏的" } }) },
+    { topics: Object.assign({}, t9, { body: { ver: "10", sections: [{ body: "x" }] } }) },
+    { topics: Object.assign(topicsOf(8), { personal: goodTopic(), extra: goodTopic() }) },
+  ];
+  cases.forEach((c, i) => {
+    const front = fx.gtc(JSON.parse(JSON.stringify(c))), server = RC.generatedTopicCount(JSON.parse(JSON.stringify(c)));
+    ok(front === server, `[same] 案例 ${i}:前端 ${front} = 服务端 ${server}`);
+    const lk = Object.keys(fx.live(c.topics || {})).sort().join(","), sk = RC.liveTopicKeys(c.topics || {}).join(",");
+    ok(lk === sk, `[same] 案例 ${i}:有效主题 key 相同`, { lk, sk });
+  });
+  ok(/const THREAD_GATE = 9;/.test(html), "[same] 前端 THREAD_GATE = 9");
+  ok(/function threadReadCount\(\) \{ return window\.Reading\.generatedTopicCount\(activeChart\(\)\); \}/.test(html), "[same] 生命脉络进度 = 已生成数(不看 readTopics)");
+});
+
+// ═══════════════ 9. 探索题照常落库(指纹不变)═══════════════
 await scenario("QUESTION", async () => {
   reset();
   const q = await clientReq("tokA", "question", { qid: "q12" });
@@ -254,7 +364,7 @@ await scenario("QUESTION", async () => {
     "[question] 探索题照常存进 user_exploration_readings,指纹与前端相同", { r, e: S.explore[0] });
 });
 
-// ═══════════════ 8. 前端:请求前等待星盘落库、401 提示重新登录 ═══════════════
+// ═══════════════ 10. 前端:请求前等待星盘落库、401 提示重新登录 ═══════════════
 await scenario("FRONT", async () => {
   ok(/const ready = \(window\.Cloud && window\.Cloud\.chartWritesSettled\)/.test(html), "[front] 送出解读请求前先等星盘写入完成");
   ok(/return trackChartWrite\(rest\("charts", \{ method: "POST"/.test(html) && /return trackChartWrite\(rest\("charts\?id=eq\."/.test(html), "[front] 新增与更新星盘都会被追踪");
@@ -262,6 +372,35 @@ await scenario("FRONT", async () => {
   ok(/dgChart/.test(html), "[front] 星盘不一致 → 提示重新整理");
   // 401 时不再提示「把 Verify JWT 关掉」(只在 GET 探测也是 401 时才这样提示)
   ok(/else if \(probe\.status === 401\) hint = T\("dg401"\);/.test(html), "[front] 只有闸道层 401 才提示 Verify JWT");
+  // 生命脉络:查看已保存的与生成新的,都先过九主题这道门
+  const fnBody = (name) => { const i = html.indexOf("function " + name + "("); return html.slice(i, html.indexOf("\n  }\n", i)); };
+  const page = fnBody("renderMapPage");
+  ok(/const saved = threadUnlocked\(c\) \? window\.Reading\.reviveTopic\(c\[window\.Reading\.LK\("lifemap"\)\]\) : null;/.test(page),
+    "[thread] #/map:九个主题没有全部生成时,不读出已保存的生命脉络");
+  ok(page.indexOf("else if (!threadUnlocked(c))") > 0 && page.indexOf("else if (!threadUnlocked(c))") < page.indexOf("else if (mapBusy)"),
+    "[thread] #/map:先显示进度,再轮到生成中 / 错误 / 生成按钮");
+  const tg = fnBody("toggleMap");
+  ok(tg.indexOf("if (!threadUnlocked(c)) {") > 0 && tg.indexOf("if (!threadUnlocked(c)) {") < tg.indexOf("reviveTopic(c[MK])") &&
+     tg.indexOf("if (!threadUnlocked(c)) {") < tg.indexOf("fetchMap("), "[thread] 生成按钮:未满九个主题不显示旧内容、不送出生成请求");
+  ok(/if \(saved\) \{ location\.hash = "#\/map"; return; \}/.test(tg), "[thread] 已有生命脉络 → 直接打开,不重新生成、不呼叫 AI");
+  const rm = fnBody("renderMap");
+  ok(/const saved = threadUnlocked\(c\) \?/.test(rm) && /else if \(!threadUnlocked\(c\)\)/.test(rm), "[thread] 旧版面板同样先检查九主题");
+  ok(/var lm = c && threadUnlocked\(c\) \?/.test(html), "[thread] 落地页快取未开启时不放生命脉络内容");
+  ok(/function favList\(\) \{ return visibleFavs\(activeChart\(\)\); \}/.test(html) && /const list = visibleFavs\(c\)\.slice\(\);/.test(html) &&
+     /f\.sourceType !== "life_thread"/.test(html), "[thread] 未开启时,来自生命脉络的收藏也不显示(资料不动)");
+  ok(/lifeThreads: \(window\.Reading\.generatedTopicCount\(c\) >= 9 && /.test(html), "[thread] 内在指南的证据层:未开启时不使用生命脉络");
+  // cleanupLegacy:不再删除、也不回存
+  const cl = grab(/function cleanupLegacy\(c\) \{[^\n]*\}/, "cleanupLegacy()");
+  const cx = vm.createContext({}); vm.runInContext(cl + "\nthis.f = cleanupLegacy;", cx);
+  const sample = { answers: [1], topics: { personal: { ver: 3 }, self: { ver: 9 } }, lifemap: { ver: 2 }, reading: { ver: 1 }, qa: { q01: { ver: 1 } } };
+  const before = JSON.stringify(sample);
+  ok(cx.f(sample) === false && JSON.stringify(sample) === before, "[legacy] cleanupLegacy 不改动任何资料、回传 false");
+  ok(!/cleanupLegacy\(c\)\) window\.Cloud\.updateChart/.test(html), "[legacy] 载入星盘时不再回存");
+  ok(/window\.Reading\.liveTopics\(c\.topics\)/.test(html) && /liveTopics\(c\[QK\]\)/.test(html) && /liveEntry\(c\[window\.Reading\.LK\("reading"\)\]\)/.test(html),
+    "[legacy] 送给服务端的主题 / 探索题 / 生命蓝图只取有效内容(与以前清理后相同)");
+  // 新的错误代码有对应的提示,不会显示成未知错误
+  ok(/err\.code === "paid_required"\) hint = T\("dgPaid"\)/.test(html) && /err\.code === "life_thread_locked"\) hint = T\("dgThread"\)/.test(html) &&
+     /err\.code === "entitlement_unavailable"\) hint = T\("dgEnt"\)/.test(html), "[front] paid_required / life_thread_locked / entitlement_unavailable 有提示");
 });
 
 if (failures.length) {
